@@ -126,3 +126,55 @@ TEST(DesktopFileReader, testUTF8Characters)
     EXPECT_EQ(reader->comment(), "Ubuntu 简易计算器");
     EXPECT_EQ(reader->splashTitle(), "计算器 2.0");
 }
+
+TEST(DesktopFileReader, parseOrientations)
+{
+    using namespace ::testing;
+
+    bool ok;
+    Qt::ScreenOrientations orientations;
+
+    ok = DesktopFileReader::parseOrientations(QString(), orientations);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(Qt::PrimaryOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations("landscape", orientations);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(Qt::LandscapeOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations("   InvertedPortrait  , Portrait ", orientations);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(Qt::InvertedPortraitOrientation | Qt::PortraitOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations(",inverted-landscape, inverted_portrait, ", orientations);
+    ASSERT_FALSE(ok);
+    EXPECT_EQ(Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations("landscape;portrait", orientations);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(Qt::PortraitOrientation | Qt::LandscapeOrientation, orientations);
+}
+
+TEST(DesktopFileReader, parseBoolean)
+{
+    using namespace ::testing;
+
+    bool ok;
+    bool boolean;
+
+    ok = DesktopFileReader::parseBoolean(QString(), boolean);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(false, boolean);
+
+    ok = DesktopFileReader::parseBoolean("  Yes ", boolean);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(true, boolean);
+
+    ok = DesktopFileReader::parseBoolean("False", boolean);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(false, boolean);
+
+    ok = DesktopFileReader::parseBoolean("Hello World!", boolean);
+    ASSERT_FALSE(ok);
+    EXPECT_EQ(false, boolean);
+}

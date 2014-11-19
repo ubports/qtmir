@@ -202,6 +202,83 @@ QString DesktopFileReader::splashColorFooter() const
     return d->getKey("X-Ubuntu-Splash-Color-Footer");
 }
 
+Qt::ScreenOrientations DesktopFileReader::supportedOrientations() const
+{
+    Q_D(const DesktopFileReader);
+    Qt::ScreenOrientations result;
+
+    if (!parseOrientations(d->getKey("X-Ubuntu-Supported-Orientations"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Supported-Orientations entry.";
+    }
+
+    return result;
+}
+
+bool DesktopFileReader::rotatesWindowContents() const
+{
+    Q_D(const DesktopFileReader);
+    bool result;
+
+    if (!parseBoolean(d->getKey("X-Ubuntu-Rotates-Window-Contents"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Rotates-Window-Contents entry.";
+    }
+
+    return result;
+}
+
+bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOrientations &result)
+{
+    if (rawString.isEmpty()) {
+        result = Qt::PrimaryOrientation;
+        return true;
+    }
+
+    result = 0;
+    bool ok = true;
+
+    QStringList orientationsList = rawString
+            .simplified()
+            .replace(QChar(','), ";")
+            .remove(QChar(' '))
+            .remove(QChar('-'))
+            .remove(QChar('_'))
+            .toLower()
+            .split(";");
+
+    for (int i = 0; i < orientationsList.count(); ++i) {
+        const QString &orientationString = orientationsList.at(i);
+        if (orientationString == "portrait") {
+            result |= Qt::PortraitOrientation;
+        } else if (orientationString == "landscape") {
+            result |= Qt::LandscapeOrientation;
+        } else if (orientationString == "invertedportrait") {
+            result |= Qt::InvertedPortraitOrientation;
+        } else if (orientationString == "invertedlandscape") {
+            result |= Qt::InvertedLandscapeOrientation;
+        } else {
+            ok = false;
+        }
+    }
+
+    return ok;
+}
+
+bool DesktopFileReader::parseBoolean(const QString &rawString, bool &result)
+{
+    QString cookedString = rawString.trimmed().toLower();
+
+    result = cookedString == "y"
+          || cookedString == "1"
+          || cookedString == "yes"
+          || cookedString == "true";
+
+    return result || rawString.isEmpty()
+        || cookedString == "n"
+        || cookedString == "0"
+        || cookedString == "no"
+        || cookedString == "false";
+}
+
 bool DesktopFileReader::loaded() const
 {
     Q_D(const DesktopFileReader);

@@ -74,7 +74,11 @@ class MirSurfaceItem : public QQuickItem
     Q_PROPERTY(State state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(bool live READ live NOTIFY liveChanged)
-    Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged DESIGNABLE false)
+
+    // How many degrees, clockwise, the UI in the surface has to rotate to match with the
+    // shell UI orientation
+    Q_PROPERTY(int orientationAngle READ orientationAngle WRITE setOrientationAngle
+               NOTIFY orientationAngleChanged DESIGNABLE false)
 
 public:
     explicit MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
@@ -107,7 +111,6 @@ public:
     State state() const;
     QString name() const;
     bool live() const;
-    Qt::ScreenOrientation orientation() const;
     SessionInterface *session() const;
 
     Q_INVOKABLE void release();
@@ -121,7 +124,9 @@ public:
 
     bool isFirstFrameDrawn() const { return m_firstFrameDrawn; }
 
-    void setOrientation(const Qt::ScreenOrientation orientation);
+    int orientationAngle() const;
+    void setOrientationAngle(int angle);
+
     void setSession(SessionInterface *app);
 
     // to allow easy touch event injection from tests
@@ -134,7 +139,7 @@ Q_SIGNALS:
     void typeChanged();
     void stateChanged();
     void nameChanged();
-    void orientationChanged();
+    void orientationAngleChanged(int angle);
     void liveChanged(bool live);
     void firstFrameDrawn(MirSurfaceItem *item);
 
@@ -194,7 +199,7 @@ private:
     QPointer<SessionInterface> m_session;
     bool m_firstFrameDrawn;
     bool m_live;
-    Qt::ScreenOrientation m_orientation; //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
+    int m_orientationAngle; //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
 
     QMirSurfaceTextureProvider *m_textureProvider;
 

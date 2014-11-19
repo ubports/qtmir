@@ -252,7 +252,7 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
     , m_session(session)
     , m_firstFrameDrawn(false)
     , m_live(true)
-    , m_orientation(Qt::PortraitOrientation)
+    , m_orientationAngle(0)
     , m_textureProvider(nullptr)
     , m_lastTouchEvent(nullptr)
 {
@@ -359,49 +359,42 @@ MirSurfaceItem::State MirSurfaceItem::state() const
     return static_cast<MirSurfaceItem::State>(m_surface->state());
 }
 
-Qt::ScreenOrientation MirSurfaceItem::orientation() const
+int MirSurfaceItem::orientationAngle() const
 {
-    return m_orientation;
+    return m_orientationAngle;
 }
 
-void MirSurfaceItem::setOrientation(const Qt::ScreenOrientation orientation)
+void MirSurfaceItem::setOrientationAngle(int angle)
 {
-    qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::setOrientation - orientation=" << orientation;
+    qCDebug(QTMIR_SURFACES, "MirSurfaceItem::setOrientationAngle(%d)", angle);
 
-    if (m_orientation == orientation)
+    if (m_orientationAngle == angle)
         return;
 
     MirOrientation mirOrientation;
-    Qt::ScreenOrientation nativeOrientation = QGuiApplication::primaryScreen()->nativeOrientation();
-    const bool landscapeNativeOrientation = (nativeOrientation == Qt::LandscapeOrientation);
 
-    Qt::ScreenOrientation requestedOrientation = orientation;
-    if (orientation == Qt::PrimaryOrientation) { // means orientation equals native orientation, set it as such
-        requestedOrientation = nativeOrientation;
-    }
-
-    switch(requestedOrientation) {
-    case Qt::PortraitOrientation:
-        mirOrientation = (landscapeNativeOrientation) ? mir_orientation_right : mir_orientation_normal;
+    switch (angle) {
+    case 0:
+        mirOrientation = mir_orientation_normal;
         break;
-    case Qt::LandscapeOrientation:
-        mirOrientation = (landscapeNativeOrientation) ? mir_orientation_normal : mir_orientation_left;
+    case 90:
+        mirOrientation = mir_orientation_right;
         break;
-    case Qt::InvertedPortraitOrientation:
-        mirOrientation = (landscapeNativeOrientation) ? mir_orientation_left : mir_orientation_inverted;
+    case 180:
+        mirOrientation = mir_orientation_inverted;
         break;
-    case Qt::InvertedLandscapeOrientation:
-        mirOrientation = (landscapeNativeOrientation) ? mir_orientation_inverted : mir_orientation_right;
+    case 270:
+        mirOrientation = mir_orientation_left;
         break;
     default:
-        qWarning("Unrecognized Qt::ScreenOrientation!");
+        qCWarning(QTMIR_SURFACES, "Unsupported orientation angle: %d", angle);
         return;
     }
 
     m_surface->set_orientation(mirOrientation);
 
-    m_orientation = orientation;
-    Q_EMIT orientationChanged();
+    m_orientationAngle = angle;
+    Q_EMIT orientationAngleChanged(angle);
 }
 
 QString MirSurfaceItem::name() const

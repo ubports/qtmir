@@ -53,7 +53,12 @@ public:
     virtual QString splashColor() const;
     virtual QString splashColorHeader() const;
     virtual QString splashColorFooter() const;
+    virtual Qt::ScreenOrientations supportedOrientations() const;
+    virtual bool rotatesWindowContents() const;
     virtual bool loaded() const;
+
+    static bool parseOrientations(const QString &rawString, Qt::ScreenOrientations &result);
+    static bool parseBoolean(const QString &rawString, bool &result);
 
 protected:
     DesktopFileReader(const QString &appId, const QFileInfo &desktopFile);
