@@ -228,12 +228,15 @@ bool DesktopFileReader::rotatesWindowContents() const
 
 bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOrientations &result)
 {
+    // Default to all orientations
+    result = Qt::PortraitOrientation | Qt::LandscapeOrientation
+        | Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation;
+
     if (rawString.isEmpty()) {
-        result = Qt::PrimaryOrientation;
         return true;
     }
 
-    result = 0;
+    Qt::ScreenOrientations parsedOrientations = 0;
     bool ok = true;
 
     QStringList orientationsList = rawString
@@ -245,19 +248,33 @@ bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOr
             .toLower()
             .split(";");
 
-    for (int i = 0; i < orientationsList.count(); ++i) {
+    for (int i = 0; i < orientationsList.count() && ok; ++i) {
         const QString &orientationString = orientationsList.at(i);
+        if (orientationString.isEmpty()) {
+            // skip it
+            continue;
+        }
+
         if (orientationString == "portrait") {
-            result |= Qt::PortraitOrientation;
+            parsedOrientations |= Qt::PortraitOrientation;
         } else if (orientationString == "landscape") {
-            result |= Qt::LandscapeOrientation;
+            parsedOrientations |= Qt::LandscapeOrientation;
         } else if (orientationString == "invertedportrait") {
-            result |= Qt::InvertedPortraitOrientation;
+            parsedOrientations |= Qt::InvertedPortraitOrientation;
         } else if (orientationString == "invertedlandscape") {
-            result |= Qt::InvertedLandscapeOrientation;
+            parsedOrientations |= Qt::InvertedLandscapeOrientation;
+        } else if (orientationsList.count() == 1 && orientationString == "primary") {
+            // Special case: primary orientation must be alone
+            // There's no sense in supporting primary orientation + other orientations
+            // like "primary,landscape"
+            parsedOrientations = Qt::PrimaryOrientation;
         } else {
             ok = false;
         }
+    }
+
+    if (ok) {
+        result = parsedOrientations;
     }
 
     return ok;

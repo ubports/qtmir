@@ -131,12 +131,18 @@ TEST(DesktopFileReader, parseOrientations)
 {
     using namespace ::testing;
 
+    const Qt::ScreenOrientations defaultOrientations = Qt::PortraitOrientation | Qt::LandscapeOrientation
+        | Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation;
     bool ok;
     Qt::ScreenOrientations orientations;
 
     ok = DesktopFileReader::parseOrientations(QString(), orientations);
     ASSERT_TRUE(ok);
-    EXPECT_EQ(Qt::PrimaryOrientation, orientations);
+    EXPECT_EQ(defaultOrientations, orientations);
+
+    ok = DesktopFileReader::parseOrientations("An invalid string!", orientations);
+    ASSERT_FALSE(ok);
+    EXPECT_EQ(defaultOrientations, orientations);
 
     ok = DesktopFileReader::parseOrientations("landscape", orientations);
     ASSERT_TRUE(ok);
@@ -147,12 +153,24 @@ TEST(DesktopFileReader, parseOrientations)
     EXPECT_EQ(Qt::InvertedPortraitOrientation | Qt::PortraitOrientation, orientations);
 
     ok = DesktopFileReader::parseOrientations(",inverted-landscape, inverted_portrait, ", orientations);
-    ASSERT_FALSE(ok);
+    ASSERT_TRUE(ok);
     EXPECT_EQ(Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations(",inverted-landscape, some-invalid-text, ", orientations);
+    ASSERT_FALSE(ok);
+    EXPECT_EQ(defaultOrientations, orientations);
 
     ok = DesktopFileReader::parseOrientations("landscape;portrait", orientations);
     ASSERT_TRUE(ok);
     EXPECT_EQ(Qt::PortraitOrientation | Qt::LandscapeOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations("primary", orientations);
+    ASSERT_TRUE(ok);
+    EXPECT_EQ(Qt::PrimaryOrientation, orientations);
+
+    ok = DesktopFileReader::parseOrientations("landscpe,primary", orientations);
+    ASSERT_FALSE(ok);
+    EXPECT_EQ(defaultOrientations, orientations);
 }
 
 TEST(DesktopFileReader, parseBoolean)
