@@ -68,6 +68,8 @@ DesktopFileReader::DesktopFileReader(const QString &appId, const QFileInfo &desk
     : d_ptr(new DesktopFileReaderPrivate(this))
 {
     Q_D(DesktopFileReader);
+    qCDebug(QTMIR_APPLICATIONS) << "Loading desktop file" << desktopFile.absoluteFilePath()
+            << "for appId" << appId;
 
     d->appId = appId;
     d->file = desktopFile.absoluteFilePath();

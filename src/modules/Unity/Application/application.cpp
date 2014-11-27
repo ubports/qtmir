@@ -58,11 +58,6 @@ Application::Application(const QSharedPointer<TaskController>& taskController,
     m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
 
     m_supportedOrientations = m_desktopData->supportedOrientations();
-    if (m_supportedOrientations == Qt::PrimaryOrientation) {
-        // Default to all orientations
-        m_supportedOrientations = Qt::PortraitOrientation | Qt::LandscapeOrientation
-            | Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation;
-    }
 
     m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
 }
