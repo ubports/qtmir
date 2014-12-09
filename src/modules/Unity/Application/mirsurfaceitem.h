@@ -69,6 +69,7 @@ class MirSurfaceItem : public QQuickItem
     Q_OBJECT
     Q_ENUMS(Type)
     Q_ENUMS(State)
+    Q_ENUMS(OrientationAngle)
 
     Q_PROPERTY(Type type READ type NOTIFY typeChanged)
     Q_PROPERTY(State state READ state NOTIFY stateChanged)
@@ -77,7 +78,7 @@ class MirSurfaceItem : public QQuickItem
 
     // How many degrees, clockwise, the UI in the surface has to rotate to match with the
     // shell UI orientation
-    Q_PROPERTY(int orientationAngle READ orientationAngle WRITE setOrientationAngle
+    Q_PROPERTY(OrientationAngle orientationAngle READ orientationAngle WRITE setOrientationAngle
                NOTIFY orientationAngleChanged DESIGNABLE false)
 
 public:
@@ -106,6 +107,13 @@ public:
         Fullscreen = mir_surface_state_fullscreen,
     };
 
+    enum OrientationAngle {
+        Angle0 = 0,
+        Angle90 = 90,
+        Angle180 = 180,
+        Angle270 = 270
+    };
+
     //getters
     Type type() const;
     State state() const;
@@ -124,8 +132,8 @@ public:
 
     bool isFirstFrameDrawn() const { return m_firstFrameDrawn; }
 
-    int orientationAngle() const;
-    void setOrientationAngle(int angle);
+    OrientationAngle orientationAngle() const;
+    void setOrientationAngle(OrientationAngle angle);
 
     void setSession(SessionInterface *app);
 
@@ -139,7 +147,7 @@ Q_SIGNALS:
     void typeChanged();
     void stateChanged();
     void nameChanged();
-    void orientationAngleChanged(int angle);
+    void orientationAngleChanged(OrientationAngle angle);
     void liveChanged(bool live);
     void firstFrameDrawn(MirSurfaceItem *item);
 
@@ -199,7 +207,9 @@ private:
     QPointer<SessionInterface> m_session;
     bool m_firstFrameDrawn;
     bool m_live;
-    int m_orientationAngle; //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
+
+    //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
+    OrientationAngle m_orientationAngle;
 
     QMirSurfaceTextureProvider *m_textureProvider;
 

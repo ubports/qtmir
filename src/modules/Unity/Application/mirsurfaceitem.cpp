@@ -252,7 +252,7 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
     , m_session(session)
     , m_firstFrameDrawn(false)
     , m_live(true)
-    , m_orientationAngle(0)
+    , m_orientationAngle(Angle0)
     , m_textureProvider(nullptr)
     , m_lastTouchEvent(nullptr)
 {
@@ -359,12 +359,12 @@ MirSurfaceItem::State MirSurfaceItem::state() const
     return static_cast<MirSurfaceItem::State>(m_surface->state());
 }
 
-int MirSurfaceItem::orientationAngle() const
+MirSurfaceItem::OrientationAngle MirSurfaceItem::orientationAngle() const
 {
     return m_orientationAngle;
 }
 
-void MirSurfaceItem::setOrientationAngle(int angle)
+void MirSurfaceItem::setOrientationAngle(MirSurfaceItem::OrientationAngle angle)
 {
     qCDebug(QTMIR_SURFACES, "MirSurfaceItem::setOrientationAngle(%d)", angle);
 
@@ -374,16 +374,16 @@ void MirSurfaceItem::setOrientationAngle(int angle)
     MirOrientation mirOrientation;
 
     switch (angle) {
-    case 0:
+    case Angle0:
         mirOrientation = mir_orientation_normal;
         break;
-    case 90:
+    case Angle90:
         mirOrientation = mir_orientation_right;
         break;
-    case 180:
+    case Angle180:
         mirOrientation = mir_orientation_inverted;
         break;
-    case 270:
+    case Angle270:
         mirOrientation = mir_orientation_left;
         break;
     default:
