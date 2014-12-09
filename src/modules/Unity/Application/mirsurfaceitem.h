@@ -243,5 +243,6 @@ private:
 } // namespace qtmir
 
 Q_DECLARE_METATYPE(qtmir::MirSurfaceItem*)
+Q_DECLARE_METATYPE(qtmir::MirSurfaceItem::OrientationAngle)
 
 #endif // MIRSURFACEITEM_H
