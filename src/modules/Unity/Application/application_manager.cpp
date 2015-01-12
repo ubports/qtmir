@@ -26,7 +26,7 @@
 #include "tracepoints.h" // generated from tracepoints.tp
 
 // mirserver
-#include "mirserverconfiguration.h"
+#include "mirserver.h"
 #include "nativeinterface.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
@@ -114,7 +114,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
         return nullptr;
     }
 
-    auto mirConfig = nativeInterface->m_mirConfig;
+    auto mirServer = nativeInterface->m_mirServer;
 
     SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
@@ -130,7 +130,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     // of the QSharedPointer, and a double-delete results. Trying QQmlEngine::setObjectOwnership on the
     // object no effect, which it should. Need to investigate why.
     ApplicationManager* appManager = new ApplicationManager(
-                                             mirConfig,
+                                             mirServer,
                                              taskController,
                                              fileReaderFactory,
                                              procInfo
@@ -139,6 +139,15 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     connectToSessionListener(appManager, sessionListener);
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
+
+    // Emit signal to notify Upstart that Mir is ready to receive client connections
+    // see http://upstart.ubuntu.com/cookbook/#expect-stop
+    // FIXME: should not be qtmir's job, instead should notify the user of this library
+    // that they should emit this signal, perhaps by posting an event to the
+    // QMirServerApplication event loop when it comes up
+    if (qgetenv("UNITY_MIR_EMITS_SIGSTOP") == "1") {
+        raise(SIGSTOP);
+    }
 
     return appManager;
 }
@@ -155,13 +164,13 @@ ApplicationManager* ApplicationManager::singleton()
 }
 
 ApplicationManager::ApplicationManager(
-        const QSharedPointer<MirServerConfiguration>& mirConfig,
+        const QSharedPointer<MirServer>& mirServer,
         const QSharedPointer<TaskController>& taskController,
         const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
         QObject *parent)
     : ApplicationManagerInterface(parent)
-    , m_mirConfig(mirConfig)
+    , m_mirServer(mirServer)
     , m_focusedApplication(nullptr)
     , m_mainStageApplication(nullptr)
     , m_sideStageApplication(nullptr)
