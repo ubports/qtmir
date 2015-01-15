@@ -10,7 +10,7 @@ Build-Depends: cmake,
 # version. To allow cross-compiling to work, we also must
 # append :native to g++-4.9 so we don't try to run armhf g++
 # on an x86 CPU for example, when cross-compiling.
-               g++-4.9:native,
+               g++-4.9,
                google-mock (>= 1.6.0+svn437),
                libboost-system-dev,
                libfontconfig1-dev,
