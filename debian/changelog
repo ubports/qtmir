@@ -4,6 +4,20 @@ qtmir (0.4.5) UNRELEASED; urgency=medium
 
  -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Fri, 31 Oct 2014 10:17:42 -0200
 
+qtmir (0.4.4+15.04.20150115-0ubuntu1) vivid; urgency=low
+
+  [ Gerry Boland ]
+  * Add Wakelock support - ensures device drops to deep-sleep mode only
+    when all AppMan suspend tasks have completed
+
+  [ Ricardo Mendoza ]
+  * Reduce suspend timeout to half of the previous value because the
+    long value was too apparent on fast paced apps, like web games of
+    music players; it broke the user experience according to design.
+    (LP: #1402650)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 15 Jan 2015 15:19:46 +0000
+
 qtmir (0.4.4+15.04.20150114-0ubuntu1) vivid; urgency=low
 
   [ Gerry Boland ]
