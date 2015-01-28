@@ -37,43 +37,17 @@ public:
 
     void focus_next() override;
 
-//    std::weak_ptr<mir::scene::Session> focussed_application() const override;
-
     void set_focus_to(std::shared_ptr<mir::scene::Session> const& focus) override;
-
-//    virtual std::shared_ptr<mir::scene::Session> open_session(
-//        pid_t client_pid,
-//        std::string const& name,
-//        std::shared_ptr<mir::frontend::EventSink> const& sink);
-//
-//    virtual void close_session(std::shared_ptr<mir::scene::Session> const& session);
 
     void handle_surface_created(std::shared_ptr<mir::scene::Session> const& session) override;
 
-//    virtual std::shared_ptr<mir::scene::PromptSession> start_prompt_session_for(
-//        std::shared_ptr<mir::scene::Session> const& session,
-//        mir::scene::PromptSessionCreationParameters const& params);
-//
-//    virtual void add_prompt_provider_for(
-//        std::shared_ptr<mir::scene::PromptSession> const& prompt_session,
-//        std::shared_ptr<mir::scene::Session> const& session);
-//
-//    virtual void stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session);
-
     virtual mir::frontend::SurfaceId create_surface(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params);
 
-//    virtual void destroy_surface(std::shared_ptr<mir::scene::Session> const& session, mir::frontend::SurfaceId surface);
-//
     virtual int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib,
         int value);
-
-//    virtual int get_surface_attribute(
-//        std::shared_ptr<mir::scene::Session> const& session,
-//        mir::frontend::SurfaceId surface_id,
-//        MirSurfaceAttrib attrib);
 
 Q_SIGNALS:
     void surfaceAttributeChanged(mir::scene::Surface const*, const MirSurfaceAttrib, const int);
