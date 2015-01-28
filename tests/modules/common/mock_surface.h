@@ -36,6 +36,7 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(parent, std::shared_ptr<Surface>());
 
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* /*compositor_id*/) const
     {

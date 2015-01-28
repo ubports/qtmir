@@ -31,7 +31,7 @@
 #include "nativeinterface.h"
 #include "mirserver.h"
 #include "sessionlistener.h"
-#include "surfaceconfigurator.h"
+#include "mirshell.h"
 #include "logging.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
@@ -51,9 +51,9 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
-void connectToSurfaceConfigurator(MirSurfaceManager *manager, SurfaceConfigurator *surfaceConfigurator)
+void connectToShell(MirSurfaceManager *manager, MirShell *shell)
 {
-    QObject::connect(surfaceConfigurator, &SurfaceConfigurator::surfaceAttributeChanged,
+    QObject::connect(shell, &MirShell::surfaceAttributeChanged,
                      manager, &MirSurfaceManager::onSurfaceAttributeChanged);
 }
 
@@ -70,12 +70,12 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        SurfaceConfigurator *surfaceConfigurator = static_cast<SurfaceConfigurator*>(nativeInterface->nativeResourceForIntegration("SessionConfigurator"));
+        MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         the_surface_manager = new MirSurfaceManager(nativeInterface->m_mirServer, SessionManager::singleton());
 
         connectToSessionListener(the_surface_manager, sessionListener);
-        connectToSurfaceConfigurator(the_surface_manager, surfaceConfigurator);
+        connectToShell(the_surface_manager, shell);
     }
     return the_surface_manager;
 }

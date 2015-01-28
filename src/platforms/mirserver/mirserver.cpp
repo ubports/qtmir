@@ -19,13 +19,11 @@
 #include "mirserver.h"
 
 // local
-#include "focussetter.h"
+#include "mirshell.h"
 #include "mirglconfig.h"
-#include "mirplacementstrategy.h"
 #include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
 #include "sessionlistener.h"
-#include "surfaceconfigurator.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
@@ -53,11 +51,6 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
     set_command_line_handler(&ignore_unparsed_arguments);
     set_command_line(argc, argv);
 
-    override_the_placement_strategy([this]
-        {
-            return std::make_shared<MirPlacementStrategy>(the_shell_display_layout());
-        });
-
     override_the_session_listener([]
         {
             return std::make_shared<SessionListener>();
@@ -66,11 +59,6 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
     override_the_prompt_session_listener([]
         {
             return std::make_shared<PromptSessionListener>();
-        });
-
-    override_the_surface_configurator([]
-        {
-            return std::make_shared<SurfaceConfigurator>();
         });
 
     override_the_session_authorizer([]
@@ -102,9 +90,9 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_shell_focus_setter([]
+    wrap_shell([this](std::shared_ptr<msh::Shell> const& wrapped)
         {
-            return std::make_shared<FocusSetter>();
+            return std::make_shared<MirShell>(wrapped, the_shell_display_layout());
         });
 
     set_terminator([&](int)
@@ -157,10 +145,10 @@ PromptSessionListener *MirServer::promptSessionListener()
     return static_cast<PromptSessionListener*>(sharedPtr.get());
 }
 
-SurfaceConfigurator *MirServer::surfaceConfigurator()
+MirShell *MirServer::shell()
 {
-    auto sharedPtr = the_surface_configurator();
+    auto sharedPtr = the_shell();
     if (sharedPtr.unique()) return 0;
 
-    return static_cast<SurfaceConfigurator*>(sharedPtr.get());
+    return static_cast<MirShell*>(sharedPtr.get());
 }
