@@ -24,25 +24,19 @@
 #include <mir/shell/display_layout.h>
 
 namespace ms = mir::scene;
-using mir::shell::ShellWrapper;
+using mir::shell::AbstractShell;
 
 MirShell::MirShell(
-    std::shared_ptr<mir::shell::Shell> const& wrapped,
+    std::shared_ptr<mir::shell::InputTargeter> const& input_targeter,
+    std::shared_ptr<mir::scene::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
-    ShellWrapper{wrapped},
+    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
     m_displayLayout{display_layout}
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::MirShell";
 }
-
-// Change focus functions to no-ops
-// The focus concept live entirely inside the shell qml scene. Therefore
-// we don't want anything in mir to intervene with it
-// The mir DefaultShell::handle_surface_created() would give the session focus at this point
-void MirShell::focus_next() {}
-void MirShell::set_focus_to(std::shared_ptr<ms::Session> const& /*focus*/) {}
-void MirShell::handle_surface_created(std::shared_ptr<ms::Session> const& /*session*/) {}
-
 
 mir::frontend::SurfaceId MirShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& requestParameters)
 {
@@ -65,17 +59,17 @@ mir::frontend::SurfaceId MirShell::create_surface(std::shared_ptr<ms::Session> c
 
      tracepoint(qtmirserver, surfacePlacementEnd);
 
-     return ShellWrapper::create_surface(session, placedParameters);
+     return AbstractShell::create_surface(session, placedParameters);
 }
 
 int MirShell::set_surface_attribute(
-    std::shared_ptr<ms::Session> const& session,
-    mir::frontend::SurfaceId surface_id,
+    std::shared_ptr<mir::scene::Session> const& session,
+    std::shared_ptr<mir::scene::Surface> const& surface,
     MirSurfaceAttrib attrib,
     int value)
 {
-    auto const result = ShellWrapper::set_surface_attribute(session, surface_id, attrib, value);
-    Q_EMIT surfaceAttributeChanged(session->surface(surface_id).get(), attrib, result);
+    auto const result = AbstractShell::set_surface_attribute(session, surface, attrib, value);
+    Q_EMIT surfaceAttributeChanged(surface.get(), attrib, result);
 
     return result;
 }

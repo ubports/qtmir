@@ -17,7 +17,7 @@
 #ifndef QPAMIRSERVER_SHELL_H
 #define QPAMIRSERVER_SHELL_H
 
-#include <mir/shell/shell_wrapper.h>
+#include <mir/shell/abstract_shell.h>
 #include <QObject>
 
 namespace mir {
@@ -26,28 +26,25 @@ namespace mir {
     }
 }
 
-class MirShell : public QObject, public mir::shell::ShellWrapper
+class MirShell : public QObject, public mir::shell::AbstractShell
 {
     Q_OBJECT
 
 public:
     MirShell(
-        std::shared_ptr<mir::shell::Shell> const& wrapped,
+        std::shared_ptr<mir::shell::InputTargeter> const& input_targeter,
+        std::shared_ptr<mir::scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout);
-
-    void focus_next() override;
-
-    void set_focus_to(std::shared_ptr<mir::scene::Session> const& focus) override;
-
-    void handle_surface_created(std::shared_ptr<mir::scene::Session> const& session) override;
 
     virtual mir::frontend::SurfaceId create_surface(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params);
 
-    virtual int set_surface_attribute(
+    int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& session,
-        mir::frontend::SurfaceId surface_id,
+        std::shared_ptr<mir::scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
-        int value);
+        int value) override;
 
 Q_SIGNALS:
     void surfaceAttributeChanged(mir::scene::Surface const*, const MirSurfaceAttrib, const int);

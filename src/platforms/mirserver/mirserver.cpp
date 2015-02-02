@@ -90,9 +90,17 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<MirServerStatusListener>();
         });
 
-    wrap_shell([this](std::shared_ptr<msh::Shell> const& wrapped)
+    override_the_shell([this]
         {
-            return std::make_shared<MirShell>(wrapped, the_shell_display_layout());
+            auto const shell = std::make_shared<MirShell>(
+                the_input_targeter(),
+                the_surface_coordinator(),
+                the_session_coordinator(),
+                the_prompt_session_manager(),
+                the_shell_display_layout());
+
+            m_shell = shell;
+            return shell;
         });
 
     set_terminator([&](int)
@@ -147,8 +155,5 @@ PromptSessionListener *MirServer::promptSessionListener()
 
 MirShell *MirServer::shell()
 {
-    auto sharedPtr = the_shell();
-    if (sharedPtr.unique()) return 0;
-
-    return static_cast<MirShell*>(sharedPtr.get());
+    return m_shell.lock().get();
 }

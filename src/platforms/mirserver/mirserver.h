@@ -62,6 +62,7 @@ public:
 
 private:
     std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
+    std::weak_ptr<MirShell> m_shell;
 };
 
 #endif // MIRSERVER_H
