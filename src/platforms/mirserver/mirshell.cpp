@@ -53,8 +53,8 @@ mir::frontend::SurfaceId MirShell::create_surface(std::shared_ptr<ms::Session> c
      m_displayLayout->size_to_output(rect);
      placedParameters.size = rect.size;
 
-     qCDebug(QTMIR_MIR_MESSAGES) << "MirPlacementStrategy: requested ("
-         << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and returned ("
+     qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::create_surface(): size requested ("
+         << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
          << placedParameters.size.width.as_int() << "," << placedParameters.size.height.as_int() << ")";
 
      tracepoint(qtmirserver, surfacePlacementEnd);
