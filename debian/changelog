@@ -1,3 +1,60 @@
+qtmir (0.4.4+15.04.20150115-0ubuntu1) vivid; urgency=low
+
+  [ Gerry Boland ]
+  * Add Wakelock support - ensures device drops to deep-sleep mode only
+    when all AppMan suspend tasks have completed
+
+  [ Ricardo Mendoza ]
+  * Reduce suspend timeout to half of the previous value because the
+    long value was too apparent on fast paced apps, like web games of
+    music players; it broke the user experience according to design.
+    (LP: #1402650)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 15 Jan 2015 15:19:46 +0000
+
+qtmir (0.4.4+15.04.20150114-0ubuntu1) vivid; urgency=low
+
+  [ Gerry Boland ]
+  * Depend on :native version of g++ to allow cross-compiling to work.
+    (LP: #1353855)
+
+  [ Michał Sawicz ]
+  * Declare the QByteArray in callDispatcher so it doesn't get deleted
+    before it's copied. (LP: #1408819)
+
+  [ Josh Arenson ]
+  * Assign touch events area to the correct values.
+
+  [ Albert Astals ]
+  * Move the creation of the surface observer to
+    SessionListener::surface_created
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 14 Jan 2015 09:07:53 +0000
+
+qtmir (0.4.4+15.04.20150109-0ubuntu1) vivid; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Nick Dedekind ]
+  * Notify prompt sessions that sessions have been suspended/resumed.
+    (LP: #1355173, #1384950)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Jan 2015 17:26:00 +0000
+
+qtmir (0.4.4+15.04.20150108.1-0ubuntu1) vivid; urgency=low
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+  [ Cemil Azizoglu ]
+  * Rebuild for Mir 0.10.
+
+  [ Nick Dedekind ]
+  * Compatibility for Mir 0.10.0
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 08 Jan 2015 14:18:06 +0000
+
 qtmir (0.4.4+15.04.20141215-0ubuntu1) vivid; urgency=low
 
   [ Daniel d'Andrada ]

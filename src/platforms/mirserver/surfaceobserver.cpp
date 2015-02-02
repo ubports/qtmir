@@ -12,28 +12,28 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
-#ifndef MOCK_MIR_PROMPT_SESSION_H
-#define MOCK_MIR_PROMPT_SESSION_H
+#include "surfaceobserver.h"
 
-#include <mir/scene/prompt_session.h>
-#include <gmock/gmock.h>
+#include <QMetaObject>
 
-namespace mir {
-namespace scene {
-
-struct MockPromptSession : public PromptSession
+SurfaceObserver::SurfaceObserver()
+    : m_listener(nullptr)
+    , m_framesPosted(false)
 {
-public:
-    MOCK_METHOD1(start, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(stop, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(suspend, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(resume, void(std::shared_ptr<Session> const&));
-};
+}
 
-} // namespace scene
-} // namespace mir
+void SurfaceObserver::setListener(QObject *listener) {
+    m_listener = listener;
+    if (m_framesPosted) {
+        Q_EMIT framesPosted();
+    }
+}
 
-#endif // MOCK_MIR_PROMPT_SESSION_H
+void SurfaceObserver::frame_posted(int /*frames_available*/) {
+    m_framesPosted = true;
+    if (m_listener) {
+        Q_EMIT framesPosted();
+    }
+}

@@ -26,6 +26,9 @@
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 
+// mirserver
+#include "surfaceobserver.h"
+
 // common
 #include <debughelpers.h>
 
@@ -185,8 +188,8 @@ bool fillInMirEvent(MirEvent &mirEvent,
             pointer.raw_y =  touchPoint.rawScreenPositions().at(0).y();
         }
 
-        pointer.touch_major = 0.;
-        pointer.touch_minor = 0.;
+        pointer.touch_major = touchPoint.rect().width();
+        pointer.touch_minor = touchPoint.rect().height();
         pointer.size = 0.;
         pointer.pressure = touchPoint.pressure();
         pointer.orientation = 0.;
@@ -231,21 +234,9 @@ public Q_SLOTS:
     }
 };
 
-MirSurfaceObserver::MirSurfaceObserver()
-    : m_listener(nullptr) {
-}
-
-void MirSurfaceObserver::setListener(QObject *listener) {
-    m_listener = listener;
-}
-
-void MirSurfaceObserver::frame_posted(int frames_available) {
-    Q_UNUSED(frames_available);
-    QMetaObject::invokeMethod(m_listener, "surfaceDamaged");
-}
-
 MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
                                SessionInterface* session,
+                               std::shared_ptr<SurfaceObserver> observer,
                                QQuickItem *parent)
     : QQuickItem(parent)
     , m_surface(surface)
@@ -258,9 +249,11 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::MirSurfaceItem";
 
-    m_surfaceObserver = std::make_shared<MirSurfaceObserver>();
-    m_surfaceObserver->setListener(this);
-    m_surface->add_observer(m_surfaceObserver);
+    m_surfaceObserver = observer;
+    if (observer) {
+        connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurfaceItem::surfaceDamaged);
+        observer->setListener(this);
+    }
 
     setSmooth(true);
     setFlag(QQuickItem::ItemHasContents, true); //so scene graph will render this item
