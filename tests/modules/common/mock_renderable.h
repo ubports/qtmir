@@ -34,9 +34,7 @@ struct MockRenderable : public Renderable
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float() );
     MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(visible, bool());
     MOCK_CONST_METHOD0(shaped, bool());
-    MOCK_CONST_METHOD0(buffers_ready_for_compositor, int());
 };
 
 } // namespace graphics

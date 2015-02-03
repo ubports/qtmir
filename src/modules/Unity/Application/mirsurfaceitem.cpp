@@ -440,10 +440,11 @@ bool MirSurfaceItem::updateTexture()    // called by rendering thread (scene gra
     ensureProvider();
     bool textureUpdated = false;
 
+    const void* const user_id = (void*)123;
     std::unique_ptr<mg::Renderable> renderable =
-        m_surface->compositor_snapshot((void*)123/*user_id*/);
+        m_surface->compositor_snapshot(user_id);
 
-    if (renderable->buffers_ready_for_compositor() > 0) {
+    if (m_surface->buffers_ready_for_compositor(user_id) > 0) {
         if (!m_textureProvider->t) {
             m_textureProvider->t = new MirBufferSGTexture(renderable->buffer());
         } else {
@@ -455,7 +456,7 @@ bool MirSurfaceItem::updateTexture()    // called by rendering thread (scene gra
         textureUpdated = true;
     }
 
-    if (renderable->buffers_ready_for_compositor() > 0) {
+    if (m_surface->buffers_ready_for_compositor(user_id) > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
         // restart the frame dropper so that we have enough time to render the next frame.
         m_frameDropperTimer.start();
@@ -747,18 +748,17 @@ void MirSurfaceItem::dropPendingBuffers()
 {
     QMutexLocker locker(&m_mutex);
 
-    std::unique_ptr<mg::Renderable> renderable =
-        m_surface->compositor_snapshot((void*)123/*user_id*/);
+    const void* const user_id = (void*)123;  // TODO: Multimonitor support
 
-    while (renderable->buffers_ready_for_compositor() > 0) {
+    while (m_surface->buffers_ready_for_compositor(user_id) > 0) {
         // The line below looks like an innocent, effect-less, getter. But as this
         // method returns a unique_pointer, not holding its reference causes the
         // buffer to be destroyed/released straight away.
-        m_surface->compositor_snapshot((void*)123/*user_id*/)->buffer();
+        m_surface->compositor_snapshot(user_id)->buffer();
         qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffers()"
             << "surface =" << this
             << "buffer dropped."
-            << renderable->buffers_ready_for_compositor()
+            << m_surface->buffers_ready_for_compositor(user_id)
             << "left.";
     }
 }
