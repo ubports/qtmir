@@ -32,17 +32,17 @@ class MirShell : public QObject, public mir::shell::AbstractShell
 
 public:
     MirShell(
-        std::shared_ptr<mir::shell::InputTargeter> const& input_targeter,
-        std::shared_ptr<mir::scene::SurfaceCoordinator> const& surface_coordinator,
-        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<mir::shell::DisplayLayout> const& display_layout);
+        const std::shared_ptr<mir::shell::InputTargeter> &inputTargeter,
+        const std::shared_ptr<mir::scene::SurfaceCoordinator> &surfaceCoordinator,
+        const std::shared_ptr<mir::scene::SessionCoordinator> &sessionCoordinator,
+        const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager,
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
 
-    virtual mir::frontend::SurfaceId create_surface(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params);
+    virtual mir::frontend::SurfaceId create_surface(const std::shared_ptr<mir::scene::Session>& session, const mir::scene::SurfaceCreationParameters &params);
 
     int set_surface_attribute(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
+        const std::shared_ptr<mir::scene::Session> &session,
+        const std::shared_ptr<mir::scene::Surface> &surface,
         MirSurfaceAttrib attrib,
         int value) override;
 

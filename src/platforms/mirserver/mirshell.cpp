@@ -27,18 +27,18 @@ namespace ms = mir::scene;
 using mir::shell::AbstractShell;
 
 MirShell::MirShell(
-    std::shared_ptr<mir::shell::InputTargeter> const& input_targeter,
-    std::shared_ptr<mir::scene::SurfaceCoordinator> const& surface_coordinator,
-    std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager,
-    std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
-    AbstractShell(input_targeter, surface_coordinator, session_coordinator, prompt_session_manager),
-    m_displayLayout{display_layout}
+    const std::shared_ptr<mir::shell::InputTargeter> &inputTargeter,
+    const std::shared_ptr<mir::scene::SurfaceCoordinator> &surfaceCoordinator,
+    const std::shared_ptr<mir::scene::SessionCoordinator> &sessionCoordinator,
+    const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager,
+    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
+    AbstractShell(inputTargeter, surfaceCoordinator, sessionCoordinator, promptSessionManager),
+    m_displayLayout{displayLayout}
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::MirShell";
 }
 
-mir::frontend::SurfaceId MirShell::create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& requestParameters)
+mir::frontend::SurfaceId MirShell::create_surface(const std::shared_ptr<ms::Session> &session, const ms::SurfaceCreationParameters &requestParameters)
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
@@ -63,8 +63,8 @@ mir::frontend::SurfaceId MirShell::create_surface(std::shared_ptr<ms::Session> c
 }
 
 int MirShell::set_surface_attribute(
-    std::shared_ptr<mir::scene::Session> const& session,
-    std::shared_ptr<mir::scene::Surface> const& surface,
+    const std::shared_ptr<mir::scene::Session> &session,
+    const std::shared_ptr<mir::scene::Surface> &surface,
     MirSurfaceAttrib attrib,
     int value)
 {
