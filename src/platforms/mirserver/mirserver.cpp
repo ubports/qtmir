@@ -90,10 +90,6 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
 
     override_the_gl_config([]
         {
-#ifdef QTMIR_USE_OPENGL
-            // Should desktop-GL be desired, need to bind that API before a context is created
-            eglBindAPI(EGL_OPENGL_API);
-#endif
             return std::make_shared<MirGLConfig>();
         });
 
