@@ -40,6 +40,7 @@ namespace mir {
 }
 
 class MirServer;
+class MirShell;
 
 namespace qtmir {
 
@@ -54,6 +55,7 @@ class MirSurfaceManager : public MirSurfaceItemModel
 public:
     explicit MirSurfaceManager(
         const QSharedPointer<MirServer>& mirServer,
+        MirShell *shell,
         SessionManager* sessionManager,
         QObject *parent = 0
     );
@@ -80,6 +82,7 @@ protected:
 
 private:
     QSharedPointer<MirServer> m_mirServer;
+    MirShell *const m_shell;
     SessionManager* m_sessionManager;
     static MirSurfaceManager *the_surface_manager;
 };
