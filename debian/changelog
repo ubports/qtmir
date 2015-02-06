@@ -1,3 +1,21 @@
+qtmir (0.4.4+15.04.20150206-0ubuntu1) vivid; urgency=medium
+
+  [ Gerry Boland ]
+  * Explicitly setting GL-mode breaks GTK app rendering. Removing the
+    hack appears to just work (LP: #1401968)
+
+  [ Michał Sawicz ]
+  * Add moot autopkgtest to run the standard unit tests
+
+  [ Albert Astals Cid ]
+  * Fix demo shell import name
+
+  [ Daniel d'Andrada ]
+  * Don't suspend&resume the main stage app when switching focus from
+    side to main stage
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Feb 2015 10:23:19 +0000
+
 qtmir (0.4.4+15.04.20150115-0ubuntu1) vivid; urgency=low
 
   [ Gerry Boland ]
