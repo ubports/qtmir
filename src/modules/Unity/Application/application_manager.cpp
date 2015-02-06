@@ -413,7 +413,9 @@ bool ApplicationManager::focusApplication(const QString &inputAppId)
     if (m_focusedApplication) {
         m_focusedApplication->setFocused(false);
         Application *lastApplication = applicationForStage(application->stage());
-        suspendApplication(lastApplication);
+        if (lastApplication != application) {
+            suspendApplication(lastApplication);
+        }
     }
 
     if (application->stage() == Application::MainStage) {
