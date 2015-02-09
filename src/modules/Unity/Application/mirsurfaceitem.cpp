@@ -23,6 +23,7 @@
 #include "mirbuffersgtexture.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
+#include "mirshell.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 
@@ -236,11 +237,13 @@ public Q_SLOTS:
 
 MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
                                SessionInterface* session,
+                               MirShell *shell,
                                std::shared_ptr<SurfaceObserver> observer,
                                QQuickItem *parent)
     : QQuickItem(parent)
     , m_surface(surface)
     , m_session(session)
+    , m_shell(shell)
     , m_firstFrameDrawn(false)
     , m_live(true)
     , m_orientation(Qt::PortraitOrientation)
@@ -668,14 +671,14 @@ bool MirSurfaceItem::hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::Touch
 void MirSurfaceItem::setType(const Type &type)
 {
     if (this->type() != type) {
-        m_surface->configure(mir_surface_attrib_type, static_cast<int>(type));
+        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_type, static_cast<int>(type));
     }
 }
 
 void MirSurfaceItem::setState(const State &state)
 {
     if (this->state() != state) {
-        m_surface->configure(mir_surface_attrib_state, static_cast<int>(state));
+        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_state, static_cast<int>(state));
     }
 }
 
@@ -737,9 +740,9 @@ void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::updateMirSurfaceFocus" << focused;
     if (focused) {
-        m_surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
     } else {
-        m_surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_unfocused);
     }
 }
 

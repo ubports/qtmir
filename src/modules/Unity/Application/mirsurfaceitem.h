@@ -34,6 +34,7 @@
 #include "session_interface.h"
 
 class SurfaceObserver;
+class MirShell;
 
 namespace qtmir {
 
@@ -57,6 +58,7 @@ class MirSurfaceItem : public QQuickItem
 public:
     explicit MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
                             SessionInterface* session,
+                            MirShell *shell,
                             std::shared_ptr<SurfaceObserver> observer,
                             QQuickItem *parent = 0);
     ~MirSurfaceItem();
@@ -171,6 +173,7 @@ private:
 
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
+    MirShell *const m_shell;
     bool m_firstFrameDrawn;
     bool m_live;
     Qt::ScreenOrientation m_orientation; //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)

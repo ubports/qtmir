@@ -31,7 +31,7 @@
 #include "nativeinterface.h"
 #include "mirserver.h"
 #include "sessionlistener.h"
-#include "surfaceconfigurator.h"
+#include "mirshell.h"
 #include "logging.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
@@ -51,9 +51,9 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
-void connectToSurfaceConfigurator(MirSurfaceManager *manager, SurfaceConfigurator *surfaceConfigurator)
+void connectToShell(MirSurfaceManager *manager, MirShell *shell)
 {
-    QObject::connect(surfaceConfigurator, &SurfaceConfigurator::surfaceAttributeChanged,
+    QObject::connect(shell, &MirShell::surfaceAttributeChanged,
                      manager, &MirSurfaceManager::onSurfaceAttributeChanged);
 }
 
@@ -70,22 +70,24 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        SurfaceConfigurator *surfaceConfigurator = static_cast<SurfaceConfigurator*>(nativeInterface->nativeResourceForIntegration("SessionConfigurator"));
+        MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        the_surface_manager = new MirSurfaceManager(nativeInterface->m_mirServer, SessionManager::singleton());
+        the_surface_manager = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
         connectToSessionListener(the_surface_manager, sessionListener);
-        connectToSurfaceConfigurator(the_surface_manager, surfaceConfigurator);
+        connectToShell(the_surface_manager, shell);
     }
     return the_surface_manager;
 }
 
 MirSurfaceManager::MirSurfaceManager(
         const QSharedPointer<MirServer>& mirServer,
+        MirShell *shell,
         SessionManager* sessionManager,
         QObject *parent)
     : MirSurfaceItemModel(parent)
     , m_mirServer(mirServer)
+    , m_shell(shell)
     , m_sessionManager(sessionManager)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::MirSurfaceManager - this=" << this;
@@ -107,7 +109,7 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurfaceItem(surface, session, observer);
+    auto qmlSurface = new MirSurfaceItem(surface, session, m_shell, observer);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToItemHash.insert(surface.get(), qmlSurface);

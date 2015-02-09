@@ -396,12 +396,12 @@ void QtEventFeeder::stop()
     // not used
 }
 
-void QtEventFeeder::configuration_changed(nsecs_t when)
+void QtEventFeeder::configuration_changed(std::chrono::nanoseconds when)
 {
     Q_UNUSED(when);
 }
 
-void QtEventFeeder::device_reset(int32_t device_id, nsecs_t when)
+void QtEventFeeder::device_reset(int32_t device_id, std::chrono::nanoseconds when)
 {
     Q_UNUSED(device_id);
     Q_UNUSED(when);
