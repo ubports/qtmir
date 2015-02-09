@@ -1,3 +1,17 @@
+qtmir (0.4.4+15.04.20150209-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * QtMir changes required to support the Mir branch of the same name.
+    Landing soon. (LP: #1395581)
+
+  [ Alan Griffiths ]
+  * Port to the msh::Shell API in Mir
+
+  [ Robert Carr ]
+  * Bump build-dep to mir 0.11.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Feb 2015 16:29:08 +0000
+
 qtmir (0.4.4+15.04.20150206-0ubuntu1) vivid; urgency=medium
 
   [ Gerry Boland ]
