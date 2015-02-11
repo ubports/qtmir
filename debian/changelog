@@ -4,6 +4,38 @@ qtmir (0.4.5) UNRELEASED; urgency=medium
 
  -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Fri, 31 Oct 2014 10:17:42 -0200
 
+qtmir (0.4.4+15.04.20150209-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * QtMir changes required to support the Mir branch of the same name.
+    Landing soon. (LP: #1395581)
+
+  [ Alan Griffiths ]
+  * Port to the msh::Shell API in Mir
+
+  [ Robert Carr ]
+  * Bump build-dep to mir 0.11.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 09 Feb 2015 16:29:08 +0000
+
+qtmir (0.4.4+15.04.20150206-0ubuntu1) vivid; urgency=medium
+
+  [ Gerry Boland ]
+  * Explicitly setting GL-mode breaks GTK app rendering. Removing the
+    hack appears to just work (LP: #1401968)
+
+  [ Michał Sawicz ]
+  * Add moot autopkgtest to run the standard unit tests
+
+  [ Albert Astals Cid ]
+  * Fix demo shell import name
+
+  [ Daniel d'Andrada ]
+  * Don't suspend&resume the main stage app when switching focus from
+    side to main stage
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 06 Feb 2015 10:23:19 +0000
+
 qtmir (0.4.4+15.04.20150115-0ubuntu1) vivid; urgency=low
 
   [ Gerry Boland ]

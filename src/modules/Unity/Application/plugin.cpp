@@ -78,6 +78,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<qtmir::Session*>("Session*");
         qRegisterMetaType<qtmir::SessionInterface*>("SessionInterface*");
         qRegisterMetaType<qtmir::SessionModel*>("SessionModel*");
+        qRegisterMetaType<MirSurfaceAttrib>("MirSurfaceAttrib");
 
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
                     uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
