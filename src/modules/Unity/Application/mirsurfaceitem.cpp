@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -45,6 +45,7 @@
 
 // Mir
 #include <mir/geometry/rectangle.h>
+#include <mir/events/event_builders.h>
 #include <mir_toolkit/event.h>
 
 namespace mg = mir::graphics;
@@ -53,160 +54,109 @@ namespace qtmir {
 
 namespace {
 
-bool fillInMirEvent(MirEvent &mirEvent, QKeyEvent *qtEvent)
+// Would be better if QMouseEvent had nativeModifiers
+MirInputEventModifiers
+getMirModifiersFromQt(Qt::KeyboardModifiers mods)
 {
-    mirEvent.type = mir_event_type_key;
+    MirInputEventModifiers m_mods = mir_input_event_modifier_none;
+    if (mods & Qt::ShiftModifier)
+        m_mods |= mir_input_event_modifier_shift;
+    if (mods & Qt::ControlModifier)
+        m_mods |= mir_input_event_modifier_ctrl;
+    if (mods & Qt::AltModifier)
+        m_mods |= mir_input_event_modifier_alt;
+    if (mods & Qt::MetaModifier)
+        m_mods |= mir_input_event_modifier_meta;
 
-    // don't care
-    mirEvent.key.device_id = 0;
-    mirEvent.key.source_id = 0;
-
-    switch (qtEvent->type()) {
-        case QEvent::KeyPress:
-            mirEvent.key.action = mir_key_action_down;
-            break;
-        case QEvent::KeyRelease:
-            mirEvent.key.action = mir_key_action_up;
-            break;
-        default:
-            return false;
-    }
-
-    // don't care
-    mirEvent.key.flags = (MirKeyFlag)0;
-
-    mirEvent.key.modifiers = qtEvent->nativeModifiers();
-    mirEvent.key.key_code = qtEvent->nativeVirtualKey();
-    mirEvent.key.scan_code = qtEvent->nativeScanCode();
-
-    // TODO: It's not the best that we lose the actual repeat count from
-    // the original mir event (pre QtEventFeeder)...of course it will
-    // not matter for Qt clients...so this is an improvement for now.
-    mirEvent.key.repeat_count = qtEvent->isAutoRepeat() ? 1 : 0;
-
-    // Don't care
-    mirEvent.key.down_time = 0;
-
-    mirEvent.key.event_time = qtEvent->timestamp() * 1000000;
-
-    // Don't care
-    mirEvent.key.is_system_key = 0;
-
-    return true;
+    return m_mods;
 }
 
-bool fillInMirEvent(MirEvent &mirEvent,
-                    const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
-                    Qt::TouchPointStates qtTouchPointStates,
-                    ulong qtTimestamp)
+mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerInputEventAction action)
 {
-    mirEvent.type = mir_event_type_motion;
+    auto timestamp = qtEvent->timestamp() * 1000000;
+    auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
 
-    // Hardcoding it for now
-    // TODO: Gather this info from a QTouchDevice-derived class created by QtEventFeeder
-    mirEvent.motion.device_id = 0;
-    mirEvent.motion.source_id = 0x00001002; // AINPUT_SOURCE_TOUCHSCREEN; https://bugs.launchpad.net/bugs/1311687
+    std::vector<MirPointerInputEventButton> buttons;
+    if (qtEvent->buttons() & Qt::LeftButton)
+        buttons.push_back(mir_pointer_input_button_primary);
+    if (qtEvent->buttons() & Qt::RightButton)
+        buttons.push_back(mir_pointer_input_button_secondary);
+    if (qtEvent->buttons() & Qt::MidButton)
+        buttons.push_back(mir_pointer_input_button_tertiary);
 
-    // NB: it's assumed that touch points are pressed and released
-    // one at a time.
+    return mir::events::make_event(0 /*DeviceID */, timestamp, modifiers, action,
+                                   buttons, qtEvent->x(), qtEvent->y(), 0, 0);
+}
 
-    if (qtTouchPointStates.testFlag(Qt::TouchPointPressed)) {
-        if (qtTouchPoints.count() > 1) {
-            mirEvent.motion.action = mir_motion_action_pointer_down;
-        } else {
-            mirEvent.motion.action = mir_motion_action_down;
-        }
-    } else if (qtTouchPointStates.testFlag(Qt::TouchPointReleased)) {
-        if (qtTouchPoints.count() > 1) {
-            mirEvent.motion.action = mir_motion_action_pointer_up;
-        } else {
-            mirEvent.motion.action = mir_motion_action_up;
-        }
-    } else {
-            mirEvent.motion.action = mir_motion_action_move;
+mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerInputEventAction action)
+{
+    auto timestamp = qtEvent->timestamp() * 1000000;
+
+    std::vector<MirPointerInputEventButton> buttons;
+
+    return mir::events::make_event(0 /*DeviceID */, timestamp, mir_input_event_modifier_none, action,
+                                   buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0);
+}
+
+mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
+{
+    MirKeyInputEventAction action = mir_key_input_event_action_down;
+    switch (qtEvent->type())
+    {
+    case QEvent::KeyPress:
+        action = mir_key_input_event_action_down;
+        break;
+    case QEvent::KeyRelease:
+        action = mir_key_input_event_action_up;
+        break;
+    default:
+        break;
     }
+    if (qtEvent->isAutoRepeat())
+        action = mir_key_input_event_action_repeat;
 
-    // not used
-    mirEvent.motion.flags = (MirMotionFlag) 0;
+    return mir::events::make_event(0 /* DeviceID */, qtEvent->timestamp() * 1000000,
+                           action, qtEvent->nativeVirtualKey(),
+                           qtEvent->nativeScanCode(),
+                           qtEvent->nativeModifiers());
+}
 
-    // TODO: map QInputEvent::modifiers()
-    mirEvent.motion.modifiers = 0;
-
-    // not used
-    mirEvent.motion.edge_flags = 0;
-
-    // TODO
-    mirEvent.motion.button_state = (MirMotionButton) 0;
-
-    // Does it matter?
-    mirEvent.motion.x_offset = 0.;
-    mirEvent.motion.y_offset = 0.;
-    mirEvent.motion.x_precision = 0.1;
-    mirEvent.motion.y_precision = 0.1;
-
-    // TODO. Not useful to Qt at least...
-    mirEvent.motion.down_time = 0;
-
-    // Note: QtEventFeeder scales the event time down, scale it back up - precision is
-    // lost but the time difference should still be accurate to milliseconds
-    mirEvent.motion.event_time = static_cast<nsecs_t>(qtTimestamp) * 1000000;
-
-    mirEvent.motion.pointer_count = qtTouchPoints.count();
+mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
+                            const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
+                            Qt::TouchPointStates /* qtTouchPointStates */,
+                            ulong qtTimestamp)
+{
+    auto modifiers = getMirModifiersFromQt(qmods);
+    auto ev = mir::events::make_event(0, static_cast<int64_t>(qtTimestamp) * 1000000,
+                                      modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
         auto touchPoint = qtTouchPoints.at(i);
-        auto &pointer = mirEvent.motion.pointer_coordinates[i];
+        auto id = touchPoint.id();
 
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-        // When multiple touch points are transmitted with a MirEvent
-        // and one of them (only one is allowed) indicates a presse
-        // state change the index is encoded in the second byte of the
-        // action value.
-        const int mir_motion_event_pointer_index_shift = 8;
-        if (mirEvent.motion.action == mir_motion_action_pointer_up &&
-            touchPoint.state() == Qt::TouchPointReleased)
+        MirTouchInputEventTouchAction action = mir_touch_input_event_action_change;
+        if (touchPoint.state() == Qt::TouchPointReleased)
         {
-            mirEvent.motion.action |= i << mir_motion_event_pointer_index_shift;
+            action = mir_touch_input_event_action_up;
         }
-        if (mirEvent.motion.action == mir_motion_action_pointer_down &&
-            touchPoint.state() == Qt::TouchPointPressed)
+        if (touchPoint.state() == Qt::TouchPointPressed)
         {
-            mirEvent.motion.action |= i << mir_motion_event_pointer_index_shift;
+            action = mir_touch_input_event_action_down;
         }
 
-
-        pointer.id = touchPoint.id();
-        pointer.x = touchPoint.pos().x();
-        pointer.y = touchPoint.pos().y();
-
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1311809
-
-        if (touchPoint.rawScreenPositions().isEmpty()) {
-            pointer.raw_x = 0.;
-            pointer.raw_y = 0.;
-        } else {
-            pointer.raw_x = touchPoint.rawScreenPositions().at(0).x();
-            pointer.raw_y =  touchPoint.rawScreenPositions().at(0).y();
-        }
-
-        pointer.touch_major = touchPoint.rect().width();
-        pointer.touch_minor = touchPoint.rect().height();
-        pointer.size = 0.;
-        pointer.pressure = touchPoint.pressure();
-        pointer.orientation = 0.;
-        pointer.vscroll = 0.;
-        pointer.hscroll = 0.;
-
-        // TODO: Mir supports a wider set of tool types (finger, stylus, mouse, eraser, unknown).
-        // so just because we are not TouchPoint::Pen does not mean we are motion_tool_type_finger...
-        // however this is the best we can do with the QtEventFeeder approach.
+        MirTouchInputEventTouchTooltype tooltype = mir_touch_input_tool_type_finger;
         if (touchPoint.flags() & QTouchEvent::TouchPoint::Pen)
-            pointer.tool_type = mir_motion_tool_type_stylus;
-        else
-            pointer.tool_type = mir_motion_tool_type_finger;
+            tooltype = mir_touch_input_tool_type_stylus;
+
+        mir::events::add_touch(*ev, id, action, tooltype,
+                               touchPoint.pos().x(), touchPoint.pos().y(),
+                               touchPoint.pressure(),
+                               touchPoint.rect().width(),
+                               touchPoint.rect().height(),
+                               0 /* size */);
     }
 
-    return true;
+    return ev;
 }
 
 } // namespace {
@@ -511,18 +461,23 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
 void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
 {
-    // TODO: Implement for desktop support
-    event->ignore();
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
+    m_surface->consume(*ev);
+    event->accept();
 }
 
 void MirSurfaceItem::mouseMoveEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event);
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_motion);
+    m_surface->consume(*ev);
+    event->accept();
 }
 
 void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event);
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_up);
+    m_surface->consume(*ev);
+    event->accept();
 }
 
 void MirSurfaceItem::wheelEvent(QWheelEvent *event)
@@ -530,20 +485,39 @@ void MirSurfaceItem::wheelEvent(QWheelEvent *event)
     Q_UNUSED(event);
 }
 
+void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
+{
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_enter);
+    m_surface->consume(*ev);
+    event->accept();
+}
+
+void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
+{
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_leave);
+    m_surface->consume(*ev);
+    event->accept();
+}
+
+void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
+{
+    auto ev = makeMirEvent(event, mir_pointer_input_event_action_motion);
+    m_surface->consume(*ev);
+    event->accept();
+}
+
 void MirSurfaceItem::keyPressEvent(QKeyEvent *qtEvent)
 {
-    MirEvent mirEvent;
-    if (fillInMirEvent(mirEvent, qtEvent)) {
-        m_surface->consume(mirEvent);
-    }
+    auto ev = makeMirEvent(qtEvent);
+    m_surface->consume(*ev);
+    qtEvent->accept();
 }
 
 void MirSurfaceItem::keyReleaseEvent(QKeyEvent *qtEvent)
 {
-    MirEvent mirEvent;
-    if (fillInMirEvent(mirEvent, qtEvent)) {
-        m_surface->consume(mirEvent);
-    }
+    auto ev = makeMirEvent(qtEvent);
+    m_surface->consume(*ev);
+    qtEvent->accept();
 }
 
 QString MirSurfaceItem::appId() const
@@ -559,8 +533,6 @@ QString MirSurfaceItem::appId() const
 
 void MirSurfaceItem::endCurrentTouchSequence(ulong timestamp)
 {
-    MirEvent mirEvent;
-
     Q_ASSERT(m_lastTouchEvent);
     Q_ASSERT(m_lastTouchEvent->type != QEvent::TouchEnd);
     Q_ASSERT(m_lastTouchEvent->touchPoints.count() > 0);
@@ -584,10 +556,10 @@ void MirSurfaceItem::endCurrentTouchSequence(ulong timestamp)
 
         touchEvent.updateTouchPointStatesAndType();
 
-        if (fillInMirEvent(mirEvent, touchEvent.touchPoints,
-                           touchEvent.touchPointStates, touchEvent.timestamp)) {
-            m_surface->consume(mirEvent);
-        }
+        auto ev = makeMirEvent(touchEvent.modifiers, touchEvent.touchPoints, 
+                               touchEvent.touchPointStates, touchEvent.timestamp);
+        m_surface->consume(*ev);
+
         *m_lastTouchEvent = touchEvent;
 
         touchEvent.touchPoints.removeAt(0);
@@ -596,11 +568,10 @@ void MirSurfaceItem::endCurrentTouchSequence(ulong timestamp)
 
 void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
             ulong timestamp,
+            Qt::KeyboardModifiers mods,
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates)
 {
-    MirEvent mirEvent;
-
     if (eventType == QEvent::TouchBegin && m_lastTouchEvent && m_lastTouchEvent->type != QEvent::TouchEnd) {
         qCWarning(QTMIR_SURFACES) << qPrintable(QString("MirSurfaceItem(%1) - Got a QEvent::TouchBegin while "
             "there's still an active/unfinished touch sequence.").arg(appId()));
@@ -608,9 +579,8 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
         endCurrentTouchSequence(timestamp);
     }
 
-    if (fillInMirEvent(mirEvent, touchPoints, touchPointStates, timestamp)) {
-        m_surface->consume(mirEvent);
-    }
+    auto ev = makeMirEvent(mods, touchPoints, touchPointStates, timestamp);
+    m_surface->consume(*ev);
 
     if (!m_lastTouchEvent) {
         m_lastTouchEvent = new TouchEvent;
@@ -625,6 +595,7 @@ void MirSurfaceItem::touchEvent(QTouchEvent *event)
 {
     bool accepted = processTouchEvent(event->type(),
             event->timestamp(),
+            event->modifiers(),
             event->touchPoints(),
             event->touchPointStates());
     event->setAccepted(accepted);
@@ -633,6 +604,7 @@ void MirSurfaceItem::touchEvent(QTouchEvent *event)
 bool MirSurfaceItem::processTouchEvent(
         int eventType,
         ulong timestamp,
+        Qt::KeyboardModifiers mods,
         const QList<QTouchEvent::TouchPoint> &touchPoints,
         Qt::TouchPointStates touchPointStates)
 {
@@ -640,7 +612,7 @@ bool MirSurfaceItem::processTouchEvent(
     if (type() == InputMethod && eventType == QEvent::TouchBegin) {
         // FIXME: Hack to get the VKB use case working while we don't have the proper solution in place.
         if (hasTouchInsideUbuntuKeyboard(touchPoints)) {
-            validateAndDeliverTouchEvent(eventType, timestamp, touchPoints, touchPointStates);
+            validateAndDeliverTouchEvent(eventType, timestamp, mods, touchPoints, touchPointStates);
         } else {
             accepted = false;
         }
@@ -648,7 +620,7 @@ bool MirSurfaceItem::processTouchEvent(
     } else {
         // NB: If we are getting QEvent::TouchUpdate or QEvent::TouchEnd it's because we've
         // previously accepted the corresponding QEvent::TouchBegin
-        validateAndDeliverTouchEvent(eventType, timestamp, touchPoints, touchPointStates);
+        validateAndDeliverTouchEvent(eventType, timestamp, mods, touchPoints, touchPointStates);
     }
     return accepted;
 }
