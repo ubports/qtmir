@@ -372,9 +372,11 @@ bool ApplicationManager::suspendApplication(Application *application)
         return false;
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::suspendApplication - appId=" << application->appId();
 
-    // Present in exceptions list, return.
-    if (!m_lifecycleExceptions.filter(application->appId().section('_',0,0)).empty())
+    // Present in exceptions list, explicitly release wakelock and return.
+    if (!m_lifecycleExceptions.filter(application->appId().section('_',0,0)).empty()) {
+        m_sharedWakelock->release(application);
         return false;
+    }
 
     if (m_forceDashActive && application->appId() == "unity8-dash") {
         return false;
