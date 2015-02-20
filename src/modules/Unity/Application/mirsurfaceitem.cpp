@@ -462,7 +462,8 @@ bool MirSurfaceItem::updateTexture()    // called by rendering thread (scene gra
     if (m_surface->buffers_ready_for_compositor(userId) > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
         // restart the frame dropper so that we have enough time to render the next frame.
-        m_frameDropperTimer.start();
+        // queued since the timer lives in a different thread
+        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
     }
 
     m_textureProvider->smooth = smooth();
