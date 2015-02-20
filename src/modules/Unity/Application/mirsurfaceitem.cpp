@@ -461,9 +461,20 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
 void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
-    m_surface->consume(*ev);
-    event->accept();
+    if (type() == InputMethod) {
+        // FIXME: Hack to get the VKB use case working while we don't have the proper solution in place.
+        if (isMouseInsideUbuntuKeyboard(event)) {
+            auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
+            m_surface->consume(*ev);
+            event->accept();
+        } else {
+            event->ignore();
+        }
+    } else {
+        auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
+        m_surface->consume(*ev);
+        event->accept();
+    }
 }
 
 void MirSurfaceItem::mouseMoveEvent(QMouseEvent *event)
@@ -639,6 +650,18 @@ bool MirSurfaceItem::hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::Touch
         }
     }
     return false;
+}
+
+bool MirSurfaceItem::isMouseInsideUbuntuKeyboard(const QMouseEvent *event)
+{
+    UbuntuKeyboardInfo *ubuntuKeyboardInfo = UbuntuKeyboardInfo::instance();
+
+    const QPointF &pos = event->localPos();
+
+    return pos.x() >= ubuntuKeyboardInfo->x()
+        && pos.x() <= (ubuntuKeyboardInfo->x() + ubuntuKeyboardInfo->width())
+        && pos.y() >= ubuntuKeyboardInfo->y()
+        && pos.y() <= (ubuntuKeyboardInfo->y() + ubuntuKeyboardInfo->height());
 }
 
 void MirSurfaceItem::setType(const Type &type)

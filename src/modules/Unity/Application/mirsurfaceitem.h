@@ -162,6 +162,7 @@ private:
     void setSurfaceValid(const bool);
 
     bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);
+    bool isMouseInsideUbuntuKeyboard(const QMouseEvent *event);
     void syncSurfaceSizeWithItemSize();
 
     bool clientIsRunning() const;
