@@ -748,26 +748,26 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
         return;
     }
 
-    boost::optional<QString> desktopFileName{ info->getParameter("--desktop_file_hint=") };
+    QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
-    if (!desktopFileName) {
+    if (desktopFileName.isNull()) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                    << "as no desktop_file_hint specified";
+                    << "as it was not launched by upstart, and no desktop_file_hint is specified";
         return;
     }
 
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
 
     // Guess appId from the desktop file hint
-    QString appId = toShortAppIdIfPossible(desktopFileName.get().remove(QRegExp(".desktop$")).split('/').last());
+    QString appId = toShortAppIdIfPossible(desktopFileName.remove(QRegExp(".desktop$")).split('/').last());
 
     // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
     // case we didn't get an existing .desktop file path
     DesktopFileReader* desktopData;
-    if (QFileInfo::exists(desktopFileName.get())) {
-        desktopData = m_desktopFileReaderFactory->createInstance(appId, QFileInfo(desktopFileName.get()));
+    if (QFileInfo::exists(desktopFileName)) {
+        desktopData = m_desktopFileReaderFactory->createInstance(appId, QFileInfo(desktopFileName));
     } else {
-        qCDebug(QTMIR_APPLICATIONS) << "Unable to find file:" << desktopFileName.get()
+        qCDebug(QTMIR_APPLICATIONS) << "Unable to find file:" << desktopFileName
                                     << "so will search standard paths for one named" << appId << ".desktop";
         desktopData = m_desktopFileReaderFactory->createInstance(appId, m_taskController->findDesktopFileForAppId(appId));
     }
@@ -793,9 +793,9 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
 
     // if stage supplied in CLI, fetch that
     Application::Stage stage = Application::MainStage;
-    boost::optional<QString> stageParam = info->getParameter("--stage_hint=");
+    QString stageParam = info->getParameter("--stage_hint=");
 
-    if (stageParam && stageParam.get() == "side_stage") {
+    if (stageParam == "side_stage") {
         stage = Application::SideStage;
     }
 
