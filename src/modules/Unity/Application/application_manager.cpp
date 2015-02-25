@@ -372,7 +372,8 @@ bool ApplicationManager::suspendApplication(Application *application)
         return false;
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::suspendApplication - appId=" << application->appId();
 
-    // Present in exceptions list, explicitly release wakelock and return.
+    // Present in exceptions list, explicitly release wakelock and return. There's no need to keep the wakelock
+    // as the process is never suspended and thus has no cleanup to perform when (for example) the display is blanked
     if (!m_lifecycleExceptions.filter(application->appId().section('_',0,0)).empty()) {
         m_sharedWakelock->release(application);
         return false;
