@@ -1,3 +1,13 @@
+qtmir (0.4.4+15.04.20150227.1-0ubuntu1) vivid; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Kevin DuBois ]
+  * No change rebuild for mir 0.12
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 27 Feb 2015 18:53:32 +0000
+
 qtmir (0.4.4+15.04.20150220-0ubuntu1) vivid; urgency=medium
 
   [ Albert Astals Cid ]
