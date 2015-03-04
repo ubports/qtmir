@@ -131,9 +131,6 @@ TEST_F(SharedWakelockTest, acquireThenReleaseDestroysTheWakelock)
     EXPECT_CALL(wakelockDBusMethodSpy, 0, "clearSysState",
                 QVariantList() << QString("cookie"));
 
-    // Ensure a wakelock released
-//    wakelockEnabledSpy.wait();
-//    EXPECT_FALSE(wakelockEnabledSpy.empty());
     EXPECT_FALSE(wakelock.enabled());
 }
 
@@ -171,108 +168,181 @@ TEST_F(SharedWakelockTest, doubleAcquireThenReleaseBySameOwnerDestroysWakelock)
 
     wakelock.acquire(object.data());
     wakelock.acquire(object.data());
-//    wakelockEnabledSpy.wait();
     wakelock.release(object.data());
     wakelockEnabledSpy.wait();
     EXPECT_FALSE(wakelock.enabled());
 }
 
-/*
- * TEST(SharedWakelock, acquireByDifferentOwnerOnlyCreatesASingleWakelock)
+TEST_F(SharedWakelockTest, acquireByDifferentOwnerOnlyCreatesASingleWakelock)
 {
-    using namespace ::testing;
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
-    QScopedPointer<QObject> app1(new QObject);
-    QScopedPointer<QObject> app2(new QObject);
+    SharedWakelock wakelock(dbus.systemConnection());
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1).WillOnce(Return(new QObject));
-    sharedWakelock.acquire(app1.data());
-    sharedWakelock.acquire(app2.data());
+    // Verify the DBus method is called & wakelock
+    QSignalSpy wakelockDBusMethodSpy(&powerdMockInterface(), SIGNAL(MethodCalled(const QString &, const QVariantList &)));
+
+    QScopedPointer<QObject> object1(new QObject);
+    QScopedPointer<QObject> object2(new QObject);
+    wakelock.acquire(object1.data());
+    wakelock.acquire(object2.data());
+
+    wakelockDBusMethodSpy.wait();
+    EXPECT_EQ(wakelockDBusMethodSpy.count(), 1);
 }
 
-TEST(SharedWakelock, twoOwnersWhenOneReleasesStillHoldWakelock)
+TEST_F(SharedWakelockTest, twoOwnersWhenBothReleaseWakelockReleased)
 {
-    using namespace ::testing;
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
-    QScopedPointer<QObject> app1(new QObject);
-    QScopedPointer<QObject> app2(new QObject);
+    SharedWakelock wakelock(dbus.systemConnection());
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1).WillOnce(Return(new QObject));
-    sharedWakelock.acquire(app1.data());
-    sharedWakelock.acquire(app2.data());
-    sharedWakelock.release(app1.data());
-    EXPECT_TRUE(sharedWakelock.wakelockHeld());
+    QScopedPointer<QObject> object1(new QObject);
+    QScopedPointer<QObject> object2(new QObject);
+    wakelock.acquire(object1.data());
+    wakelock.acquire(object2.data());
+
+    QSignalSpy wakelockEnabledSpy(&wakelock, SIGNAL( enabledChanged(bool) ));
+
+    wakelock.release(object1.data());
+    wakelock.release(object2.data());
+
+    wakelockEnabledSpy.wait();
+    EXPECT_FALSE(wakelock.enabled());
 }
 
-TEST(SharedWakelock, twoOwnersWhenBothReleaseWakelockReleased)
+TEST_F(SharedWakelockTest, doubleReleaseOfSingleOwnerIgnored)
 {
-    using namespace ::testing;
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
-    QScopedPointer<QObject> app1(new QObject);
-    QScopedPointer<QObject> app2(new QObject);
+    SharedWakelock wakelock(dbus.systemConnection());
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1).WillOnce(Return(new QObject));
-    sharedWakelock.acquire(app1.data());
-    sharedWakelock.acquire(app2.data());
-    sharedWakelock.release(app2.data());
-    sharedWakelock.release(app1.data());
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    QSignalSpy wakelockEnabledSpy(&wakelock, SIGNAL( enabledChanged(bool) ));
+
+    QScopedPointer<QObject> object1(new QObject);
+    QScopedPointer<QObject> object2(new QObject);
+    wakelock.acquire(object1.data());
+    wakelock.acquire(object2.data());
+    wakelock.release(object1.data());
+
+    wakelockEnabledSpy.wait();
+
+    wakelock.release(object1.data());
+
+    EXPECT_TRUE(wakelock.enabled());
 }
 
-TEST(SharedWakelock, doubleReleaseOfSingleOwnerIgnored)
+TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)
 {
-    using namespace ::testing;
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
-    QScopedPointer<QObject> app1(new QObject);
-    QScopedPointer<QObject> app2(new QObject);
+    SharedWakelock wakelock(dbus.systemConnection());
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1).WillOnce(Return(new QObject));
-    sharedWakelock.acquire(app1.data());
-    sharedWakelock.acquire(app2.data());
-    sharedWakelock.release(app1.data());
-    EXPECT_TRUE(sharedWakelock.wakelockHeld());
+    QSignalSpy wakelockEnabledSpy(&wakelock, SIGNAL( enabledChanged(bool) ));
 
-    sharedWakelock.release(app1.data());
-    EXPECT_TRUE(sharedWakelock.wakelockHeld());
+    wakelock.acquire(nullptr);
+
+    wakelockEnabledSpy.wait(200); // have to wait to see if anything happens
+
+    EXPECT_FALSE(wakelock.enabled());
 }
 
-TEST(SharedWakelock, nullOwnerAcquireIgnored)
+TEST_F(SharedWakelockTest, nullReleaseAcquireIgnored)
 {
-    using namespace ::testing;
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
+    SharedWakelock wakelock(dbus.systemConnection());
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(0);
-    sharedWakelock.acquire(nullptr);
+    wakelock.release(nullptr);
+
+    EXPECT_FALSE(wakelock.enabled());
 }
 
-TEST(SharedWakelock, nullOwnerReleaseIgnored)
+TEST_F(SharedWakelockTest, ifOwnerDestroyedWakelockReleased)
 {
-    using namespace ::testing;
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "clearSysState", "s", "", "").waitForFinished();
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(0);
-    sharedWakelock.release(nullptr);
+    SharedWakelock wakelock(dbus.systemConnection());
+
+    QSignalSpy wakelockEnabledSpy(&wakelock, SIGNAL( enabledChanged(bool) ));
+
+    QScopedPointer<QObject> object(new QObject);
+    wakelock.acquire(object.data());
+    wakelockEnabledSpy.wait();
+
+    // Verify the DBus method is called
+    QSignalSpy wakelockDBusMethodSpy(&powerdMockInterface(), SIGNAL(MethodCalled(const QString &, const QVariantList &)));
+
+    object.reset();
+    wakelockDBusMethodSpy.wait();
+
+    EXPECT_FALSE(wakelockDBusMethodSpy.empty());
+    EXPECT_CALL(wakelockDBusMethodSpy, 0, "clearSysState",
+                QVariantList() << QString("cookie"));
+
+    EXPECT_FALSE(wakelock.enabled());
 }
 
-TEST(SharedWakelock, ifOwnerDestroyedWakelockReleased)
+TEST_F(SharedWakelockTest, reloadCachedWakelockCookie)
 {
-    using namespace ::testing;
+    const char cookieFile[] = "/tmp/qtmir_powerd_cookie";
 
-    testing::NiceMock<MockSharedWakelock> sharedWakelock;
-    QScopedPointer<QObject> app1(new QObject);
+    // Custom Deleter for QScopedPointer to delete the qtmir cookie file no matter what
+    struct ScopedQFileCustomDeleter
+    {
+        static inline void cleanup(QFile *file)
+        {
+            file->remove();
+            delete file;
+        }
+    };
+    QScopedPointer<QFile, ScopedQFileCustomDeleter> cookieCache(new QFile(cookieFile));
+    cookieCache->open(QFile::WriteOnly | QFile::Text);
+    cookieCache->write("myCookie");
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1).WillOnce(Return(new QObject));
-    sharedWakelock.acquire(app1.data());
-    app1.reset();
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    SharedWakelock wakelock(dbus.systemConnection());
+    EXPECT_TRUE(wakelock.enabled());
 }
-*/
+
+TEST_F(SharedWakelockTest, wakelockReleasedOnSharedWakelockDestroyed)
+{
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "clearSysState", "s", "", "").waitForFinished();
+
+    auto wakelock = new SharedWakelock(dbus.systemConnection());
+
+    QSignalSpy wakelockEnabledSpy(wakelock, SIGNAL( enabledChanged(bool) ));
+
+    QScopedPointer<QObject> object(new QObject);
+    wakelock->acquire(object.data());
+    wakelockEnabledSpy.wait(); // wait for wakelock to be enabled
+
+    QSignalSpy wakelockDBusMethodSpy(&powerdMockInterface(), SIGNAL(MethodCalled(const QString &, const QVariantList &)));
+    delete wakelock;
+    wakelockDBusMethodSpy.wait();
+
+    EXPECT_FALSE(wakelockDBusMethodSpy.empty());
+    EXPECT_CALL(wakelockDBusMethodSpy, 0, "clearSysState",
+                QVariantList() << QString("cookie"));
+}
 
 
 // Define custom main() as these tests rely on a QEventLoop

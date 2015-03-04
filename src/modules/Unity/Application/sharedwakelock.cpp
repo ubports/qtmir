@@ -67,7 +67,6 @@ public:
     void acquire()
     {
         if (m_wakelockEnabled) { // wakelock already requested/set
-            qDebug() << "EEE";
             return;
         }
         m_wakelockEnabled = true;
