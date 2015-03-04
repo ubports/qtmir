@@ -34,10 +34,10 @@ public:
     SharedWakelock(const QDBusConnection& connection = QDBusConnection::systemBus());
     virtual ~SharedWakelock();
 
-    bool enabled() const;
+    virtual bool enabled() const;
 
-    void acquire(const QObject *caller);
-    Q_SLOT void release(const QObject *caller);
+    virtual void acquire(const QObject *caller);
+    Q_SLOT virtual void release(const QObject *caller);
 
 Q_SIGNALS:
     void enabledChanged(bool enabled);

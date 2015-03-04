@@ -2268,7 +2268,7 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
 
     applicationManager.unfocusCurrentApplication();
 
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    EXPECT_FALSE(sharedWakelock.enabled());
     EXPECT_EQ(application->state(), Application::Running);
 }
 
@@ -2307,6 +2307,6 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnUnSuspen
 
     applicationManager.setSuspended(true);
 
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    EXPECT_FALSE(sharedWakelock.enabled());
     EXPECT_EQ(application->state(), Application::Running);
 }
