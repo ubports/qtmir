@@ -41,14 +41,13 @@ public:
 };
 
 AbstractDBusServiceMonitor::AbstractDBusServiceMonitor(const QString &service, const QString &path,
-                                                       const QString &interface, const Bus bus,
+                                                       const QString &interface, const QDBusConnection &connection,
                                                        QObject *parent)
     : QObject(parent)
     , m_service(service)
     , m_path(path)
     , m_interface(interface)
-    , m_busConnection((bus == SystemBus) ? QDBusConnection::systemBus()
-                                         : QDBusConnection::sessionBus())
+    , m_busConnection(connection)
     , m_watcher(new QDBusServiceWatcher(service, m_busConnection))
     , m_dbusInterface(nullptr)
 {
