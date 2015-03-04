@@ -19,26 +19,31 @@
 #ifndef WAKELOCK_H
 #define WAKELOCK_H
 
-#include <QObject>
+#include <QDBusConnection>
 #include <QSet>
 #include <QScopedPointer>
 
 namespace qtmir {
 
+class Wakelock;
 class SharedWakelock : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool enabled READ enabled NOTIFY enabledChanged)
 public:
-    SharedWakelock() = default;
-    virtual ~SharedWakelock() noexcept = default;
+    SharedWakelock(const QDBusConnection& connection = QDBusConnection::systemBus());
+    virtual ~SharedWakelock();
+
+    bool enabled() const;
 
     void acquire(const QObject *caller);
     Q_SLOT void release(const QObject *caller);
 
-protected:
-    virtual QObject* createWakelock(); // override to test
+Q_SIGNALS:
+    void enabledChanged(bool enabled);
 
-    QScopedPointer<QObject> m_wakelock;
+protected:
+    QScopedPointer<Wakelock> m_wakelock;
     QSet<const QObject *> m_owners;
 
 private:

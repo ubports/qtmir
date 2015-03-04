@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="/">
+  <interface name="com.canonical.powerd">
+    <!-- Properties -->
+
+    <!-- Functions -->
+    <method name="requestSysState">
+      <arg type="s" name="name" direction="in" />
+      <arg type="i" name="state" direction="in" />
+      <arg type="s" name="cookie" direction="out" />
+    </method>
+
+    <method name="clearSysState">
+      <arg type="s" name="cookie" direction="in" />
+    </method>
+
+<!-- NOTE: everything else is unnecessary for this test, and requires extra work to support.
+    <method name="requestWakeup">
+      <arg type="s" name="name" direction="in" />
+      <arg type="t" name="time" direction="in" />
+      <arg type="s" name="cookie" direction="out" />
+    </method>
+
+    <method name="enableProximityHandling">
+      <arg type="s" name="name" direction="in" />
+    </method>
+
+    <method name="disableProximityHandling">
+      <arg type="s" name="name" direction="in" />
+    </method>
+
+    <method name="clearWakeup">
+      <arg type="s" name="cookie" direction="in" />
+    </method>
+
+    <method name="registerClient">
+        <arg type="s" name="name" direction="in" />
+    </method>
+
+    <method name="unregisterClient">
+        <arg type="s" name="name" direction="in" />
+    </method>
+
+    <method name="ackStateChange">
+        <arg type="i" name="state" direction="in" />
+    </method>
+
+    <!-- User settings -/->
+    <method name="userAutobrightnessEnable">
+        <arg type="b" name="enable" direction="in" />
+    </method>
+
+    <method name="getBrightnessParams">
+        <!-- Returns min, max, and default brighness and whether or not
+             autobrightness is supported, in that order -/->
+        <arg type="(iiiib)" name="params" direction="out" />
+    </method>
+
+    <method name="setUserBrightness">
+        <arg type="i" name="brightness" direction="in" />
+    </method>
+
+    <!-- for debug/testing -/->
+    <method name="listSysRequests">
+      <arg type="a(ssi)" name="requestList" direction="out" />
+    </method>
+
+    <method name="getSysRequestStats">
+      <arg type="a(ssuttt)" name="requestStats" direction="out" />
+    </method>
+
+    <!-- Signals -/->
+    <signal name="SysPowerStateChange">
+      <arg type="i" name="sysState" direction="out" />
+    </signal>
+
+    <signal name="Wakeup">
+    </signal>
+-->
+  </interface>
+</node>
+

@@ -6,6 +6,14 @@ set(
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/modules/common
+  ${QTDBUSTEST_INCLUDE_DIRS}
+  ${QTDBUSMOCK_INCLUDE_DIRS}
+)
+
+qt5_add_dbus_interface(
+  SHARED_WAKELOCK_TEST_SOURCES
+  com.canonical.powerd.xml
+  PowerdInterface
 )
 
 add_executable(sharedwakelock_test ${SHARED_WAKELOCK_TEST_SOURCES})
@@ -15,8 +23,12 @@ target_link_libraries(
 
   unityapplicationplugin
 
+  Qt5::Test
+
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
+  ${QTDBUSTEST_LIBRARIES}
+  ${QTDBUSMOCK_LIBRARIES}
 )
 
 add_test(SharedWakelock, sharedwakelock_test)

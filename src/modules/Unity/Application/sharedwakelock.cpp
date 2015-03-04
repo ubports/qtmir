@@ -29,39 +29,60 @@ const int POWERD_SYS_STATE_ACTIVE = 1; // copied from private header file powerd
 const char cookieFile[] = "/tmp/qtmir_powerd_cookie";
 
 /**
- * @brief The Wakelock class - on creation acquires a system wakelock, on destruction releases it
- * Designed in the spirit of RAII. Should the PowerD service vanish from the bus, the wakelock
- * will be re-acquired when it re-joins the bus.
+ * @brief The Wakelock class - wraps a single system wakelock
+ * Should the PowerD service vanish from the bus, the wakelock will be re-acquired when it re-joins the bus.
  */
 class Wakelock : public AbstractDBusServiceMonitor
 {
     Q_OBJECT
 public:
-    Wakelock() noexcept
-        : AbstractDBusServiceMonitor("com.canonical.powerd", "/com/canonical/powerd", "com.canonical.powerd", SystemBus)
+    Wakelock(const QDBusConnection &connection) noexcept
+        : AbstractDBusServiceMonitor("com.canonical.powerd", "/com/canonical/powerd", "com.canonical.powerd", connection)
+        , m_wakelockEnabled(false)
     {
         // (re-)acquire wake lock when powerd (re-)appears on the bus
         QObject::connect(this, &Wakelock::serviceAvailableChanged,
-                         this, &Wakelock::acquireWakelock);
-
-        if (!serviceAvailable()) {
-            qWarning() << "com.canonical.powerd DBus interface not available, waiting for it";
-            return;
-        }
+                         this, &Wakelock::onServiceAvailableChanged);
 
         // WORKAROUND: if shell crashed while it held a wakelock, due to bug lp:1409722 powerd will not have released
         // the wakelock for it. As workaround, we save the cookie to file and restore it if possible.
-        QFile cookie(cookieFile);
-        if (cookie.exists() && cookie.open(QFile::ReadOnly | QFile::Text)) {
-            m_cookie = cookie.readAll();
-        } else {
-            acquireWakelock(true);
+        QFile cookieCache(cookieFile);
+        if (cookieCache.exists() && cookieCache.open(QFile::ReadOnly | QFile::Text)) {
+            m_wakelockEnabled = true;
+            m_cookie = cookieCache.readAll();
         }
     }
 
     virtual ~Wakelock() noexcept
     {
+        release();
+    }
+
+    Q_SIGNAL void enabledChanged(bool);
+    bool enabled() const
+    {
+        return m_wakelockEnabled;
+    }
+
+    void acquire()
+    {
+        if (m_wakelockEnabled) { // wakelock already requested/set
+            qDebug() << "EEE";
+            return;
+        }
+        m_wakelockEnabled = true;
+
+        acquireWakelock();
+    }
+
+    void release()
+    {
         QFile::remove(cookieFile);
+
+        if (!m_wakelockEnabled) { // no wakelock already requested/set
+            return;
+        }
+        m_wakelockEnabled = false;
 
         if (!serviceAvailable()) {
             qWarning() << "com.canonical.powerd DBus interface not available";
@@ -69,17 +90,66 @@ public:
         }
 
         if (!m_cookie.isEmpty()) {
-            dbusInterface()->asyncCall("clearSysState", m_cookie);
+            dbusInterface()->asyncCall("clearSysState", QString(m_cookie));
+            qCDebug(QTMIR_SESSIONS) << "Wakelock released" << m_cookie;
+            m_cookie.clear();
+            Q_EMIT enabledChanged(false);
         }
-        qCDebug(QTMIR_SESSIONS) << "Wakelock released";
     }
 
 private Q_SLOTS:
-    void acquireWakelock(bool available)
+    void onServiceAvailableChanged(bool available)
     {
-        if (!available) {
-            m_cookie.clear(); // clear cookie so that when powerd re-appears, new cookie will be set
+        // Assumption is if service vanishes & reappears on the bus, it has lost its wakelock state and
+        // we must re-acquire if necessary
+        if (!m_wakelockEnabled) {
+            return;
+        }
+
+        if (available) {
+            acquireWakelock();
+        } else {
+            m_cookie.clear();
             QFile::remove(cookieFile);
+        }
+    }
+
+    void onWakeLockAcquired(QDBusPendingCallWatcher *call)
+    {
+        QDBusPendingReply<QString> reply = *call;
+        if (reply.isError()) {
+            qCDebug(QTMIR_SESSIONS) << "Wakelock was NOT acquired, error:"
+                                    << QDBusError::errorString(reply.error().type());
+            call->deleteLater();
+            return;
+        }
+        QByteArray cookie = reply.argumentAt<0>().toLatin1();
+        call->deleteLater();
+
+        if (!m_wakelockEnabled) {
+            // notified wakelock was created, but we don't want it - release it immediately
+            dbusInterface()->asyncCall("clearSysState", QString(cookie));
+        }
+
+        if (!m_cookie.isEmpty()) { // don't overwrite existing cookie
+            qCDebug(QTMIR_SESSIONS) << "DAFUQ?";
+        }
+        m_cookie = cookie;
+
+        // see WORKAROUND above for why we save cookie to disk
+        QFile cookieCache(cookieFile);
+        cookieCache.open(QFile::WriteOnly | QFile::Text);
+        cookieCache.write(m_cookie);
+
+        qCDebug(QTMIR_SESSIONS) << "Wakelock acquired" << m_cookie;
+        Q_EMIT enabledChanged(true);
+    }
+
+private:
+    void acquireWakelock()
+    {
+        if (!serviceAvailable()) {
+            qWarning() << "com.canonical.powerd DBus interface not available, waiting for it";
             return;
         }
 
@@ -90,29 +160,8 @@ private Q_SLOTS:
                          this, &Wakelock::onWakeLockAcquired);
     }
 
-    void onWakeLockAcquired(QDBusPendingCallWatcher *call)
-    {
-        if (m_cookie.isEmpty()) { // don't overwrite existing cookie
-            QDBusPendingReply<QString> reply = *call;
-            if (reply.isError()) {
-                qCDebug(QTMIR_SESSIONS) << "Wakelock was NOT acquired, error:"
-                                        << QDBusError::errorString(reply.error().type());
-            } else {
-                m_cookie = reply.argumentAt<0>();
-
-                // see WORKAROUND above for why we save cookie to disk
-                QFile cookie(cookieFile);
-                cookie.open(QFile::WriteOnly | QFile::Text);
-                cookie.write(m_cookie.toLatin1());
-
-                qCDebug(QTMIR_SESSIONS) << "Wakelock acquired" << m_cookie;
-            }
-        }
-        call->deleteLater();
-    }
-
-private:
-    QString m_cookie;
+    QByteArray m_cookie;
+    bool m_wakelockEnabled;
 
     Q_DISABLE_COPY(Wakelock)
 };
@@ -132,36 +181,48 @@ private:
  * Note a caller cannot have multiple shares of the wakelock. Multiple calls to acquire are ignored.
  */
 
-QObject* SharedWakelock::createWakelock()
+SharedWakelock::SharedWakelock(const QDBusConnection &connection)
+    : m_wakelock(new Wakelock(connection))
 {
-    return new Wakelock;
+    connect(m_wakelock.data(), &Wakelock::enabledChanged,
+            this, &SharedWakelock::enabledChanged);
 }
 
+// Define empty deconstructor here, as QScopedPointer<Wakelock> requires the destructor of the Wakelock class
+// to be defined first.
+SharedWakelock::~SharedWakelock()
+{
+}
+
+bool SharedWakelock::enabled() const
+{
+    return m_wakelock->enabled();
+}
 
 void SharedWakelock::acquire(const QObject *caller)
 {
-    if (m_owners.contains(caller) || caller == nullptr) {
+    if (caller == nullptr || m_owners.contains(caller)) {
         return;
     }
 
     // register a slot to remove itself from owners list if destroyed
     QObject::connect(caller, &QObject::destroyed, this, &SharedWakelock::release);
 
-    if (m_wakelock.isNull()) {
-        m_wakelock.reset(createWakelock());
-    }
+    m_wakelock->acquire();
 
     m_owners.insert(caller);
 }
 
 void SharedWakelock::release(const QObject *caller)
 {
-    if (!m_owners.remove(caller) || caller == nullptr) {
+    if (caller == nullptr || !m_owners.remove(caller)) {
         return;
     }
 
-    if (m_owners.empty() && m_wakelock) {
-        m_wakelock.reset();
+    QObject::disconnect(caller, &QObject::destroyed, this, 0);
+
+    if (m_owners.empty()) {
+        m_wakelock->release();
     }
 }
 
