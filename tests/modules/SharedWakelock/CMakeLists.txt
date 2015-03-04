@@ -10,12 +10,6 @@ include_directories(
   ${QTDBUSMOCK_INCLUDE_DIRS}
 )
 
-qt5_add_dbus_interface(
-  SHARED_WAKELOCK_TEST_SOURCES
-  com.canonical.powerd.xml
-  PowerdInterface
-)
-
 add_executable(sharedwakelock_test ${SHARED_WAKELOCK_TEST_SOURCES})
 
 target_link_libraries(

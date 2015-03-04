@@ -23,15 +23,14 @@
 #include <QSignalSpy>
 #include <gtest/gtest.h>
 
-#include "PowerdInterface.h"
-
 using namespace qtmir;
 using namespace testing;
 using namespace QtDBusTest;
 using namespace QtDBusMock;
 
-const char POWERD_INTERFACE[] = "com.canonical.powerd";
+const char POWERD_NAME[] = "com.canonical.powerd";
 const char POWERD_PATH[] = "/com/canonical/powerd";
+const char POWERD_INTERFACE[] = "com.canonical.powerd";
 
 class SharedWakelockTest: public Test
 {
@@ -39,18 +38,12 @@ protected:
     SharedWakelockTest()
         : mock(dbus)
     {
-        mock.registerCustomMock(POWERD_INTERFACE,
+        mock.registerCustomMock(POWERD_NAME,
                                 POWERD_PATH,
-                                ComCanonicalPowerdInterface::staticInterfaceName(),
+                                POWERD_INTERFACE,
                                 QDBusConnection::SystemBus);
         
         dbus.startServices();
-        
-        powerd.reset(
-                    new ComCanonicalPowerdInterface(
-                        POWERD_INTERFACE,
-                        POWERD_PATH,
-                        dbus.systemConnection()));
     }
     
     virtual ~SharedWakelockTest()
@@ -58,9 +51,9 @@ protected:
 
     virtual OrgFreedesktopDBusMockInterface& powerdMockInterface()
     {
-        return mock.mockInterface(POWERD_INTERFACE,
+        return mock.mockInterface(POWERD_NAME,
                                   POWERD_PATH,
-                                  ComCanonicalPowerdInterface::staticInterfaceName(),
+                                  POWERD_INTERFACE,
                                   QDBusConnection::SystemBus);
     }
 
@@ -76,7 +69,6 @@ protected:
     
     DBusTestRunner dbus;
     DBusMock mock;
-    QScopedPointer<ComCanonicalPowerdInterface> powerd;
 };
 
 TEST_F(SharedWakelockTest, acquireCreatesAWakelock)
