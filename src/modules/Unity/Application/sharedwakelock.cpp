@@ -128,10 +128,11 @@ private Q_SLOTS:
         if (!m_wakelockEnabled) {
             // notified wakelock was created, but we don't want it - release it immediately
             dbusInterface()->asyncCall("clearSysState", QString(cookie));
+            return;
         }
 
         if (!m_cookie.isEmpty()) { // don't overwrite existing cookie
-            qCDebug(QTMIR_SESSIONS) << "DAFUQ?";
+            qCWarning(QTMIR_SESSIONS) << "Overwriting existing cookie - should not happen!!";
         }
         m_cookie = cookie;
 

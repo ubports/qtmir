@@ -249,7 +249,10 @@ TEST_F(SharedWakelockTest, wakelockAcquireReleaseFlood)
     wakelock.release(object.data());
     wakelock.acquire(object.data());
     wakelock.release(object.data());
-    wakelockEnabledSpy.wait(200);
+    while (wakelockEnabledSpy.wait(100)) {
+        if (wakelockEnabledSpy.count() == 6)
+            break;
+    }
     EXPECT_FALSE(wakelock.enabled());
 }
 
