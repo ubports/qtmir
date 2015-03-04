@@ -237,6 +237,30 @@ TEST_F(SharedWakelockTest, doubleReleaseOfSingleOwnerIgnored)
     EXPECT_TRUE(wakelock.enabled());
 }
 
+TEST_F(SharedWakelockTest, wakelockAcquireReleaseFlood)
+{
+    // Define mock impementation of the DBus method
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "clearSysState", "s", "", "").waitForFinished();
+
+    SharedWakelock wakelock(dbus.systemConnection());
+
+    QSignalSpy wakelockEnabledSpy(&wakelock, SIGNAL( enabledChanged(bool) ));
+
+    QScopedPointer<QObject> object(new QObject);
+    wakelock.acquire(object.data());
+    wakelock.release(object.data());
+    wakelock.acquire(object.data());
+    wakelock.release(object.data());
+    wakelock.acquire(object.data());
+    wakelock.release(object.data());
+    wakelockEnabledSpy.wait(200);
+    EXPECT_FALSE(wakelock.enabled());
+}
+
 TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)
 {
     // Define mock impementation of the DBus method
