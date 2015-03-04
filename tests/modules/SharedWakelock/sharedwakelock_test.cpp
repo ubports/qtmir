@@ -57,6 +57,17 @@ protected:
                                   QDBusConnection::SystemBus);
     }
 
+    void implementRequestSysState() {
+        // Defines the mock impementation of this DBus method
+        powerdMockInterface().AddMethod("com.canonical.powerd",
+                "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    }
+
+    void implementClearSysState() {
+        powerdMockInterface().AddMethod("com.canonical.powerd",
+                "clearSysState", "s", "", "").waitForFinished();
+    }
+
     void EXPECT_CALL(const QList<QVariantList> &spy, int index,
                      const QString &name, const QVariantList &args)
     {
@@ -73,9 +84,7 @@ protected:
 
 TEST_F(SharedWakelockTest, acquireCreatesAWakelock)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -99,12 +108,8 @@ TEST_F(SharedWakelockTest, acquireCreatesAWakelock)
 
 TEST_F(SharedWakelockTest, acquireThenReleaseDestroysTheWakelock)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
-
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "clearSysState", "s", "", "").waitForFinished();
+    implementRequestSysState();
+    implementClearSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -128,8 +133,7 @@ TEST_F(SharedWakelockTest, acquireThenReleaseDestroysTheWakelock)
 
 TEST_F(SharedWakelockTest, doubleAcquireBySameOwnerOnlyCreatesASingleWakelock)
 {
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -146,12 +150,8 @@ TEST_F(SharedWakelockTest, doubleAcquireBySameOwnerOnlyCreatesASingleWakelock)
 
 TEST_F(SharedWakelockTest, doubleAcquireThenReleaseBySameOwnerDestroysWakelock)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
-
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "clearSysState", "s", "", "").waitForFinished();
+    implementRequestSysState();
+    implementClearSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -167,8 +167,7 @@ TEST_F(SharedWakelockTest, doubleAcquireThenReleaseBySameOwnerDestroysWakelock)
 
 TEST_F(SharedWakelockTest, acquireByDifferentOwnerOnlyCreatesASingleWakelock)
 {
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -186,9 +185,7 @@ TEST_F(SharedWakelockTest, acquireByDifferentOwnerOnlyCreatesASingleWakelock)
 
 TEST_F(SharedWakelockTest, twoOwnersWhenBothReleaseWakelockReleased)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -208,9 +205,7 @@ TEST_F(SharedWakelockTest, twoOwnersWhenBothReleaseWakelockReleased)
 
 TEST_F(SharedWakelockTest, doubleReleaseOfSingleOwnerIgnored)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -231,12 +226,8 @@ TEST_F(SharedWakelockTest, doubleReleaseOfSingleOwnerIgnored)
 
 TEST_F(SharedWakelockTest, wakelockAcquireReleaseFlood)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
-
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "clearSysState", "s", "", "").waitForFinished();
+    implementRequestSysState();
+    implementClearSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -258,9 +249,7 @@ TEST_F(SharedWakelockTest, wakelockAcquireReleaseFlood)
 
 TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -275,9 +264,7 @@ TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)
 
 TEST_F(SharedWakelockTest, nullReleaseAcquireIgnored)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
+    implementRequestSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -288,12 +275,8 @@ TEST_F(SharedWakelockTest, nullReleaseAcquireIgnored)
 
 TEST_F(SharedWakelockTest, ifOwnerDestroyedWakelockReleased)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
-
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "clearSysState", "s", "", "").waitForFinished();
+    implementRequestSysState();
+    implementClearSysState();
 
     SharedWakelock wakelock(dbus.systemConnection());
 
@@ -339,12 +322,8 @@ TEST_F(SharedWakelockTest, reloadCachedWakelockCookie)
 
 TEST_F(SharedWakelockTest, wakelockReleasedOnSharedWakelockDestroyed)
 {
-    // Define mock impementation of the DBus method
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "requestSysState", "si", "s", "ret = 'cookie'").waitForFinished();
-
-    powerdMockInterface().AddMethod("com.canonical.powerd",
-            "clearSysState", "s", "", "").waitForFinished();
+    implementRequestSysState();
+    implementClearSysState();
 
     auto wakelock = new SharedWakelock(dbus.systemConnection());
 
