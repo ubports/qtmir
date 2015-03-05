@@ -86,6 +86,10 @@ TEST_F(SharedWakelockTest, acquireCreatesAWakelock)
 {
     implementRequestSysState();
 
+    /* Note: we pass the DBusTestRunner constructed system DBus connection instead of letting
+     * Qt create one. This is done as Qt has a non-testing friendly way of handling the built-in
+     * system and session connections, and as DBusTestRunner restarts the DBus daemon for each
+     * testcase, it unfortunately means Qt would end up pointing to a dead bus after one testcase. */
     SharedWakelock wakelock(dbus.systemConnection());
 
     // Verify the DBus method is called & wakelock
