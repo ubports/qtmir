@@ -82,9 +82,10 @@ public:
             return;
         }
         m_wakelockEnabled = false;
+        Q_EMIT enabledChanged(false);
 
         if (!serviceAvailable()) {
-            qWarning() << "com.canonical.powerd DBus interface not available";
+            qWarning() << "com.canonical.powerd DBus interface not available, presuming no wakelocks held";
             return;
         }
 
@@ -92,7 +93,6 @@ public:
             dbusInterface()->asyncCall("clearSysState", QString(m_cookie));
             qCDebug(QTMIR_SESSIONS) << "Wakelock released" << m_cookie;
             m_cookie.clear();
-            Q_EMIT enabledChanged(false);
         }
     }
 
@@ -119,6 +119,11 @@ private Q_SLOTS:
         if (reply.isError()) {
             qCDebug(QTMIR_SESSIONS) << "Wakelock was NOT acquired, error:"
                                     << QDBusError::errorString(reply.error().type());
+            if (m_wakelockEnabled) {
+                m_wakelockEnabled = false;
+                Q_EMIT enabledChanged(false);
+            }
+
             call->deleteLater();
             return;
         }
