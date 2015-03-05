@@ -31,7 +31,6 @@ public:
         ON_CALL(*this, enabled()).WillByDefault(Invoke(this, &MockSharedWakelock::doEnabled));
         ON_CALL(*this, acquire(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doAcquire));
         ON_CALL(*this, release(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doRelease));
-        qDebug() <<"AAAA";
     }
 
     MOCK_CONST_METHOD0(enabled, bool());
@@ -44,7 +43,7 @@ public:
     }
 
     void doAcquire(const QObject *object)
-    { qDebug() << "ACQ";
+    {
         if (m_owners.contains(object)) {
             return;
         }
@@ -55,7 +54,7 @@ public:
     }
 
     void doRelease(const QObject *object)
-    {qDebug() << "REL";
+    {
         if (!m_owners.remove(object)) {
             return;
         }
