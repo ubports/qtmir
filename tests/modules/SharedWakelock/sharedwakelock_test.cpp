@@ -244,11 +244,37 @@ TEST_F(SharedWakelockTest, wakelockAcquireReleaseFlood)
     wakelock.release(object.data());
     wakelock.acquire(object.data());
     wakelock.release(object.data());
-    while (wakelockEnabledSpy.wait(100)) {
-        if (wakelockEnabledSpy.count() == 6)
-            break;
-    }
+    while (wakelockEnabledSpy.wait(100)) {}
     EXPECT_FALSE(wakelock.enabled());
+}
+
+TEST_F(SharedWakelockTest, wakelockAcquireReleaseAcquireWithDelays)
+{
+    powerdMockInterface().AddMethod("com.canonical.powerd",
+            "requestSysState", "si", "s",
+            "i=100000\n" // delay the response from the mock dbus instance
+            "while i>0:\n"
+            "    i-=1\n"
+            "ret = 'cookie'").waitForFinished();
+
+    implementClearSysState();
+
+    SharedWakelock wakelock(dbus.systemConnection());
+
+    QSignalSpy wakelockDBusMethodSpy(&powerdMockInterface(), SIGNAL(MethodCalled(const QString &, const QVariantList &)));
+
+    QScopedPointer<QObject> object(new QObject);
+    wakelock.acquire(object.data());
+    wakelock.release(object.data());
+    wakelock.acquire(object.data());
+
+    while (wakelockDBusMethodSpy.wait(100)) {}
+    EXPECT_TRUE(wakelock.enabled());
+
+    // there must be at least one clearSysState call, but is not necessarily the second call
+    // should the dbus response be slow enough, it may be the third call.
+    EXPECT_CALL(wakelockDBusMethodSpy, 2, "clearSysState",
+                QVariantList() << QString("cookie"));
 }
 
 TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)

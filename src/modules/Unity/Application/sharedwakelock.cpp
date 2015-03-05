@@ -130,15 +130,12 @@ private Q_SLOTS:
         QByteArray cookie = reply.argumentAt<0>().toLatin1();
         call->deleteLater();
 
-        if (!m_wakelockEnabled) {
-            // notified wakelock was created, but we don't want it - release it immediately
+        if (!m_wakelockEnabled || !m_cookie.isEmpty()) {
+            // notified wakelock was created, but we either don't want it, or already have one - release it immediately
             dbusInterface()->asyncCall("clearSysState", QString(cookie));
             return;
         }
 
-        if (!m_cookie.isEmpty()) { // don't overwrite existing cookie
-            qCWarning(QTMIR_SESSIONS) << "Overwriting existing cookie - should not happen!!";
-        }
         m_cookie = cookie;
 
         // see WORKAROUND above for why we save cookie to disk
