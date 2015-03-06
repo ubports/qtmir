@@ -33,7 +33,6 @@
 #include "mock_desktop_file_reader.h"
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
-#include "mock_focus_controller.h"
 #include "mock_prompt_session_manager.h"
 #include "mock_prompt_session.h"
 #include "mock_shared_wakelock.h"
@@ -111,6 +110,7 @@ public:
         }
         , surfaceManager{
             mirServer,
+            mirShell,
             &sessionManager
         }
     {
@@ -150,6 +150,7 @@ public:
     testing::NiceMock<testing::MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<testing::MockSharedWakelock> sharedWakelock;
     QSharedPointer<FakeMirServer> mirServer;
+    MirShell *mirShell{nullptr};
     QSharedPointer<TaskController> taskController;
     ApplicationManager applicationManager;
     SessionManager sessionManager;

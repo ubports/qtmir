@@ -2135,3 +2135,100 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
         cv.wait(lk, [&] { return done; } );
     }
 }
+
+/*
+   1 - launch and focus a main stage app
+     * main stage app is running and focused
+   2 - launch and focus a side stage app
+     * main stage app is running but is not focused
+     * side stage app is running and has focus
+   3 - focus the main stage app
+     * main stage app is running and has focus
+     * side stage app is running but is not focused
+
+   This is a regression test for the bug where on step 3, the main stage app was momentarily
+   suspended and then resumed again.
+ */
+TEST_F(ApplicationManagerTests, focusMainStageAfterSideStage)
+{
+    using namespace testing;
+
+    QString webbrowserAppId("webbrowser-app");
+    quint64 webbrowserPID = 123;
+    std::shared_ptr<mir::scene::Surface> webbrowserSurface(nullptr);
+
+    QString dialerAppId("dialer-app");
+    quint64 dialerPID = 456;
+    std::shared_ptr<mir::scene::Surface> dialerSurface(nullptr);
+
+    /*** Start webbrowser-app (main stage) ***/
+
+    ON_CALL(appController,appIdHasProcessId(webbrowserPID, webbrowserAppId)).WillByDefault(Return(true));
+
+    {
+        auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(webbrowserAppId, QFileInfo());
+        ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+        ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(webbrowserAppId));
+        ON_CALL(*mockDesktopFileReader, stageHint()).WillByDefault(Return("MainStage"));
+
+        ON_CALL(desktopFileReaderFactory, createInstance(webbrowserAppId, _))
+            .WillByDefault(Return(mockDesktopFileReader));
+    }
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(webbrowserAppId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    /*auto application =*/ applicationManager.startApplication(webbrowserAppId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(webbrowserAppId);
+
+    {
+        bool authed = false;
+        applicationManager.authorizeSession(webbrowserPID, authed);
+        EXPECT_EQ(authed, true);
+    }
+
+    auto webbrowserSession = std::make_shared<mir::scene::MockSession>(webbrowserAppId.toStdString(), webbrowserPID);
+    sessionManager.onSessionStarting(webbrowserSession);
+    applicationManager.focusApplication(webbrowserAppId);
+    applicationManager.onSessionCreatedSurface(webbrowserSession.get(), webbrowserSurface);
+
+    /*** Start dialer-app (side stage) ***/
+
+    ON_CALL(appController, appIdHasProcessId(dialerPID, dialerAppId)).WillByDefault(Return(true));
+
+    {
+        auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(dialerAppId, QFileInfo());
+        ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+        ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(dialerAppId));
+        ON_CALL(*mockDesktopFileReader, stageHint()).WillByDefault(Return("SideStage"));
+
+        ON_CALL(desktopFileReaderFactory, createInstance(dialerAppId, _))
+            .WillByDefault(Return(mockDesktopFileReader));
+    }
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(dialerAppId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    /*auto application =*/ applicationManager.startApplication(dialerAppId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(dialerAppId);
+
+    {
+        bool authed = false;
+        applicationManager.authorizeSession(dialerPID, authed);
+        EXPECT_EQ(authed, true);
+    }
+
+    auto dialerSession = std::make_shared<mir::scene::MockSession>(dialerAppId.toStdString(), dialerPID);
+    sessionManager.onSessionStarting(dialerSession);
+    applicationManager.focusApplication(dialerAppId);
+    applicationManager.onSessionCreatedSurface(dialerSession.get(), dialerSurface);
+
+    /*** Focus webbrowser ***/
+
+    // Nothing should happen as it's already the running main stage app
+    EXPECT_CALL(*webbrowserSession.get(), set_lifecycle_state(_))
+            .Times(0);
+    applicationManager.focusApplication(webbrowserAppId);
+}

@@ -49,6 +49,7 @@ struct MockSession : public Session
 
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<Surface>());
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<scene::Surface>(frontend::SurfaceId));
 
     MOCK_METHOD1(take_snapshot, void(SnapshotCallback const&));
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState));
