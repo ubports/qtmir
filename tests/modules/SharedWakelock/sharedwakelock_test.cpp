@@ -268,13 +268,21 @@ TEST_F(SharedWakelockTest, wakelockAcquireReleaseAcquireWithDelays)
     wakelock.release(object.data());
     wakelock.acquire(object.data());
 
-    while (wakelockDBusMethodSpy.wait(100)) {}
+    while (wakelockDBusMethodSpy.wait()) {}
     EXPECT_TRUE(wakelock.enabled());
 
     // there must be at least one clearSysState call, but is not necessarily the second call
-    // should the dbus response be slow enough, it may be the third call.
-    EXPECT_CALL(wakelockDBusMethodSpy, 2, "clearSysState",
-                QVariantList() << QString("cookie"));
+    // should the dbus response be slow enough, it may be the third call. Is hard to reliably
+    // reproduce the racey condition for all platforms.
+    bool found = false;
+    for (int i=0; i<wakelockDBusMethodSpy.count(); i++) {
+        const QVariantList &call(wakelockDBusMethodSpy.at(i));
+
+        if (call.at(0).toString() == "clearSysState") {
+            found = true;
+        }
+    }
+    EXPECT_TRUE(found);
 }
 
 TEST_F(SharedWakelockTest, nullOwnerAcquireIgnored)
