@@ -36,10 +36,14 @@ static WId newWId()
     return ++id;
 }
 
-DisplayWindow::DisplayWindow(QWindow *window, mir::graphics::DisplayBuffer *displayBuffer)
+DisplayWindow::DisplayWindow(
+    QWindow *window,
+    mir::graphics::DisplaySyncGroup *displayGroup,
+    mir::graphics::DisplayBuffer *displayBuffer)
     : QObject(nullptr), QPlatformWindow(window)
     , m_isExposed(true)
     , m_winId(newWId())
+    , m_displayGroup(displayGroup)
     , m_displayBuffer(displayBuffer)
 {
     qDebug() << "DisplayWindow::DisplayWindow";
@@ -101,7 +105,7 @@ bool DisplayWindow::event(QEvent *event)
 void DisplayWindow::swapBuffers()
 {
     m_displayBuffer->gl_swap_buffers();
-//    m_displayBuffer->flip(); TODO check with kdub what's needed
+    m_displayGroup->post();
 }
 
 void DisplayWindow::makeCurrent()
