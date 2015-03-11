@@ -255,6 +255,7 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
     m_surfaceObserver = observer;
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurfaceItem::surfaceDamaged);
+        connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurfaceItem::onAttributeChanged);
         observer->setListener(this);
     }
 
@@ -692,8 +693,7 @@ void MirSurfaceItem::setLive(const bool live)
     }
 }
 
-// Called by MirSurfaceItemManager upon a msh::Surface attribute change
-void MirSurfaceItem::setAttribute(const MirSurfaceAttrib attribute, const int /*value*/)
+void MirSurfaceItem::onAttributeChanged(const MirSurfaceAttrib attribute, const int /*value*/)
 {
     switch (attribute) {
     case mir_surface_attrib_type:
