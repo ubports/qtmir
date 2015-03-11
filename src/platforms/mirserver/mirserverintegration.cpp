@@ -135,10 +135,13 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 
     DisplayWindow* displayWindow = nullptr;
 
-    m_mirServer->the_display()->for_each_display_buffer(
+    m_mirServer->the_display()->for_each_display_sync_group(
+                [&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer(
                 [&](mg::DisplayBuffer& buffer) {
-        // FIXME(gerry) this will go very bad for >1 display buffer
-        displayWindow = new DisplayWindow(window, &buffer);
+            // FIXME(gerry) this will go very bad for >1 display buffer
+            displayWindow = new DisplayWindow(window, &buffer);
+        });
     });
 
     if (!displayWindow)

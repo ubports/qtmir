@@ -101,7 +101,7 @@ bool DisplayWindow::event(QEvent *event)
 void DisplayWindow::swapBuffers()
 {
     m_displayBuffer->gl_swap_buffers();
-    m_displayBuffer->flip();
+//    m_displayBuffer->flip(); TODO check with kdub what's needed
 }
 
 void DisplayWindow::makeCurrent()

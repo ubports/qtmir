@@ -42,6 +42,7 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override {}
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
+    void keymap_changed(xkb_rule_names const&) override {}
 
 Q_SIGNALS:
     void framesPosted();
