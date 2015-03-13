@@ -223,7 +223,7 @@ ApplicationManager::ApplicationManager(
     m_roleNames.insert(RoleFullscreen, "fullscreen");
 
     m_settings = new QGSettings("com.canonical.qtmir", "/com/canonical/qtmir/", this);
-    m_lifecycleExceptions = m_settings->get("items").toStringList();
+    m_lifecycleExceptions = m_settings->get("lifecycle-exempt-appids").toStringList();
     connect(m_settings, &QGSettings::changed, this, &ApplicationManager::onSettingsChanged);
 }
 
@@ -717,8 +717,8 @@ void ApplicationManager::onAppDataChanged(const int role)
 
 void ApplicationManager::onSettingsChanged(const QString &key)
 {
-    if (key == "items") {
-        m_lifecycleExceptions = m_settings->get("items").toStringList();
+    if (key == "lifecycle-exempt-appids") {
+        m_lifecycleExceptions = m_settings->get("lifecycle-exempt-appids").toStringList();
     }
 }
 
