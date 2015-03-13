@@ -40,6 +40,7 @@ namespace mir {
 }
 
 class MirServer;
+class QGSettings;
 
 namespace qtmir {
 
@@ -136,6 +137,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
+    void onSettingsChanged(const QString &key);
 
 private:
     void setFocused(Application *application);
@@ -167,6 +169,7 @@ private:
     QList<pid_t> m_hiddenPIDs;
     bool m_suspended;
     bool m_forceDashActive;
+    QGSettings *m_settings;
 
     friend class Application;
     friend class DBusWindowStack;

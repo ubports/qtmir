@@ -47,6 +47,9 @@
 #include <QByteArray>
 #include <QDir>
 
+// Ubuntu
+#include <QGSettings>
+
 // std
 #include <csignal>
 
@@ -205,7 +208,6 @@ ApplicationManager::ApplicationManager(
     , m_focusedApplication(nullptr)
     , m_mainStageApplication(nullptr)
     , m_sideStageApplication(nullptr)
-    , m_lifecycleExceptions(QStringList() << "com.ubuntu.music")
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
@@ -219,6 +221,10 @@ ApplicationManager::ApplicationManager(
 
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
+
+    m_settings = new QGSettings("com.canonical.qtmir", "/com/canonical/qtmir/", this);
+    m_lifecycleExceptions = m_settings->get("items").toStringList();
+    connect(m_settings, &QGSettings::changed, this, &ApplicationManager::onSettingsChanged);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -706,6 +712,13 @@ void ApplicationManager::onAppDataChanged(const int role)
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update", application->appId();
     } else {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
+    }
+}
+
+void ApplicationManager::onSettingsChanged(const QString &key)
+{
+    if (key == "items") {
+        m_lifecycleExceptions = m_settings->get("items").toStringList();
     }
 }
 

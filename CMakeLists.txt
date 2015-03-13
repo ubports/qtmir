@@ -77,6 +77,7 @@ pkg_check_modules(EGL egl)
 pkg_check_modules(GIO gio-2.0)
 pkg_check_modules(GIO_UNIX gio-unix-2.0)
 pkg_check_modules(LTTNG lttng-ust)
+pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 
 
 # We expect this to be set via debian/rules for GLES builds
