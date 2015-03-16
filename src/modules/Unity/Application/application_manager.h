@@ -87,6 +87,7 @@ public:
             const QSharedPointer<SharedWakelock> &sharedWakelock,
             const QSharedPointer<DesktopFileReader::Factory> &desktopFileReaderFactory,
             const QSharedPointer<ProcInfo> &processInfo,
+            const QSharedPointer<QGSettings> &settings,
             QObject *parent = 0);
     virtual ~ApplicationManager();
 
@@ -165,11 +166,11 @@ private:
     QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
+    QSharedPointer<QGSettings> m_settings;
     static ApplicationManager* the_application_manager;
     QList<pid_t> m_hiddenPIDs;
     bool m_suspended;
     bool m_forceDashActive;
-    QGSettings *m_settings;
 
     friend class Application;
     friend class DBusWindowStack;

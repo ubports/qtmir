@@ -155,6 +155,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
+    QSharedPointer<QGSettings> settings(new QGSettings("com.canonical.qtmir", "/com/canonical/qtmir/"));
 
     // FIXME: We should use a QSharedPointer to wrap this ApplicationManager object, which requires us
     // to use the data() method to pass the raw pointer to the QML engine. However the QML engine appears
@@ -166,7 +167,8 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              taskController,
                                              sharedWakelock,
                                              fileReaderFactory,
-                                             procInfo
+                                             procInfo,
+                                             settings
                                          );
 
     connectToSessionListener(appManager, sessionListener);
@@ -202,6 +204,7 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SharedWakelock>& sharedWakelock,
         const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
+        const QSharedPointer<QGSettings>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
@@ -213,6 +216,7 @@ ApplicationManager::ApplicationManager(
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
+    , m_settings(settings)
     , m_suspended(false)
     , m_forceDashActive(false)
 {
@@ -222,9 +226,10 @@ ApplicationManager::ApplicationManager(
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
 
-    m_settings = new QGSettings("com.canonical.qtmir", "/com/canonical/qtmir/", this);
-    m_lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
-    connect(m_settings, &QGSettings::changed, this, &ApplicationManager::onSettingsChanged);
+    if (settings.data()) {
+        m_lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
+        connect(m_settings.data(), &QGSettings::changed, this, &ApplicationManager::onSettingsChanged);
+    }
 }
 
 ApplicationManager::~ApplicationManager()

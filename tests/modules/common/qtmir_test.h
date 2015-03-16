@@ -102,7 +102,8 @@ public:
             QSharedPointer<DesktopFileReader::Factory>(
                 &desktopFileReaderFactory,
                 [](DesktopFileReader::Factory*){}),
-            QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){})
+            QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
+            QSharedPointer<QGSettings>(nullptr)
         }
         , sessionManager{
             mirServer,
