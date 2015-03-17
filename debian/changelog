@@ -1,3 +1,10 @@
+qtmir (0.4.4+15.04.20150317-0ubuntu1) vivid; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Make the test pass with Qt >= 5.4.1 (LP: #1427529)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 17 Mar 2015 18:01:53 +0000
+
 qtmir (0.4.4+15.04.20150227.1-0ubuntu1) vivid; urgency=medium
 
   [ CI Train Bot ]
