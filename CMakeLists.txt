@@ -77,6 +77,8 @@ pkg_check_modules(EGL egl)
 pkg_check_modules(GIO gio-2.0)
 pkg_check_modules(GIO_UNIX gio-unix-2.0)
 pkg_check_modules(LTTNG lttng-ust)
+pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
+pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 

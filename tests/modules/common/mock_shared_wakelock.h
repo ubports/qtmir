@@ -23,21 +23,48 @@
 
 namespace testing
 {
-struct MockSharedWakelock : public qtmir::SharedWakelock
+class MockSharedWakelock : public qtmir::SharedWakelock
 {
-    MockSharedWakelock()
+public:
+    MockSharedWakelock(const QDBusConnection& /*connection*/= QDBusConnection::systemBus())
     {
-        ON_CALL(*this, createWakelock()).WillByDefault(Invoke(this, &MockSharedWakelock::doCreateWakelock));
+        ON_CALL(*this, enabled()).WillByDefault(Invoke(this, &MockSharedWakelock::doEnabled));
+        ON_CALL(*this, acquire(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doAcquire));
+        ON_CALL(*this, release(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doRelease));
     }
 
-    MOCK_METHOD0(createWakelock, QObject*());
-    bool wakelockHeld() { return m_wakelock; }
+    MOCK_CONST_METHOD0(enabled, bool());
+    MOCK_METHOD1(acquire, void(const QObject *));
+    MOCK_METHOD1(release, void(const QObject *));
 
-
-    QObject* doCreateWakelock() const
+    bool doEnabled()
     {
-        return new QObject;
+        return !m_owners.isEmpty();
     }
+
+    void doAcquire(const QObject *object)
+    {
+        if (m_owners.contains(object)) {
+            return;
+        }
+        m_owners.insert(object);
+        if (m_owners.size() == 1) {
+            Q_EMIT enabledChanged(true);
+        }
+    }
+
+    void doRelease(const QObject *object)
+    {
+        if (!m_owners.remove(object)) {
+            return;
+        }
+        if (m_owners.isEmpty()) {
+            Q_EMIT enabledChanged(false);
+        }
+    }
+
+private:
+    QSet<const QObject *> m_owners;
 };
 
 } // namespace testing

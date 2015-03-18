@@ -34,7 +34,7 @@ TEST_F(ApplicationTests, checkFocusAcquiresWakeLock)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1);
+    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
 
     startApplication(123, "app");
     applicationManager.focusApplication("app");
@@ -50,14 +50,14 @@ TEST_F(ApplicationTests, checkSuspendReleasesWakeLock)
     applicationManager.focusApplication("app");
 
     Q_EMIT session->suspended();
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    EXPECT_FALSE(sharedWakelock.enabled());
 }
 
 TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1);
+    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
 
     auto app = startApplication(123, "app");
     auto session = app->session();
@@ -69,7 +69,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(1);
+    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
     const QString appId = "app";
 
     auto app = startApplication(123, "app");
@@ -89,7 +89,7 @@ TEST_F(ApplicationTests, checkDashFocusDoesNotAcquireWakeLock)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(0);
+    EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
 
     startApplication(123, "unity8-dash");
     applicationManager.focusApplication("unity8-dash");
@@ -105,14 +105,14 @@ TEST_F(ApplicationTests, checkDashSuspendDoesNotImpactWakeLock)
     applicationManager.focusApplication("unity8-dash");
 
     Q_EMIT session->suspended();
-    EXPECT_FALSE(sharedWakelock.wakelockHeld());
+    EXPECT_FALSE(sharedWakelock.enabled());
 }
 
 TEST_F(ApplicationTests, checkDashResumeDoesNotAcquireWakeLock)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(sharedWakelock, createWakelock()).Times(0);
+    EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
 
     auto app = startApplication(123, "unity8-dash");
     auto session = app->session();
