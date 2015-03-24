@@ -36,6 +36,7 @@
 #include "mock_prompt_session_manager.h"
 #include "mock_prompt_session.h"
 #include "mock_shared_wakelock.h"
+#include "mock_settings.h"
 
 namespace ms = mir::scene;
 using namespace qtmir;
@@ -103,7 +104,7 @@ public:
                 &desktopFileReaderFactory,
                 [](DesktopFileReader::Factory*){}),
             QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
-            QSharedPointer<QGSettings>(nullptr)
+            QSharedPointer<MockSettings>(&settings,[](MockSettings *){})
         }
         , sessionManager{
             mirServer,
@@ -150,6 +151,7 @@ public:
     testing::NiceMock<testing::MockProcInfo> procInfo;
     testing::NiceMock<testing::MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<testing::MockSharedWakelock> sharedWakelock;
+    testing::NiceMock<testing::MockSettings> settings;
     QSharedPointer<FakeMirServer> mirServer;
     MirShell *mirShell{nullptr};
     QSharedPointer<TaskController> taskController;

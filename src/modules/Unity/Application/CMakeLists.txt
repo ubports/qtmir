@@ -42,12 +42,14 @@ set(QMLMIRPLUGIN_SRC
     sharedwakelock.cpp
     upstart/applicationcontroller.cpp
     tracepoints.c
+    settings.cpp
 # We need to run moc on these headers
     /usr/include/unity/shell/application/ApplicationInfoInterface.h
     /usr/include/unity/shell/application/ApplicationManagerInterface.h
 # Feed the automoc monster
     session_interface.h
     applicationcontroller.h
+    settings_interface.h
     )
 
 add_library(unityapplicationplugin SHARED

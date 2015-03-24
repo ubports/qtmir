@@ -25,6 +25,7 @@
 #include "taskcontroller.h"
 #include "upstart/applicationcontroller.h"
 #include "tracepoints.h" // generated from tracepoints.tp
+#include "settings.h"
 
 // mirserver
 #include "mirserver.h"
@@ -46,9 +47,6 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QDir>
-
-// Ubuntu
-#include <QGSettings>
 
 // std
 #include <csignal>
@@ -155,7 +153,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
-    QSharedPointer<QGSettings> settings(new QGSettings("com.canonical.qtmir", "/com/canonical/qtmir/"));
+    QSharedPointer<Settings> settings(new Settings());
 
     // FIXME: We should use a QSharedPointer to wrap this ApplicationManager object, which requires us
     // to use the data() method to pass the raw pointer to the QML engine. However the QML engine appears
@@ -204,7 +202,7 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SharedWakelock>& sharedWakelock,
         const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
-        const QSharedPointer<QGSettings>& settings,
+        const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
@@ -228,7 +226,7 @@ ApplicationManager::ApplicationManager(
 
     if (settings.data()) {
         m_lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
-        connect(m_settings.data(), &QGSettings::changed, this, &ApplicationManager::onSettingsChanged);
+        connect(m_settings.data(), &Settings::changed, this, &ApplicationManager::onSettingsChanged);
     }
 }
 
