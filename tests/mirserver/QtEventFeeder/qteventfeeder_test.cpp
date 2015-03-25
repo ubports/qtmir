@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -191,34 +193,3 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
 }
 
-TEST_F(QtEventFeederTest, IgnoreHovering)
-{
-    setIrrelevantMockWindowSystemExpectations();
-    EXPECT_CALL(*mockWindowSystem, handleTouchEvent(_,_,_,_)).Times(0);
-
-    MirEvent mirEvent;
-    mirEvent.type = mir_event_type_motion;
-    mirEvent.motion.pointer_count = 1;
-    mirEvent.motion.pointer_coordinates[0].id = 0;
-    mirEvent.motion.pointer_coordinates[0].x = 10;
-    mirEvent.motion.pointer_coordinates[0].y = 10;
-    mirEvent.motion.pointer_coordinates[0].touch_major = 1;
-    mirEvent.motion.pointer_coordinates[0].touch_minor = 1;
-    mirEvent.motion.pointer_coordinates[0].pressure = 10;
-    mirEvent.motion.action = mir_motion_action_hover_enter;
-    mirEvent.motion.event_time = 123 * 1000000;
-
-    qtEventFeeder->dispatch(mirEvent);
-
-    mirEvent.motion.pointer_coordinates[0].x = 20;
-    mirEvent.motion.pointer_coordinates[0].y = 20;
-    mirEvent.motion.action = mir_motion_action_hover_move;
-    mirEvent.motion.event_time = 125 * 1000000;
-
-    qtEventFeeder->dispatch(mirEvent);
-
-    mirEvent.motion.action = mir_motion_action_hover_exit;
-    mirEvent.motion.event_time = 127 * 1000000;
-
-    qtEventFeeder->dispatch(mirEvent);
-}
