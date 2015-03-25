@@ -66,7 +66,7 @@ if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
     message(SEND_ERROR "protoc executable not found! Missing protobuf-compiler package?")
 endif()
 
-pkg_check_modules(MIRSERVER mirserver REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.11 REQUIRED)
 
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
@@ -78,7 +78,10 @@ pkg_check_modules(GIO gio-2.0)
 pkg_check_modules(GIO_UNIX gio-unix-2.0)
 pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
+pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
+pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 
+add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 # We expect this to be set via debian/rules for GLES builds
 if ("${USE_OPENGLES}" STREQUAL 1)

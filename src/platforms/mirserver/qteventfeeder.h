@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -51,6 +51,7 @@ public:
         virtual void handleTouchEvent(ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
+        virtual void handleMouseEvent(ulong timestamp, QPointF point, Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) = 0;
     };
 
     QtEventFeeder(QtWindowSystemInterface *windowSystem = nullptr);
@@ -67,8 +68,9 @@ public:
     void stop() override;
 
 private:
-    void dispatchKey(MirKeyEvent const& event);
-    void dispatchMotion(MirMotionEvent const& event);
+    void dispatchKey(MirInputEvent const* event);
+    void dispatchTouch(MirInputEvent const* event);
+    void dispatchPointer(MirInputEvent const* event);
     void validateTouches(QList<QWindowSystemInterface::TouchPoint> &touchPoints);
     bool validateTouch(QWindowSystemInterface::TouchPoint &touchPoint);
 

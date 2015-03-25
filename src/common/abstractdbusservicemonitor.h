@@ -31,17 +31,11 @@ class QDBusServiceWatcher;
 class Q_DECL_EXPORT AbstractDBusServiceMonitor : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(Bus)
     Q_PROPERTY(bool serviceAvailable READ serviceAvailable NOTIFY serviceAvailableChanged)
 
 public:
-    enum Bus {
-        SessionBus,
-        SystemBus,
-    };
-
     explicit AbstractDBusServiceMonitor(const QString &service, const QString &path, const QString &interface,
-                                        const Bus bus = SessionBus,
+                                        const QDBusConnection &connection = QDBusConnection::sessionBus(),
                                         QObject *parent = 0);
     ~AbstractDBusServiceMonitor();
 
