@@ -15,6 +15,8 @@
  *
  */
 
+#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
+
 #include <thread>
 #include <condition_variable>
 #include <QSignalSpy>
@@ -2231,4 +2233,82 @@ TEST_F(ApplicationManagerTests, focusMainStageAfterSideStage)
     EXPECT_CALL(*webbrowserSession.get(), set_lifecycle_state(_))
             .Times(0);
     applicationManager.focusApplication(webbrowserAppId);
+}
+
+/*
+ * Test lifecycle exempt applications have their wakelocks released when shell tries to suspend them
+ */
+TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttemptedSuspend)
+{
+    using namespace ::testing;
+
+    const QString appId("com.ubuntu.music"); // member of lifecycle exemption list
+    const quint64 procId = 12345;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // App creates surface, focuses it so state is running
+    std::shared_ptr<mir::scene::Surface> surface(nullptr);
+    applicationManager.onSessionCreatedSurface(session.get(), surface);
+    applicationManager.focusApplication(appId);
+
+    applicationManager.unfocusCurrentApplication();
+
+    EXPECT_FALSE(sharedWakelock.enabled());
+    EXPECT_EQ(application->state(), Application::Running);
+}
+
+/*
+ * Test lifecycle exempt applications have their wakelocks released on suspend
+ */
+TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnUnSuspend)
+{
+    using namespace ::testing;
+
+    const QString appId("com.ubuntu.music"); // member of lifecycle exemption list
+    const quint64 procId = 12345;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // App creates surface, focuses it so state is running
+    std::shared_ptr<mir::scene::Surface> surface(nullptr);
+    applicationManager.onSessionCreatedSurface(session.get(), surface);
+    applicationManager.focusApplication(appId);
+
+    applicationManager.setSuspended(true);
+
+    EXPECT_FALSE(sharedWakelock.enabled());
+    EXPECT_EQ(application->state(), Application::Running);
 }

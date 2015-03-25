@@ -51,6 +51,11 @@ mg::DisplayConfigurationOutput const fake_output
 
 TEST(ScreenTest, OrientationSensor)
 {
+    if (!qEnvironmentVariableIsSet("QT_ACCEL_FILEPATH")) {
+        // Trick Qt >= 5.4.1 to load the generic sensors
+        qputenv("QT_ACCEL_FILEPATH", "dummy");
+    }
+
     Screen::skipDBusRegistration = true;
     Screen *screen = new Screen(fake_output);
 

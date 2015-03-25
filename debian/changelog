@@ -1,3 +1,26 @@
+qtmir (0.4.4+15.04.20150318-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Port to the new MirEvent API and add support for pointer events.
+    (LP: #1417650, #1392716)
+
+  [ Gerry Boland ]
+  * Refactor wakelock handling. Lifecycle exempt apps now release
+    wakelock when shell tries to suspend them (LP: #1423787)
+
+  [ Robert Carr ]
+  * Port to the new MirEvent API and add support for pointer events.
+    (LP: #1417650, #1392716)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 18 Mar 2015 10:12:22 +0000
+
+qtmir (0.4.4+15.04.20150317-0ubuntu1) vivid; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Make the test pass with Qt >= 5.4.1 (LP: #1427529)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 17 Mar 2015 18:01:53 +0000
+
 qtmir (0.4.4+15.04.20150227.1-0ubuntu1) vivid; urgency=medium
 
   [ CI Train Bot ]
