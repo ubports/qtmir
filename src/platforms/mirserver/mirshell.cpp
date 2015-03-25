@@ -22,6 +22,7 @@
 #include <mir/scene/session.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
+#include <mir/shell/null_window_manager.h>
 
 namespace ms = mir::scene;
 using mir::shell::AbstractShell;
@@ -32,7 +33,8 @@ MirShell::MirShell(
     const std::shared_ptr<mir::scene::SessionCoordinator> &sessionCoordinator,
     const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager,
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
-    AbstractShell(inputTargeter, surfaceCoordinator, sessionCoordinator, promptSessionManager),
+    AbstractShell(inputTargeter, surfaceCoordinator, sessionCoordinator, promptSessionManager,
+        [](mir::shell::FocusController*) { return std::make_shared<mir::shell::NullWindowManager>(); }),
     m_displayLayout{displayLayout}
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::MirShell";

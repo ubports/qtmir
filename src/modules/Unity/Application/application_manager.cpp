@@ -67,11 +67,14 @@ bool forceAllAppsIntoMainStage(const QSharedPointer<MirServer> &mirServer)
     const int tabletModeMinimimWithGU = 100;
 
     // Obtain display size
+    //TODO: should use mir::graphics::Display::configuration
     mir::geometry::Rectangles view_area;
-    mirServer->the_display()->for_each_display_buffer(
-        [&view_area](const mir::graphics::DisplayBuffer & db)
-        {
-            view_area.add(db.view_area());
+    mirServer->the_display()->for_each_display_sync_group(
+        [&view_area](mir::graphics::DisplaySyncGroup& group) {
+            group.for_each_display_buffer(
+                [&view_area](const mir::graphics::DisplayBuffer & db) {
+                    view_area.add(db.view_area());
+                });
         });
 
     // Get current Grid Unit value
