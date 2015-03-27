@@ -83,6 +83,8 @@ struct MockSurface : public mir::scene::Surface
 
     // from mir::scene::SurfaceBufferAccess
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const& exec));
+
+    MOCK_METHOD2(set_cursor_stream, void(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&));
 };
 
 } // namespace scene

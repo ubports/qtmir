@@ -66,6 +66,10 @@ struct MockSession : public Session
     void suspend_prompt_session() override {};
     void resume_prompt_session() override {};
 
+    MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
+    MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
+    MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+
 private:
     std::string m_sessionName;
     pid_t m_sessionId;
