@@ -62,26 +62,26 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     EXPECT_CALL(*mockSurface, type()).Times(AnyNumber()).WillRepeatedly(Return(mir_surface_type_normal));
     EXPECT_CALL(*mockSession, setSurface(_)).Times(AnyNumber());
 
-    auto getTouchEvent = [](MirEvent const& event) -> MirTouchInputEvent const*
+    auto getTouchEvent = [](MirEvent const& event) -> MirTouchEvent const*
     {
         if (mir_event_get_type(&event) != mir_event_type_input)
             return nullptr;
         auto const* input_event = mir_event_get_input_event(&event);
         if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
             return nullptr;
-        return mir_input_event_get_touch_input_event(input_event);
+        return mir_input_event_get_touch_event(input_event);
     };
 
     auto eventMatches = [&](MirEvent const& event,
                             int touch_count,
-                            MirTouchInputEventTouchAction action,
-                            MirTouchInputEventTouchId touch_id) ->void
+                            MirTouchAction action,
+                            MirTouchId touch_id) ->void
     {
         auto const* touch_event = getTouchEvent(event);
         ASSERT_NE(touch_event, nullptr);
-        ASSERT_EQ(touch_count, mir_touch_input_event_get_touch_count(touch_event));
-        ASSERT_EQ(action, mir_touch_input_event_get_touch_action(touch_event,0));
-        ASSERT_EQ(touch_id, mir_touch_input_event_get_touch_id(touch_event,0));
+        ASSERT_EQ(touch_count, mir_touch_event_point_count(touch_event));
+        ASSERT_EQ(action, mir_touch_event_action(touch_event,0));
+        ASSERT_EQ(touch_id, mir_touch_event_id(touch_event,0));
     };
 
     // The touch event sequence we expect mir::input::surface to receive from MirSurfaceItem.
@@ -89,16 +89,16 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     // the sequence for touch 1.
     EXPECT_CALL(*mockSurface, consume(_))
         .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_input_event_action_down, 0);
+            eventMatches(mirEvent, 1, mir_touch_action_down, 0);
         }))
         .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_input_event_action_change, 0);
+            eventMatches(mirEvent, 1, mir_touch_action_change, 0);
         }))
         .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_input_event_action_up, 0);
+            eventMatches(mirEvent, 1, mir_touch_action_up, 0);
         }))
         .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_input_event_action_down, 1);
+            eventMatches(mirEvent, 1, mir_touch_action_down, 1);
         }));
 
 

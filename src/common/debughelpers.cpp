@@ -176,14 +176,14 @@ const char *mirSurfaceVisibilityToStr(int value)
     }
 }
 
-const char *mirTouchActionToStr(MirTouchInputEventTouchAction action)
+const char *mirTouchActionToStr(MirTouchAction action)
 {
     switch (action) {
-    case mir_touch_input_event_action_up:
+    case mir_touch_action_up:
         return "up";
-    case mir_touch_input_event_action_down:
+    case mir_touch_action_down:
         return "down";
-    case mir_touch_input_event_action_change:
+    case mir_touch_action_change:
         return "change";
     default:
         return "???";
