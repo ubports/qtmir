@@ -105,6 +105,16 @@ bool DisplayWindow::event(QEvent *event)
 void DisplayWindow::swapBuffers()
 {
     m_displayBuffer->gl_swap_buffers();
+
+    // FIXME this exposes a QtMir architecture problem now, as DisplayWindow
+    // is supposed to wrap a mg::DisplayBuffer. We use Qt's multithreaded
+    // renderer, where each DisplayWindow is rendered to relatively
+    // independently, and post() called also individually.
+    //
+    // But in multimonitor case where a DisplaySyncGroup contains 2
+    // DisplayBuffers, one post() call will submit both
+    // mg::DisplayBuffers for flipping, which can happen before the other
+    // DisplayWindow has been rendered to, causing visual artifacts
     m_displayGroup->post();
 }
 
