@@ -80,6 +80,8 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib attrib, int value));
     MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib attrib));
+    bool modify(const Modifications &) override { return false; }
+
 
     // from mir::scene::SurfaceBufferAccess
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const& exec));
