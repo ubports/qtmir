@@ -30,7 +30,9 @@
 
 #include <QDebug>
 
-Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input")
+#include "../../common/debughelpers.h"
+
+Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
 
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
@@ -355,6 +357,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         return;
 
     auto tev = mir_input_event_get_touch_input_event(event);
+    qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
 
     // FIXME(loicm) Max pressure is device specific. That one is for the Samsung Galaxy Nexus. That
     //     needs to be fixed as soon as the compat input lib adds query support.
@@ -398,9 +401,10 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
 
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
-    validateTouches(touchPoints);
+    validateTouches(mir_input_event_get_event_time(event) / 1000000, touchPoints);
 
     // Touch event propagation.
+    qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
     mQtWindowSystem->handleTouchEvent(
         //scales down the nsec_t (int64) to fit a ulong, precision lost but time difference suitable
         mir_input_event_get_event_time(event) / 1000000,
@@ -429,7 +433,8 @@ void QtEventFeeder::device_reset(int32_t device_id, std::chrono::nanoseconds whe
     Q_UNUSED(when);
 }
 
-void QtEventFeeder::validateTouches(QList<QWindowSystemInterface::TouchPoint> &touchPoints)
+void QtEventFeeder::validateTouches(ulong timestamp,
+        QList<QWindowSystemInterface::TouchPoint> &touchPoints)
 {
     QSet<int> updatedTouches;
 
@@ -446,21 +451,45 @@ void QtEventFeeder::validateTouches(QList<QWindowSystemInterface::TouchPoint> &t
         }
     }
 
-    // Release all unmentioned touches.
-    {
-        QHash<int, QWindowSystemInterface::TouchPoint>::iterator it = mActiveTouches.begin();
-        while (it != mActiveTouches.end()) {
-            if (!updatedTouches.contains(it.key())) {
-                qCWarning(QTMIR_MIR_INPUT)
-                    << "There's a touch (id =" << it.key() << ") missing. Releasing it.";
-                it.value().state = Qt::TouchPointReleased;
-                touchPoints.append(it.value());
-                it = mActiveTouches.erase(it);
-            } else {
-                ++it;
-            }
+    // Release all unmentioned touches, one by one.
+    QHash<int, QWindowSystemInterface::TouchPoint>::iterator it = mActiveTouches.begin();
+    while (it != mActiveTouches.end()) {
+        if (!updatedTouches.contains(it.key())) {
+            qCWarning(QTMIR_MIR_INPUT)
+                << "There's a touch (id =" << it.key() << ") missing. Releasing it.";
+            sendActiveTouchRelease(timestamp, it.key());
+            it = mActiveTouches.erase(it);
+        } else {
+            ++it;
         }
     }
+
+    // update mActiveTouches
+    for (int i = 0; i < touchPoints.count(); ++i) {
+        auto &touchPoint = touchPoints.at(i);
+        if (touchPoint.state == Qt::TouchPointReleased) {
+            mActiveTouches.remove(touchPoint.id);
+        } else {
+            mActiveTouches[touchPoint.id] = touchPoint;
+        }
+    }
+}
+
+void QtEventFeeder::sendActiveTouchRelease(ulong timestamp, int id)
+{
+    QList<QWindowSystemInterface::TouchPoint> touchPoints = mActiveTouches.values();
+
+    for (int i = 0; i < touchPoints.count(); ++i) {
+        QWindowSystemInterface::TouchPoint &touchPoint = touchPoints[i];
+        if (touchPoint.id == id) {
+            touchPoint.state = Qt::TouchPointReleased;
+        } else {
+            touchPoint.state = Qt::TouchPointStationary;
+        }
+    }
+
+    qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
+    mQtWindowSystem->handleTouchEvent(timestamp, mTouchDevice, touchPoints);
 }
 
 bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint)
@@ -475,7 +504,6 @@ bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint
                 << "). Making it move instead.";
             touchPoint.state = Qt::TouchPointMoved;
         }
-        mActiveTouches[touchPoint.id] = touchPoint;
         break;
     case Qt::TouchPointMoved:
         if (!mActiveTouches.contains(touchPoint.id)) {
@@ -484,7 +512,6 @@ bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint
                 << "). Making it press instead.";
             touchPoint.state = Qt::TouchPointPressed;
         }
-        mActiveTouches[touchPoint.id] = touchPoint;
         break;
     case Qt::TouchPointStationary:
         if (!mActiveTouches.contains(touchPoint.id)) {
@@ -493,7 +520,6 @@ bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint
                 << "). Making it press instead.";
             touchPoint.state = Qt::TouchPointPressed;
         }
-        mActiveTouches[touchPoint.id] = touchPoint;
         break;
     case Qt::TouchPointReleased:
         if (!mActiveTouches.contains(touchPoint.id)) {
@@ -501,8 +527,6 @@ bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint
                 << "Would release a touch that wasn't pressed before (id =" << touchPoint.id
                 << "). Ignoring it.";
             ok = false;
-        } else {
-            mActiveTouches.remove(touchPoint.id);
         }
         break;
     default:
@@ -510,4 +534,22 @@ bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint
     }
 
     return ok;
+}
+
+QString QtEventFeeder::touchesToString(const QList<struct QWindowSystemInterface::TouchPoint> &points)
+{
+    QString result;
+    for (int i = 0; i < points.count(); ++i) {
+        if (i > 0) {
+            result.append(",");
+        }
+        const struct QWindowSystemInterface::TouchPoint &point = points.at(i);
+        result.append(QString("(id=%1,state=%2,normalPosition=(%3,%4))")
+            .arg(point.id)
+            .arg(touchPointStateToString(point.state))
+            .arg(point.normalPosition.x())
+            .arg(point.normalPosition.y())
+            );
+    }
+    return result;
 }

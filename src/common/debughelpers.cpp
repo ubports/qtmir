@@ -207,3 +207,51 @@ const char *applicationStateToStr(int state)
         return "???";
     }
 }
+
+#include <stdio.h>
+QString mirTouchEventToString(MirTouchInputEvent const* event)
+{
+    const int pointerCount = mir_touch_input_event_get_touch_count(event);
+
+    QString string("MirTouchInputEvent(");
+
+    for (int i = 0; i < pointerCount; ++i) {
+
+        if (i > 0) {
+            string.append(",");
+        }
+
+        MirTouchInputEventTouchAction touchAction = mir_touch_input_event_get_touch_action(event, i);
+
+        QString touchStr = QString("(id=%1,action=%2,x=%3,y=%4)")
+            .arg(mir_touch_input_event_get_touch_id(event, i))
+            .arg(mirTouchActionToString(touchAction))
+            .arg(mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x))
+            .arg(mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y));
+
+        string.append(touchStr);
+    }
+
+    string.append(")");
+
+    return string;
+}
+
+const char *mirTouchActionToString(MirTouchInputEventTouchAction touchAction)
+{
+    switch (touchAction)
+    {
+    case mir_touch_input_event_action_up:
+        return "up";
+        break;
+    case mir_touch_input_event_action_down:
+        return "down";
+        break;
+    case mir_touch_input_event_action_change:
+        return "change";
+        break;
+    default:
+        return "???";
+        break;
+    }
+}

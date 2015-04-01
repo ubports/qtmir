@@ -50,6 +50,11 @@ MATCHER(IsReleased, std::string(negation ? "isn't" : "is") + " released")
     return arg.state == Qt::TouchPointReleased;
 }
 
+MATCHER(IsStationary, std::string(negation ? "isn't" : "is") + " stationary")
+{
+    return arg.state == Qt::TouchPointStationary;
+}
+
 MATCHER(StateIsMoved, "state " + std::string(negation ? "isn't" : "is") + " 'moved'")
 {
     return arg.state == Qt::TouchPointMoved;
