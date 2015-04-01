@@ -137,10 +137,14 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 
     mg::DisplayBuffer* first_buffer{nullptr};
     mg::DisplaySyncGroup* first_group{nullptr};
-    m_mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
-        if (!first_group) first_group = &group;
-        group.for_each_display_buffer([&](mg::DisplayBuffer& buffer) {
-            if (!first_buffer) first_buffer = &buffer;
+    m_mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
+        if (!first_group) {
+            first_group = &group;
+        }
+        group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
+            if (!first_buffer) {
+                first_buffer = &buffer;
+            }
         });
     });
 
