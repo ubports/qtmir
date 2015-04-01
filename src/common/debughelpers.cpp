@@ -208,7 +208,6 @@ const char *applicationStateToStr(int state)
     }
 }
 
-#include <stdio.h>
 QString mirTouchEventToString(MirTouchInputEvent const* event)
 {
     const int pointerCount = mir_touch_input_event_get_touch_count(event);
