@@ -1,4 +1,7 @@
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=5)
+
 include_directories(
+    ${APPLICATION_API_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
@@ -42,8 +45,8 @@ set(QMLMIRPLUGIN_SRC
     upstart/applicationcontroller.cpp
     tracepoints.c
 # We need to run moc on these headers
-    /usr/include/unity/shell/application/ApplicationInfoInterface.h
-    /usr/include/unity/shell/application/ApplicationManagerInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
 # Feed the automoc monster
     session_interface.h
     applicationcontroller.h
