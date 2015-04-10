@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -121,6 +121,7 @@ public:
     // to allow easy touch event injection from tests
     bool processTouchEvent(int eventType,
             ulong timestamp,
+            Qt::KeyboardModifiers modifiers,
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
 
@@ -139,6 +140,9 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
@@ -171,6 +175,7 @@ private:
     void setSurfaceValid(const bool);
 
     bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);
+    bool isMouseInsideUbuntuKeyboard(const QMouseEvent *event);
     void syncSurfaceSizeWithItemSize();
 
     bool clientIsRunning() const;
@@ -179,6 +184,7 @@ private:
     void endCurrentTouchSequence(ulong timestamp);
     void validateAndDeliverTouchEvent(int eventType,
             ulong timestamp,
+            Qt::KeyboardModifiers modifiers,
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
 
@@ -206,6 +212,7 @@ private:
         TouchEvent &operator= (const QTouchEvent &qtEvent) {
             type = qtEvent.type();
             timestamp = qtEvent.timestamp();
+            modifiers = qtEvent.modifiers();
             touchPoints = qtEvent.touchPoints();
             touchPointStates = qtEvent.touchPointStates();
             return *this;
@@ -215,6 +222,7 @@ private:
 
         int type;
         ulong timestamp;
+        Qt::KeyboardModifiers modifiers;
         QList<QTouchEvent::TouchPoint> touchPoints;
         Qt::TouchPointStates touchPointStates;
     } *m_lastTouchEvent;

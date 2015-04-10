@@ -4,6 +4,52 @@ qtmir (0.4.5) UNRELEASED; urgency=medium
 
  -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Fri, 31 Oct 2014 10:17:42 -0200
 
+qtmir (0.4.4+15.04.20150318-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Port to the new MirEvent API and add support for pointer events.
+    (LP: #1417650, #1392716)
+
+  [ Gerry Boland ]
+  * Refactor wakelock handling. Lifecycle exempt apps now release
+    wakelock when shell tries to suspend them (LP: #1423787)
+
+  [ Robert Carr ]
+  * Port to the new MirEvent API and add support for pointer events.
+    (LP: #1417650, #1392716)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 18 Mar 2015 10:12:22 +0000
+
+qtmir (0.4.4+15.04.20150317-0ubuntu1) vivid; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Make the test pass with Qt >= 5.4.1 (LP: #1427529)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 17 Mar 2015 18:01:53 +0000
+
+qtmir (0.4.4+15.04.20150227.1-0ubuntu1) vivid; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Kevin DuBois ]
+  * No change rebuild for mir 0.12
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 27 Feb 2015 18:53:32 +0000
+
+qtmir (0.4.4+15.04.20150220-0ubuntu1) vivid; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Don't start timer from the thread it doesn't belong to
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 20 Feb 2015 10:33:30 +0000
+
+qtmir (0.4.4+15.04.20150209-0ubuntu2) vivid; urgency=medium
+
+  * No-change rebuild against Qt 5.4.0.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 13 Feb 2015 13:05:26 +0200
+
 qtmir (0.4.4+15.04.20150209-0ubuntu1) vivid; urgency=medium
 
   [ Daniel van Vugt ]

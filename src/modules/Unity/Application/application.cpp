@@ -316,7 +316,9 @@ void Application::setState(Application::State state)
 void Application::setFocused(bool focused)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::setFocused - appId=" << appId() << "focused=" << focused;
-    holdWakelock(true);
+    if (focused) {
+        holdWakelock(true);
+    }
 
     if (m_focused != focused) {
         m_focused = focused;
