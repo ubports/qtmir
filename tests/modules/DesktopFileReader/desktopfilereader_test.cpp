@@ -182,17 +182,17 @@ TEST(DesktopFileReader, parseBoolean)
 
     ok = DesktopFileReader::parseBoolean(QString(), boolean);
     ASSERT_TRUE(ok);
-    EXPECT_EQ(false, boolean);
+    EXPECT_FALSE(boolean);
 
     ok = DesktopFileReader::parseBoolean("  Yes ", boolean);
     ASSERT_TRUE(ok);
-    EXPECT_EQ(true, boolean);
+    EXPECT_FALSE(boolean);
 
     ok = DesktopFileReader::parseBoolean("False", boolean);
     ASSERT_TRUE(ok);
-    EXPECT_EQ(false, boolean);
+    EXPECT_FALSE(boolean);
 
     ok = DesktopFileReader::parseBoolean("Hello World!", boolean);
     ASSERT_FALSE(ok);
-    EXPECT_EQ(false, boolean);
+    EXPECT_FALSE(boolean);
 }
