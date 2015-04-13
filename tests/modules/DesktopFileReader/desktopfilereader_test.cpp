@@ -186,7 +186,7 @@ TEST(DesktopFileReader, parseBoolean)
 
     ok = DesktopFileReader::parseBoolean("  Yes ", boolean);
     ASSERT_TRUE(ok);
-    EXPECT_FALSE(boolean);
+    EXPECT_TRUE(boolean);
 
     ok = DesktopFileReader::parseBoolean("False", boolean);
     ASSERT_TRUE(ok);
