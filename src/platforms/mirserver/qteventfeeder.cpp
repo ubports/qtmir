@@ -30,7 +30,8 @@
 
 #include <QDebug>
 
-#include "../../common/debughelpers.h"
+// common dir
+#include <debughelpers.h>
 
 Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
 
