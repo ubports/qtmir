@@ -706,7 +706,7 @@ void ApplicationManager::onAppDataChanged(const int role)
         QModelIndex appIndex = findIndex(application);
         Q_EMIT dataChanged(appIndex, appIndex, QVector<int>() << role);
 
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update", application->appId();
+        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update" <<  application->appId();
     } else {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
     }
