@@ -50,7 +50,7 @@ public:
 
     void remove_display(mir::geometry::Rectangle const& area) override;
 
-    bool handle_key_event(MirKeyboardEvent const* event) override;
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
     bool handle_touch_event(MirTouchEvent const* event) override;
 
@@ -61,6 +61,8 @@ public:
         std::shared_ptr<ms::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
+
+    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
 };
 }
 
@@ -145,7 +147,7 @@ void NullWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-bool NullWindowManager::handle_key_event(MirKeyboardEvent const* /*event*/)
+bool NullWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
@@ -167,4 +169,8 @@ int NullWindowManager::set_surface_attribute(
     int value)
 {
     return surface->configure(attrib, value);
+}
+
+void NullWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+{
 }

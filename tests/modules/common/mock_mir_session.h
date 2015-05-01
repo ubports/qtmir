@@ -65,6 +65,7 @@ struct MockSession : public Session
     void stop_prompt_session() override {};
     void suspend_prompt_session() override {};
     void resume_prompt_session() override {};
+    std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override { return {}; }
 
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));

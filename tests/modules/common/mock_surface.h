@@ -67,6 +67,7 @@ struct MockSurface : public mir::scene::Surface
     MOCK_METHOD0(request_client_surface_close, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     void set_keymap(xkb_rule_names const &) override {}
+    void rename(std::string const&) override {}
 
     // from mir::input::surface
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const& point));
@@ -80,7 +81,6 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib attrib, int value));
     MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib attrib));
-    bool modify(const Modifications &) override { return false; }
 
 
     // from mir::scene::SurfaceBufferAccess
