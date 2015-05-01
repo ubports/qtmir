@@ -17,7 +17,7 @@
 // Qt
 #include <QObject>
 #include <QCoreApplication>
-#include <QMetaMethod>
+#include <QMetaObject>
 #include <QDebug>
 
 // local
@@ -46,9 +46,6 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
     d->serverWorker = new MirServerWorker(d->server);
     d->serverWorker->moveToThread(&d->serverThread);
 
-    connect(this, &QMirServer::runServer, d->serverWorker, &MirServerWorker::run);
-    connect(this, &QMirServer::stopServer, d->serverWorker, &MirServerWorker::stop);
-
     connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
             d->serverWorker, &MirServerWorker::stop, Qt::DirectConnection); // see FIXME in MirServerWorker
     connect(d->serverWorker, &MirServerWorker::stopped, this, &QMirServer::serverStopped, Qt::DirectConnection);
@@ -64,7 +61,7 @@ bool QMirServer::run()
     Q_D(QMirServer);
 
     d->serverThread.start(QThread::TimeCriticalPriority);
-    Q_EMIT runServer();
+    QMetaObject::invokeMethod(d->serverWorker, "run");
 
     if (!d->serverWorker->waitForMirStartup())
     {
@@ -81,7 +78,7 @@ bool QMirServer::stop()
     Q_D(QMirServer);
 
     if (d->serverThread.isRunning()) {
-        Q_EMIT stopServer();
+        QMetaObject::invokeMethod(d->serverWorker, "stop");
         if (!d->serverThread.wait(10000)) {
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";

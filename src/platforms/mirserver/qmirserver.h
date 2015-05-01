@@ -43,10 +43,6 @@ protected:
 
     Q_SLOT void serverStopped();
 
-Q_SIGNALS:
-    void runServer();
-    void stopServer();
-
 private:
     Q_DISABLE_COPY(QMirServer)
     Q_DECLARE_PRIVATE(QMirServer)
