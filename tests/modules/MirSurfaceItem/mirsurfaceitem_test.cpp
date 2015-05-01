@@ -62,17 +62,17 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     EXPECT_CALL(*mockSurface, type()).Times(AnyNumber()).WillRepeatedly(Return(mir_surface_type_normal));
     EXPECT_CALL(*mockSession, setSurface(_)).Times(AnyNumber());
 
-    auto getTouchEvent = [](MirEvent const& event) -> MirTouchEvent const*
+    auto getTouchEvent = [](MirEvent const* event) -> MirTouchEvent const*
     {
-        if (mir_event_get_type(&event) != mir_event_type_input)
+        if (mir_event_get_type(event) != mir_event_type_input)
             return nullptr;
-        auto const* input_event = mir_event_get_input_event(&event);
+        auto const* input_event = mir_event_get_input_event(event);
         if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
             return nullptr;
         return mir_input_event_get_touch_event(input_event);
     };
 
-    auto eventMatches = [&](MirEvent const& event,
+    auto eventMatches = [&](MirEvent const* event,
                             int touch_count,
                             MirTouchAction action,
                             MirTouchId touch_id) ->void
@@ -88,16 +88,16 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     // It should properly finish the sequence for touch 0 ('down', 'move' and 'up') before starting
     // the sequence for touch 1.
     EXPECT_CALL(*mockSurface, consume(_))
-        .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
+        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
             eventMatches(mirEvent, 1, mir_touch_action_down, 0);
         }))
-        .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
+        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
             eventMatches(mirEvent, 1, mir_touch_action_change, 0);
         }))
-        .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
+        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
             eventMatches(mirEvent, 1, mir_touch_action_up, 0);
         }))
-        .WillOnce(Invoke([&] (MirEvent const& mirEvent) {
+        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
             eventMatches(mirEvent, 1, mir_touch_action_down, 1);
         }));
 

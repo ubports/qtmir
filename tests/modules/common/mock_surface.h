@@ -72,7 +72,8 @@ struct MockSurface : public mir::scene::Surface
     // from mir::input::surface
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const& point));
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
-    MOCK_METHOD1(consume, void(MirEvent const& event));
+    MOCK_METHOD1(consume, void(MirEvent const* event));
+    void consume(MirEvent const& event) override { consume(&event); }
 
     // from mir::frontend::surface
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
