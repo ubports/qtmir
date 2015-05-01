@@ -17,6 +17,7 @@
 #ifndef QMIRSERVER_P_H
 #define QMIRSERVER_P_H
 
+// Qt
 #include <QThread>
 #include <QSharedPointer>
 
@@ -24,6 +25,7 @@
 #include <condition_variable>
 #include <mutex>
 
+// local
 #include "mirserver.h"
 
 class QMirServer;
