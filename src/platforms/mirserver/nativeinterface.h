@@ -29,11 +29,11 @@
 class NativeInterface : public QPlatformNativeInterface
 {
 public:
-    NativeInterface(const QSharedPointer<MirServer> &);
+    NativeInterface(const QWeakPointer<MirServer> &);
 
     virtual void *nativeResourceForIntegration(const QByteArray &resource);
 
-    QSharedPointer<MirServer> m_mirServer;
+    QWeakPointer<MirServer> m_mirServer;
 };
 
 #endif // NATIVEINTEGRATION_H

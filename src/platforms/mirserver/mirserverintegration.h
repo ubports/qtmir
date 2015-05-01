@@ -69,8 +69,6 @@ public:
     QPlatformNativeInterface *nativeInterface() const override;
 
 private:
-    QSharedPointer<MirServer> m_mirServer;
-
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;
     QScopedPointer<QPlatformServices> m_services;
@@ -78,8 +76,9 @@ private:
     QScopedPointer<QAbstractEventDispatcher> m_eventDispatcher;
 #endif
 
+    QScopedPointer<QMirServer> m_mirServer;
+
     Display *m_display;
-    QMirServer *m_qmirServer;
     NativeInterface *m_nativeInterface;
     QPlatformInputContext* m_inputContext;
     QScopedPointer<qtmir::Clipboard> m_clipboard;

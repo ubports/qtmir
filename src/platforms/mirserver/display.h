@@ -19,23 +19,21 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include <QObject>
+#include <QSharedPointer>
 #include <qpa/qplatformscreen.h>
 
 class MirServer;
 
-class Display : public QObject
+class Display
 {
-    Q_OBJECT
 public:
-    Display(const QSharedPointer<MirServer> &server, QObject *parent = 0);
-    ~Display();
+    Display(const QSharedPointer<MirServer> &server);
+    virtual ~Display();
 
     QList<QPlatformScreen *> screens() const { return m_screens; }
 
 private:
     QList<QPlatformScreen *> m_screens;
-    const QSharedPointer<MirServer> m_mirServer;
 };
 
 #endif // DISPLAY_H

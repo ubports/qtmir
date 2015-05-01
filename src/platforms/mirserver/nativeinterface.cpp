@@ -18,7 +18,7 @@
 
 #include "nativeinterface.h"
 
-NativeInterface::NativeInterface(const QSharedPointer<MirServer> &server)
+NativeInterface::NativeInterface(const QWeakPointer<MirServer> &server)
     : m_mirServer(server)
 {
 }
@@ -27,14 +27,17 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 {
     void *result = nullptr;
 
-    if (resource == "SessionAuthorizer")
-        result = m_mirServer->sessionAuthorizer();
-    else if (resource == "Shell")
-        result = m_mirServer->shell();
-    else if (resource == "SessionListener")
-        result = m_mirServer->sessionListener();
-    else if (resource == "PromptSessionListener")
-        result = m_mirServer->promptSessionListener();
+    auto const server = m_mirServer.lock();
 
+    if (server) {
+        if (resource == "SessionAuthorizer")
+            result = server->sessionAuthorizer();
+        else if (resource == "Shell")
+            result = server->shell();
+        else if (resource == "SessionListener")
+            result = server->sessionListener();
+        else if (resource == "PromptSessionListener")
+            result = server->promptSessionListener();
+    }
     return result;
 }

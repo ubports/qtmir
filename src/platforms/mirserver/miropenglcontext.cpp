@@ -36,12 +36,11 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
-    : m_mirServer(server)
 #if GL_DEBUG
-    , m_logger(new QOpenGLDebugLogger(this))
+    : m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
-    std::shared_ptr<mir::graphics::Display> display = m_mirServer->the_display();
+    std::shared_ptr<mir::graphics::Display> display = server->the_display();
 
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
     std::unique_ptr<mir::graphics::GLContext> mirContext = display->create_gl_context();

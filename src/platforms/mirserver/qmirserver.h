@@ -19,63 +19,37 @@
 
 // Qt
 #include <QObject>
-#include <QThread>
-#include <QSharedPointer>
+#include <QWeakPointer>
 
-// local
-#include "mirserver.h"
-
-#include <condition_variable>
-#include <mutex>
-
-// Wrap mir::Server with QObject, so it can be controlled via QThread
-class MirServerWorker : public QObject
-{
-    Q_OBJECT
-
-public:
-    MirServerWorker(const QSharedPointer<MirServer> &server)
-        : server(server)
-    {}
-
-    bool wait_for_mir_startup();
-
-Q_SIGNALS:
-    void stopped();
-
-public Q_SLOTS:
-    void run();
-    void stop() { server->stop(); }
-
-private:
-    std::mutex mutex;
-    std::condition_variable started_cv;
-    bool mir_running{false};
-
-    const QSharedPointer<MirServer> server;
-};
-
+class QMirServerPrivate;
+class MirServer;
 
 class QMirServer: public QObject
 {
     Q_OBJECT
 
 public:
-    QMirServer(const QSharedPointer<MirServer> &config, QObject* parent=0);
-    ~QMirServer();
+    QMirServer(const QStringList &arguments, QObject* parent=0);
+    virtual ~QMirServer();
+
+    bool run();
+    Q_SLOT bool stop();
+    bool isRunning() const;
+
+    QWeakPointer<MirServer> mirServer() const;
+
+protected:
+    QMirServerPrivate * const d_ptr;
+
+    Q_SLOT void serverStopped();
 
 Q_SIGNALS:
-    void run();
-    void stop();
-
-protected Q_SLOTS:
-    void shutDownMirServer();
-    void shutDownQApplication();
+    void runServer();
+    void stopServer();
 
 private:
-    QThread m_mirThread;
-    MirServerWorker *m_mirServer;
     Q_DISABLE_COPY(QMirServer)
+    Q_DECLARE_PRIVATE(QMirServer)
 };
 
 #endif // QMIRSERVER_H
