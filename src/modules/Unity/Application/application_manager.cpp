@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -211,8 +211,6 @@ ApplicationManager::ApplicationManager(
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
-    , m_suspended(false)
-    , m_forceDashActive(false)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
@@ -307,65 +305,6 @@ QString ApplicationManager::focusedApplicationId() const
     }
 }
 
-bool ApplicationManager::suspended() const
-{
-    return m_suspended;
-}
-
-void ApplicationManager::setSuspended(bool suspended)
-{
-    if (suspended == m_suspended) {
-        return;
-    }
-    m_suspended = suspended;
-    Q_EMIT suspendedChanged();
-
-    if (m_suspended) {
-        suspendApplication(m_mainStageApplication);
-        suspendApplication(m_sideStageApplication);
-        if (m_focusedApplication) {
-            m_focusedApplication->setFocused(false);
-            m_dbusWindowStack->FocusedWindowChanged(0, QString(), 0);
-        }
-    } else {
-        resumeApplication(m_mainStageApplication);
-        resumeApplication(m_sideStageApplication);
-        if (m_focusedApplication) {
-            m_focusedApplication->setFocused(true);
-            m_dbusWindowStack->FocusedWindowChanged(0, m_focusedApplication->appId(), m_focusedApplication->stage());
-        }
-    }
-}
-
-bool ApplicationManager::forceDashActive() const
-{
-    return m_forceDashActive;
-}
-
-void ApplicationManager::setForceDashActive(bool forceDashActive)
-{
-    if (m_forceDashActive == forceDashActive) {
-        return;
-    }
-
-    m_forceDashActive = forceDashActive;
-    Q_EMIT forceDashActiveChanged();
-
-    Application *dashApp = findApplication("unity8-dash");
-    if (!dashApp) {
-        qCWarning(QTMIR_APPLICATIONS) << "Dash doesn't seem to be running... Ignoring.";
-        return;
-    }
-
-    if (m_forceDashActive && dashApp->state() != Application::Running) {
-         resumeApplication(dashApp);
-    } else if (!m_forceDashActive && dashApp->state() == Application::Running
-            && m_mainStageApplication != dashApp
-            && m_sideStageApplication != dashApp) {
-        suspendApplication(dashApp);
-    }
-}
-
 bool ApplicationManager::suspendApplication(Application *application)
 {
     if (application == nullptr)
@@ -376,10 +315,6 @@ bool ApplicationManager::suspendApplication(Application *application)
     // as the process is never suspended and thus has no cleanup to perform when (for example) the display is blanked
     if (!m_lifecycleExceptions.filter(application->appId().section('_',0,0)).empty()) {
         m_sharedWakelock->release(application);
-        return false;
-    }
-
-    if (m_forceDashActive && application->appId() == "unity8-dash") {
         return false;
     }
 
@@ -427,11 +362,7 @@ bool ApplicationManager::focusApplication(const QString &inputAppId)
         m_sideStageApplication = application;
     }
 
-    if (!m_suspended) {
-        resumeApplication(application); // in case unfocusCurrentApplication() was last called
-    } else {
-        suspendApplication(application); // Make sure we also have this one suspended if everything is suspended
-    }
+    resumeApplication(application); // in case unfocusCurrentApplication() was last called
 
     m_focusedApplication = application;
     m_focusedApplication->setFocused(true);
@@ -845,7 +776,7 @@ void ApplicationManager::onSessionStopping(std::shared_ptr<ms::Session> const& s
                 || application->state() == Application::Running) {
             m_dbusWindowStack->WindowDestroyed(0, application->appId());
             remove(application);
-           
+
             // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
             QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/"));
             QDir dir(path);
@@ -884,7 +815,7 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     if (application && application->state() == Application::Starting) {
         m_dbusWindowStack->WindowCreated(0, application->appId());
         application->setState(Application::Running);
-        if ((application != m_mainStageApplication && application != m_sideStageApplication) || m_suspended) {
+        if ((application != m_mainStageApplication && application != m_sideStageApplication)) {
             suspendApplication(application);
         }
     }
