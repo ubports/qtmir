@@ -37,6 +37,8 @@ namespace ms = mir::scene;
 namespace qtmir
 {
 
+QStringList Application::lifecycleExceptions;
+
 Application::Application(const QSharedPointer<TaskController>& taskController,
                          const QSharedPointer<SharedWakelock>& sharedWakelock,
                          DesktopFileReader *desktopFileReader,
@@ -221,6 +223,12 @@ void Application::setActive(bool value)
     if (m_active != value) {
         m_active = value;
         Q_EMIT activeChanged(m_active);
+
+        if (m_active && m_state == Suspended) {
+            setState(Running);
+        } else if (!m_active && m_state == Running) {
+            setState(Suspended);
+        }
     }
 }
 
@@ -308,6 +316,17 @@ void Application::setStage(Application::Stage stage)
 void Application::setState(Application::State state)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::setState - appId=" << appId() << "state=" << applicationStateToStr(state);
+
+    if (state == Suspended && m_state == Running
+            && !lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
+        // Present in exceptions list.
+        // There's no need to keep the wakelock as the process is never suspended
+        // and thus has no cleanup to perform when (for example) the display is
+        // blanked.
+        holdWakelock(false);
+        return;
+    }
+
     if (m_state != state) {
         if (session()) {
             session()->setState((Session::State)state);

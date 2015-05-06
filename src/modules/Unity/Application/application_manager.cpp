@@ -203,9 +203,6 @@ ApplicationManager::ApplicationManager(
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
     , m_focusedApplication(nullptr)
-    , m_mainStageApplication(nullptr)
-    , m_sideStageApplication(nullptr)
-    , m_lifecycleExceptions(QStringList() << "com.ubuntu.music")
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
@@ -217,6 +214,8 @@ ApplicationManager::ApplicationManager(
 
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
+
+    Application::lifecycleExceptions << "com.ubuntu.music";
 }
 
 ApplicationManager::~ApplicationManager()
@@ -305,35 +304,6 @@ QString ApplicationManager::focusedApplicationId() const
     }
 }
 
-bool ApplicationManager::suspendApplication(Application *application)
-{
-    if (application == nullptr)
-        return false;
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::suspendApplication - appId=" << application->appId();
-
-    // Present in exceptions list, explicitly release wakelock and return. There's no need to keep the wakelock
-    // as the process is never suspended and thus has no cleanup to perform when (for example) the display is blanked
-    if (!m_lifecycleExceptions.filter(application->appId().section('_',0,0)).empty()) {
-        m_sharedWakelock->release(application);
-        return false;
-    }
-
-    if (application->state() == Application::Running)
-        application->setState(Application::Suspended);
-
-    return true;
-}
-
-void ApplicationManager::resumeApplication(Application *application)
-{
-    if (application == nullptr)
-        return;
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::resumeApplication - appId=" << application->appId();
-
-    if (application->state() == Application::Suspended || application->state() == Application::Stopped)
-        application->setState(Application::Running);
-}
-
 bool ApplicationManager::focusApplication(const QString &inputAppId)
 {
     const QString appId = toShortAppIdIfPossible(inputAppId);
@@ -345,24 +315,9 @@ bool ApplicationManager::focusApplication(const QString &inputAppId)
         return false;
     }
 
-    resumeApplication(application);
-
-    // set state of previously focused app to suspended
     if (m_focusedApplication) {
         m_focusedApplication->setFocused(false);
-        Application *lastApplication = applicationForStage(application->stage());
-        if (lastApplication != application) {
-            suspendApplication(lastApplication);
-        }
     }
-
-    if (application->stage() == Application::MainStage) {
-        m_mainStageApplication = application;
-    } else {
-        m_sideStageApplication = application;
-    }
-
-    resumeApplication(application); // in case unfocusCurrentApplication() was last called
 
     m_focusedApplication = application;
     m_focusedApplication->setFocused(true);
@@ -371,18 +326,12 @@ bool ApplicationManager::focusApplication(const QString &inputAppId)
     Q_EMIT focusedApplicationIdChanged();
     m_dbusWindowStack->FocusedWindowChanged(0, application->appId(), application->stage());
 
-    // FIXME(dandrader): lying here. The operation is async. So we will only know whether
-    // the focusing was successful once the server replies. Maybe the API in unity-api should
-    // reflect that?
     return true;
 }
 
 void ApplicationManager::unfocusCurrentApplication()
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::unfocusCurrentApplication";
-
-    suspendApplication(m_sideStageApplication);
-    suspendApplication(m_mainStageApplication);
 
     m_focusedApplication = nullptr;
     Q_EMIT focusedApplicationIdChanged();
@@ -625,7 +574,7 @@ void ApplicationManager::onResumeRequested(const QString& appId)
 
     // If app Stopped, trust that ubuntu-app-launch respawns it itself, and AppManager will
     // be notified of that through the onProcessStartReportReceived slot. Else resume.
-    if (application->state() == Application::Suspended) {
+    if (application->state() == Application::Suspended && application->active()) {
         application->setState(Application::Running);
     }
 }
@@ -814,9 +763,11 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     Application* application = findApplicationWithSession(session);
     if (application && application->state() == Application::Starting) {
         m_dbusWindowStack->WindowCreated(0, application->appId());
-        application->setState(Application::Running);
-        if ((application != m_mainStageApplication && application != m_sideStageApplication)) {
-            suspendApplication(application);
+
+        if (application->active()) {
+            application->setState(Application::Running);
+        } else {
+            application->setState(Application::Suspended);
         }
     }
 }
@@ -846,16 +797,6 @@ Application* ApplicationManager::findApplicationWithPid(const qint64 pid)
     return nullptr;
 }
 
-Application* ApplicationManager::applicationForStage(Application::Stage stage)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::focusedApplicationForStage" << stage;
-
-    if (stage == Application::MainStage)
-        return m_mainStageApplication;
-    else
-        return m_sideStageApplication;
-}
-
 void ApplicationManager::add(Application* application)
 {
     Q_ASSERT(application != nullptr);
@@ -880,11 +821,6 @@ void ApplicationManager::remove(Application *application)
 {
     Q_ASSERT(application != nullptr);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::remove - appId=" << application->appId();
-
-    if (application == m_sideStageApplication)
-        m_sideStageApplication = nullptr;
-    if (application == m_mainStageApplication)
-        m_mainStageApplication = nullptr;
 
     application->disconnect(this);
 

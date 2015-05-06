@@ -111,6 +111,8 @@ public:
 
     pid_t pid() const;
 
+    static QStringList lifecycleExceptions;
+
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
     void stageChanged(Stage stage);

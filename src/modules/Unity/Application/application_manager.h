@@ -139,9 +139,7 @@ private:
     void remove(Application* application);
     Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
     Application* findApplicationWithSession(const mir::scene::Session *session);
-    Application* applicationForStage(Application::Stage stage);
     QModelIndex findIndex(Application* application);
-    bool suspendApplication(Application *application);
     void resumeApplication(Application *application);
     QString toString() const;
 
@@ -151,9 +149,6 @@ private:
 
     QList<Application*> m_applications;
     Application* m_focusedApplication;
-    Application* m_mainStageApplication;
-    Application* m_sideStageApplication;
-    QStringList m_lifecycleExceptions;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
