@@ -83,6 +83,8 @@ public:
     QUrl icon() const override;
     Stage stage() const override;
     State state() const override;
+    bool active() const override;
+    void setActive(bool value) override;
     bool focused() const override;
     QString splashTitle() const override;
     QUrl splashImage() const override;
@@ -142,6 +144,7 @@ private:
     QStringList m_arguments;
     SupportedOrientations m_supportedOrientations;
     Session *m_session;
+    bool m_active;
 
     friend class ApplicationManager;
     friend class SessionManager;

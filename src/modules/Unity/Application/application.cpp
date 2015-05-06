@@ -54,6 +54,7 @@ Application::Application(const QSharedPointer<TaskController>& taskController,
     , m_canBeResumed(true)
     , m_arguments(arguments)
     , m_session(nullptr)
+    , m_active(true)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId() << "state=" << state;
 
@@ -208,6 +209,19 @@ Application::Stages Application::supportedStages() const
 Application::State Application::state() const
 {
     return m_state;
+}
+
+bool Application::active() const
+{
+    return m_active;
+}
+
+void Application::setActive(bool value)
+{
+    if (m_active != value) {
+        m_active = value;
+        Q_EMIT activeChanged(m_active);
+    }
 }
 
 bool Application::focused() const
