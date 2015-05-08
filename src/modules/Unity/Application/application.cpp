@@ -221,6 +221,7 @@ bool Application::active() const
 void Application::setActive(bool value)
 {
     if (m_active != value) {
+        qCDebug(QTMIR_APPLICATIONS) << "Application::setActive - appId=" << appId() << "active=" << value;
         m_active = value;
         Q_EMIT activeChanged(m_active);
 
