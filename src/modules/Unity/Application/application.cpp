@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -56,7 +56,7 @@ Application::Application(const QSharedPointer<TaskController>& taskController,
     , m_canBeResumed(true)
     , m_arguments(arguments)
     , m_session(nullptr)
-    , m_active(true)
+    , m_requestedState(RequestedRunning)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId() << "state=" << state;
 
@@ -213,21 +213,22 @@ Application::State Application::state() const
     return m_state;
 }
 
-bool Application::active() const
+Application::RequestedState Application::requestedState() const
 {
-    return m_active;
+    return m_requestedState;
 }
 
-void Application::setActive(bool value)
+void Application::setRequestedState(RequestedState value)
 {
-    if (m_active != value) {
-        qCDebug(QTMIR_APPLICATIONS) << "Application::setActive - appId=" << appId() << "active=" << value;
-        m_active = value;
-        Q_EMIT activeChanged(m_active);
+    if (m_requestedState != value) {
+        qCDebug(QTMIR_APPLICATIONS) << "Application::setRequestedState - appId=" << appId()
+                                    << "requestedState=" << applicationStateToStr(value);
+        m_requestedState = value;
+        Q_EMIT requestedStateChanged(m_requestedState);
 
-        if (m_active && m_state == Suspended) {
+        if (m_requestedState == RequestedRunning && m_state == Suspended) {
             setState(Running);
-        } else if (!m_active && m_state == Running) {
+        } else if (m_requestedState == RequestedSuspended && m_state == Running) {
             setState(Suspended);
         }
     }

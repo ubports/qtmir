@@ -453,7 +453,7 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
     EXPECT_EQ(true, the_app->focused());
 }
 
-TEST_F(ApplicationManagerTests,inactive_starting_app_is_suspended_when_it_gets_ready)
+TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_requested)
 {
     using namespace ::testing;
     quint64 procId = 5921;
@@ -473,7 +473,7 @@ TEST_F(ApplicationManagerTests,inactive_starting_app_is_suspended_when_it_gets_r
     onSessionStarting(session);
 
     Application * app = applicationManager.findApplication("app");
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
 
     // First app starting...
     EXPECT_EQ(Application::Starting, app->state());
@@ -1271,7 +1271,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
     applicationManager.onSessionCreatedSurface(session.get(), surface);
 
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
     EXPECT_EQ(Application::Suspended, app->state());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
@@ -1329,7 +1329,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
     applicationManager.onSessionCreatedSurface(session.get(), surface);
 
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
     EXPECT_EQ(Application::Suspended, app->state());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
@@ -1517,7 +1517,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     onSessionStarting(session);
     EXPECT_EQ(Application::Starting, app->state());
 
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
 
     // Associate a surface so AppMan considers app Running, check in background
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
@@ -1810,12 +1810,12 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     onSessionStarting(session2);
     EXPECT_EQ(true, authed);
 
-    // both sessions create surfaces, then get them all inactive
+    // both sessions create surfaces, then get them all suspended
     std::shared_ptr<mir::scene::Surface> surface1(nullptr);
     applicationManager.onSessionCreatedSurface(session1.get(), surface1);
     std::shared_ptr<mir::scene::Surface> surface2(nullptr);
     applicationManager.onSessionCreatedSurface(session2.get(), surface2);
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
     EXPECT_EQ(Application::Suspended, app->state());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
@@ -1863,7 +1863,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     // App creates surface, puts it in background, then is OOM killed.
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
     applicationManager.onSessionCreatedSurface(session.get(), surface);
-    app->setActive(false);
+    app->setRequestedState(Application::RequestedSuspended);
 
     onSessionStopping(session);
     applicationManager.onProcessFailed(appId, false);
@@ -2111,7 +2111,7 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
     applicationManager.onSessionCreatedSurface(session.get(), surface);
 
-    application->setActive(false);
+    application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
     EXPECT_EQ(application->state(), Application::Running);
@@ -2149,7 +2149,7 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnUnSuspen
     std::shared_ptr<mir::scene::Surface> surface(nullptr);
     applicationManager.onSessionCreatedSurface(session.get(), surface);
 
-    application->setActive(false);
+    application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
     EXPECT_EQ(application->state(), Application::Running);

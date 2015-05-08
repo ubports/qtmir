@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -83,8 +83,8 @@ public:
     QUrl icon() const override;
     Stage stage() const override;
     State state() const override;
-    bool active() const override;
-    void setActive(bool value) override;
+    RequestedState requestedState() const override;
+    void setRequestedState(RequestedState) override;
     bool focused() const override;
     QString splashTitle() const override;
     QUrl splashImage() const override;
@@ -146,7 +146,7 @@ private:
     QStringList m_arguments;
     SupportedOrientations m_supportedOrientations;
     Session *m_session;
-    bool m_active;
+    RequestedState m_requestedState;
 
     friend class ApplicationManager;
     friend class SessionManager;

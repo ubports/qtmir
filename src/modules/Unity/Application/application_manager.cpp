@@ -574,7 +574,8 @@ void ApplicationManager::onResumeRequested(const QString& appId)
 
     // If app Stopped, trust that ubuntu-app-launch respawns it itself, and AppManager will
     // be notified of that through the onProcessStartReportReceived slot. Else resume.
-    if (application->state() == Application::Suspended && application->active()) {
+    if (application->state() == Application::Suspended
+            && application->requestedState() == Application::RequestedRunning) {
         application->setState(Application::Running);
     }
 }
@@ -764,7 +765,7 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     if (application && application->state() == Application::Starting) {
         m_dbusWindowStack->WindowCreated(0, application->appId());
 
-        if (application->active()) {
+        if (application->requestedState() == Application::RequestedRunning) {
             application->setState(Application::Running);
         } else {
             application->setState(Application::Suspended);
