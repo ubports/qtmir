@@ -224,13 +224,14 @@ void Application::setRequestedState(RequestedState value)
         qCDebug(QTMIR_APPLICATIONS) << "Application::setRequestedState - appId=" << appId()
                                     << "requestedState=" << applicationStateToStr(value);
         m_requestedState = value;
-        Q_EMIT requestedStateChanged(m_requestedState);
 
         if (m_requestedState == RequestedRunning && m_state == Suspended) {
             setState(Running);
         } else if (m_requestedState == RequestedSuspended && m_state == Running) {
             setState(Suspended);
         }
+
+        Q_EMIT requestedStateChanged(m_requestedState);
     }
 }
 
