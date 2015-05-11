@@ -51,12 +51,6 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
-void connectToShell(MirSurfaceManager *manager, MirShell *shell)
-{
-    QObject::connect(shell, &MirShell::surfaceAttributeChanged,
-                     manager, &MirSurfaceManager::onSurfaceAttributeChanged);
-}
-
 MirSurfaceManager* MirSurfaceManager::singleton()
 {
     if (!the_surface_manager) {
@@ -75,7 +69,6 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         the_surface_manager = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
         connectToSessionListener(the_surface_manager, sessionListener);
-        connectToShell(the_surface_manager, shell);
     }
     return the_surface_manager;
 }
@@ -166,20 +159,5 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
     item->setLive(false); //disable input events
     Q_EMIT surfaceDestroyed(item);
 }
-
-// NB: Surface might be a dangling pointer here, so refrain from dereferencing it.
-void MirSurfaceManager::onSurfaceAttributeChanged(const ms::Surface *surface,
-                                                  const MirSurfaceAttrib attribute, const int value)
-{
-    qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceAttributeChanged - surface=" << surface
-                            << qPrintable(mirSurfaceAttribAndValueToString(attribute, value));
-
-    QMutexLocker lock(&m_mutex);
-    auto it = m_mirSurfaceToItemHash.find(surface);
-    if (it != m_mirSurfaceToItemHash.end()) {
-        it.value()->setAttribute(attribute, value);
-    }
-}
-
 
 } // namespace qtmir
