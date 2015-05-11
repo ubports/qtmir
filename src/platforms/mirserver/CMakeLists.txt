@@ -86,8 +86,6 @@ target_link_libraries(
     Qt5::DBus
     Qt5::Quick
     Qt5::Sensors
-
-    -lboost_system
 )
 
 include(UseLttngGenTp)

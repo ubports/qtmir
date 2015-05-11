@@ -59,7 +59,6 @@ find_package(Qt5Sensors 5.3 REQUIRED)
 find_package(Qt5Test 5.3 REQUIRED)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.50 COMPONENTS system REQUIRED)
 
 find_package(Protobuf REQUIRED)
 if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
