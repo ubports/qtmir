@@ -25,6 +25,7 @@
 #include "taskcontroller.h"
 #include "upstart/applicationcontroller.h"
 #include "tracepoints.h" // generated from tracepoints.tp
+#include "settings.h"
 
 // mirserver
 #include "mirserver.h"
@@ -152,6 +153,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
+    QSharedPointer<Settings> settings(new Settings());
 
     // FIXME: We should use a QSharedPointer to wrap this ApplicationManager object, which requires us
     // to use the data() method to pass the raw pointer to the QML engine. However the QML engine appears
@@ -163,7 +165,8 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              taskController,
                                              sharedWakelock,
                                              fileReaderFactory,
-                                             procInfo
+                                             procInfo,
+                                             settings
                                          );
 
     connectToSessionListener(appManager, sessionListener);
@@ -199,18 +202,19 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SharedWakelock>& sharedWakelock,
         const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
+        const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
     , m_focusedApplication(nullptr)
     , m_mainStageApplication(nullptr)
     , m_sideStageApplication(nullptr)
-    , m_lifecycleExceptions(QStringList() << "com.ubuntu.music")
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
+    , m_settings(settings)
     , m_suspended(false)
     , m_forceDashActive(false)
 {
@@ -219,6 +223,11 @@ ApplicationManager::ApplicationManager(
 
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
+
+    if (settings.data()) {
+        m_lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
+        connect(m_settings.data(), &Settings::changed, this, &ApplicationManager::onSettingsChanged);
+    }
 }
 
 ApplicationManager::~ApplicationManager()
@@ -709,6 +718,13 @@ void ApplicationManager::onAppDataChanged(const int role)
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update", application->appId();
     } else {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
+    }
+}
+
+void ApplicationManager::onSettingsChanged(const QString &key)
+{
+    if (key == "lifecycleExemptAppids") {
+        m_lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
     }
 }
 

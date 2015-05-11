@@ -9,6 +9,7 @@ include_directories(
     ${UBUNTU_APP_LAUNCH_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/common
+    ${GSETTINGS_QT_INCLUDE_DIRS}
 
     ${LTTNG_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
@@ -41,12 +42,14 @@ set(QMLMIRPLUGIN_SRC
     sharedwakelock.cpp
     upstart/applicationcontroller.cpp
     tracepoints.c
+    settings.cpp
 # We need to run moc on these headers
     /usr/include/unity/shell/application/ApplicationInfoInterface.h
     /usr/include/unity/shell/application/ApplicationManagerInterface.h
 # Feed the automoc monster
     session_interface.h
     applicationcontroller.h
+    settings_interface.h
     )
 
 add_library(unityapplicationplugin SHARED
@@ -64,6 +67,7 @@ target_link_libraries(
     ${PROCESS_CPP_LDFLAGS}
     ${UBUNTU_APP_LAUNCH_LDFLAGS}
     ${LTTNG_LDFLAGS}
+    ${GSETTINGS_QT_LDFLAGS}
 
     ${GL_LIBRARIES}
 
@@ -82,3 +86,5 @@ add_lttng_gen_tp(NAME tracepoints)
 
 # install
 add_qml_plugin(Unity.Application 0.1 Unity/Application TARGETS unityapplicationplugin)
+install(FILES com.canonical.qtmir.gschema.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas)
+
