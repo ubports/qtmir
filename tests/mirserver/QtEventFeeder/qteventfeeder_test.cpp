@@ -40,15 +40,23 @@ using ::testing::Return;
 
 // own gmock extensions
 using ::testing::IsPressed;
+using ::testing::IsStationary;
 using ::testing::IsReleased;
 using ::testing::HasId;
 using ::testing::StateIsMoved;
 
+// used by google mock in error messages
 void PrintTo(const struct QWindowSystemInterface::TouchPoint& touchPoint, ::std::ostream* os) {
     *os << "TouchPoint("
         << "id=" << touchPoint.id
         << "," << touchPointStateToString(touchPoint.state)
         << ")";
+}
+
+::std::ostream& operator<<(::std::ostream& os, QTouchDevice*) {
+    // actually don't care about its contents. Just to avoit having a raw
+    // pointer address being printed in google mock error messages.
+    return os << "QTouchDevice*";
 }
 
 class QtEventFeederTest : public ::testing::Test {
@@ -96,7 +104,7 @@ void QtEventFeederTest::setIrrelevantMockWindowSystemExpectations()
    Then, Mir sends a MirEvent([touch(id=1,state=pressed)]). In MirEvents, every single active touch
    point must be listed in the event even if it didn't change at all in the meantime. So that's a bug.
    But instead of crashing or forwarding the bogus event stream down to Qt, QtEventFeeder should attempt
-   to fix the situation by synthesizing a touch[id=1,state=released] to be send along with the
+   to fix the situation by synthesizing a touch[id=0,state=released] to be send along with the
    touch(id=1,state=pressed) it got. So that Qt receives a correct touch event stream.
  */
 TEST_F(QtEventFeederTest, GenerateMissingTouchEnd)
@@ -126,10 +134,20 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd)
 
     setIrrelevantMockWindowSystemExpectations();
 
-    EXPECT_CALL(*mockWindowSystem, handleTouchEvent(_,_,AllOf(SizeIs(2),
-                                                              Contains(AllOf(HasId(0),IsReleased())),
-                                                              Contains(AllOf(HasId(1),IsPressed()))
-                                                             ),_)).Times(1);
+    // There can be only one pressed or released touch per event
+    {
+        InSequence sequence;
+
+        EXPECT_CALL(*mockWindowSystem,
+                    handleTouchEvent(_,_,AllOf(SizeIs(1),
+                                               Contains(AllOf(HasId(0),IsReleased()))
+                                               ),_)).Times(1);
+
+        EXPECT_CALL(*mockWindowSystem,
+                    handleTouchEvent(_,_,AllOf(SizeIs(1),
+                                               Contains(AllOf(HasId(1),IsPressed()))
+                                               ),_)).Times(1);
+    }
 
     mirEvent.type = mir_event_type_motion;
     mirEvent.motion.pointer_count = 1;
@@ -142,6 +160,107 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd)
     mirEvent.motion.action = mir_motion_action_down;
     mirEvent.motion.event_time = 125 * 1000000;
 
+    qtEventFeeder->dispatch(mirEvent);
+
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+}
+
+TEST_F(QtEventFeederTest, GenerateMissingTouchEnd2)
+{
+
+    setIrrelevantMockWindowSystemExpectations();
+
+
+    MirEvent mirEvent;
+    mirEvent.type = mir_event_type_motion;
+    mirEvent.motion.pointer_count = 1;
+    mirEvent.motion.action = mir_motion_action_down;
+    mirEvent.motion.pointer_coordinates[0].id = 0;
+    mirEvent.motion.pointer_coordinates[0].x = 10;
+    mirEvent.motion.pointer_coordinates[0].y = 10;
+    mirEvent.motion.pointer_coordinates[0].touch_major = 1;
+    mirEvent.motion.pointer_coordinates[0].touch_minor = 1;
+    mirEvent.motion.pointer_coordinates[0].pressure = 10;
+    mirEvent.motion.event_time = 123 * 1000000;
+
+    EXPECT_CALL(*mockWindowSystem, handleTouchEvent(_,_,AllOf(SizeIs(1),
+                                                              Contains(AllOf(HasId(0),
+                                                                             IsPressed()))),_)).Times(1);
+    qtEventFeeder->dispatch(mirEvent);
+
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+
+    // ---
+
+    setIrrelevantMockWindowSystemExpectations();
+
+    mirEvent.type = mir_event_type_motion;
+    mirEvent.motion.pointer_count = 2;
+    mirEvent.motion.action = mir_motion_action_pointer_down | (1 /*pointer index*/ << 8 /*shift*/);
+    mirEvent.motion.pointer_coordinates[0].id = 0;
+    mirEvent.motion.pointer_coordinates[0].x = 10;
+    mirEvent.motion.pointer_coordinates[0].y = 10;
+    mirEvent.motion.pointer_coordinates[0].touch_major = 1;
+    mirEvent.motion.pointer_coordinates[0].touch_minor = 1;
+    mirEvent.motion.pointer_coordinates[0].pressure = 10;
+    mirEvent.motion.pointer_coordinates[1].id = 1;
+    mirEvent.motion.pointer_coordinates[1].x = 20;
+    mirEvent.motion.pointer_coordinates[1].y = 20;
+    mirEvent.motion.pointer_coordinates[1].touch_major = 1;
+    mirEvent.motion.pointer_coordinates[1].touch_minor = 1;
+    mirEvent.motion.pointer_coordinates[1].pressure = 10;
+    mirEvent.motion.event_time = 124 * 1000000;
+
+    EXPECT_CALL(*mockWindowSystem,
+        handleTouchEvent(_,_,AllOf(SizeIs(2),
+                                   Contains(AllOf(HasId(0), StateIsMoved())),
+                                   Contains(AllOf(HasId(1), IsPressed()))
+                                   ),_)).Times(1);
+    qtEventFeeder->dispatch(mirEvent);
+
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+
+    // ---
+
+    setIrrelevantMockWindowSystemExpectations();
+
+    // touch 0 disappeared and touch 2 got pressed
+    mirEvent.type = mir_event_type_motion;
+    mirEvent.motion.pointer_count = 2;
+    mirEvent.motion.action = mir_motion_action_pointer_down | (1 /*pointer index*/ << 8 /*shift*/);
+    mirEvent.motion.pointer_coordinates[0].id = 1;
+    mirEvent.motion.pointer_coordinates[0].x = 20;
+    mirEvent.motion.pointer_coordinates[0].y = 20;
+    mirEvent.motion.pointer_coordinates[0].touch_major = 1;
+    mirEvent.motion.pointer_coordinates[0].touch_minor = 1;
+    mirEvent.motion.pointer_coordinates[0].pressure = 10;
+    mirEvent.motion.pointer_coordinates[1].id = 2;
+    mirEvent.motion.pointer_coordinates[1].x = 30;
+    mirEvent.motion.pointer_coordinates[1].y = 30;
+    mirEvent.motion.pointer_coordinates[1].touch_major = 1;
+    mirEvent.motion.pointer_coordinates[1].touch_minor = 1;
+    mirEvent.motion.pointer_coordinates[1].pressure = 10;
+    mirEvent.motion.event_time = 125 * 1000000;
+
+    // There can be only one pressed or released touch per event
+    {
+        InSequence sequence;
+
+        // first release touch 0
+        EXPECT_CALL(*mockWindowSystem,
+            handleTouchEvent(_,_,AllOf(SizeIs(2),
+                                       Contains(AllOf(HasId(0), IsReleased())),
+                                       Contains(AllOf(HasId(1), IsStationary()))
+                                       ),_)).Times(1);
+
+        // then press touch 2
+        EXPECT_CALL(*mockWindowSystem,
+            handleTouchEvent(_,_,AllOf(SizeIs(2),
+                                       Contains(AllOf(HasId(1), StateIsMoved())),
+                                       Contains(AllOf(HasId(2), IsPressed()))
+                                       ),_)).Times(1);
+
+    }
     qtEventFeeder->dispatch(mirEvent);
 
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
@@ -192,4 +311,3 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
 
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
 }
-

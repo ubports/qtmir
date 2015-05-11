@@ -18,9 +18,11 @@ foreach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
 include_directories(
+    ${CMAKE_SOURCE_DIR}/src/common
+
     ${MIRCOMMON_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
-    
+
     ${URL_DISPATCHER_INCLUDE_DIRS}
     ${PROTOBUF_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -37,7 +39,7 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 set(MIRSERVER_QPA_PLUGIN_SRC
-    ../../common/debughelpers.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     mirshell.cpp
     qteventfeeder.cpp
     plugin.cpp
@@ -74,7 +76,7 @@ target_link_libraries(
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}
     ${LTTNG_LIBRARIES}
-    
+
     ${QT5PLATFORM_SUPPORT_LDFLAGS}
     # TODO Qt5Platform support LDFLAGS dont provide actual required ldflags...
     # I found these were needed...perhaps there is some way to query qmake/qconfig?
