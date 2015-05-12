@@ -25,6 +25,7 @@
 #include "taskcontroller.h"
 #include "upstart/applicationcontroller.h"
 #include "tracepoints.h" // generated from tracepoints.tp
+#include "settings.h"
 
 // mirserver
 #include "mirserver.h"
@@ -152,6 +153,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
+    QSharedPointer<Settings> settings(new Settings());
 
     // FIXME: We should use a QSharedPointer to wrap this ApplicationManager object, which requires us
     // to use the data() method to pass the raw pointer to the QML engine. However the QML engine appears
@@ -163,7 +165,8 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              taskController,
                                              sharedWakelock,
                                              fileReaderFactory,
-                                             procInfo
+                                             procInfo,
+                                             settings
                                          );
 
     connectToSessionListener(appManager, sessionListener);
@@ -199,6 +202,7 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SharedWakelock>& sharedWakelock,
         const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
+        const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
@@ -208,6 +212,7 @@ ApplicationManager::ApplicationManager(
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
+    , m_settings(settings)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
@@ -215,7 +220,10 @@ ApplicationManager::ApplicationManager(
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
 
-    Application::lifecycleExceptions << "com.ubuntu.music";
+    if (settings.data()) {
+        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
+        connect(m_settings.data(), &Settings::changed, this, &ApplicationManager::onSettingsChanged);
+    }
 }
 
 ApplicationManager::~ApplicationManager()
@@ -587,9 +595,16 @@ void ApplicationManager::onAppDataChanged(const int role)
         QModelIndex appIndex = findIndex(application);
         Q_EMIT dataChanged(appIndex, appIndex, QVector<int>() << role);
 
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update", application->appId();
+        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update" <<  application->appId();
     } else {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
+    }
+}
+
+void ApplicationManager::onSettingsChanged(const QString &key)
+{
+    if (key == "lifecycleExemptAppids") {
+        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
     }
 }
 
@@ -632,26 +647,26 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
         return;
     }
 
-    boost::optional<QString> desktopFileName{ info->getParameter("--desktop_file_hint=") };
+    QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
-    if (!desktopFileName) {
+    if (desktopFileName.isNull()) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                    << "as no desktop_file_hint specified";
+                    << "as it was not launched by upstart, and no desktop_file_hint is specified";
         return;
     }
 
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
 
     // Guess appId from the desktop file hint
-    QString appId = toShortAppIdIfPossible(desktopFileName.get().remove(QRegExp(".desktop$")).split('/').last());
+    QString appId = toShortAppIdIfPossible(desktopFileName.remove(QRegExp(".desktop$")).split('/').last());
 
     // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
     // case we didn't get an existing .desktop file path
     DesktopFileReader* desktopData;
-    if (QFileInfo::exists(desktopFileName.get())) {
-        desktopData = m_desktopFileReaderFactory->createInstance(appId, QFileInfo(desktopFileName.get()));
+    if (QFileInfo::exists(desktopFileName)) {
+        desktopData = m_desktopFileReaderFactory->createInstance(appId, QFileInfo(desktopFileName));
     } else {
-        qCDebug(QTMIR_APPLICATIONS) << "Unable to find file:" << desktopFileName.get()
+        qCDebug(QTMIR_APPLICATIONS) << "Unable to find file:" << desktopFileName
                                     << "so will search standard paths for one named" << appId << ".desktop";
         desktopData = m_desktopFileReaderFactory->createInstance(appId, m_taskController->findDesktopFileForAppId(appId));
     }
@@ -677,9 +692,9 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
 
     // if stage supplied in CLI, fetch that
     Application::Stage stage = Application::MainStage;
-    boost::optional<QString> stageParam = info->getParameter("--stage_hint=");
+    QString stageParam = info->getParameter("--stage_hint=");
 
-    if (stageParam && stageParam.get() == "side_stage") {
+    if (stageParam == "side_stage") {
         stage = Application::SideStage;
     }
 

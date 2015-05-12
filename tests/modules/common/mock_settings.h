@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,36 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "surfaceobserver.h"
+#ifndef MOCK_SETTINGS_H
+#define MOCK_SETTINGS_H
 
-#include <QMetaObject>
+#include <Unity/Application/settings_interface.h>
 
-SurfaceObserver::SurfaceObserver()
-    : m_listener(nullptr)
-    , m_framesPosted(false)
+#include <gmock/gmock.h>
+
+namespace testing
 {
-}
-
-void SurfaceObserver::setListener(QObject *listener)
+struct MockSettings : public qtmir::SettingsInterface
 {
-    m_listener = listener;
-    if (m_framesPosted) {
-        Q_EMIT framesPosted();
+    MockSettings()
+    {
+        QVariantList lifecycleExemptAppIds;
+        lifecycleExemptAppIds << "com.ubuntu.music";
+        ON_CALL(*this, get(_))
+                .WillByDefault(
+                    Return(lifecycleExemptAppIds));
+
     }
-}
+    MOCK_CONST_METHOD1(get, QVariant(const QString &));
+};
 
-void SurfaceObserver::frame_posted(int /*frames_available*/)
-{
-    m_framesPosted = true;
-    if (m_listener) {
-        Q_EMIT framesPosted();
-    }
-}
-
-void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
-{
-    if (m_listener) {
-        Q_EMIT attributeChanged(attribute, value);
-    }
-}
-
+} // namespace testing
+#endif // MOCK_SETTINGS_H

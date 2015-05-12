@@ -48,6 +48,7 @@ class MirSurfaceManager;
 class ProcInfo;
 class SharedWakelock;
 class TaskController;
+class SettingsInterface;
 
 class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
 {
@@ -86,6 +87,7 @@ public:
             const QSharedPointer<SharedWakelock> &sharedWakelock,
             const QSharedPointer<DesktopFileReader::Factory> &desktopFileReaderFactory,
             const QSharedPointer<ProcInfo> &processInfo,
+            const QSharedPointer<SettingsInterface> &settings,
             QObject *parent = 0);
     virtual ~ApplicationManager();
 
@@ -132,6 +134,7 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
+    void onSettingsChanged(const QString &key);
 
 private:
     void setFocused(Application *application);
@@ -154,6 +157,7 @@ private:
     QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
+    QSharedPointer<SettingsInterface> m_settings;
     static ApplicationManager* the_application_manager;
     QList<pid_t> m_hiddenPIDs;
 

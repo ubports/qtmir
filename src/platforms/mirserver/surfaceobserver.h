@@ -20,7 +20,8 @@
 #include <QObject>
 #include <mir/scene/surface_observer.h>
 
-class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver {
+class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver
+{
     Q_OBJECT
 
 public:
@@ -28,7 +29,7 @@ public:
 
     void setListener(QObject *listener);
 
-    void attrib_changed(MirSurfaceAttrib, int) override {}
+    void attrib_changed(MirSurfaceAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override {}
     void moved_to(mir::geometry::Point const&) override {}
     void hidden_set_to(bool) override {}
@@ -44,6 +45,7 @@ public:
     void client_surface_close_requested() override {}
 
 Q_SIGNALS:
+    void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
 
 private:
