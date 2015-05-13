@@ -161,6 +161,7 @@ private Q_SLOTS:
     void updateMirSurfaceSize();
 
     void updateMirSurfaceFocus(bool focused);
+    void onAttributeChanged(const MirSurfaceAttrib, const int);
 
 private:
     bool updateTexture();
@@ -171,7 +172,6 @@ private:
     void setLive(const bool);
 
     // called by MirSurfaceManager
-    void setAttribute(const MirSurfaceAttrib, const int);
     void setSurfaceValid(const bool);
 
     bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);

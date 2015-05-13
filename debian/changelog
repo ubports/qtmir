@@ -4,6 +4,34 @@ qtmir (0.4.5) UNRELEASED; urgency=medium
 
  -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Thu, 16 Apr 2015 13:25:08 -0300
 
+qtmir (0.4.4+15.04.20150511.1-0ubuntu1) vivid; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Fix debug line
+
+  [ Daniel d'Andrada ]
+  * When synthesizing touch releases for absent touches, send them in
+    separate events (LP: #1437357)
+
+  [ Gerry Boland ]
+  * If Mir fails to start, exit the process immediately as nothing else
+    can be done
+  * Remove boost dependence, it supplies almost nothing of benefit to
+    offset its cost
+  * Remove legacy surface configuration change code, use newer
+    SurfaceObserver
+  * Remove useless profiling information, fixes build with Qt5.5 (LP:
+    #1437181)
+
+  [ Michael Zanetti ]
+  * read exception list from gsettings instead of a hardcoded list
+
+  [ Michał Sawicz ]
+  * Require an application API version, fix the provided version and use
+    include dir from the .pc file
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 11 May 2015 13:16:33 +0000
+
 qtmir (0.4.4+15.04.20150318-0ubuntu1) vivid; urgency=medium
 
   [ Daniel d'Andrada ]

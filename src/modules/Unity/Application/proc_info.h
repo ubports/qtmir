@@ -44,7 +44,7 @@ public:
 
         bool startsWith(const char* prefix) const;
         bool contains(const char* prefix) const;
-        boost::optional<QString> getParameter(const char* name) const;
+        QString getParameter(const char* name) const;
         QStringList asStringList() const;
     };
     virtual std::unique_ptr<CommandLine> commandLine(quint64 pid);

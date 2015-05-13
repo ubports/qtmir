@@ -20,18 +20,6 @@
 #include <mir/graphics/buffer.h>
 #include <mir/geometry/size.h>
 
-// QQuickProfiler uses the pretty syntax for emit, signal & slot
-#define emit Q_EMIT
-#define signals Q_SIGNALS
-#define slots Q_SLOTS
-#include <private/qquickprofiler_p.h>
-#undef emit
-#undef signals
-#undef slots
-#include <QElapsedTimer>
-static QElapsedTimer qsg_renderer_timer;
-static bool qsg_render_timing = !qgetenv("QSG_RENDER_TIMING").isEmpty();
-
 namespace mg = mir::geometry;
 
 MirBufferSGTexture::MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer> buffer)
@@ -88,37 +76,7 @@ bool MirBufferSGTexture::hasAlphaChannel() const
 
 void MirBufferSGTexture::bind()
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    bool profileFrames = qsg_render_timing || QQuickProfiler::enabled;
-#else
-    bool profileFrames = qsg_render_timing || QQuickProfiler::profilingSceneGraph();
-#endif
-    if (profileFrames)
-        qsg_renderer_timer.start();
-
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
     m_mirBuffer->gl_bind_to_texture();
-
-    qint64 bindTime = 0;
-    if (profileFrames)
-        bindTime = qsg_renderer_timer.nsecsElapsed();
-
-    if (qsg_render_timing) {
-        printf("   - mirbuffertexture(%dx%d) bind=%d, total=%d\n",
-               m_width, m_height,
-               int(bindTime/1000000),
-               (int) qsg_renderer_timer.elapsed());
-    }
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-    Q_QUICK_SG_PROFILE1(QQuickProfiler::SceneGraphTexturePrepare, (
-#else
-    Q_QUICK_SG_PROFILE(QQuickProfiler::SceneGraphTexturePrepare, (
-#endif
-            bindTime,  // bind (all this does)
-            0,  // convert (not relevant)
-            0,  // swizzle (not relevant)
-            0,  // upload (not relevant)
-            0)); // mipmap (not used ever...)
 }

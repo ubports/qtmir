@@ -2235,6 +2235,65 @@ TEST_F(ApplicationManagerTests, focusMainStageAfterSideStage)
     applicationManager.focusApplication(webbrowserAppId);
 }
 
+TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
+{
+    using namespace ::testing;
+    quint64 a_procId = 5921;
+    const char an_app_id[] = "some_app";
+    QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
+    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
+
+    ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
+
+    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+
+    bool authed = true;
+
+    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", a_procId);
+    std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", a_procId);
+    applicationManager.authorizeSession(a_procId, authed);
+
+    onSessionStarting(first_session);
+    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
+    onSessionStarting(second_session);
+
+    Application * the_app = applicationManager.findApplication(an_app_id);
+    applicationManager.focusApplication(an_app_id);
+
+    // Add to other apps to the list (Not "some_app")
+    QVariantList lifecycleExemptAppIds;
+    lifecycleExemptAppIds << "one_app" << "another_app";
+    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
+    settings.changed("lifecycleExemptAppids");
+
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    applicationManager.setSuspended(true);
+
+    // And expect "some_app" to get suspended
+    EXPECT_EQ(Application::Suspended, the_app->state());
+
+    applicationManager.setSuspended(false);
+
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    // Now add "some_app" to the exception list
+    lifecycleExemptAppIds << "some_app";
+    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
+    settings.changed("lifecycleExemptAppids");
+
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    applicationManager.setSuspended(true);
+
+    // And expect it to be running still
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    applicationManager.setSuspended(false);
+
+    EXPECT_EQ(Application::Running, the_app->state());
+}
+
 /*
  * Test lifecycle exempt applications have their wakelocks released when shell tries to suspend them
  */
