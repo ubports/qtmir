@@ -46,16 +46,16 @@ bool ProcInfo::CommandLine::contains(char const* prefix) const {
     return m_command.contains(prefix);
 }
 
-boost::optional<QString> ProcInfo::CommandLine::getParameter(const char* name) const {
+QString ProcInfo::CommandLine::getParameter(const char* name) const {
     QString pattern = QRegularExpression::escape(name) + "(\\S+)";
     QRegularExpression regExp(pattern);
     QRegularExpressionMatch regExpMatch = regExp.match(m_command);
 
     if (!regExpMatch.hasMatch()) {
-        return boost::optional<QString>{};
+        return QString();
     }
 
-    return boost::optional<QString>{regExpMatch.captured(1)};
+    return QString(regExpMatch.captured(1));
 }
 
 } // namespace qtmir

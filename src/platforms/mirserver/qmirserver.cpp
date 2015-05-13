@@ -69,7 +69,7 @@ QMirServer::QMirServer(const QSharedPointer<MirServer> &server, QObject *parent)
     if (!m_mirServer->wait_for_mir_startup())
     {
         qCritical() << "ERROR: QMirServer - Mir failed to start";
-        QCoreApplication::quit();
+        exit(2);
     }
 }
 

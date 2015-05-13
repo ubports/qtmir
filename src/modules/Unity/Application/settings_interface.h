@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,36 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "surfaceobserver.h"
+#ifndef SETTINGS_INTERFACE_H
+#define SETTINGS_INTERFACE_H
 
-#include <QMetaObject>
+//Qt
+#include <QObject>
 
-SurfaceObserver::SurfaceObserver()
-    : m_listener(nullptr)
-    , m_framesPosted(false)
+namespace qtmir
 {
+
+class SettingsInterface: public QObject
+{
+    Q_OBJECT
+public:
+    explicit SettingsInterface(QObject *parent = 0): QObject(parent) {}
+
+    virtual QVariant get(const QString &key) const = 0;
+
+Q_SIGNALS:
+    void changed(const QString &key);
+};
+
 }
 
-void SurfaceObserver::setListener(QObject *listener)
-{
-    m_listener = listener;
-    if (m_framesPosted) {
-        Q_EMIT framesPosted();
-    }
-}
-
-void SurfaceObserver::frame_posted(int /*frames_available*/)
-{
-    m_framesPosted = true;
-    if (m_listener) {
-        Q_EMIT framesPosted();
-    }
-}
-
-void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
-{
-    if (m_listener) {
-        Q_EMIT attributeChanged(attribute, value);
-    }
-}
-
+#endif // SETTINGS_INTERFACE_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,6 +20,7 @@
 #include <QString>
 
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/events/input/input_event.h>
 
 class QTouchEvent;
 
@@ -34,5 +35,8 @@ const char *mirSurfaceVisibilityToStr(int value);
 const char *mirMotionActionToStr(int value);
 
 const char *applicationStateToStr(int state);
+
+QString mirTouchEventToString(MirTouchEvent const* event);
+const char *mirTouchActionToString(MirTouchAction touchAction);
 
 #endif // UBUNTUGESTURES_DEBUG_HELPER_H

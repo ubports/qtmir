@@ -59,7 +59,6 @@ find_package(Qt5Sensors 5.3 REQUIRED)
 find_package(Qt5Test 5.3 REQUIRED)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.50 COMPONENTS system REQUIRED)
 
 find_package(Protobuf REQUIRED)
 if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
@@ -78,8 +77,10 @@ pkg_check_modules(EGL egl)
 pkg_check_modules(GIO gio-2.0)
 pkg_check_modules(GIO_UNIX gio-unix-2.0)
 pkg_check_modules(LTTNG lttng-ust)
+pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=5)
 
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 

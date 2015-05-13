@@ -104,18 +104,6 @@ mir::frontend::SurfaceId MirShell::create_surface(const std::shared_ptr<ms::Sess
      return AbstractShell::create_surface(session, placedParameters);
 }
 
-int MirShell::set_surface_attribute(
-    const std::shared_ptr<mir::scene::Session> &session,
-    const std::shared_ptr<mir::scene::Surface> &surface,
-    MirSurfaceAttrib attrib,
-    int value)
-{
-    auto const result = AbstractShell::set_surface_attribute(session, surface, attrib, value);
-    Q_EMIT surfaceAttributeChanged(surface.get(), attrib, result);
-
-    return result;
-}
-
 void NullWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }

@@ -12,10 +12,10 @@ Build-Depends: cmake,
 # on an x86 CPU for example, when cross-compiling.
                g++-4.9:native,
                google-mock (>= 1.6.0+svn437),
-               libboost-system-dev,
                libfontconfig1-dev,
                libgles2-mesa-dev,
                libglib2.0-dev,
+               libgsettings-qt-dev,
                liblttng-ust-dev,
                libmirclient-dev (>= 0.13.0),
                libmircommon-dev (>= 0.13.0),
@@ -99,7 +99,7 @@ Replaces: libqtmir,
 Conflicts: libqtmir,
            libunity-mir1,
 Provides: unity-application-impl,
-          unity-application-impl-4,
+          unity-application-impl-5,
 Description: Qt plugin for Unity specific Mir APIs
  QtMir provides Qt/QML bindings for Mir features that are exposed through the
  qtmir-desktop or qtmir-android QPA plugin such as Application management
