@@ -71,7 +71,6 @@ public:
     void hide() override {}
     void show() override {}
     void move_to(geometry::Point const&) override {}
-    void take_input_focus(std::shared_ptr<shell::InputTargeter> const&) override {}
     void set_input_region(std::vector<geometry::Rectangle> const&) override {}
     void allow_framedropping(bool) override {}
     void resize(geometry::Size const&) override {}
@@ -96,7 +95,7 @@ public:
     bool supports_input() const override { return true;}
     int client_input_fd() const override { return fd;}
     int configure(MirSurfaceAttrib, int) override { return 0; }
-    int query(MirSurfaceAttrib) override { return 0; }
+    int query(MirSurfaceAttrib) const override { return 0; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& ) override {}
 };
 
