@@ -78,10 +78,8 @@ void QMirServer::stop()
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
             d->serverThread->terminate();
-            return;
         }
     }
-    return;
 }
 
 bool QMirServer::isRunning() const
