@@ -19,7 +19,7 @@
 
 // local
 #include "qmirserver_p.h"
-
+#include <QDebug>
 
 /* FIXME: QThread by default starts an event loop, which is required for correct signal/slot
  * messaging between threads. However below you'll see that the mir server run() method
@@ -43,11 +43,12 @@ void MirServerWorker::run()
         });
 
     server->run(); // blocks until Mir server stopped
+    qDebug() << "stopped";
     Q_EMIT stopped();
 }
 
 void MirServerWorker::stop()
-{
+{qDebug() << "stop";
     server->stop();
 }
 

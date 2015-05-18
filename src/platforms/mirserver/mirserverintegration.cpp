@@ -77,6 +77,10 @@ MirServerIntegration::MirServerIntegration()
         }
     }
 
+    // If Mir shuts down, quit.
+    QObject::connect(m_mirServer.data(), &QMirServer::stopped,
+                     QCoreApplication::instance(), &QCoreApplication::quit);
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
     QGuiApplicationPrivate::instance()->setEventDispatcher(eventDispatcher_);
     initialize();
@@ -152,7 +156,7 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
-    m_mirServer->run();
+    m_mirServer->start();
 
     m_display = new Display(m_mirServer->mirServer());
     m_nativeInterface = new NativeInterface(m_mirServer->mirServer());

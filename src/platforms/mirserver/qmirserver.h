@@ -32,11 +32,15 @@ public:
     QMirServer(const QStringList &arguments, QObject* parent=0);
     virtual ~QMirServer();
 
-    bool run();
+    bool start();
     Q_SLOT bool stop();
     bool isRunning() const;
 
     QWeakPointer<MirServer> mirServer() const;
+
+Q_SIGNALS:
+    void started();
+    void stopped();
 
 protected:
     QMirServerPrivate * const d_ptr;
