@@ -19,7 +19,6 @@
 
 // local
 #include "qmirserver_p.h"
-#include <QDebug>
 
 /* FIXME: QThread by default starts an event loop, which is required for correct signal/slot
  * messaging between threads. However below you'll see that the mir server run() method
@@ -27,7 +26,7 @@
  * the queued signal/slot mechanism does not work. As workaround, need to use direct call to
  * stop the server.
  */
-void MirServerWorker::run()
+void MirServerThread::run()
 {
     auto const main_loop = server->the_main_loop();
     // By enqueuing the notification code in the main loop, we are
@@ -43,16 +42,15 @@ void MirServerWorker::run()
         });
 
     server->run(); // blocks until Mir server stopped
-    qDebug() << "stopped";
     Q_EMIT stopped();
 }
 
-void MirServerWorker::stop()
-{qDebug() << "stop";
+void MirServerThread::stop()
+{
     server->stop();
 }
 
-bool MirServerWorker::waitForMirStartup()
+bool MirServerThread::waitForMirStartup()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return mir_running; });

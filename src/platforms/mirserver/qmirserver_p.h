@@ -29,23 +29,21 @@
 #include "mirserver.h"
 
 class QMirServer;
-class MirServerWorker;
+class MirServerThread;
 
 struct QMirServerPrivate
 {
     QSharedPointer<MirServer> server;
-    QThread serverThread;
-    MirServerWorker *serverWorker;
+    MirServerThread *serverThread;
 };
 
 
-// Wraps mir::Server with QObject, so it can be controlled via QThread
-class MirServerWorker : public QObject
+class MirServerThread : public QThread
 {
     Q_OBJECT
 
 public:
-    MirServerWorker(const QSharedPointer<MirServer> &server)
+    MirServerThread(const QSharedPointer<MirServer> &server)
         : server(server)
     {}
 
@@ -55,7 +53,7 @@ Q_SIGNALS:
     void stopped();
 
 public Q_SLOTS:
-    void run();
+    void run() override;
     void stop();
 
 private:

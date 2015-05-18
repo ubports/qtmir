@@ -43,12 +43,9 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
 
     d->server = QSharedPointer<MirServer>(new MirServer(argc, const_cast<const char**>(argv)));
 
-    d->serverWorker = new MirServerWorker(d->server);
-    d->serverWorker->moveToThread(&d->serverThread);
+    d->serverThread = new MirServerThread(d->server);
 
-/*    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
-            d->serverWorker, &MirServerWorker::stop, Qt::DirectConnection);*/ // see FIXME in MirServerWorker
-    connect(d->serverWorker, &MirServerWorker::stopped, this, &QMirServer::serverStopped, Qt::DirectConnection);
+    connect(d->serverThread, &MirServerThread::stopped, this, &QMirServer::serverStopped);
 }
 
 QMirServer::~QMirServer()
@@ -60,10 +57,9 @@ bool QMirServer::start()
 {
     Q_D(QMirServer);
 
-    d->serverThread.start(QThread::TimeCriticalPriority);
-    QMetaObject::invokeMethod(d->serverWorker, "run");
+    d->serverThread->start(QThread::TimeCriticalPriority);
 
-    if (!d->serverWorker->waitForMirStartup())
+    if (!d->serverThread->waitForMirStartup())
     {
         qCritical() << "ERROR: QMirServer - Mir failed to start";
         return false;
@@ -77,13 +73,12 @@ bool QMirServer::stop()
 {
     Q_D(QMirServer);
 
-    if (d->serverThread.isRunning()) {
-        d->serverWorker->stop();
-        //QMetaObject::invokeMethod(d->serverWorker, "stop");
-        if (!d->serverThread.wait(10000)) {
+    if (d->serverThread->isRunning()) {
+        d->serverThread->stop();
+        if (!d->serverThread->wait(10000)) {
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
-            d->serverThread.terminate();
+            d->serverThread->terminate();
             return false;
         }
     }
@@ -93,15 +88,15 @@ bool QMirServer::stop()
 bool QMirServer::isRunning() const
 {
     Q_D(const QMirServer);
-    return d->serverThread.isRunning();
+    return d->serverThread->isRunning();
 }
 
 void QMirServer::serverStopped()
 {
     Q_D(QMirServer);
 
-    if (d->serverThread.isRunning())
-        d->serverThread.quit();
+    if (d->serverThread->isRunning())
+        d->serverThread->quit();
 
     // if unexpected mir server stop, better quit the QApplication
     if (!QCoreApplication::closingDown()) {
