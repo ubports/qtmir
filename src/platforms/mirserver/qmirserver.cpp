@@ -53,7 +53,7 @@ QMirServer::~QMirServer()
     stop();
 }
 
-void QMirServer::start()
+bool QMirServer::start()
 {
     Q_D(QMirServer);
 
@@ -62,10 +62,11 @@ void QMirServer::start()
     if (!d->serverThread->waitForMirStartup())
     {
         qCritical() << "ERROR: QMirServer - Mir failed to start";
-        return;
+        return false;
     }
 
     Q_EMIT started();
+    return true;
 }
 
 void QMirServer::stop()

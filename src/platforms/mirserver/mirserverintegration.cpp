@@ -156,7 +156,9 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
-    m_mirServer->start();
+    if (!m_mirServer->start()) {
+        exit(2);
+    }
 
     m_display = new Display(m_mirServer->mirServer());
     m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
