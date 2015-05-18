@@ -45,7 +45,7 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
 
     d->serverThread = new MirServerThread(d->server);
 
-    connect(d->serverThread, &MirServerThread::stopped, this, &QMirServer::serverStopped);
+    connect(d->serverThread, &MirServerThread::stopped, this, &QMirServer::stopped);
 }
 
 QMirServer::~QMirServer()
@@ -53,7 +53,7 @@ QMirServer::~QMirServer()
     stop();
 }
 
-bool QMirServer::start()
+void QMirServer::start()
 {
     Q_D(QMirServer);
 
@@ -62,14 +62,13 @@ bool QMirServer::start()
     if (!d->serverThread->waitForMirStartup())
     {
         qCritical() << "ERROR: QMirServer - Mir failed to start";
-        return false;
+        return;
     }
 
     Q_EMIT started();
-    return true;
 }
 
-bool QMirServer::stop()
+void QMirServer::stop()
 {
     Q_D(QMirServer);
 
@@ -79,29 +78,16 @@ bool QMirServer::stop()
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
             d->serverThread->terminate();
-            return false;
+            return;
         }
     }
-    return true;
+    return;
 }
 
 bool QMirServer::isRunning() const
 {
     Q_D(const QMirServer);
     return d->serverThread->isRunning();
-}
-
-void QMirServer::serverStopped()
-{
-    Q_D(QMirServer);
-
-    if (d->serverThread->isRunning())
-        d->serverThread->quit();
-
-    // if unexpected mir server stop, better quit the QApplication
-    if (!QCoreApplication::closingDown()) {
-        QCoreApplication::quit();
-    }
 }
 
 QWeakPointer<MirServer> QMirServer::mirServer() const

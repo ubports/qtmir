@@ -32,8 +32,8 @@ public:
     QMirServer(const QStringList &arguments, QObject* parent=0);
     virtual ~QMirServer();
 
-    bool start();
-    Q_SLOT bool stop();
+    void start();
+    Q_SLOT void stop();
     bool isRunning() const;
 
     QWeakPointer<MirServer> mirServer() const;
@@ -44,8 +44,6 @@ Q_SIGNALS:
 
 protected:
     QMirServerPrivate * const d_ptr;
-
-    Q_SLOT void serverStopped();
 
 private:
     Q_DISABLE_COPY(QMirServer)
