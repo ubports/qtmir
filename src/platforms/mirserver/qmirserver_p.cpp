@@ -20,12 +20,7 @@
 // local
 #include "qmirserver_p.h"
 
-/* FIXME: QThread by default starts an event loop, which is required for correct signal/slot
- * messaging between threads. However below you'll see that the mir server run() method
- * blocks, which blocks the event loop for this thread too. Therefore while mir is running
- * the queued signal/slot mechanism does not work. As workaround, need to use direct call to
- * stop the server.
- */
+
 void MirServerThread::run()
 {
     auto const main_loop = server->the_main_loop();
