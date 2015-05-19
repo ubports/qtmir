@@ -17,7 +17,6 @@
 // Qt
 #include <QObject>
 #include <QCoreApplication>
-#include <QMetaObject>
 #include <QDebug>
 
 // local
