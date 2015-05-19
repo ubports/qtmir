@@ -119,13 +119,24 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
     DisplayWindow* displayWindow = nullptr;
 
     auto const mirServer = m_mirServer->mirServer().lock();
+    mg::DisplayBuffer* first_buffer{nullptr};
+    mg::DisplaySyncGroup* first_group{nullptr};
     if (mirServer) {
-        mirServer->the_display()->for_each_display_buffer(
-                    [&](mg::DisplayBuffer& buffer) {
-            // FIXME(gerry) this will go very bad for >1 display buffer
-            displayWindow = new DisplayWindow(window, &buffer);
+        mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
+            if (!first_group) {
+                first_group = &group;
+            }
+            group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
+                if (!first_buffer) {
+                    first_buffer = &buffer;
+                }
+            });
         });
     }
+
+    // FIXME(gerry) this will go very bad for >1 display buffer
+    if (first_group && first_buffer)
+        displayWindow = new DisplayWindow(window, first_group, first_buffer);
 
     if (!displayWindow)
         return nullptr;

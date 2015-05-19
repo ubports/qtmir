@@ -72,6 +72,7 @@ target_link_libraries(
     qpa-mirserver
 
     ${MIRSERVER_LDFLAGS}
+    ${MIRCLIENT_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
     ${PROTOBUF_LDFLAGS}
     ${EGL_LDFLAGS}
