@@ -4,6 +4,19 @@ qtmir (0.4.5) UNRELEASED; urgency=medium
 
  -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Thu, 16 Apr 2015 13:25:08 -0300
 
+qtmir (0.4.4+15.04.20150513-0ubuntu1) vivid; urgency=medium
+
+  [ Alan Griffiths ]
+  * Release in step with Mir 0.13.0
+
+  [ Daniel van Vugt ]
+  * Release in step with Mir 0.13.0
+
+  [ Gerry Boland ]
+  * Release in step with Mir 0.13.0
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 13 May 2015 09:44:12 +0000
+
 qtmir (0.4.4+15.04.20150511.1-0ubuntu1) vivid; urgency=medium
 
   [ Albert Astals Cid ]

@@ -36,10 +36,14 @@ static WId newWId()
     return ++id;
 }
 
-DisplayWindow::DisplayWindow(QWindow *window, mir::graphics::DisplayBuffer *displayBuffer)
+DisplayWindow::DisplayWindow(
+    QWindow *window,
+    mir::graphics::DisplaySyncGroup *displayGroup,
+    mir::graphics::DisplayBuffer *displayBuffer)
     : QObject(nullptr), QPlatformWindow(window)
     , m_isExposed(true)
     , m_winId(newWId())
+    , m_displayGroup(displayGroup)
     , m_displayBuffer(displayBuffer)
 {
     qDebug() << "DisplayWindow::DisplayWindow";
@@ -101,7 +105,17 @@ bool DisplayWindow::event(QEvent *event)
 void DisplayWindow::swapBuffers()
 {
     m_displayBuffer->gl_swap_buffers();
-    m_displayBuffer->flip();
+
+    // FIXME this exposes a QtMir architecture problem now, as DisplayWindow
+    // is supposed to wrap a mg::DisplayBuffer. We use Qt's multithreaded
+    // renderer, where each DisplayWindow is rendered to relatively
+    // independently, and post() called also individually.
+    //
+    // But in multimonitor case where a DisplaySyncGroup contains 2
+    // DisplayBuffers, one post() call will submit both
+    // mg::DisplayBuffers for flipping, which can happen before the other
+    // DisplayWindow has been rendered to, causing visual artifacts
+    m_displayGroup->post();
 }
 
 void DisplayWindow::makeCurrent()

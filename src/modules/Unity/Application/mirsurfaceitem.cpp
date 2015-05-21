@@ -71,28 +71,28 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
     return m_mods;
 }
 
-mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerInputEventAction action)
+mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
     auto timestamp = qtEvent->timestamp() * 1000000;
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
 
-    std::vector<MirPointerInputEventButton> buttons;
+    std::vector<MirPointerButton> buttons;
     if (qtEvent->buttons() & Qt::LeftButton)
-        buttons.push_back(mir_pointer_input_button_primary);
+        buttons.push_back(mir_pointer_button_primary);
     if (qtEvent->buttons() & Qt::RightButton)
-        buttons.push_back(mir_pointer_input_button_secondary);
+        buttons.push_back(mir_pointer_button_secondary);
     if (qtEvent->buttons() & Qt::MidButton)
-        buttons.push_back(mir_pointer_input_button_tertiary);
+        buttons.push_back(mir_pointer_button_tertiary);
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0);
 }
 
-mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerInputEventAction action)
+mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
     auto timestamp = qtEvent->timestamp() * 1000000;
 
-    std::vector<MirPointerInputEventButton> buttons;
+    std::vector<MirPointerButton> buttons;
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0);
@@ -100,20 +100,20 @@ mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerInputEventAction act
 
 mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
 {
-    MirKeyInputEventAction action = mir_key_input_event_action_down;
+    MirKeyboardAction action = mir_keyboard_action_down;
     switch (qtEvent->type())
     {
     case QEvent::KeyPress:
-        action = mir_key_input_event_action_down;
+        action = mir_keyboard_action_down;
         break;
     case QEvent::KeyRelease:
-        action = mir_key_input_event_action_up;
+        action = mir_keyboard_action_up;
         break;
     default:
         break;
     }
     if (qtEvent->isAutoRepeat())
-        action = mir_key_input_event_action_repeat;
+        action = mir_keyboard_action_repeat;
 
     return mir::events::make_event(0 /* DeviceID */, qtEvent->timestamp() * 1000000,
                            action, qtEvent->nativeVirtualKey(),
@@ -134,19 +134,19 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
         auto touchPoint = qtTouchPoints.at(i);
         auto id = touchPoint.id();
 
-        MirTouchInputEventTouchAction action = mir_touch_input_event_action_change;
+        MirTouchAction action = mir_touch_action_change;
         if (touchPoint.state() == Qt::TouchPointReleased)
         {
-            action = mir_touch_input_event_action_up;
+            action = mir_touch_action_up;
         }
         if (touchPoint.state() == Qt::TouchPointPressed)
         {
-            action = mir_touch_input_event_action_down;
+            action = mir_touch_action_down;
         }
 
-        MirTouchInputEventTouchTooltype tooltype = mir_touch_input_tool_type_finger;
+        MirTouchTooltype tooltype = mir_touch_tooltype_finger;
         if (touchPoint.flags() & QTouchEvent::TouchPoint::Pen)
-            tooltype = mir_touch_input_tool_type_stylus;
+            tooltype = mir_touch_tooltype_stylus;
 
         mir::events::add_touch(*ev, id, action, tooltype,
                                touchPoint.pos().x(), touchPoint.pos().y(),
@@ -459,14 +459,14 @@ void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
     if (type() == InputMethod) {
         // FIXME: Hack to get the VKB use case working while we don't have the proper solution in place.
         if (isMouseInsideUbuntuKeyboard(event)) {
-            auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
+            auto ev = makeMirEvent(event, mir_pointer_action_button_down);
             m_surface->consume(*ev);
             event->accept();
         } else {
             event->ignore();
         }
     } else {
-        auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_down);
+        auto ev = makeMirEvent(event, mir_pointer_action_button_down);
         m_surface->consume(*ev);
         event->accept();
     }
@@ -474,14 +474,14 @@ void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
 
 void MirSurfaceItem::mouseMoveEvent(QMouseEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_motion);
+    auto ev = makeMirEvent(event, mir_pointer_action_motion);
     m_surface->consume(*ev);
     event->accept();
 }
 
 void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_button_up);
+    auto ev = makeMirEvent(event, mir_pointer_action_button_up);
     m_surface->consume(*ev);
     event->accept();
 }
@@ -493,21 +493,21 @@ void MirSurfaceItem::wheelEvent(QWheelEvent *event)
 
 void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_enter);
+    auto ev = makeMirEvent(event, mir_pointer_action_enter);
     m_surface->consume(*ev);
     event->accept();
 }
 
 void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_leave);
+    auto ev = makeMirEvent(event, mir_pointer_action_leave);
     m_surface->consume(*ev);
     event->accept();
 }
 
 void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
 {
-    auto ev = makeMirEvent(event, mir_pointer_input_event_action_motion);
+    auto ev = makeMirEvent(event, mir_pointer_action_motion);
     m_surface->consume(*ev);
     event->accept();
 }

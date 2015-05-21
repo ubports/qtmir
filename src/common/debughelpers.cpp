@@ -176,14 +176,14 @@ const char *mirSurfaceVisibilityToStr(int value)
     }
 }
 
-const char *mirTouchActionToStr(MirTouchInputEventTouchAction action)
+const char *mirTouchActionToStr(MirTouchAction action)
 {
     switch (action) {
-    case mir_touch_input_event_action_up:
+    case mir_touch_action_up:
         return "up";
-    case mir_touch_input_event_action_down:
+    case mir_touch_action_down:
         return "down";
-    case mir_touch_input_event_action_change:
+    case mir_touch_action_change:
         return "change";
     default:
         return "???";
@@ -208,9 +208,9 @@ const char *applicationStateToStr(int state)
     }
 }
 
-QString mirTouchEventToString(MirTouchInputEvent const* event)
+QString mirTouchEventToString(MirTouchEvent const* event)
 {
-    const int pointerCount = mir_touch_input_event_get_touch_count(event);
+    const int pointerCount = mir_touch_event_point_count(event);
 
     QString string("MirTouchInputEvent(");
 
@@ -220,13 +220,13 @@ QString mirTouchEventToString(MirTouchInputEvent const* event)
             string.append(",");
         }
 
-        MirTouchInputEventTouchAction touchAction = mir_touch_input_event_get_touch_action(event, i);
+        MirTouchAction touchAction = mir_touch_event_action(event, i);
 
         QString touchStr = QString("(id=%1,action=%2,x=%3,y=%4)")
-            .arg(mir_touch_input_event_get_touch_id(event, i))
+            .arg(mir_touch_event_id(event, i))
             .arg(mirTouchActionToString(touchAction))
-            .arg(mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_x))
-            .arg(mir_touch_input_event_get_touch_axis_value(event, i, mir_touch_input_axis_y));
+            .arg(mir_touch_event_axis_value(event, i, mir_touch_axis_x))
+            .arg(mir_touch_event_axis_value(event, i, mir_touch_axis_y));
 
         string.append(touchStr);
     }
@@ -236,17 +236,17 @@ QString mirTouchEventToString(MirTouchInputEvent const* event)
     return string;
 }
 
-const char *mirTouchActionToString(MirTouchInputEventTouchAction touchAction)
+const char *mirTouchActionToString(MirTouchAction touchAction)
 {
     switch (touchAction)
     {
-    case mir_touch_input_event_action_up:
+    case mir_touch_action_up:
         return "up";
         break;
-    case mir_touch_input_event_action_down:
+    case mir_touch_action_down:
         return "down";
         break;
-    case mir_touch_input_event_action_change:
+    case mir_touch_action_change:
         return "change";
         break;
     default:

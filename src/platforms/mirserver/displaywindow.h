@@ -21,6 +21,7 @@
 
 #include <qpa/qplatformwindow.h>
 
+#include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
 
 #include <QObject>
@@ -32,7 +33,7 @@ class DisplayWindow : public QObject, public QPlatformWindow
 {
     Q_OBJECT
 public:
-    explicit DisplayWindow(QWindow *window, mir::graphics::DisplayBuffer*);
+    explicit DisplayWindow(QWindow *window, mir::graphics::DisplaySyncGroup*, mir::graphics::DisplayBuffer*);
 
     QRect geometry() const override;
     void setGeometry(const QRect &rect) override;
@@ -50,6 +51,7 @@ public:
 private:
     bool m_isExposed;
     WId m_winId;
+    mir::graphics::DisplaySyncGroup *m_displayGroup;
     mir::graphics::DisplayBuffer *m_displayBuffer;
 };
 
