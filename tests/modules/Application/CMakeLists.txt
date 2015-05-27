@@ -1,6 +1,7 @@
 set(
   APPLICATION_TEST_SOURCES
   application_test.cpp
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
 )
 
 include_directories(
@@ -18,6 +19,8 @@ target_link_libraries(
 
   unityapplicationplugin
   qpa-mirserver
+
+  Qt5::Test
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

@@ -21,7 +21,7 @@
 
 #include <Unity/Application/session.h>
 
- #include "qtmir_test.h"
+#include "qtmir_test.h"
 
 using namespace qtmir;
 using mir::scene::MockSession;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -48,14 +48,12 @@ public:
 Q_SIGNALS:
     void processStarting(const QString &appId);
     void processStopped(const QString &appId);
+    void processSuspended(const QString &appId);
     void processFailed(const QString &appId, const bool duringStartup);
-    void requestFocus(const QString &appId);
-    void requestResume(const QString &appId);
+    void focusRequested(const QString &appId);
+    void resumeRequested(const QString &appId);
 
 private Q_SLOTS:
-    void onApplicationFocusRequest(const QString &id);
-    void onApplicationResumeRequest(const QString &id);
-
     void onApplicationError(const QString &id, ApplicationController::Error error);
 
 private:

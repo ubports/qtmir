@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,15 +52,18 @@ public:
     //getters
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceItem* surface() const override;
+    MirSurfaceItemInterface* surface() const override;
     SessionInterface* parentSession() const override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
 
     void setApplication(unity::shell::application::ApplicationInfoInterface* item) override;
-    void setSurface(MirSurfaceItem* surface) override;
-    void setState(State state) override;
+    void setSurface(MirSurfaceItemInterface* surface) override;
+
+    void suspend() override;
+    void resume() override;
+    void stop() override;
 
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;
@@ -74,23 +77,28 @@ public:
 
     SessionModel* childSessions() const override;
 
-protected:
     void setFullscreen(bool fullscreen) override;
     void setLive(const bool) override;
     void appendPromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) override;
     void removePromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) override;
+
+public Q_SLOTS:
+    // it's public to ease testing
+    void doSuspend();
 
 private Q_SLOTS:
     void updateFullscreenProperty();
 
 private:
     void setParentSession(Session* session);
+    void setState(State state);
+    void doResume();
 
     void stopPromptSessions();
 
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
-    MirSurfaceItem* m_surface;
+    MirSurfaceItemInterface* m_surface;
     SessionInterface* m_parentSession;
     SessionModel* m_children;
     bool m_fullscreen;
@@ -102,7 +110,5 @@ private:
 };
 
 } // namespace qtmir
-
-Q_DECLARE_METATYPE(qtmir::Session*)
 
 #endif // SESSION_H

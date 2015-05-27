@@ -28,6 +28,8 @@
 // Unity API
 #include <unity/shell/application/ApplicationInfoInterface.h>
 
+#include "session_interface.h"
+
 namespace mir {
     namespace scene {
         class Session;
@@ -39,7 +41,6 @@ namespace qtmir
 
 class ApplicationManager;
 class DesktopFileReader;
-class TaskController;
 class Session;
 class SharedWakelock;
 
@@ -54,7 +55,7 @@ class Application : public unity::shell::application::ApplicationInfoInterface
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
     Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
     Q_PROPERTY(SupportedOrientations supportedOrientations READ supportedOrientations CONSTANT)
-    Q_PROPERTY(Session* session READ session NOTIFY sessionChanged DESIGNABLE false)
+    Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
 
 public:
     Q_DECLARE_FLAGS(Stages, Stage)
@@ -68,10 +69,27 @@ public:
     };
     Q_DECLARE_FLAGS(SupportedOrientations, Orientation)
 
-    Application(const QSharedPointer<TaskController>& taskController,
-                const QSharedPointer<SharedWakelock>& sharedWakelock,
+    enum ProcessState {
+        ProcessUnknown,
+        ProcessRunning,
+        ProcessSuspended,
+        ProcessStopped
+    };
+
+    enum class InternalState {
+        Starting,
+        Running,
+        RunningWithoutWakelock,
+        SuspendingWaitSession,
+        SuspendingWaitProcess,
+        Suspended,
+        KilledOutOfMemory, // It was killed because the device was running out of memory
+                           // and we can respawn it
+        Stopped // It closed itself, crashed or it stopped and we can't respawn it
+                // In any case, this is a dead end.
+    };
+    Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                 DesktopFileReader *desktopFileReader,
-                State state,
                 const QStringList &arguments,
                 ApplicationManager *parent);
     virtual ~Application();
@@ -94,12 +112,17 @@ public:
     QColor splashColorFooter() const override;
 
     void setStage(Stage stage);
-    void setState(State state);
 
-    Session* session() const;
+
+    void setProcessState(ProcessState value);
+    ProcessState processState() const;
+
+    QStringList arguments() const { return m_arguments; }
+
+    SessionInterface* session() const;
+    void setSession(SessionInterface *session);
 
     bool canBeResumed() const;
-    void setCanBeResumed(const bool);
 
     bool isValid() const;
     QString desktopFile() const;
@@ -111,42 +134,55 @@ public:
 
     pid_t pid() const;
 
+    // for tests
+    InternalState internalState() const { return m_state; }
+
     static QStringList lifecycleExceptions;
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
     void stageChanged(Stage stage);
-    void sessionChanged(Session *session);
+    void sessionChanged(SessionInterface *session);
+
+    void startProcessRequested();
+    void suspendProcessRequested();
+    void resumeProcessRequested();
+    void stopped();
 
 private Q_SLOTS:
-    void onSessionSuspended();
-    void onSessionResumed();
+    void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
 
 private:
+
     QString longAppId() const;
-    void holdWakelock(bool enable) const;
+    void acquireWakelock() const;
+    void releaseWakelock() const;
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
     void setFocused(bool focus);
-    void setSession(Session *session);
+    void setState(InternalState state);
+    void wipeQMLCache();
+    void suspend();
+    void resume();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
+    static const char* internalStateToStr(InternalState state);
+    void applyRequestedState();
 
-    QSharedPointer<TaskController> m_taskController;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
     QString m_longAppId;
     qint64 m_pid;
     Stage m_stage;
     Stages m_supportedStages;
-    State m_state;
+    InternalState m_state;
     bool m_focused;
-    bool m_canBeResumed;
     QStringList m_arguments;
     SupportedOrientations m_supportedOrientations;
-    Session *m_session;
+    SessionInterface *m_session;
     RequestedState m_requestedState;
+    ProcessState m_processState;
 
     friend class ApplicationManager;
     friend class SessionManager;

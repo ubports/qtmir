@@ -82,6 +82,8 @@ pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=6)
 
+include_directories(${APPLICATION_API_INCLUDE_DIRS})
+
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 # We expect this to be set via debian/rules for GLES builds

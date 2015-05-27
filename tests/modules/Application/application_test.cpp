@@ -20,6 +20,10 @@
 
 #include "qtmir_test.h"
 
+#include <mock_session.h>
+
+#include <QSignalSpy>
+
 
 using namespace qtmir;
 
@@ -30,93 +34,171 @@ public:
     {}
 };
 
-TEST_F(ApplicationTests, checkFocusAcquiresWakeLock)
+TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
 {
     using namespace ::testing;
+    QString appId("foo-app");
 
-    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
+    auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    startApplication(123, "app");
-    applicationManager.focusApplication("app");
-}
+    Application *application = new Application(
+            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+            desktopFileReader, QStringList(), nullptr);
 
-TEST_F(ApplicationTests, checkSuspendReleasesWakeLock)
-{
-    using namespace ::testing;
+    application->setProcessState(Application::ProcessRunning);
 
-    auto app = startApplication(123, "app");
-    auto session = app->session();
+    NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
-    applicationManager.focusApplication("app");
+    EXPECT_CALL(*session, setApplication(_));
+    EXPECT_CALL(*session, fullscreen()).WillRepeatedly(Return(false));
 
-    Q_EMIT session->suspended();
+    application->setSession(session);
+
+    ASSERT_EQ(Application::InternalState::Starting, application->internalState());
+
+    session->setState(SessionInterface::Running);
+
+    EXPECT_TRUE(sharedWakelock.enabled());
+
+    ASSERT_EQ(Application::InternalState::Running, application->internalState());
+
+    application->setRequestedState(Application::RequestedSuspended);
+
+    ASSERT_EQ(SessionInterface::Suspending, session->state());
+    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
+
+    session->setState(SessionInterface::Suspended);
+
+    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
+
+    application->setProcessState(Application::ProcessSuspended);
+
+    ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
+
     EXPECT_FALSE(sharedWakelock.enabled());
+
+    delete application;
 }
 
 TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
 {
     using namespace ::testing;
+    QString appId("foo-app");
 
-    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
+    auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    auto app = startApplication(123, "app");
-    auto session = app->session();
+    Application *application = new Application(
+            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+            desktopFileReader, QStringList(), nullptr);
+    NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
-    Q_EMIT session->resumed();
+    // Get it running and then suspend it
+    application->setProcessState(Application::ProcessRunning);
+    application->setSession(session);
+    session->setState(SessionInterface::Running);
+    application->setRequestedState(Application::RequestedSuspended);
+    session->setState(SessionInterface::Suspended);
+    application->setProcessState(Application::ProcessSuspended);
+    ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
+
+    EXPECT_FALSE(sharedWakelock.enabled());
+
+    application->setRequestedState(Application::RequestedRunning);
+
+    ASSERT_EQ(Application::InternalState::Running, application->internalState());
+
+    EXPECT_TRUE(sharedWakelock.enabled());
+
+    delete application;
 }
 
 TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 {
     using namespace ::testing;
+    QString appId("foo-app");
 
-    EXPECT_CALL(sharedWakelock, acquire(_)).Times(1);
-    const QString appId = "app";
+    auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    auto app = startApplication(123, "app");
+    Application *application = new Application(
+            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+            desktopFileReader, QStringList(), nullptr);
+    NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
-    // as respawn fires startApplicationWithAppIdAndArgs again, keep gmock quiet about another call
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-            .Times(1)
-            .WillRepeatedly(Return(true));
+    // Get it running, suspend it, and finally stop it
+    application->setProcessState(Application::ProcessRunning);
+    application->setSession(session);
+    session->setState(SessionInterface::Running);
+    application->setRequestedState(Application::RequestedSuspended);
+    session->setState(SessionInterface::Suspended);
+    application->setProcessState(Application::ProcessSuspended);
+    ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
+    session->setState(SessionInterface::Stopped);
+    application->setProcessState(Application::ProcessStopped);
+    ASSERT_EQ(Application::InternalState::KilledOutOfMemory, application->internalState());
 
-    // respawn by setting app state as Stopped, delete the Session associated, then set to Running state
-    app->setState(Session::State::Stopped);
-    delete app->session();
-    app->setState(Session::State::Running);
-}
-
-TEST_F(ApplicationTests, checkDashFocusDoesNotAcquireWakeLock)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
-
-    startApplication(123, "unity8-dash");
-    applicationManager.focusApplication("unity8-dash");
-}
-
-TEST_F(ApplicationTests, checkDashSuspendDoesNotImpactWakeLock)
-{
-    using namespace ::testing;
-
-    auto app = startApplication(123, "unity8-dash");
-    auto session = app->session();
-
-    applicationManager.focusApplication("unity8-dash");
-
-    Q_EMIT session->suspended();
     EXPECT_FALSE(sharedWakelock.enabled());
+
+    QSignalSpy spyStartProcess(application, SIGNAL(startProcessRequested()));
+    application->setRequestedState(Application::RequestedRunning);
+    ASSERT_EQ(1, spyStartProcess.count());
+    application->setProcessState(Application::ProcessRunning);
+
+    ASSERT_EQ(Application::InternalState::Starting, application->internalState());
+
+    EXPECT_TRUE(sharedWakelock.enabled());
+
+    delete application;
 }
 
-TEST_F(ApplicationTests, checkDashResumeDoesNotAcquireWakeLock)
+TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
 {
     using namespace ::testing;
+    QString appId("unity8-dash");
 
     EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
+    EXPECT_CALL(sharedWakelock, release(_)).Times(0);
 
-    auto app = startApplication(123, "unity8-dash");
-    auto session = app->session();
+    auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    Q_EMIT session->resumed();
+    Application *application = new Application(
+            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+            desktopFileReader, QStringList(), nullptr);
+
+    application->setProcessState(Application::ProcessRunning);
+
+    NiceMock<MockSession> *session = new NiceMock<MockSession>;
+
+    EXPECT_CALL(*session, setApplication(_));
+    EXPECT_CALL(*session, fullscreen()).WillRepeatedly(Return(false));
+
+    application->setSession(session);
+
+    ASSERT_EQ(Application::InternalState::Starting, application->internalState());
+
+    session->setState(SessionInterface::Running);
+
+    ASSERT_EQ(Application::InternalState::Running, application->internalState());
+
+    application->setRequestedState(Application::RequestedSuspended);
+
+    ASSERT_EQ(SessionInterface::Suspending, session->state());
+    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
+
+    session->setState(SessionInterface::Suspended);
+
+    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
+
+    application->setProcessState(Application::ProcessSuspended);
+
+    ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
+
+    application->setRequestedState(Application::RequestedRunning);
+
+    ASSERT_EQ(Application::InternalState::Running, application->internalState());
+
+    delete application;
 }
-

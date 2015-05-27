@@ -22,8 +22,8 @@
 
 namespace qtmir {
 
-class MirSurfaceItem;
-typedef ObjectListModel<MirSurfaceItem> MirSurfaceItemModel;
+class MirSurfaceItemInterface;
+typedef ObjectListModel<MirSurfaceItemInterface> MirSurfaceItemModel;
 
 } // namespace qtmir
 

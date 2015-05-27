@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014,2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,15 +15,16 @@
  *
  */
 
+#include <qtmir_test.h>
+#include <fake_mirsurfaceitem.h>
+
 #include <Unity/Application/application.h>
 #include <Unity/Application/mirsurfaceitem.h>
 
-#include "qtmir_test.h"
 #include "stub_scene_surface.h"
 
 using namespace qtmir;
 using mir::scene::MockSession;
-
 
 namespace ms = mir::scene;
 namespace mtd = mir::test::doubles;
@@ -192,17 +193,6 @@ TEST_F(SessionTests, DeleteSessionDeletesChildSessions)
     EXPECT_THAT(destroyed, UnorderedElementsAre(session1, session2, session3));
 }
 
-class MockQtMirSession : public qtmir::Session
-{
-public:
-    MockQtMirSession(const std::shared_ptr<ms::Session>& session,
-                     const std::shared_ptr<ms::PromptSessionManager>& promptSessionManager)
-    : Session(session, promptSessionManager)
-    {}
-
-    using SessionInterface::appendPromptSession;
-};
-
 TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
 {
     using namespace testing;
@@ -211,17 +201,23 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     quint64 procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
-    EXPECT_CALL(*mirSession, set_lifecycle_state(_));
 
-    auto session = std::make_shared<MockQtMirSession>(mirSession, mirServer->the_prompt_session_manager());
-    session->setState(Session::State::Running);
+    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+    EXPECT_EQ(Session::Starting, session->state());
+
+    session->setSurface(new FakeMirSurfaceItem);
+    EXPECT_EQ(Session::Running, session->state());
 
     auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
     session->appendPromptSession(mirPromptSession);
 
     EXPECT_CALL(*mirServer->the_mock_prompt_session_manager(), suspend_prompt_session(_)).Times(1);
 
-    session->setState(Session::State::Suspended);
+    EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));
+    session->suspend();
+    EXPECT_EQ(Session::Suspending, session->state());
+    session->doSuspend();
+    EXPECT_EQ(Session::Suspended, session->state());
 
     Mock::VerifyAndClear(mirServer->the_mock_prompt_session_manager().get());
 }
@@ -234,18 +230,26 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     quint64 procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
-    EXPECT_CALL(*mirSession, set_lifecycle_state(_));
 
-    auto session = std::make_shared<MockQtMirSession>(mirSession, mirServer->the_prompt_session_manager());
-    session->setState(Session::State::Suspended);
+    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+
+    session->setSurface(new FakeMirSurfaceItem);
+    EXPECT_EQ(Session::Running, session->state());
+
+    EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));
+    session->suspend();
+    EXPECT_EQ(Session::Suspending, session->state());
+    session->doSuspend();
+    EXPECT_EQ(Session::Suspended, session->state());
 
     auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
     session->appendPromptSession(mirPromptSession);
 
     EXPECT_CALL(*mirServer->the_mock_prompt_session_manager(), resume_prompt_session(_)).Times(1);
 
-    session->setState(Session::State::Running);
+    EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_resumed));
+    session->resume();
+    EXPECT_EQ(Session::Running, session->state());
 
     Mock::VerifyAndClear(mirServer->the_mock_prompt_session_manager().get());
 }
-

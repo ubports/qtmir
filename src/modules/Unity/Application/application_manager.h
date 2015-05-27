@@ -124,6 +124,7 @@ public Q_SLOTS:
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
+    void onProcessSuspended(const QString& appId);
     void onProcessFailed(const QString& appId, const bool duringStartup);
     void onFocusRequested(const QString& appId);
     void onResumeRequested(const QString& appId);
@@ -159,7 +160,6 @@ private:
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
     static ApplicationManager* the_application_manager;
-    QList<pid_t> m_hiddenPIDs;
 
     friend class Application;
     friend class DBusWindowStack;
