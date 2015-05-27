@@ -28,10 +28,8 @@ namespace mg = mir::graphics;
 
 // TODO: Listen for display changes and update the list accordingly
 
-Display::Display(const QSharedPointer<MirServer> &server)
+Display::Display(const std::shared_ptr<mir::graphics::DisplayConfiguration> &displayConfig)
 {
-    std::shared_ptr<mir::graphics::DisplayConfiguration> displayConfig = server->the_display()->configuration();
-
     displayConfig->for_each_output([this](mg::DisplayConfigurationOutput const& output) {
         if (output.used) {
             auto screen = new Screen(output);

@@ -40,6 +40,7 @@
 
 // Mir
 #include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
 
 // local
 #include "clipboard.h"
@@ -171,7 +172,7 @@ void MirServerIntegration::initialize()
         exit(2);
     }
 
-    m_display = new Display(m_mirServer->mirServer());
+    m_display = new Display(m_mirServer->mirServer().data()->the_display()->configuration());
     m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
 
     for (QPlatformScreen *screen : m_display->screens())
