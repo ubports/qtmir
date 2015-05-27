@@ -36,7 +36,7 @@ const char *mirMotionActionToStr(int value);
 
 const char *applicationStateToStr(int state);
 
-QString mirTouchEventToString(MirTouchInputEvent const* event);
-const char *mirTouchActionToString(MirTouchInputEventTouchAction touchAction);
+QString mirTouchEventToString(MirTouchEvent const* event);
+const char *mirTouchActionToString(MirTouchAction touchAction);
 
 #endif // UBUNTUGESTURES_DEBUG_HELPER_H
