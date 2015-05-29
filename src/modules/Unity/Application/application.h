@@ -83,8 +83,7 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
-        KilledOutOfMemory, // It was killed because the device was running out of memory
-                           // and we can respawn it
+        DiedUnexpectedly,
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
                 // In any case, this is a dead end.
     };
