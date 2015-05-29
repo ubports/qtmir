@@ -480,7 +480,7 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     EXPECT_EQ(Application::Starting, theApp->state());
     EXPECT_EQ(appId, theApp->appId());
     EXPECT_EQ(name, theApp->name());
-    EXPECT_EQ(false, theApp->canBeResumed());
+    EXPECT_FALSE(theApp->canBeResumed());
 
     // check signals were emitted
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
