@@ -77,7 +77,7 @@ public:
     void drawFirstFrame() {
         if (!m_isFirstFrameDrawn) {
             m_isFirstFrameDrawn = true;
-            Q_EMIT firstFrameDrawn(this);
+            Q_EMIT firstFrameDrawn();
         }
     }
 

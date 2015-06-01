@@ -382,7 +382,7 @@ void MirSurfaceItem::surfaceDamaged()
 {
     if (!m_firstFrameDrawn) {
         m_firstFrameDrawn = true;
-        Q_EMIT firstFrameDrawn(this);
+        Q_EMIT firstFrameDrawn();
     }
 
     scheduleTextureUpdate();

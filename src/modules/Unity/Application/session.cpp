@@ -191,25 +191,33 @@ void Session::setSurface(MirSurfaceItemInterface *newSurface)
         m_surface->setParent(this);
         m_surface->setSession(this);
 
-        // Only notify QML of surface creation once it has drawn its first frame.
-        if (!surface()) {
-            connect(newSurface, &MirSurfaceItemInterface::firstFrameDrawn,
-                    this, [this] { Q_EMIT surfaceChanged(m_surface); });
-        }
-
         connect(newSurface, &MirSurfaceItemInterface::stateChanged,
             this, &Session::updateFullscreenProperty);
 
-        if (m_state == Starting) {
+        // Only notify QML of surface creation once it has drawn its first frame.
+        if (m_surface->isFirstFrameDrawn()) {
             setState(Running);
+        } else {
+            connect(newSurface, &MirSurfaceItemInterface::firstFrameDrawn,
+                    this, &Session::onFirstSurfaceFrameDrawn);
         }
     }
 
     if (previousSurface != surface()) {
+        qCDebug(QTMIR_SESSIONS).nospace() << "Session::surfaceChanged - session=" << this
+            << " surface=" << m_surface;
         Q_EMIT surfaceChanged(m_surface);
     }
 
     updateFullscreenProperty();
+}
+
+void Session::onFirstSurfaceFrameDrawn()
+{
+    qCDebug(QTMIR_SESSIONS).nospace() << "Session::surfaceChanged - session=" << this
+        << " surface=" << m_surface;
+    Q_EMIT surfaceChanged(m_surface);
+    setState(Running);
 }
 
 void Session::updateFullscreenProperty()

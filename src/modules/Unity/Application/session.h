@@ -88,6 +88,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void updateFullscreenProperty();
+    void onFirstSurfaceFrameDrawn();
 
 private:
     void setParentSession(Session* session);

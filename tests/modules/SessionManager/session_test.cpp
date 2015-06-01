@@ -44,6 +44,30 @@ public:
     }
 };
 
+TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
+{
+    using namespace testing;
+
+    const QString appId("test-app");
+    quint64 procId = 5551;
+
+    auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
+
+    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+
+    // On Starting as it has no surface.
+    EXPECT_EQ(Session::Starting, session->state());
+
+    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    session->setSurface(surface);
+
+    // Still on Starting as the surface hasn't drawn its first frame yet
+    EXPECT_EQ(Session::Starting, session->state());
+
+    surface->drawFirstFrame();
+    EXPECT_EQ(Session::Running, session->state());
+}
+
 TEST_F(SessionTests, AddChildSession)
 {
     using namespace testing;
@@ -203,9 +227,11 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
-    EXPECT_EQ(Session::Starting, session->state());
-
-    session->setSurface(new FakeMirSurfaceItem);
+    {
+        FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+        session->setSurface(surface);
+        surface->drawFirstFrame();
+    }
     EXPECT_EQ(Session::Running, session->state());
 
     auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
@@ -232,8 +258,11 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
-
-    session->setSurface(new FakeMirSurfaceItem);
+    {
+        FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+        session->setSurface(surface);
+        surface->drawFirstFrame();
+    }
     EXPECT_EQ(Session::Running, session->state());
 
     EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));

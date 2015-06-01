@@ -87,7 +87,7 @@ Q_SIGNALS:
     void nameChanged();
     void orientationChanged();
     void liveChanged(bool live);
-    void firstFrameDrawn(MirSurfaceItemInterface *item);
+    void firstFrameDrawn();
 
 private:
     virtual void setLive(bool) = 0;
