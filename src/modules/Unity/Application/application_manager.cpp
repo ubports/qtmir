@@ -745,7 +745,15 @@ void ApplicationManager::add(Application* application)
     QString longAppId = application->longAppId();
     QStringList arguments =application->arguments();
 
-    connect(application, &Application::startProcessRequested, this, [=]() { m_taskController->start(appId, arguments); } );
+    // The connection is queued as a workaround an issue in the PhoneStage animation that
+    // happens when you tap on a killed app in the spread to bring it to foreground, causing
+    // a Application::respawn() to take place.
+    // In any case, it seems like in general QML works better when don't do too many things
+    // in the same event loop iteration.
+    connect(application, &Application::startProcessRequested,
+            this, [=]() { m_taskController->start(appId, arguments); },
+            Qt::QueuedConnection);
+
     connect(application, &Application::suspendProcessRequested, this, [=]() { m_taskController->suspend(longAppId); } );
     connect(application, &Application::resumeProcessRequested, this, [=]() { m_taskController->resume(longAppId); } );
 
