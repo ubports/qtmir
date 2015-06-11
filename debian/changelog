@@ -1,3 +1,9 @@
+qtmir (0.4.5) UNRELEASED; urgency=medium
+
+  * Add X-Ubuntu-Supported-Orientations desktop file entry
+
+ -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Thu, 16 Apr 2015 13:25:08 -0300
+
 qtmir (0.4.4+15.04.20150513-0ubuntu1) vivid; urgency=medium
 
   [ Alan Griffiths ]

@@ -68,6 +68,8 @@ DesktopFileReader::DesktopFileReader(const QString &appId, const QFileInfo &desk
     : d_ptr(new DesktopFileReaderPrivate(this))
 {
     Q_D(DesktopFileReader);
+    qCDebug(QTMIR_APPLICATIONS) << "Loading desktop file" << desktopFile.absoluteFilePath()
+            << "for appId" << appId;
 
     d->appId = appId;
     d->file = desktopFile.absoluteFilePath();
@@ -200,6 +202,100 @@ QString DesktopFileReader::splashColorFooter() const
 {
     Q_D(const DesktopFileReader);
     return d->getKey("X-Ubuntu-Splash-Color-Footer");
+}
+
+Qt::ScreenOrientations DesktopFileReader::supportedOrientations() const
+{
+    Q_D(const DesktopFileReader);
+    Qt::ScreenOrientations result;
+
+    if (!parseOrientations(d->getKey("X-Ubuntu-Supported-Orientations"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Supported-Orientations entry.";
+    }
+
+    return result;
+}
+
+bool DesktopFileReader::rotatesWindowContents() const
+{
+    Q_D(const DesktopFileReader);
+    bool result;
+
+    if (!parseBoolean(d->getKey("X-Ubuntu-Rotates-Window-Contents"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Rotates-Window-Contents entry.";
+    }
+
+    return result;
+}
+
+bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOrientations &result)
+{
+    // Default to all orientations
+    result = Qt::PortraitOrientation | Qt::LandscapeOrientation
+        | Qt::InvertedPortraitOrientation | Qt::InvertedLandscapeOrientation;
+
+    if (rawString.isEmpty()) {
+        return true;
+    }
+
+    Qt::ScreenOrientations parsedOrientations = 0;
+    bool ok = true;
+
+    QStringList orientationsList = rawString
+            .simplified()
+            .replace(QChar(','), ";")
+            .remove(QChar(' '))
+            .remove(QChar('-'))
+            .remove(QChar('_'))
+            .toLower()
+            .split(";");
+
+    for (int i = 0; i < orientationsList.count() && ok; ++i) {
+        const QString &orientationString = orientationsList.at(i);
+        if (orientationString.isEmpty()) {
+            // skip it
+            continue;
+        }
+
+        if (orientationString == "portrait") {
+            parsedOrientations |= Qt::PortraitOrientation;
+        } else if (orientationString == "landscape") {
+            parsedOrientations |= Qt::LandscapeOrientation;
+        } else if (orientationString == "invertedportrait") {
+            parsedOrientations |= Qt::InvertedPortraitOrientation;
+        } else if (orientationString == "invertedlandscape") {
+            parsedOrientations |= Qt::InvertedLandscapeOrientation;
+        } else if (orientationsList.count() == 1 && orientationString == "primary") {
+            // Special case: primary orientation must be alone
+            // There's no sense in supporting primary orientation + other orientations
+            // like "primary,landscape"
+            parsedOrientations = Qt::PrimaryOrientation;
+        } else {
+            ok = false;
+        }
+    }
+
+    if (ok) {
+        result = parsedOrientations;
+    }
+
+    return ok;
+}
+
+bool DesktopFileReader::parseBoolean(const QString &rawString, bool &result)
+{
+    QString cookedString = rawString.trimmed().toLower();
+
+    result = cookedString == "y"
+          || cookedString == "1"
+          || cookedString == "yes"
+          || cookedString == "true";
+
+    return result || rawString.isEmpty()
+        || cookedString == "n"
+        || cookedString == "0"
+        || cookedString == "no"
+        || cookedString == "false";
 }
 
 bool DesktopFileReader::loaded() const
