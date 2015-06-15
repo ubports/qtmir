@@ -294,16 +294,63 @@ void Application::setRequestedState(RequestedState value)
 
 void Application::applyRequestedState()
 {
-    if (m_state == InternalState::Running && m_processState == ProcessRunning
-            && m_requestedState == RequestedSuspended) {
-        suspend();
-    } else if ((m_state == InternalState::Suspended
-                || m_state == InternalState::SuspendingWaitSession
-                || m_state == InternalState::RunningInBackground)
-            && m_requestedState == RequestedRunning) {
+    if (m_requestedState == RequestedRunning) {
+        applyRequestedRunning();
+    } else {
+        applyRequestedSuspended();
+    }
+}
+
+void Application::applyRequestedRunning()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        // should leave the app alone until it reaches Running state
+        break;
+    case InternalState::Running:
+        // already where it's wanted to be
+        break;
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::Suspended:
         resume();
-    } else if (m_state == InternalState::StoppedUnexpectedly && m_requestedState == RequestedRunning) {
+        break;
+    case InternalState::SuspendingWaitProcess:
+        // should leave the app alone until it reaches Suspended state
+        break;
+    case InternalState::StoppedUnexpectedly:
         respawn();
+        break;
+    case InternalState::Stopped:
+        // dead end.
+        break;
+    }
+}
+
+void Application::applyRequestedSuspended()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        // should leave the app alone until it reaches Running state
+        break;
+    case InternalState::Running:
+        if (m_processState == ProcessRunning) {
+            suspend();
+        } else {
+            // we can't suspend it since we have no information on the app process
+            Q_ASSERT(m_processState == ProcessUnknown);
+        }
+        break;
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+    case InternalState::Suspended:
+        // it's already going where we it's wanted
+        break;
+    case InternalState::StoppedUnexpectedly:
+    case InternalState::Stopped:
+        // the app doesn't have a process in the first place, so there's nothing to suspend
+        break;
     }
 }
 

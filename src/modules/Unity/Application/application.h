@@ -157,6 +157,8 @@ private:
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
+    void applyRequestedRunning();
+    void applyRequestedSuspended();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
