@@ -704,7 +704,7 @@ void ApplicationManager::add(Application* application)
 
     QString appId = application->appId();
     QString longAppId = application->longAppId();
-    QStringList arguments =application->arguments();
+    QStringList arguments = application->arguments();
 
     // The connection is queued as a workaround an issue in the PhoneStage animation that
     // happens when you tap on a killed app in the spread to bring it to foreground, causing
