@@ -137,7 +137,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
     ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
     session->setState(SessionInterface::Stopped);
     application->setProcessState(Application::ProcessStopped);
-    ASSERT_EQ(Application::InternalState::DiedUnexpectedly, application->internalState());
+    ASSERT_EQ(Application::InternalState::StoppedUnexpectedly, application->internalState());
 
     EXPECT_FALSE(sharedWakelock.enabled());
 

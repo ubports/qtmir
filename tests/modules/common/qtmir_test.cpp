@@ -22,8 +22,8 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os) {
     case Application::InternalState::Suspended:
         *os << "Suspended";
         break;
-    case Application::InternalState::DiedUnexpectedly:
-        *os << "DiedUnexpectedly";
+    case Application::InternalState::StoppedUnexpectedly:
+        *os << "StoppedUnexpectedly";
         break;
     case Application::InternalState::Stopped:
         *os << "Stopped";

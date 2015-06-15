@@ -200,8 +200,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "SuspendingWaitProcess";
     case InternalState::Suspended:
         return "Suspended";
-    case InternalState::DiedUnexpectedly:
-        return "DiedUnexpectedly";
+    case InternalState::StoppedUnexpectedly:
+        return "StoppedUnexpectedly";
     case InternalState::Stopped:
         return "Stopped";
     default:
@@ -302,7 +302,7 @@ void Application::applyRequestedState()
                 || m_state == InternalState::RunningInBackground)
             && m_requestedState == RequestedRunning) {
         resume();
-    } else if (m_state == InternalState::DiedUnexpectedly && m_requestedState == RequestedRunning) {
+    } else if (m_state == InternalState::StoppedUnexpectedly && m_requestedState == RequestedRunning) {
         respawn();
     }
 }
@@ -421,7 +421,7 @@ void Application::setState(Application::InternalState state)
         case InternalState::Suspended:
             releaseWakelock();
             break;
-        case InternalState::DiedUnexpectedly:
+        case InternalState::StoppedUnexpectedly:
             releaseWakelock();
             break;
         case InternalState::Stopped:
@@ -458,7 +458,7 @@ void Application::setProcessState(ProcessState newProcessState)
         m_processState = newProcessState;
 
         if (m_processState == ProcessRunning) {
-            if (m_state == InternalState::DiedUnexpectedly) {
+            if (m_state == InternalState::StoppedUnexpectedly) {
                 setState(InternalState::Starting);
             }
         } else if (m_processState == ProcessSuspended) {
@@ -471,7 +471,7 @@ void Application::setProcessState(ProcessState newProcessState)
                 setState(InternalState::Stopped);
             } else {
                 Q_ASSERT(m_state == InternalState::Stopped
-                        || m_state == InternalState::DiedUnexpectedly);
+                        || m_state == InternalState::StoppedUnexpectedly);
             }
         }
 
@@ -594,7 +594,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
              */
             setState(InternalState::Stopped);
         } else {
-            setState(InternalState::DiedUnexpectedly);
+            setState(InternalState::StoppedUnexpectedly);
         }
     default:
         break;
