@@ -398,13 +398,13 @@ void Application::setStage(Application::Stage stage)
     }
 }
 
-void Application::setState(Application::InternalState state)
+void Application::setInternalState(Application::InternalState state)
 {
     if (m_state == state) {
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setState - appId=" << appId()
+    qCDebug(QTMIR_APPLICATIONS) << "Application::setInternalState - appId=" << appId()
         << "state=" << internalStateToStr(state);
 
     auto oldPublicState = this->state();
@@ -459,16 +459,16 @@ void Application::setProcessState(ProcessState newProcessState)
 
         if (m_processState == ProcessRunning) {
             if (m_state == InternalState::StoppedUnexpectedly) {
-                setState(InternalState::Starting);
+                setInternalState(InternalState::Starting);
             }
         } else if (m_processState == ProcessSuspended) {
             Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
-            setState(InternalState::Suspended);
+            setInternalState(InternalState::Suspended);
         } else if (m_processState == ProcessStopped) {
             // we assume the session always stop before the process
             Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
             if (m_state == InternalState::Starting) {
-                setState(InternalState::Stopped);
+                setInternalState(InternalState::Stopped);
             } else {
                 Q_ASSERT(m_state == InternalState::Stopped
                         || m_state == InternalState::StoppedUnexpectedly);
@@ -489,9 +489,9 @@ void Application::suspend()
         // There's no need to keep the wakelock as the process is never suspended
         // and thus has no cleanup to perform when (for example) the display is
         // blanked.
-        setState(InternalState::RunningInBackground);
+        setInternalState(InternalState::RunningInBackground);
     } else {
-        setState(InternalState::SuspendingWaitSession);
+        setInternalState(InternalState::SuspendingWaitSession);
         m_session->suspend();
     }
 }
@@ -499,17 +499,17 @@ void Application::suspend()
 void Application::resume()
 {
     if (m_state == InternalState::Suspended) {
-        setState(InternalState::Running);
+        setInternalState(InternalState::Running);
         Q_EMIT resumeProcessRequested();
         if (m_processState == ProcessSuspended) {
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?
         }
         m_session->resume();
     } else if (m_state == InternalState::SuspendingWaitSession) {
-        setState(InternalState::Running);
+        setInternalState(InternalState::Running);
         m_session->resume();
     } else if (m_state == InternalState::RunningInBackground) {
-        setState(InternalState::Running);
+        setInternalState(InternalState::Running);
     }
 }
 
@@ -517,7 +517,7 @@ void Application::respawn()
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::respawn - appId=" << appId();
 
-    setState(InternalState::Starting);
+    setInternalState(InternalState::Starting);
 
     Q_EMIT startProcessRequested();
 }
@@ -565,14 +565,14 @@ void Application::onSessionStateChanged(Session::State sessionState)
         break;
     case Session::Running:
         if (m_state == InternalState::Starting) {
-            setState(InternalState::Running);
+            setInternalState(InternalState::Running);
         }
         break;
     case Session::Suspending:
         break;
     case Session::Suspended:
         Q_ASSERT(m_state == InternalState::SuspendingWaitSession);
-        setState(InternalState::SuspendingWaitProcess);
+        setInternalState(InternalState::SuspendingWaitProcess);
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
@@ -587,9 +587,9 @@ void Application::onSessionStateChanged(Session::State sessionState)
              *     Running state), if Mir reports the application disconnects, it
              *     either crashed or stopped itself.
              */
-            setState(InternalState::Stopped);
+            setInternalState(InternalState::Stopped);
         } else {
-            setState(InternalState::StoppedUnexpectedly);
+            setInternalState(InternalState::StoppedUnexpectedly);
         }
     default:
         break;

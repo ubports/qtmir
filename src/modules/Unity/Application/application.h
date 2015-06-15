@@ -150,7 +150,7 @@ private:
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
     void setFocused(bool focus);
-    void setState(InternalState state);
+    void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
     void resume();
