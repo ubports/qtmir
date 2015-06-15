@@ -58,8 +58,8 @@ public:
     State state() const override;
     QString name() const override;
     bool live() const override;
-    Qt::ScreenOrientation orientation() const override;
     SessionInterface *session() const override;
+    OrientationAngle orientationAngle() const override;
 
     Q_INVOKABLE void release() override;
 
@@ -72,7 +72,7 @@ public:
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
-    void setOrientation(const Qt::ScreenOrientation orientation) override;
+    void setOrientationAngle(OrientationAngle angle) override;
     void setSession(SessionInterface *app) override;
 
     // to allow easy touch event injection from tests
@@ -144,7 +144,9 @@ private:
     MirShell *const m_shell;
     bool m_firstFrameDrawn;
     bool m_live;
-    Qt::ScreenOrientation m_orientation; //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
+
+    //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
+    OrientationAngle m_orientationAngle;
 
     QMirSurfaceTextureProvider *m_textureProvider;
 
