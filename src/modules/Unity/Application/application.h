@@ -105,7 +105,6 @@ public:
 
 
     void setProcessState(ProcessState value);
-    ProcessState processState() const;
 
     QStringList arguments() const { return m_arguments; }
 

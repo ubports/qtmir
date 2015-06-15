@@ -479,11 +479,6 @@ void Application::setProcessState(ProcessState newProcessState)
     }
 }
 
-Application::ProcessState Application::processState() const
-{
-    return m_processState;
-}
-
 void Application::suspend()
 {
     Q_ASSERT(m_state == InternalState::Running);
