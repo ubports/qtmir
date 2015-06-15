@@ -384,6 +384,24 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
         return nullptr;
     }
 
+    if (m_queuedStartApplications.contains(inputAppId)) {
+        qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " is queued to start";
+        return nullptr;
+    }
+    else {
+        application = findClosingApplication(inputAppId);
+        if (application) {
+            m_queuedStartApplications.append(inputAppId);
+            qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " is closing. Queuing start";
+            connect(application, &QObject::destroyed, this, [this, application, inputAppId, flags, arguments]() {
+                m_queuedStartApplications.removeAll(inputAppId);
+                // start the app.
+                startApplication(inputAppId, flags, arguments);
+            }, Qt::QueuedConnection); // Queued so that we finish the app removal before starting again.
+            return nullptr;
+        }
+    }
+
     if (!m_taskController->start(appId, arguments)) {
         qWarning() << "Upstart failed to start application with appId" << appId;
         return nullptr;
@@ -477,17 +495,19 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
 
     remove(application);
 
-    bool result = m_taskController->stop(application->longAppId());
-
-    if (!result && application->pid() > 0) {
-        qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
-                   << "Sending SIGTERM to process:" << application->pid();
-        kill(application->pid(), SIGTERM);
-        result = true;
-    }
-
-    delete application;
-    return result;
+    connect(application, &Application::stopProcessRequested, this, [=]() {
+        if (!m_taskController->stop(application->longAppId()) && application->pid() > 0) {
+            qWarning() << "FAILED to ask Upstart to stop application with appId" << inputAppId
+                       << "Sending SIGTERM to process:" << inputAppId;
+            kill(application->pid(), SIGTERM);
+        }
+    });
+    application->close();
+    connect(application, &QObject::destroyed, this, [this, application](QObject*) {
+        m_closingApplications.removeAll(application);
+    });
+    m_closingApplications.append(application);
+    return true;
 }
 
 void ApplicationManager::onProcessFailed(const QString &appId, const bool duringStartup)
@@ -515,6 +535,12 @@ void ApplicationManager::onProcessStopped(const QString &appId)
     Application *application = findApplication(appId);
 
     if (!application) {
+        Q_FOREACH(Application* application, m_closingApplications) {
+            if (application->appId() == appId) {
+                delete application;
+                return;
+            }
+        }
         qDebug() << "ApplicationManager::onProcessStopped reports stop of appId=" << appId
                  << "which AppMan is not managing, ignoring the event";
         return;
@@ -836,6 +862,18 @@ QString ApplicationManager::toString() const
         result.append(m_applications.at(i)->appId());
     }
     return result;
+}
+
+Application *ApplicationManager::findClosingApplication(const QString &inputAppId) const
+{
+    const QString appId = toShortAppIdIfPossible(inputAppId);
+
+    for (Application *app : m_closingApplications) {
+        if (app->appId() == appId) {
+            return app;
+        }
+    }
+    return nullptr;
 }
 
 } // namespace qtmir

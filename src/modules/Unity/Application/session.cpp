@@ -392,6 +392,15 @@ void Session::removePromptSession(const std::shared_ptr<ms::PromptSession>& prom
     m_promptSessions.removeAll(promptSession);
 }
 
+bool Session::close()
+{
+    qCDebug(QTMIR_SESSIONS) << "Session::close - " << name() << m_surface;
+    if (m_surface) {
+        return m_surface->close();
+    }
+    return false;
+}
+
 void Session::stopPromptSessions()
 {
     QList<SessionInterface*> children(m_children->list());

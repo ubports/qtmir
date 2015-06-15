@@ -133,6 +133,8 @@ public:
 
     pid_t pid() const;
 
+    void close();
+
     // for tests
     InternalState internalState() const { return m_state; }
 
@@ -144,6 +146,7 @@ Q_SIGNALS:
     void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
+    void stopProcessRequested();
     void suspendProcessRequested();
     void resumeProcessRequested();
     void stopped();
@@ -153,8 +156,10 @@ private Q_SLOTS:
 
     void respawn();
 
-private:
+protected:
+    void timerEvent(QTimerEvent *event);
 
+private:
     QString longAppId() const;
     void acquireWakelock() const;
     void releaseWakelock() const;
@@ -168,6 +173,7 @@ private:
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
+    void forceClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
@@ -182,6 +188,7 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    int m_closeTimer;
 
     friend class ApplicationManager;
     friend class SessionManager;

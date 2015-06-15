@@ -72,6 +72,7 @@ public:
     virtual SessionInterface *session() const = 0;
 
     virtual Q_INVOKABLE void release() = 0;
+    virtual bool close() = 0;
 
     virtual void stopFrameDropper() = 0;
     virtual void startFrameDropper() = 0;

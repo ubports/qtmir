@@ -35,6 +35,7 @@ public:
     MOCK_CONST_METHOD0(session, SessionInterface*());
 
     MOCK_METHOD0(release, void());
+    MOCK_METHOD0(close, bool());
 
     MOCK_METHOD0(stopFrameDropper, void());
     MOCK_METHOD0(startFrameDropper, void());
@@ -43,6 +44,7 @@ public:
 
     MOCK_METHOD1(setOrientation, void(const Qt::ScreenOrientation orientation));
     MOCK_METHOD1(setSession, void(SessionInterface *app));
+    MOCK_METHOD1(setLive, void(bool live));
 };
 
 } // namespace qtmir

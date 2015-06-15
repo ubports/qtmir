@@ -85,6 +85,10 @@ public:
         return m_isFrameDropperRunning;
     }
 
+    bool close() {
+        return true;
+    }
+
 private:
     void setLive(bool value) override { m_live = value; }
 

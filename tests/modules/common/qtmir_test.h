@@ -151,7 +151,11 @@ public:
         EXPECT_EQ(authed, true);
 
         auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
+        applicationManager.onSessionStarting(appSession);
         sessionManager.onSessionStarting(appSession);
+
+        Mock::VerifyAndClearExpectations(&appController);
+        Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
         return application;
     }
 

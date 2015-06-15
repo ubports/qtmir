@@ -47,13 +47,14 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_desktopData(desktopFileReader)
     , m_pid(0)
-    , m_stage((m_desktopData->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
+    , m_closeTimer(0)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
 
@@ -310,6 +311,14 @@ void Application::applyRequestedState()
     }
 }
 
+void Application::forceClose()
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::forceClose - appId=" << appId();
+
+    Q_EMIT stopProcessRequested();
+    deleteLater();
+}
+
 bool Application::focused() const
 {
     return m_focused;
@@ -328,6 +337,22 @@ bool Application::canBeResumed() const
 pid_t Application::pid() const
 {
     return m_pid;
+}
+
+void Application::close()
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
+
+    if (m_session) {
+        if (m_closeTimer == 0) {
+            resume();
+            if (m_session->close()) {
+                m_closeTimer = startTimer(3000);
+                return;
+            }
+        }
+    }
+    forceClose();
 }
 
 void Application::setPid(pid_t pid)
@@ -528,6 +553,14 @@ void Application::respawn()
     setState(InternalState::Starting);
 
     Q_EMIT startProcessRequested();
+}
+
+void Application::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_closeTimer) {
+        forceClose();
+        m_closeTimer = 0;
+    }
 }
 
 QString Application::longAppId() const
