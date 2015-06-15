@@ -1883,7 +1883,7 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     the_app->setRequestedState(Application::RequestedSuspended);
 
     // And expect it to be running still
-    ASSERT_EQ(Application::InternalState::RunningWithoutWakelock, the_app->internalState());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
 
     the_app->setRequestedState(Application::RequestedRunning);
 
@@ -1926,6 +1926,6 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
-    ASSERT_EQ(Application::InternalState::RunningWithoutWakelock, application->internalState());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
 }

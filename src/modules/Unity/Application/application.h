@@ -79,7 +79,7 @@ public:
     enum class InternalState {
         Starting,
         Running,
-        RunningWithoutWakelock,
+        RunningInBackground,
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,

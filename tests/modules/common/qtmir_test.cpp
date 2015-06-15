@@ -10,8 +10,8 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os) {
     case Application::InternalState::Running:
         *os << "Running";
         break;
-    case Application::InternalState::RunningWithoutWakelock:
-        *os << "RunningWithoutWakelock";
+    case Application::InternalState::RunningInBackground:
+        *os << "RunningInBackground";
         break;
     case Application::InternalState::SuspendingWaitSession:
         *os << "SuspendingWaitSession";

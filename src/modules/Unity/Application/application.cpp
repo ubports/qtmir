@@ -195,8 +195,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "Starting";
     case InternalState::Running:
         return "Running";
-    case InternalState::RunningWithoutWakelock:
-        return "RunningWithoutWakelock";
+    case InternalState::RunningInBackground:
+        return "RunningInBackground";
     case InternalState::SuspendingWaitSession:
         return "SuspendingWaitSession";
     case InternalState::SuspendingWaitProcess:
@@ -263,7 +263,7 @@ Application::State Application::state() const
     case InternalState::Starting:
         return Starting;
     case InternalState::Running:
-    case InternalState::RunningWithoutWakelock:
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
         return Running;
@@ -302,7 +302,7 @@ void Application::applyRequestedState()
         suspend();
     } else if ((m_state == InternalState::Suspended
                 || m_state == InternalState::SuspendingWaitSession
-                || m_state == InternalState::RunningWithoutWakelock)
+                || m_state == InternalState::RunningInBackground)
             && m_requestedState == RequestedRunning) {
         resume();
     } else if (m_state == InternalState::DiedUnexpectedly && m_requestedState == RequestedRunning) {
@@ -363,7 +363,7 @@ void Application::setSession(SessionInterface *newSession)
         switch (m_state) {
         case InternalState::Starting:
         case InternalState::Running:
-        case InternalState::RunningWithoutWakelock:
+        case InternalState::RunningInBackground:
             m_session->resume();
             break;
         case InternalState::SuspendingWaitSession:
@@ -418,7 +418,7 @@ void Application::setState(Application::InternalState state)
         case InternalState::Running:
             acquireWakelock();
             break;
-        case InternalState::RunningWithoutWakelock:
+        case InternalState::RunningInBackground:
             releaseWakelock();
             break;
         case InternalState::Suspended:
@@ -497,7 +497,7 @@ void Application::suspend()
         // There's no need to keep the wakelock as the process is never suspended
         // and thus has no cleanup to perform when (for example) the display is
         // blanked.
-        setState(InternalState::RunningWithoutWakelock);
+        setState(InternalState::RunningInBackground);
     } else {
         setState(InternalState::SuspendingWaitSession);
         m_session->suspend();
@@ -516,7 +516,7 @@ void Application::resume()
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setState(InternalState::Running);
         m_session->resume();
-    } else if (m_state == InternalState::RunningWithoutWakelock) {
+    } else if (m_state == InternalState::RunningInBackground) {
         setState(InternalState::Running);
     }
 }
