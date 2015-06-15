@@ -638,8 +638,6 @@ void Application::onSessionStateChanged(Session::State sessionState)
         } else {
             setInternalState(InternalState::StoppedUnexpectedly);
         }
-    default:
-        break;
     }
 }
 
