@@ -501,29 +501,39 @@ void Application::setFocused(bool focused)
 
 void Application::setProcessState(ProcessState newProcessState)
 {
-    if (m_processState != newProcessState) {
-        m_processState = newProcessState;
-
-        if (m_processState == ProcessRunning) {
-            if (m_state == InternalState::StoppedUnexpectedly) {
-                setInternalState(InternalState::Starting);
-            }
-        } else if (m_processState == ProcessSuspended) {
-            Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
-            setInternalState(InternalState::Suspended);
-        } else if (m_processState == ProcessStopped) {
-            // we assume the session always stop before the process
-            Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
-            if (m_state == InternalState::Starting) {
-                setInternalState(InternalState::Stopped);
-            } else {
-                Q_ASSERT(m_state == InternalState::Stopped
-                        || m_state == InternalState::StoppedUnexpectedly);
-            }
-        }
-
-        applyRequestedState();
+    if (m_processState == newProcessState) {
+        return;
     }
+
+    m_processState = newProcessState;
+
+    switch (m_processState) {
+    case ProcessUnknown:
+        // it would be a coding error
+        Q_ASSERT(false);
+        break;
+    case ProcessRunning:
+        if (m_state == InternalState::StoppedUnexpectedly) {
+            setInternalState(InternalState::Starting);
+        }
+        break;
+    case ProcessSuspended:
+        Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
+        setInternalState(InternalState::Suspended);
+        break;
+    case ProcessStopped:
+        // we assume the session always stop before the process
+        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+        if (m_state == InternalState::Starting) {
+            setInternalState(InternalState::Stopped);
+        } else {
+            Q_ASSERT(m_state == InternalState::Stopped
+                    || m_state == InternalState::StoppedUnexpectedly);
+        }
+        break;
+    }
+
+    applyRequestedState();
 }
 
 void Application::suspend()
