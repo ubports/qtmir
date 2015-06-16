@@ -937,7 +937,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 /*
  * Test that a suspended application is stopped correctly
  */
-TEST_F(ApplicationManagerTests,shellStopsBackgroundAppCorrectly)
+TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
 {
     using namespace ::testing;
     const QString appId("testAppId");
