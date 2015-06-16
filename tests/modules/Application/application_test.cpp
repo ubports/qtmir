@@ -22,8 +22,8 @@
 
 #include <mock_session.h>
 
+#include <QScopedPointer>
 #include <QSignalSpy>
-
 
 using namespace qtmir;
 
@@ -42,9 +42,9 @@ TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
     auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    Application *application = new Application(
+    QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            desktopFileReader, QStringList(), nullptr);
+            desktopFileReader, QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -77,8 +77,6 @@ TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
     ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
 
     EXPECT_FALSE(sharedWakelock.enabled());
-
-    delete application;
 }
 
 TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
@@ -89,9 +87,9 @@ TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
     auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    Application *application = new Application(
+    QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            desktopFileReader, QStringList(), nullptr);
+            desktopFileReader, QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running and then suspend it
@@ -110,8 +108,6 @@ TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
     EXPECT_TRUE(sharedWakelock.enabled());
-
-    delete application;
 }
 
 TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
@@ -122,9 +118,9 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
     auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    Application *application = new Application(
+    QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            desktopFileReader, QStringList(), nullptr);
+            desktopFileReader, QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running, suspend it, and finally stop it
@@ -141,7 +137,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 
     EXPECT_FALSE(sharedWakelock.enabled());
 
-    QSignalSpy spyStartProcess(application, SIGNAL(startProcessRequested()));
+    QSignalSpy spyStartProcess(application.data(), SIGNAL(startProcessRequested()));
     application->setRequestedState(Application::RequestedRunning);
     ASSERT_EQ(1, spyStartProcess.count());
     application->setProcessState(Application::ProcessRunning);
@@ -149,8 +145,6 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
     ASSERT_EQ(Application::InternalState::Starting, application->internalState());
 
     EXPECT_TRUE(sharedWakelock.enabled());
-
-    delete application;
 }
 
 TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
@@ -164,9 +158,9 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
     auto desktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*desktopFileReader, loaded()).WillByDefault(Return(true));
 
-    Application *application = new Application(
+    QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            desktopFileReader, QStringList(), nullptr);
+            desktopFileReader, QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -199,6 +193,4 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
     application->setRequestedState(Application::RequestedRunning);
 
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
-
-    delete application;
 }
