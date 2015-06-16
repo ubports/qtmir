@@ -495,14 +495,7 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
 
     remove(application);
 
-    connect(application, &Application::stopProcessRequested, this, [=]() {
-        if (!m_taskController->stop(application->longAppId()) && application->pid() > 0) {
-            qWarning() << "FAILED to ask Upstart to stop application with appId" << inputAppId
-                       << "Sending SIGTERM to process:" << inputAppId;
-            kill(application->pid(), SIGTERM);
-        }
-    });
-    application->close();
+    application->stop();
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {
         m_closingApplications.removeAll(application);
     });
@@ -780,6 +773,14 @@ void ApplicationManager::add(Application* application)
             this, [=]() { m_taskController->start(appId, arguments); },
             Qt::QueuedConnection);
 
+    connect(application, &Application::stopProcessRequested, this, [=]() {
+        if (!m_taskController->stop(application->longAppId()) && application->pid() > 0) {
+            qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
+                       << "Sending SIGTERM to process:" << appId;
+            kill(application->pid(), SIGTERM);
+        }
+    });
+
     connect(application, &Application::suspendProcessRequested, this, [=]() { m_taskController->suspend(longAppId); } );
     connect(application, &Application::resumeProcessRequested, this, [=]() { m_taskController->resume(longAppId); } );
 
@@ -787,7 +788,6 @@ void ApplicationManager::add(Application* application)
         remove(application);
         application->deleteLater();
     });
-
 
     beginInsertRows(QModelIndex(), m_applications.count(), m_applications.count());
     m_applications.append(application);
@@ -804,7 +804,10 @@ void ApplicationManager::remove(Application *application)
     Q_ASSERT(application != nullptr);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::remove - appId=" << application->appId();
 
-    application->disconnect(this);
+    disconnect(application, &Application::fullscreenChanged, this, 0);
+    disconnect(application, &Application::focusedChanged, this, 0);
+    disconnect(application, &Application::stateChanged, this, 0);
+    disconnect(application, &Application::stageChanged, this, 0);
 
     int i = m_applications.indexOf(application);
     if (i != -1) {

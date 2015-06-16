@@ -83,6 +83,7 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
+        Stopping,
         DiedUnexpectedly,
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
                 // In any case, this is a dead end.
@@ -133,7 +134,7 @@ public:
 
     pid_t pid() const;
 
-    void close();
+    void stop();
 
     // for tests
     InternalState internalState() const { return m_state; }
@@ -170,10 +171,10 @@ private:
     void wipeQMLCache();
     void suspend();
     void resume();
+    void kill();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
-    void forceClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;

@@ -204,6 +204,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "SuspendingWaitProcess";
     case InternalState::Suspended:
         return "Suspended";
+    case InternalState::Stopping:
+        return "Stopping";
     case InternalState::DiedUnexpectedly:
         return "DiedUnexpectedly";
     case InternalState::Stopped:
@@ -267,6 +269,7 @@ Application::State Application::state() const
     case InternalState::RunningWithoutWakelock:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
+    case InternalState::Stopping:
         return Running;
     case InternalState::Suspended:
         return Suspended;
@@ -311,14 +314,6 @@ void Application::applyRequestedState()
     }
 }
 
-void Application::forceClose()
-{
-    qCDebug(QTMIR_APPLICATIONS) << "Application::forceClose - appId=" << appId();
-
-    Q_EMIT stopProcessRequested();
-    deleteLater();
-}
-
 bool Application::focused() const
 {
     return m_focused;
@@ -339,20 +334,11 @@ pid_t Application::pid() const
     return m_pid;
 }
 
-void Application::close()
+void Application::stop()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
+    qCDebug(QTMIR_APPLICATIONS) << "Application::stop - appId=" << appId();
 
-    if (m_session) {
-        if (m_closeTimer == 0) {
-            resume();
-            if (m_session->close()) {
-                m_closeTimer = startTimer(3000);
-                return;
-            }
-        }
-    }
-    forceClose();
+    setState(InternalState::Stopping);
 }
 
 void Application::setPid(pid_t pid)
@@ -389,6 +375,7 @@ void Application::setSession(SessionInterface *newSession)
         case InternalState::Starting:
         case InternalState::Running:
         case InternalState::RunningWithoutWakelock:
+        case InternalState::Stopping:
             m_session->resume();
             break;
         case InternalState::SuspendingWaitSession:
@@ -449,6 +436,21 @@ void Application::setState(Application::InternalState state)
         case InternalState::Suspended:
             releaseWakelock();
             break;
+
+        case InternalState::Stopping:
+            if (m_closeTimer != 0) break;
+            if (m_session) {
+                if (oldPublicState == Application::Suspended) {
+                    resume();
+                }
+                if (m_session->close()) {
+                    m_closeTimer = startTimer(3000);
+                    break;
+                }
+            }
+            kill();
+            return;
+
         case InternalState::DiedUnexpectedly:
             releaseWakelock();
             break;
@@ -538,6 +540,11 @@ void Application::resume()
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?
         }
         m_session->resume();
+    } else if (m_state == InternalState::Stopping) {
+        Q_EMIT resumeProcessRequested();
+        if (m_processState == ProcessSuspended) {
+            setProcessState(ProcessRunning); // should we wait for a resumed() signal?
+        }
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setState(InternalState::Running);
         m_session->resume();
@@ -555,11 +562,17 @@ void Application::respawn()
     Q_EMIT startProcessRequested();
 }
 
+void Application::kill()
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::kill - appId=" << appId();
+    Q_EMIT stopProcessRequested();
+}
+
 void Application::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_closeTimer) {
-        forceClose();
         m_closeTimer = 0;
+        kill();
     }
 }
 
@@ -612,7 +625,9 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if (!canBeResumed()
+        if (m_state == InternalState::Stopping) {
+            // We're expecting the application to stop
+        } else if (!canBeResumed()
                 || m_state == InternalState::Starting
                 || m_state == InternalState::Running) {
             /*  1. application is not managed by upstart
