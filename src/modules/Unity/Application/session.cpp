@@ -342,14 +342,16 @@ void Session::insertChildSession(uint index, SessionInterface* session)
 
     switch (m_state) {
         case Starting:
+        case Running:
             session->resume();
+            break;
         case Suspending:
         case Suspended:
             session->suspend();
             break;
         case Stopped:
-        default:
             session->stop();
+            break;
     }
 }
 
