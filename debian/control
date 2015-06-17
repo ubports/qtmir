@@ -91,7 +91,7 @@ Package: qtdeclarative5-qtmir-plugin
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends},
-Depends: qtmir-desktop | qtmir-android,
+Depends: qtmir-desktop (= ${source:Version}) | qtmir-android (= ${source:Version}),
          ${misc:Depends},
          ${shlibs:Depends},
 Replaces: libqtmir,
