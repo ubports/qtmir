@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -30,7 +30,6 @@
 #include <qpa/qwindowsysteminterface.h>
 
 #include <QCoreApplication>
-#include <QStringList>
 #include <QOpenGLContext>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
@@ -41,10 +40,7 @@
 
 // Mir
 #include <mir/graphics/display.h>
-#include <mir/graphics/display_buffer.h>
-
-// std
-#include <csignal>
+#include <mir/graphics/display_configuration.h>
 
 // local
 #include "clipboard.h"
@@ -66,36 +62,25 @@ MirServerIntegration::MirServerIntegration()
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
     , m_eventDispatcher(createUnixEventDispatcher())
 #endif
+    , m_mirServer(new QMirServer(QCoreApplication::arguments()))
     , m_display(nullptr)
-    , m_qmirServer(nullptr)
     , m_nativeInterface(nullptr)
     , m_clipboard(new Clipboard)
 {
-    // Start Mir server only once Qt has initialized its event dispatcher, see initialize()
-
-    QStringList args = QCoreApplication::arguments();
-    // convert arguments back into argc-argv form that Mir wants
-    char **argv;
-    argv = new char*[args.size() + 1];
-    for (int i = 0; i < args.size(); i++) {
-        argv[i] = new char[strlen(args.at(i).toStdString().c_str())+1];
-        memcpy(argv[i], args.at(i).toStdString().c_str(), strlen(args.at(i).toStdString().c_str())+1);
-    }
-    argv[args.size()] = '\0';
-
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the
     // UBUNTU_PLATFORM_API_BACKEND variable to decide if to load a valid sensor backend or not.
     // For it to function we need to ensure a valid backend has been specified
     if (qEnvironmentVariableIsEmpty("UBUNTU_PLATFORM_API_BACKEND")) {
-        if (qgetenv("DESKTOP_SESSION").contains("mir")) {
+        if (qgetenv("DESKTOP_SESSION").contains("mir") || !qEnvironmentVariableIsSet("ANDROID_DATA")) {
             qputenv("UBUNTU_PLATFORM_API_BACKEND", "desktop_mirclient");
         } else {
             qputenv("UBUNTU_PLATFORM_API_BACKEND", "touch_mirclient");
         }
     }
 
-    m_mirServer = QSharedPointer<MirServer>(
-                      new MirServer(args.length(), const_cast<const char**>(argv)));
+    // If Mir shuts down, quit.
+    QObject::connect(m_mirServer.data(), &QMirServer::stopped,
+                     QCoreApplication::instance(), &QCoreApplication::quit);
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
     QGuiApplicationPrivate::instance()->setEventDispatcher(eventDispatcher_);
@@ -109,7 +94,6 @@ MirServerIntegration::~MirServerIntegration()
 {
     delete m_nativeInterface;
     delete m_display;
-    delete m_qmirServer;
 }
 
 bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) const
@@ -135,18 +119,21 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 
     DisplayWindow* displayWindow = nullptr;
 
+    auto const mirServer = m_mirServer->mirServer().lock();
     mg::DisplayBuffer* first_buffer{nullptr};
     mg::DisplaySyncGroup* first_group{nullptr};
-    m_mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
-        if (!first_group) {
-            first_group = &group;
-        }
-        group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
-            if (!first_buffer) {
-                first_buffer = &buffer;
+    if (mirServer) {
+        mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
+            if (!first_group) {
+                first_group = &group;
             }
+            group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
+                if (!first_buffer) {
+                    first_buffer = &buffer;
+                }
+            });
         });
-    });
+    }
 
     // FIXME(gerry) this will go very bad for >1 display buffer
     if (first_group && first_buffer)
@@ -168,7 +155,7 @@ QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow 
 QPlatformOpenGLContext *MirServerIntegration::createPlatformOpenGLContext(QOpenGLContext *context) const
 {
     qDebug() << "createPlatformOpenGLContext" << context;
-    return new MirOpenGLContext(m_mirServer, context->format());
+    return new MirOpenGLContext(m_mirServer->mirServer(), context->format());
 }
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
@@ -181,10 +168,12 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
-    m_qmirServer = new QMirServer(m_mirServer);
+    if (!m_mirServer->start()) {
+        exit(2);
+    }
 
-    m_display = new Display(m_mirServer);
-    m_nativeInterface = new NativeInterface(m_mirServer);
+    m_display = new Display(m_mirServer->mirServer().data()->the_display()->configuration());
+    m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
 
     for (QPlatformScreen *screen : m_display->screens())
         screenAdded(screen);

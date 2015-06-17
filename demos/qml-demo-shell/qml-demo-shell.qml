@@ -110,6 +110,21 @@ Rectangle {
         y: point.y
     }
 
+    Rectangle {
+        width: 60
+        height: 40
+        color: "red"
+        anchors { right: parent.right; bottom: parent.bottom }
+        Text {
+            anchors.centerIn: parent
+            text: "Quit"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: Qt.quit()
+        }
+    }
+
     Connections {
         target: SurfaceManager
         onSurfaceCreated: {

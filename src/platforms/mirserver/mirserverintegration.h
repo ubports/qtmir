@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -69,8 +69,6 @@ public:
     QPlatformNativeInterface *nativeInterface() const override;
 
 private:
-    QSharedPointer<MirServer> m_mirServer;
-
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;
     QScopedPointer<QPlatformServices> m_services;
@@ -78,8 +76,9 @@ private:
     QScopedPointer<QAbstractEventDispatcher> m_eventDispatcher;
 #endif
 
+    QScopedPointer<QMirServer> m_mirServer;
+
     Display *m_display;
-    QMirServer *m_qmirServer;
     NativeInterface *m_nativeInterface;
     QPlatformInputContext* m_inputContext;
     QScopedPointer<qtmir::Clipboard> m_clipboard;

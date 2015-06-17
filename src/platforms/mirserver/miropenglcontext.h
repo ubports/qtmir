@@ -52,7 +52,6 @@ public:
 #endif
 
 private:
-    const QSharedPointer<MirServer> m_mirServer;
     QSurfaceFormat m_format;
 #if GL_DEBUG
     QOpenGLDebugLogger *m_logger;
