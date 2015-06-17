@@ -31,7 +31,6 @@ public:
         , m_state(Restored)
         , m_live(true)
         , m_session(nullptr)
-        , m_orientation(Qt::PortraitOrientation)
         , m_isFirstFrameDrawn(false)
         , m_isFrameDropperRunning(true)
     {}
@@ -40,8 +39,8 @@ public:
     State state() const override { return m_state; }
     QString name() const override { return QString("fake app surface"); }
     bool live() const override { return m_live; }
-    Qt::ScreenOrientation orientation() const override { return m_orientation; }
     SessionInterface *session() const override { return m_session; }
+    OrientationAngle orientationAngle() const override { return Angle0; }
 
     Q_INVOKABLE void release() override {}
 
@@ -56,11 +55,7 @@ public:
         return m_isFirstFrameDrawn;
     }
 
-    void setOrientation(const Qt::ScreenOrientation orientation) override {
-        if (m_orientation != orientation) {
-            m_orientation = orientation;
-            Q_EMIT orientationChanged();
-        }
+    void setOrientationAngle(OrientationAngle) override {
     }
 
     void setSession(SessionInterface *session) override {
@@ -95,7 +90,6 @@ private:
     State m_state;
     bool m_live;
     SessionInterface *m_session;
-    Qt::ScreenOrientation m_orientation;
     bool m_isFirstFrameDrawn;
     bool m_isFrameDropperRunning;
 };

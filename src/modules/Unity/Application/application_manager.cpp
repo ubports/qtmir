@@ -62,36 +62,6 @@ namespace qtmir
 
 namespace {
 
-// FIXME: AppManager should not implement policy based on display geometry, shell should do that
-bool forceAllAppsIntoMainStage(const QSharedPointer<MirServer> &mirServer)
-{
-    const int tabletModeMinimimWithGU = 100;
-
-    // Obtain display size
-    //TODO: should use mir::graphics::Display::configuration
-    mir::geometry::Rectangles view_area;
-    mirServer->the_display()->for_each_display_sync_group(
-        [&view_area](mir::graphics::DisplaySyncGroup &group) {
-            group.for_each_display_buffer(
-                [&view_area](const mir::graphics::DisplayBuffer &db) {
-                    view_area.add(db.view_area());
-                });
-        });
-
-    // Get current Grid Unit value
-    int gridUnitPx = 8;
-    QByteArray gridUnitString = qgetenv("GRID_UNIT_PX");
-    if (!gridUnitString.isEmpty()) {
-        bool ok;
-        int value = gridUnitString.toInt(&ok);
-        if (ok) {
-            gridUnitPx = value;
-        }
-    }
-
-    return (view_area.bounding_rectangle().size.width.as_int() < tabletModeMinimimWithGU * gridUnitPx);
-}
-
 // FIXME: To be removed once shell has fully adopted short appIds!!
 QString toShortAppIdIfPossible(const QString &appId) {
     QRegExp longAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*");
@@ -451,27 +421,18 @@ void ApplicationManager::onProcessStarting(const QString &appId)
             return;
         }
 
-        // override stage if necessary (i.e. side stage invalid on phone)
-        if (application->stage() == Application::SideStage && forceAllAppsIntoMainStage(m_mirServer))
-            application->setStage(Application::MainStage);
-
         add(application);
         Q_EMIT focusRequested(appId);
     }
     else {
-        bool shouldRequestFocus = false;
         if (application->state() == Application::Stopped) {
             // url-dispatcher can relaunch apps which have been OOM-killed - AppMan must accept the newly spawned
             // application and focus it immediately (as user expects app to still be running).
             qCDebug(QTMIR_APPLICATIONS) << "Stopped application appId=" << appId << "is being resumed externally";
-            shouldRequestFocus = true;
+            Q_EMIT focusRequested(appId);
         } else {
             qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting application already found with appId"
                                         << appId;
-        }
-
-        if (shouldRequestFocus) {
-            Q_EMIT focusRequested(appId);
         }
     }
     application->setProcessState(Application::ProcessRunning);
@@ -762,7 +723,7 @@ void ApplicationManager::add(Application* application)
 
     QString appId = application->appId();
     QString longAppId = application->longAppId();
-    QStringList arguments =application->arguments();
+    QStringList arguments = application->arguments();
 
     // The connection is queued as a workaround an issue in the PhoneStage animation that
     // happens when you tap on a killed app in the spread to bring it to foreground, causing

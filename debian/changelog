@@ -1,3 +1,10 @@
+qtmir (0.4.5+15.10.20150611-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Add X-Ubuntu-Supported-Orientations desktop file entry
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 11 Jun 2015 09:10:38 +0000
+
 qtmir (0.4.4+15.04.20150513-0ubuntu1) vivid; urgency=medium
 
   [ Alan Griffiths ]

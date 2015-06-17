@@ -102,6 +102,7 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     ASSERT_EQ(true, authed);
     onSessionStarting(mirSession);
     onSessionCreatedSurface(mirSession.get(), surface);
+    surface->drawFirstFrame();
     Application * application = applicationManager.findApplication(dialer_app_id);
     ASSERT_NE(nullptr,application);
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
@@ -337,6 +338,7 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 
     onSessionStarting(first_session);
     onSessionCreatedSurface(first_session.get(), aSurface);
+    aSurface->drawFirstFrame();
     onSessionStarting(second_session);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
@@ -364,6 +366,7 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
     applicationManager.authorizeSession(a_procId, authed);
     onSessionStarting(a_session);
     onSessionCreatedSurface(a_session.get(), aSurface);
+    aSurface->drawFirstFrame();
 
     Application * the_app = applicationManager.findApplication(an_app_id);
     applicationManager.focusApplication(an_app_id);
@@ -403,6 +406,7 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
     // Signal app is ready now
     applicationManager.onProcessStarting("app");
     onSessionCreatedSurface(session.get(), aSurface);
+    aSurface->drawFirstFrame();
 
     // now that its ready, suspend process should have begun
     EXPECT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
@@ -848,6 +852,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
 
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     // Check application state is correctly set
     Application *theApp = applicationManager.findApplication(appId);
@@ -922,6 +927,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -938,7 +944,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 /*
  * Test that a suspended application is stopped correctly
  */
-TEST_F(ApplicationManagerTests,shellStopsBackgroundAppCorrectly)
+TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
 {
     using namespace ::testing;
     const QString appId("testAppId");
@@ -965,6 +971,7 @@ TEST_F(ApplicationManagerTests,shellStopsBackgroundAppCorrectly)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     suspend(application);
 
@@ -1009,6 +1016,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1053,6 +1061,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1067,53 +1076,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
-}
-
-/*
- * Test that if a background application is stopped by upstart, AppMan removes it from the app list
- * as the event is a result of direct user interaction
- */
-TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingBackgroundApp)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
-    onSessionCreatedSurface(session.get(), surface);
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    onSessionStopping(session);
-
-    // Upstart notifies of stopping app
-    applicationManager.onProcessStopped(appId);
-
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(focusSpy.count(), 0);
     EXPECT_EQ(removedSpy.count(), 1);
     EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
@@ -1150,6 +1112,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     suspend(app);
 
@@ -1207,6 +1170,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     suspend(app);
 
@@ -1299,6 +1263,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     // Associate a surface so AppMan considers app Running, check focused
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1313,10 +1278,10 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
 }
 
 /*
- * Test that if a foreground application (one launched via desktop_file_hint) is reported to be stopping by
+ * Test that if an application (one launched via desktop_file_hint) is reported to be stopping by
  * Mir, AppMan removes it from the model immediately
  */
-TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundAppLaunchedWithDesktopFileHint)
+TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHint)
 {
     using namespace ::testing;
     const QString appId("testAppId");
@@ -1347,6 +1312,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundAppLaunchedWithDes
     // Associate a surface so AppMan considers app Running, check focused
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1392,11 +1358,14 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     EXPECT_EQ(Application::Starting, app->state());
 
     app->setRequestedState(Application::RequestedSuspended);
+
+    // should not suspend an app that`s still starting up
     ASSERT_EQ(Application::InternalState::Starting, app->internalState());
 
-    // Associate a surface so AppMan considers app Running, check in background
+    // Associate a surface so AppMan considers app Running
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     ASSERT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
 
@@ -1417,56 +1386,6 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     EXPECT_EQ(0, removedSpy.count());
 
     EXPECT_EQ(Application::Stopped, app->state());
-}
-
-/*
- * Test that if a background application (one launched via desktop_file_hint) is reported to be stopping by
- * Mir, AppMan removes it from the model immediately
- */
-TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundAppLaunchedWithDesktopFileHint)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    const QString name("Test App");
-    quint64 procId = 5551;
-    QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
-    cmdLine = cmdLine.append(appId);
-
-    // Set up Mocks & signal watcher
-    EXPECT_CALL(procInfo,command_line(procId))
-        .Times(1)
-        .WillOnce(Return(cmdLine));
-
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, name()).WillByDefault(Return(name));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    // Mir requests authentication for an application that was started
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    EXPECT_EQ(authed, true);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    onSessionStarting(session);
-
-    // Associate a surface so AppMan considers app Running, check in background
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
-    onSessionCreatedSurface(session.get(), surface);
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    // Mir notifies of stopping app
-    onSessionStopping(session);
-
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-
-    Application * app = applicationManager.findApplication(appId);
-    EXPECT_EQ(nullptr,app);
 }
 
 /*
@@ -1592,6 +1511,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     EXPECT_EQ(authed, true);
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session2.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1653,8 +1573,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     // both sessions create surfaces, then get them all suspended
     FakeMirSurfaceItem *surface1 = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session1.get(), surface1);
+    surface1->drawFirstFrame();
     FakeMirSurfaceItem *surface2 = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session2.get(), surface2);
+    surface2->drawFirstFrame();
     suspend(app);
     EXPECT_EQ(Application::Suspended, app->state());
 
@@ -1703,6 +1625,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     // App creates surface, puts it in background, then is OOM killed.
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
     suspend(app);
 
     onSessionStopping(session);
@@ -1855,6 +1778,7 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     onSessionStarting(first_session);
     FakeMirSurfaceItem *aSurface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(first_session.get(), aSurface);
+    aSurface->drawFirstFrame();
     onSessionStarting(second_session);
 
     // Add to other apps to the list (Not "some_app")
@@ -1890,7 +1814,7 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     the_app->setRequestedState(Application::RequestedSuspended);
 
     // And expect it to be running still
-    ASSERT_EQ(Application::InternalState::RunningWithoutWakelock, the_app->internalState());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
 
     the_app->setRequestedState(Application::RequestedRunning);
 
@@ -1929,11 +1853,12 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     // App creates surface, focuses it so state is running
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
-    ASSERT_EQ(Application::InternalState::RunningWithoutWakelock, application->internalState());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
 }
 

@@ -31,8 +31,9 @@ public:
     MOCK_CONST_METHOD0(state, State());
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(live, bool());
-    MOCK_CONST_METHOD0(orientation, Qt::ScreenOrientation());
     MOCK_CONST_METHOD0(session, SessionInterface*());
+    MOCK_CONST_METHOD0(orientationAngle, OrientationAngle());
+
 
     MOCK_METHOD0(release, void());
     MOCK_METHOD0(close, bool());
@@ -42,7 +43,7 @@ public:
 
     MOCK_CONST_METHOD0(isFirstFrameDrawn, bool());
 
-    MOCK_METHOD1(setOrientation, void(const Qt::ScreenOrientation orientation));
+    MOCK_METHOD1(setOrientationAngle, void(OrientationAngle angle));
     MOCK_METHOD1(setSession, void(SessionInterface *app));
     MOCK_METHOD1(setLive, void(bool live));
 };

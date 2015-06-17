@@ -1,5 +1,4 @@
 include_directories(
-    ${APPLICATION_API_INCLUDE_DIRS}
     ${GLIB_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}

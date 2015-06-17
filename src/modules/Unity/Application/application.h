@@ -48,26 +48,14 @@ class Application : public unity::shell::application::ApplicationInfoInterface
 {
     Q_OBJECT
 
-    Q_FLAGS(Orientation SupportedOrientations)
-
     Q_PROPERTY(QString desktopFile READ desktopFile CONSTANT)
     Q_PROPERTY(QString exec READ exec CONSTANT)
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
     Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
-    Q_PROPERTY(SupportedOrientations supportedOrientations READ supportedOrientations CONSTANT)
     Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
 
 public:
     Q_DECLARE_FLAGS(Stages, Stage)
-
-    // Matching Qt::ScreenOrientation values for convenience
-    enum Orientation {
-        PortraitOrientation = 0x1,
-        LandscapeOrientation = 0x2,
-        InvertedPortraitOrientation = 0x4,
-        InvertedLandscapeOrientation = 0x8
-    };
-    Q_DECLARE_FLAGS(SupportedOrientations, Orientation)
 
     enum ProcessState {
         ProcessUnknown,
@@ -79,15 +67,16 @@ public:
     enum class InternalState {
         Starting,
         Running,
-        RunningWithoutWakelock,
+        RunningInBackground,
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
         Closing,
-        DiedUnexpectedly,
+        StoppedUnexpectedly,
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
                 // In any case, this is a dead end.
     };
+
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                 DesktopFileReader *desktopFileReader,
                 const QStringList &arguments,
@@ -110,12 +99,13 @@ public:
     QColor splashColor() const override;
     QColor splashColorHeader() const override;
     QColor splashColorFooter() const override;
+    Qt::ScreenOrientations supportedOrientations() const override;
+    bool rotatesWindowContents() const override;
 
     void setStage(Stage stage);
 
 
     void setProcessState(ProcessState value);
-    ProcessState processState() const;
 
     QStringList arguments() const { return m_arguments; }
 
@@ -130,7 +120,6 @@ public:
     bool fullscreen() const;
 
     Stages supportedStages() const;
-    SupportedOrientations supportedOrientations() const;
 
     pid_t pid() const;
 
@@ -167,7 +156,7 @@ private:
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
     void setFocused(bool focus);
-    void setState(InternalState state);
+    void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
     void resume();
@@ -175,6 +164,8 @@ private:
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
+    void applyRequestedRunning();
+    void applyRequestedSuspended();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
@@ -185,7 +176,8 @@ private:
     InternalState m_state;
     bool m_focused;
     QStringList m_arguments;
-    SupportedOrientations m_supportedOrientations;
+    Qt::ScreenOrientations m_supportedOrientations;
+    bool m_rotatesWindowContents;
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
@@ -199,6 +191,5 @@ private:
 } // namespace qtmir
 
 Q_DECLARE_METATYPE(qtmir::Application*)
-Q_DECLARE_OPERATORS_FOR_FLAGS(qtmir::Application::SupportedOrientations)
 
 #endif  // APPLICATION_H
