@@ -31,9 +31,8 @@ public:
     MOCK_CONST_METHOD0(state, State());
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(live, bool());
-    MOCK_CONST_METHOD0(session, SessionInterface*());
     MOCK_CONST_METHOD0(orientationAngle, OrientationAngle());
-
+    MOCK_CONST_METHOD0(session, SessionInterface*());
 
     MOCK_METHOD0(release, void());
     MOCK_METHOD0(close, bool());
