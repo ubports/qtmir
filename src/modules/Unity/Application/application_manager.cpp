@@ -489,11 +489,10 @@ void ApplicationManager::onProcessStopped(const QString &appId)
     Application *application = findApplication(appId);
 
     if (!application) {
-        Q_FOREACH(Application* application, m_closingApplications) {
-            if (application->appId() == appId) {
-                delete application;
-                return;
-            }
+        application = findClosingApplication(appId);
+        if (application) {
+            delete application;
+            return;
         }
         qDebug() << "ApplicationManager::onProcessStopped reports stop of appId=" << appId
                  << "which AppMan is not managing, ignoring the event";
@@ -739,6 +738,7 @@ void ApplicationManager::add(Application* application)
             qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
                        << "Sending SIGTERM to process:" << appId;
             kill(application->pid(), SIGTERM);
+            application->setProcessState(Application::ProcessStopped);
         }
     });
 

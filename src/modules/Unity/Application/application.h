@@ -160,7 +160,7 @@ private:
     void wipeQMLCache();
     void suspend();
     void resume();
-    void kill();
+    void stop();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();

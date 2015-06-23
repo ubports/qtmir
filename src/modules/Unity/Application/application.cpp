@@ -354,7 +354,9 @@ void Application::applyRequestedSuspended()
         // it's already going where we it's wanted
         break;
     case InternalState::Closing:
-        resume();
+        if (m_processState == ProcessSuspended) {
+            resume();
+        }
         break;
     case InternalState::StoppedUnexpectedly:
     case InternalState::Stopped:
@@ -388,6 +390,9 @@ void Application::close()
     qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
 
     setInternalState(InternalState::Closing);
+    if (!m_session || !m_session->close()) {
+        stop();
+    }
 }
 
 void Application::setPid(pid_t pid)
@@ -486,15 +491,10 @@ void Application::setInternalState(Application::InternalState state)
             releaseWakelock();
             break;
         case InternalState::Closing:
+            acquireWakelock();
             if (m_closeTimer != 0) break;
-            if (m_session) {
-                if (m_session->close()) {
-                    m_closeTimer = startTimer(3000);
-                    break;
-                }
-            }
-            kill();
-            return;
+            m_closeTimer = startTimer(3000);
+            break;
         case InternalState::StoppedUnexpectedly:
             releaseWakelock();
             break;
@@ -549,9 +549,8 @@ void Application::setProcessState(ProcessState newProcessState)
         setInternalState(InternalState::Suspended);
         break;
     case ProcessStopped:
-        // we assume the session always stop before the process
-        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
-        if (m_state == InternalState::Starting) {
+        if (m_state == InternalState::Starting ||
+            m_state == InternalState::Closing) {
             setInternalState(InternalState::Stopped);
         } else {
             Q_ASSERT(m_state == InternalState::Stopped
@@ -565,6 +564,8 @@ void Application::setProcessState(ProcessState newProcessState)
 
 void Application::suspend()
 {
+    qCDebug(QTMIR_APPLICATIONS) << "Application::suspend - appId=" << appId();
+
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
@@ -582,6 +583,8 @@ void Application::suspend()
 
 void Application::resume()
 {
+    qCDebug(QTMIR_APPLICATIONS) << "Application::resume - appId=" << appId();
+
     if (m_state == InternalState::Suspended) {
         setInternalState(InternalState::Running);
         Q_EMIT resumeProcessRequested();
@@ -612,9 +615,10 @@ void Application::respawn()
     Q_EMIT startProcessRequested();
 }
 
-void Application::kill()
+void Application::stop()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::kill - appId=" << appId();
+    qCDebug(QTMIR_APPLICATIONS) << "Application::stop - appId=" << appId();
+
     Q_EMIT stopProcessRequested();
 }
 
@@ -622,7 +626,7 @@ void Application::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == m_closeTimer) {
         m_closeTimer = 0;
-        kill();
+        stop();
     }
 }
 
@@ -680,11 +684,10 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if (m_state == InternalState::Closing) {
-            // We're expecting the application to stop
-        } else if (!canBeResumed()
+        if (!canBeResumed()
                 || m_state == InternalState::Starting
-                || m_state == InternalState::Running) {
+                || m_state == InternalState::Running
+                || m_state == InternalState::Closing) {
             /*  1. application is not managed by upstart
              *  2. application is managed by upstart, but has stopped before it managed
              *     to create a surface, we can assume it crashed on startup, and thus
@@ -692,6 +695,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
              *  3. application is managed by upstart and is in foreground (i.e. has
              *     Running state), if Mir reports the application disconnects, it
              *     either crashed or stopped itself.
+             *  4. We're expecting the application to stop after a close request
              */
             setInternalState(InternalState::Stopped);
         } else {
