@@ -49,7 +49,6 @@ public:
     }
     inline void onSessionCreatedSurface(const mir::scene::Session *mirSession,
             MirSurfaceItemInterface *qmlSurface) {
-        using namespace ::testing;
 
         SessionInterface* qmlSession = sessionManager.findSession(mirSession);
         if (qmlSession) {
