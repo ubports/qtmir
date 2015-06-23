@@ -56,14 +56,7 @@ public:
             qmlSession->setSurface(qmlSurface);
         }
 
-        // const mir::geometry::Size& sz{100,100};
         auto mockSurface = std::make_shared<ms::MockSurface>();
-        // EXPECT_CALL(*mockSurface, size()).Times(AnyNumber()).WillRepeatedly(Return(sz));
-        // EXPECT_CALL(*mockSurface, state()).Times(AnyNumber()).WillRepeatedly(Return(mir_surface_state_unknown));
-        // EXPECT_CALL(*mockSurface, add_observer(_)).Times(AnyNumber());
-        // EXPECT_CALL(*mockSurface, remove_observer(_)).Times(AnyNumber());
-        // EXPECT_CALL(*mockSurface, buffers_ready_for_compositor(_)).Times(AnyNumber());
-
         applicationManager.onSessionCreatedSurface(mirSession, mockSurface);
     }
 
