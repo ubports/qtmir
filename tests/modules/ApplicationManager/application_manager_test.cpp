@@ -1904,7 +1904,7 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
 }
 
 /*
- * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
+ * Test that if an application is started while it is still attempting to close, it is queued to start again.
  */
 TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
 {
