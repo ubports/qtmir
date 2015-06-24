@@ -47,6 +47,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir_toolkit/event.h>
+#include <mir/shell/shell.h>
 
 namespace mg = mir::graphics;
 

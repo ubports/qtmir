@@ -17,7 +17,8 @@
 #ifndef QPAMIRSERVER_SHELL_H
 #define QPAMIRSERVER_SHELL_H
 
-#include <mir/shell/abstract_shell.h>
+#include <mir/shell/window_manager.h>
+
 #include <QObject>
 
 namespace mir {
@@ -26,19 +27,44 @@ namespace mir {
     }
 }
 
-class MirShell : public QObject, public mir::shell::AbstractShell
+class QtMirWindowManager : public QObject, public mir::shell::WindowManager
 {
-    Q_OBJECT
+Q_OBJECT
 
 public:
-    MirShell(
-        const std::shared_ptr<mir::shell::InputTargeter> &inputTargeter,
-        const std::shared_ptr<mir::scene::SurfaceCoordinator> &surfaceCoordinator,
-        const std::shared_ptr<mir::scene::SessionCoordinator> &sessionCoordinator,
-        const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager,
-        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
 
-    virtual mir::frontend::SurfaceId create_surface(const std::shared_ptr<mir::scene::Session>& session, const mir::scene::SurfaceCreationParameters &params);
+    QtMirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+
+    void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
+
+    void remove_session(std::shared_ptr<mir::scene::Session> const& session) override;
+
+    mir::frontend::SurfaceId add_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::function<mir::frontend::SurfaceId(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params)> const& build) override;
+
+    void remove_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::weak_ptr<mir::scene::Surface> const& surface) override;
+
+    void add_display(mir::geometry::Rectangle const& area) override;
+
+    void remove_display(mir::geometry::Rectangle const& area) override;
+
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
+
+    bool handle_touch_event(MirTouchEvent const* event) override;
+
+    bool handle_pointer_event(MirPointerEvent const* event) override;
+
+    int set_surface_attribute(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;

@@ -86,17 +86,10 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_shell([this]
+    override_the_window_manager_builder([this](mir::shell::FocusController* /*focus_controller*/)
+        -> std::shared_ptr<mir::shell::WindowManager>
         {
-            auto const shell = std::make_shared<MirShell>(
-                the_input_targeter(),
-                the_surface_coordinator(),
-                the_session_coordinator(),
-                the_prompt_session_manager(),
-                the_shell_display_layout());
-
-            m_shell = shell;
-            return shell;
+            return std::make_shared<QtMirWindowManager>(the_shell_display_layout());
         });
 
     set_terminator([&](int)
@@ -151,5 +144,6 @@ PromptSessionListener *MirServer::promptSessionListener()
 
 MirShell *MirServer::shell()
 {
+    std::weak_ptr<MirShell> m_shell = the_shell();
     return m_shell.lock().get();
 }

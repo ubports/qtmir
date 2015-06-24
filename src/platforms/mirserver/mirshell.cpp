@@ -26,131 +26,79 @@
 #include <mir/shell/window_manager.h>
 
 namespace ms = mir::scene;
-using mir::shell::AbstractShell;
 
-namespace
-{
-class NullWindowManager : public mir::shell::WindowManager
-{
-public:
-    void add_session(std::shared_ptr<ms::Session> const& session) override;
-
-    void remove_session(std::shared_ptr<ms::Session> const& session) override;
-
-    mir::frontend::SurfaceId add_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params,
-        std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build) override;
-
-    void remove_surface(
-        std::shared_ptr<ms::Session> const& session,
-        std::weak_ptr<ms::Surface> const& surface) override;
-
-    void add_display(mir::geometry::Rectangle const& area) override;
-
-    void remove_display(mir::geometry::Rectangle const& area) override;
-
-    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
-
-    bool handle_touch_event(MirTouchEvent const* event) override;
-
-    bool handle_pointer_event(MirPointerEvent const* event) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
-};
-}
-
-
-MirShell::MirShell(
-    const std::shared_ptr<mir::shell::InputTargeter> &inputTargeter,
-    const std::shared_ptr<mir::scene::SurfaceCoordinator> &surfaceCoordinator,
-    const std::shared_ptr<mir::scene::SessionCoordinator> &sessionCoordinator,
-    const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager,
-    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
-    AbstractShell(inputTargeter, surfaceCoordinator, sessionCoordinator, promptSessionManager,
-        [](mir::shell::FocusController*) { return std::make_shared<NullWindowManager>(); }),
+QtMirWindowManager::QtMirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
     m_displayLayout{displayLayout}
 {
-    qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::MirShell";
+    qCDebug(QTMIR_MIR_MESSAGES) << "QtMirWindowManager::QtMirWindowManager";
 }
 
-mir::frontend::SurfaceId MirShell::create_surface(const std::shared_ptr<ms::Session> &session, const ms::SurfaceCreationParameters &requestParameters)
-{
-    tracepoint(qtmirserver, surfacePlacementStart);
-
-     // TODO: Callback unity8 so that it can make a decision on that.
-     //       unity8 must bear in mind that the called function will be on a Mir thread though.
-     //       The QPA shouldn't be deciding for itself on such things.
-
-     ms::SurfaceCreationParameters placedParameters = requestParameters;
-
-     // Just make it fullscreen for now
-     mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
-     m_displayLayout->size_to_output(rect);
-     placedParameters.size = rect.size;
-
-     qCDebug(QTMIR_MIR_MESSAGES) << "MirShell::create_surface(): size requested ("
-         << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
-         << placedParameters.size.width.as_int() << "," << placedParameters.size.height.as_int() << ")";
-
-     tracepoint(qtmirserver, surfacePlacementEnd);
-
-     return AbstractShell::create_surface(session, placedParameters);
-}
-
-void NullWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
+void QtMirWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-void NullWindowManager::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
+void QtMirWindowManager::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-auto NullWindowManager::add_surface(
+auto QtMirWindowManager::add_surface(
     std::shared_ptr<ms::Session> const& session,
-    ms::SurfaceCreationParameters const& params,
+    ms::SurfaceCreationParameters const& requestParameters,
     std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
 -> mir::frontend::SurfaceId
 {
-    return build(session, params);
+    tracepoint(qtmirserver, surfacePlacementStart);
+
+    // TODO: Callback unity8 so that it can make a decision on that.
+    //       unity8 must bear in mind that the called function will be on a Mir thread though.
+    //       The QPA shouldn't be deciding for itself on such things.
+
+    ms::SurfaceCreationParameters placedParameters = requestParameters;
+
+    // Just make it fullscreen for now
+    mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
+    m_displayLayout->size_to_output(rect);
+    placedParameters.size = rect.size;
+
+    qCDebug(QTMIR_MIR_MESSAGES) << "QtMirWindowManager::add_surface(): size requested ("
+                                << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
+                                << placedParameters.size.width.as_int() << "," << placedParameters.size.height.as_int() << ")";
+
+    tracepoint(qtmirserver, surfacePlacementEnd);
+
+    return build(session, placedParameters);
 }
 
-void NullWindowManager::remove_surface(
+void QtMirWindowManager::remove_surface(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::weak_ptr<ms::Surface> const& /*surface*/)
 {
 }
 
-void NullWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
+void QtMirWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-void NullWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
+void QtMirWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-bool NullWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
-{
-    return false;
-}
-
-bool NullWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
+bool QtMirWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool NullWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+bool QtMirWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-int NullWindowManager::set_surface_attribute(
+bool QtMirWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+{
+    return false;
+}
+
+int QtMirWindowManager::set_surface_attribute(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
@@ -159,6 +107,6 @@ int NullWindowManager::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-void NullWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+void QtMirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
 {
 }
