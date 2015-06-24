@@ -23,7 +23,6 @@
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
-#include <mir/shell/window_manager.h>
 
 namespace ms = mir::scene;
 
@@ -109,4 +108,5 @@ int MirWindowManager::set_surface_attribute(
 
 void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
 {
+    // TODO support surface modifications
 }
