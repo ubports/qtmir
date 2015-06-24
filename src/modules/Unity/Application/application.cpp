@@ -60,12 +60,9 @@ Application::Application(const QSharedPointer<TaskController>& taskController,
     // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
     m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
 
-    // FIXME: This is a hack. Remove once we have a real implementation for knowing the supported
-    // orientations of an app
-    m_supportedOrientations = PortraitOrientation
-        | LandscapeOrientation
-        | InvertedPortraitOrientation
-        | InvertedLandscapeOrientation;
+    m_supportedOrientations = m_desktopData->supportedOrientations();
+
+    m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
 }
 
 Application::~Application()
@@ -355,9 +352,14 @@ QString Application::longAppId() const
     return m_longAppId;
 }
 
-Application::SupportedOrientations Application::supportedOrientations() const
+Qt::ScreenOrientations Application::supportedOrientations() const
 {
     return m_supportedOrientations;
+}
+
+bool Application::rotatesWindowContents() const
+{
+    return m_rotatesWindowContents;
 }
 
 Session* Application::session() const

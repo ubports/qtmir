@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -29,11 +29,11 @@
 class NativeInterface : public QPlatformNativeInterface
 {
 public:
-    NativeInterface(const QSharedPointer<MirServer> &);
+    NativeInterface(const QWeakPointer<MirServer> &);
 
     virtual void *nativeResourceForIntegration(const QByteArray &resource);
 
-    QSharedPointer<MirServer> m_mirServer;
+    QWeakPointer<MirServer> m_mirServer;
 };
 
 #endif // NATIVEINTEGRATION_H
