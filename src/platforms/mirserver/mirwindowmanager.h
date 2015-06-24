@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QPAMIRSERVER_SHELL_H
-#define QPAMIRSERVER_SHELL_H
+#ifndef QPAMIRSERVER_WINDOW_MANAGER_H
+#define QPAMIRSERVER_WINDOW_MANAGER_H
 
 #include <mir/shell/window_manager.h>
 
@@ -27,13 +27,13 @@ namespace mir {
     }
 }
 
-class QtMirWindowManager : public QObject, public mir::shell::WindowManager
+class MirWindowManager : public QObject, public mir::shell::WindowManager
 {
 Q_OBJECT
 
 public:
 
-    QtMirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+    MirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
 
@@ -70,4 +70,4 @@ private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
 };
 
-#endif /* QPAMIRSERVER_SHELL_H */
+#endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

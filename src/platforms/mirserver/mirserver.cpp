@@ -19,7 +19,7 @@
 #include "mirserver.h"
 
 // local
-#include "mirshell.h"
+#include "mirwindowmanager.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
@@ -89,7 +89,7 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
     override_the_window_manager_builder([this](mir::shell::FocusController* /*focus_controller*/)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return std::make_shared<QtMirWindowManager>(the_shell_display_layout());
+            return std::make_shared<MirWindowManager>(the_shell_display_layout());
         });
 
     set_terminator([&](int)

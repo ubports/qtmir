@@ -23,7 +23,6 @@
 #include "mirbuffersgtexture.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
-#include "mirshell.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mirshell.h"
+#include "mirwindowmanager.h"
 #include "logging.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 
@@ -27,21 +27,21 @@
 
 namespace ms = mir::scene;
 
-QtMirWindowManager::QtMirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
+MirWindowManager::MirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
     m_displayLayout{displayLayout}
 {
-    qCDebug(QTMIR_MIR_MESSAGES) << "QtMirWindowManager::QtMirWindowManager";
+    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManager::MirWindowManager";
 }
 
-void QtMirWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
+void MirWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-void QtMirWindowManager::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
+void MirWindowManager::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-auto QtMirWindowManager::add_surface(
+auto MirWindowManager::add_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& requestParameters,
     std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
@@ -60,7 +60,7 @@ auto QtMirWindowManager::add_surface(
     m_displayLayout->size_to_output(rect);
     placedParameters.size = rect.size;
 
-    qCDebug(QTMIR_MIR_MESSAGES) << "QtMirWindowManager::add_surface(): size requested ("
+    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManager::add_surface(): size requested ("
                                 << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
                                 << placedParameters.size.width.as_int() << "," << placedParameters.size.height.as_int() << ")";
 
@@ -69,36 +69,36 @@ auto QtMirWindowManager::add_surface(
     return build(session, placedParameters);
 }
 
-void QtMirWindowManager::remove_surface(
+void MirWindowManager::remove_surface(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::weak_ptr<ms::Surface> const& /*surface*/)
 {
 }
 
-void QtMirWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
+void MirWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-void QtMirWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
+void MirWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-bool QtMirWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
-{
-    return false;
-}
-
-bool QtMirWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
+bool MirWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool QtMirWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+bool MirWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-int QtMirWindowManager::set_surface_attribute(
+bool MirWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+{
+    return false;
+}
+
+int MirWindowManager::set_surface_attribute(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
@@ -107,6 +107,6 @@ int QtMirWindowManager::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-void QtMirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
 {
 }
