@@ -57,8 +57,9 @@ Q_SIGNALS:
     void applicationAboutToBeStarted(const QString &appId);
     void applicationStarted(const QString &appId);
     void applicationStopped(const QString &appId);
+    void applicationPaused(const QString &appId);
     void applicationFocusRequest(const QString &appId);
-    void applicationResumeRequest(const QString &appId);
+    void applicationResumeRequested(const QString &appId);
 
     void applicationError(const QString &appId, ApplicationController::Error error);
 

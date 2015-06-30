@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014,2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,12 +18,16 @@
 #ifndef QT_MIR_TEST_FRAMEWORK_H
 #define QT_MIR_TEST_FRAMEWORK_H
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
+#include <Unity/Application/application.h>
 #include <Unity/Application/application_manager.h>
 #include <Unity/Application/applicationcontroller.h>
 #include <Unity/Application/mirsurfacemanager.h>
 #include <Unity/Application/sessionmanager.h>
+#include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/taskcontroller.h>
 #include <Unity/Application/proc_info.h>
@@ -42,6 +46,10 @@ namespace ms = mir::scene;
 using namespace qtmir;
 
 namespace qtmir {
+
+// For better output in ASSERT_* and EXPECT_* error messages
+void PrintTo(const Application::InternalState& state, ::std::ostream* os);
+void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
 
 // Initialization of mir::Server needed for by tests
 class TestMirServerInit : virtual mir::Server

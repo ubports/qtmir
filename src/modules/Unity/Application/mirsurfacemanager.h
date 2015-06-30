@@ -64,8 +64,8 @@ public:
     static MirSurfaceManager* singleton();
 
 Q_SIGNALS:
-    void surfaceCreated(MirSurfaceItem* surface);
-    void surfaceDestroyed(MirSurfaceItem* surface);
+    void surfaceCreated(MirSurfaceItemInterface* surface);
+    void surfaceDestroyed(MirSurfaceItemInterface* surface);
 //    void surfaceResized(MirSurface*);
 //    void fullscreenSurfaceChanged();
 
@@ -74,7 +74,7 @@ public Q_SLOTS:
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:
-    QHash<const mir::scene::Surface *, MirSurfaceItem *> m_mirSurfaceToItemHash;
+    QHash<const mir::scene::Surface *, MirSurfaceItemInterface *> m_mirSurfaceToItemHash;
     QMutex m_mutex;
 
 private:
