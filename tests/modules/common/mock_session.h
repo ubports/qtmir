@@ -31,6 +31,7 @@ public:
         ON_CALL(*this, resume()).WillByDefault(::testing::Invoke(this, &MockSession::doResume));
         ON_CALL(*this, stop()).WillByDefault(::testing::Invoke(this, &MockSession::doStop));
         ON_CALL(*this, state()).WillByDefault(::testing::Invoke(this, &MockSession::doState));
+        ON_CALL(*this, close()).WillByDefault(::testing::Return(true));
     }
 
     MOCK_METHOD0(release, void());
@@ -51,6 +52,7 @@ public:
     MOCK_METHOD0(suspend, void());
     MOCK_METHOD0(resume, void());
     MOCK_METHOD0(stop, void());
+    MOCK_METHOD0(close, bool());
 
     MOCK_METHOD1(addChildSession, void(SessionInterface* session));
     MOCK_METHOD2(insertChildSession, void(uint index, SessionInterface* session));

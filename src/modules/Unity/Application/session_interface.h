@@ -81,6 +81,7 @@ public:
     virtual void suspend() = 0;
     virtual void resume() = 0;
     virtual void stop() = 0;
+    virtual bool close() = 0;
 
     // For SessionManager use
 

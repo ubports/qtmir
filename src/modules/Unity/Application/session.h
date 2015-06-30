@@ -64,6 +64,7 @@ public:
     void suspend() override;
     void resume() override;
     void stop() override;
+    bool close() override;
 
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;

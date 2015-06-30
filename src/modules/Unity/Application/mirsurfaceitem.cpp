@@ -631,6 +631,15 @@ bool MirSurfaceItem::processTouchEvent(
     return accepted;
 }
 
+bool MirSurfaceItem::close()
+{
+    if (m_surface) {
+        m_surface->request_client_surface_close();
+        return true;
+    }
+    return false;
+}
+
 bool MirSurfaceItem::hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints)
 {
     UbuntuKeyboardInfo *ubuntuKeyboardInfo = UbuntuKeyboardInfo::instance();

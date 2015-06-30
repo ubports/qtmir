@@ -71,6 +71,7 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
+        Closing,
         StoppedUnexpectedly,
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
                 // In any case, this is a dead end.
@@ -122,6 +123,8 @@ public:
 
     pid_t pid() const;
 
+    void close();
+
     // for tests
     InternalState internalState() const { return m_state; }
 
@@ -133,6 +136,7 @@ Q_SIGNALS:
     void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
+    void stopProcessRequested();
     void suspendProcessRequested();
     void resumeProcessRequested();
     void stopped();
@@ -142,8 +146,10 @@ private Q_SLOTS:
 
     void respawn();
 
-private:
+protected:
+    void timerEvent(QTimerEvent *event);
 
+private:
     QString longAppId() const;
     void acquireWakelock() const;
     void releaseWakelock() const;
@@ -154,6 +160,7 @@ private:
     void wipeQMLCache();
     void suspend();
     void resume();
+    void stop();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
@@ -174,6 +181,7 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    int m_closeTimer;
 
     friend class ApplicationManager;
     friend class SessionManager;

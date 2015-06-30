@@ -25,6 +25,7 @@
 
  #include <fake_mirsurfaceitem.h>
  #include <mock_surface.h>
+ #include <mock_mirsurfaceitem.h>
  #include <qtmir_test.h>
 
 using namespace qtmir;
@@ -54,10 +55,8 @@ public:
             qmlSession->setSurface(qmlSurface);
         }
 
-        // I assume that applicationManager ignores the mirSurface parameter, so sending
-        // a null shared pointer must suffice
-        std::shared_ptr<mir::scene::Surface> mirSurface(nullptr);
-        applicationManager.onSessionCreatedSurface(mirSession, mirSurface);
+        auto mockSurface = std::make_shared<ms::MockSurface>();
+        applicationManager.onSessionCreatedSurface(mirSession, mockSurface);
     }
 
     inline void suspend(Application *application) {
@@ -1853,4 +1852,95 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     EXPECT_FALSE(sharedWakelock.enabled());
     ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
+}
+
+/*
+ * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
+ */
+TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    MockMirSurfaceItem *surface = new MockMirSurfaceItem;
+    EXPECT_CALL(*surface, state()).Times(AnyNumber()).WillRepeatedly(Return(MirSurfaceItemInterface::Restored));
+
+    onSessionCreatedSurface(session.get(), surface);
+
+    // QObject::connect(app, &QObject::destroyed, app, [](){});
+
+    EXPECT_CALL(*surface, close()).Times(1);
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+}
+
+/*
+ * Test that if there is no surface available to the app when it is stopped, that it is forced to close.
+ */
+TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+
+    QSignalSpy spy(app, SIGNAL(destroyed(QObject*)));
+    QObject::connect(app, &QObject::destroyed, app, [&qtApp](){ qtApp.quit(); });
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    qtApp.exec();
+    EXPECT_EQ(spy.count(), 1);
+}
+
+/*
+ * Test that if an application is started while it is still attempting to close, it is queued to start again.
+ */
+TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    onSessionCreatedSurface(session.get(), surface);
+
+    // Stop app
+    applicationManager.stopApplication(appId); // will wait
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_EQ(applicationManager.startApplication(appId, ApplicationManager::NoFlag), nullptr);
+
+    QSignalSpy spy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
+    QObject::connect(&applicationManager, &ApplicationManager::applicationAdded,
+                     &applicationManager, [&qtApp, appId](const QString& startedApp) {
+        if (startedApp == appId) {
+            qtApp.quit();
+        }
+    });
+
+    qtApp.exec();
+    EXPECT_EQ(spy.count(), 1);
 }

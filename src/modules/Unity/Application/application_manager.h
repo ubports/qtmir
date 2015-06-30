@@ -148,6 +148,7 @@ private:
     QString toString() const;
 
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
+    Application *findClosingApplication(const QString &inputAppId) const;
 
     QSharedPointer<MirServer> m_mirServer;
 
@@ -159,6 +160,8 @@ private:
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
+    QList<Application*> m_closingApplications;
+    QList<QString> m_queuedStartApplications;
     static ApplicationManager* the_application_manager;
 
     friend class Application;

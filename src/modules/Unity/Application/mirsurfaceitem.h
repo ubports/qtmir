@@ -62,6 +62,7 @@ public:
     OrientationAngle orientationAngle() const override;
 
     Q_INVOKABLE void release() override;
+    bool close() override;
 
     // Item surface/texture management
     bool isTextureProvider() const { return true; }
