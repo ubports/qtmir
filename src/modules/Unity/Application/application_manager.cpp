@@ -357,8 +357,7 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
     if (m_queuedStartApplications.contains(inputAppId)) {
         qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " is queued to start";
         return nullptr;
-    }
-    else {
+    } else {
         application = findClosingApplication(inputAppId);
         if (application) {
             m_queuedStartApplications.append(inputAppId);
@@ -486,14 +485,13 @@ void ApplicationManager::onProcessStopped(const QString &appId)
 {
     tracepoint(qtmir, onProcessStopped);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStopped - appId=" << appId;
-    Application *application = findApplication(appId);
 
+    Application *application = findApplication(appId);
     if (!application) {
         application = findClosingApplication(appId);
-        if (application) {
-            delete application;
-            return;
-        }
+    }
+
+    if (!application) {
         qDebug() << "ApplicationManager::onProcessStopped reports stop of appId=" << appId
                  << "which AppMan is not managing, ignoring the event";
         return;

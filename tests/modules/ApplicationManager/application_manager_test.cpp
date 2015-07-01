@@ -1868,10 +1868,11 @@ TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
 
     MockMirSurfaceItem *surface = new MockMirSurfaceItem;
     EXPECT_CALL(*surface, state()).Times(AnyNumber()).WillRepeatedly(Return(MirSurfaceItemInterface::Restored));
+    EXPECT_CALL(*surface,isFirstFrameDrawn()).Times(AnyNumber()).WillRepeatedly(Return(false));
 
     onSessionCreatedSurface(session.get(), surface);
-
-    // QObject::connect(app, &QObject::destroyed, app, [](){});
+    EXPECT_CALL(*surface,isFirstFrameDrawn()).Times(AnyNumber()).WillRepeatedly(Return(true));
+    Q_EMIT surface->firstFrameDrawn();
 
     EXPECT_CALL(*surface, close()).Times(1);
 

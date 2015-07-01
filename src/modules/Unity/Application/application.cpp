@@ -354,9 +354,7 @@ void Application::applyRequestedSuspended()
         // it's already going where we it's wanted
         break;
     case InternalState::Closing:
-        if (m_processState == ProcessSuspended) {
-            resume();
-        }
+        // can't suspend while it's getting closed
         break;
     case InternalState::StoppedUnexpectedly:
     case InternalState::Stopped:
@@ -389,10 +387,39 @@ void Application::close()
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
 
-    setInternalState(InternalState::Closing);
-    if (!m_session || !m_session->close()) {
+    switch (m_state) {
+    case InternalState::Starting:
         stop();
+        break;
+    case InternalState::Running:
+        doClose();
+        break;
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+    case InternalState::Suspended:
+        resume();
+        doClose();
+        break;
+    case InternalState::Closing:
+        // already on the way
+        break;
+    case InternalState::StoppedUnexpectedly:
+    case InternalState::Stopped:
+        // too late
+        break;
     }
+
+}
+
+void Application::doClose()
+{
+    Q_ASSERT(m_closeTimer == 0);
+    Q_ASSERT(m_session != nullptr);
+
+    m_session->close();
+    m_closeTimer = startTimer(3000);
+    setInternalState(InternalState::Closing);
 }
 
 void Application::setPid(pid_t pid)
@@ -492,8 +519,6 @@ void Application::setInternalState(Application::InternalState state)
             break;
         case InternalState::Closing:
             acquireWakelock();
-            if (m_closeTimer != 0) break;
-            m_closeTimer = startTimer(3000);
             break;
         case InternalState::StoppedUnexpectedly:
             releaseWakelock();
@@ -549,8 +574,10 @@ void Application::setProcessState(ProcessState newProcessState)
         setInternalState(InternalState::Suspended);
         break;
     case ProcessStopped:
-        if (m_state == InternalState::Starting ||
-            m_state == InternalState::Closing) {
+        // we assume the session always stop before the process
+        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+        if (m_state == InternalState::Starting) {
+            Q_ASSERT(!m_session);
             setInternalState(InternalState::Stopped);
         } else {
             Q_ASSERT(m_state == InternalState::Stopped
@@ -587,12 +614,6 @@ void Application::resume()
 
     if (m_state == InternalState::Suspended) {
         setInternalState(InternalState::Running);
-        Q_EMIT resumeProcessRequested();
-        if (m_processState == ProcessSuspended) {
-            setProcessState(ProcessRunning); // should we wait for a resumed() signal?
-        }
-        m_session->resume();
-    } else if (m_state == InternalState::Closing) { // stay in Closing state
         Q_EMIT resumeProcessRequested();
         if (m_processState == ProcessSuspended) {
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?

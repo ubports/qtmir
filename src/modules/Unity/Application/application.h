@@ -166,6 +166,7 @@ private:
     void applyRequestedState();
     void applyRequestedRunning();
     void applyRequestedSuspended();
+    void doClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
