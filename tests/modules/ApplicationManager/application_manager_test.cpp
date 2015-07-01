@@ -1901,7 +1901,7 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
     // Stop app
     applicationManager.stopApplication(appId);
     qtApp.exec();
-    EXPECT_EQ(spy.count(), 1);
+    EXPECT_EQ(1, spy.count());
 }
 
 /*
@@ -1932,7 +1932,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
-    EXPECT_EQ(applicationManager.startApplication(appId, ApplicationManager::NoFlag), nullptr);
+    EXPECT_EQ(nullptr, applicationManager.startApplication(appId, ApplicationManager::NoFlag));
 
     QSignalSpy spy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
     QObject::connect(&applicationManager, &ApplicationManager::applicationAdded,
@@ -1943,5 +1943,5 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     });
 
     qtApp.exec();
-    EXPECT_EQ(spy.count(), 1);
+    EXPECT_EQ(1, spy.count());
 }
