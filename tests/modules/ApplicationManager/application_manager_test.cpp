@@ -1922,9 +1922,14 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
 
     FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
     onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
 
     // Stop app
-    applicationManager.stopApplication(appId); // will wait
+    applicationManager.stopApplication(appId);
+
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
