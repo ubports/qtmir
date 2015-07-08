@@ -5,13 +5,6 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL=4
 
 include /usr/share/dpkg/default.mk
 
-# Explicitly selecting a G{CC,++}-version here to avoid accidental
-# ABI breaks introduced by toolchain updates.
-export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
-export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
-
-FLAGS = "QMAKE_CXX=$(CXX)" "QMAKE_LINK=$(CXX)" "QMAKE_LINK_SHLIB=$(CXX)"
-
 ANDROID_DIR = build-android
 DESKTOP_DIR = build-desktop
 TMP1_DIR = $(CURDIR)/debian/tmp1
