@@ -21,9 +21,7 @@
 
 #include <qpa/qplatformopenglcontext.h>
 
-#define GL_DEBUG (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0) && !defined(QT_NO_DEBUG))
-
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
 #include <QOpenGLDebugLogger>
 #endif
 
@@ -46,14 +44,13 @@ public:
 
     QFunctionPointer getProcAddress(const QByteArray &procName) override;
 
-// "#if GL_DEBUG" does not work as MOC does not understand #define
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 2, 0) && !defined(QT_NO_DEBUG))
+#ifndef QT_NO_DEBUG
     Q_SLOT void onGlDebugMessageLogged(QOpenGLDebugMessage m) { qDebug() << m; }
 #endif
 
 private:
     QSurfaceFormat m_format;
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
     QOpenGLDebugLogger *m_logger;
 #endif
 };

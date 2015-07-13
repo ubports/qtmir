@@ -36,7 +36,7 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
     : m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
@@ -96,10 +96,8 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
     qDebug() << "OpenGL ES extensions:" << qPrintable(string);
     q_printEglConfig(eglDisplay, eglConfig);
 
-#if GL_DEBUG
     QObject::connect(m_logger, &QOpenGLDebugLogger::messageLogged,
                      this, &MirOpenGLContext::onGlDebugMessageLogged, Qt::DirectConnection);
-#endif // Qt>=5.2
 #endif // debug
 }
 
@@ -122,7 +120,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     if (displayBuffer) {
         displayBuffer->makeCurrent();
 
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
         if (!m_logger->isLogging() && m_logger->initialize()) {
             m_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
             m_logger->enableMessages();
