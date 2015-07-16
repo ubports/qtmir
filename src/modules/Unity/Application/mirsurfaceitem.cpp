@@ -745,7 +745,6 @@ void MirSurfaceItem::dropPendingBuffers()
         // The line below looks like an innocent, effect-less, getter. But as this
         // method returns a unique_pointer, not holding its reference causes the
         // buffer to be destroyed/released straight away.
-        //m_surface->compositor_snapshot(userId)->buffer();
         for (auto const & item : m_surface->generate_renderables(userId))
             item->buffer();
         qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffers()"
