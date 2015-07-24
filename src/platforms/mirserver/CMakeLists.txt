@@ -46,6 +46,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qteventfeeder.cpp
     plugin.cpp
     qmirserver.cpp
+    qmirserver_p.cpp
     sessionauthorizer.cpp
     sessionlistener.cpp
     surfaceobserver.cpp

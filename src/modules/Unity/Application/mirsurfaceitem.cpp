@@ -73,16 +73,16 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
 
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = qtEvent->timestamp() * 1000000;
+    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
 
-    std::vector<MirPointerButton> buttons;
+    MirPointerButtons buttons = 0;
     if (qtEvent->buttons() & Qt::LeftButton)
-        buttons.push_back(mir_pointer_button_primary);
+        buttons |= mir_pointer_button_primary;
     if (qtEvent->buttons() & Qt::RightButton)
-        buttons.push_back(mir_pointer_button_secondary);
+        buttons |= mir_pointer_button_secondary;
     if (qtEvent->buttons() & Qt::MidButton)
-        buttons.push_back(mir_pointer_button_tertiary);
+        buttons |= mir_pointer_button_tertiary;
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0);
@@ -90,9 +90,9 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = qtEvent->timestamp() * 1000000;
+    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
 
-    std::vector<MirPointerButton> buttons;
+    MirPointerButtons buttons = 0;
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0);
@@ -115,7 +115,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, qtEvent->timestamp() * 1000000,
+    return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
                            action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -127,7 +127,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, static_cast<int64_t>(qtTimestamp) * 1000000,
+    auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
                                       modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
@@ -388,17 +388,16 @@ bool MirSurfaceItem::updateTexture()    // called by rendering thread (scene gra
     bool textureUpdated = false;
 
     const void* const userId = (void*)123;
-    std::unique_ptr<mg::Renderable> renderable =
-        m_surface->compositor_snapshot(userId);
+    auto renderables = m_surface->generate_renderables(userId);
 
-    if (m_surface->buffers_ready_for_compositor(userId) > 0) {
+    if (m_surface->buffers_ready_for_compositor(userId) > 0 && renderables.size() > 0) {
         if (!m_textureProvider->t) {
-            m_textureProvider->t = new MirBufferSGTexture(renderable->buffer());
+            m_textureProvider->t = new MirBufferSGTexture(renderables[0]->buffer());
         } else {
             // Avoid holding two buffers for the compositor at the same time. Thus free the current
             // before acquiring the next
             m_textureProvider->t->freeBuffer();
-            m_textureProvider->t->setBuffer(renderable->buffer());
+            m_textureProvider->t->setBuffer(renderables[0]->buffer());
         }
         textureUpdated = true;
     }
@@ -746,7 +745,8 @@ void MirSurfaceItem::dropPendingBuffers()
         // The line below looks like an innocent, effect-less, getter. But as this
         // method returns a unique_pointer, not holding its reference causes the
         // buffer to be destroyed/released straight away.
-        m_surface->compositor_snapshot(userId)->buffer();
+        for (auto const & item : m_surface->generate_renderables(userId))
+            item->buffer();
         qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffers()"
             << "surface =" << this
             << "buffer dropped."

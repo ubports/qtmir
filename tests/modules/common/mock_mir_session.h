@@ -70,6 +70,7 @@ struct MockSession : public Session
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override {};
 
 private:
     std::string m_sessionName;
