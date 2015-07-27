@@ -102,7 +102,6 @@ bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) c
     case ThreadedPixmaps: return true;
     case OpenGL: return true;
     case ThreadedOpenGL: return true;
-    case SharedGraphicsCache: return true;
     case BufferQueueingOpenGL: return true;
     case MultipleWindows: return false; // multi-monitor support
 #if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
