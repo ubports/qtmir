@@ -154,7 +154,7 @@ protected:
 
 private Q_SLOTS:
     void surfaceDamaged();
-    void dropPendingBuffers();
+    void dropPendingBuffer();
     void scheduleTextureUpdate();
 
     void scheduleMirSurfaceSizeUpdate();
