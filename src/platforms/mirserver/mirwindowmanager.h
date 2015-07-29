@@ -29,7 +29,7 @@ namespace mir {
 
 class MirWindowManager : public QObject, public mir::shell::WindowManager
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
 
