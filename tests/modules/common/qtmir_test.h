@@ -64,11 +64,14 @@ private:
         {std::make_shared<StubPromptSessionManager>()};
 };
 
+
+static char const* args = "qtmir-test";
+
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(0, nullptr)
+    : MirServer(1, &args)
     {
     }
 
