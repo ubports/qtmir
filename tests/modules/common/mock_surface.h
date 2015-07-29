@@ -36,12 +36,9 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD1(generate_renderables,graphics::RenderableList(compositor::CompositorID id));
     MOCK_CONST_METHOD0(parent, std::shared_ptr<Surface>());
 
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* /*compositor_id*/) const
-    {
-        return std::unique_ptr<graphics::Renderable>(new graphics::MockRenderable);
-    }
 
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(type, MirSurfaceType());
@@ -68,6 +65,7 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     void set_keymap(xkb_rule_names const &) override {}
     void rename(std::string const&) override {}
+    MOCK_METHOD1(set_streams, void(std::list<StreamInfo> const&));
 
     // from mir::input::surface
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const& point));
@@ -82,7 +80,7 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib attrib, int value));
     MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib attrib));
-
+    MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
 
     // from mir::scene::SurfaceBufferAccess
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const& exec));
