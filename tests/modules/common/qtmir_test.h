@@ -65,13 +65,13 @@ private:
 };
 
 
-static char const* args = "qtmir-test";
+namespace {  char const* argv[] = { "qtmir-test", nullptr }; }
 
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(1, &args)
+    : MirServer(1, argv)
     {
     }
 
