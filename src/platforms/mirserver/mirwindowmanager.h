@@ -24,6 +24,7 @@
 namespace mir {
     namespace shell {
         class DisplayLayout;
+        class FocusController;
     }
 }
 
@@ -33,7 +34,9 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
 
 public:
 
-    static auto create(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
+    static auto create(
+        mir::shell::FocusController* focus_controller,
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
         -> std::unique_ptr<MirWindowManager>;
 };
 
