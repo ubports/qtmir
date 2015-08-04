@@ -18,10 +18,11 @@
 #include "mirwindowmanager.h"
 #include <mir/shell/display_layout.h>
 #include <mir/scene/surface_creation_parameters.h>
+#include <mir/events/event_builders.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "../../../../../../../usr/include/mircommon/mir/geometry/rectangle.h"
+#include "../../../../../../../usr/include/mirclient/mir_toolkit/events/input/input_event.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -29,6 +30,8 @@ namespace msh = mir::shell;
 
 using namespace mir::geometry;
 using namespace testing;
+
+using mir::events::make_event;
 
 namespace
 {
@@ -47,6 +50,7 @@ struct WindowManager : Test
     std::unique_ptr<MirWindowManager> window_manager =
         MirWindowManager::create(nullptr, mock_display_layout);
 
+    Rectangle const arbitrary_display{{0, 0}, {97, 101}};
     std::shared_ptr<ms::Session> const arbitrary_session;
     ms::SurfaceCreationParameters const arbitrary_params;
     mf::SurfaceId const arbitrary_surface_id{__LINE__};
@@ -100,3 +104,61 @@ TEST_F(WindowManager, sizes_new_surface_to_output)
                 return build_surface(session, params);
             });
 }
+
+// The following calls are /currently/ ignored, but we can check they don't "blow up"
+TEST_F(WindowManager, handles_add_session)
+{
+    EXPECT_NO_THROW(window_manager->add_session(arbitrary_session));
+}
+
+TEST_F(WindowManager, handles_remove_session)
+{
+    EXPECT_NO_THROW(window_manager->remove_session(arbitrary_session));
+}
+
+TEST_F(WindowManager, handles_add_display)
+{
+    EXPECT_NO_THROW(window_manager->add_display(arbitrary_display));
+}
+
+TEST_F(WindowManager, handles_remove_display)
+{
+    EXPECT_NO_THROW(window_manager->remove_display(arbitrary_display));
+}
+
+TEST_F(WindowManager, handles_modify_surface)
+{
+    const std::shared_ptr<ms::Surface> arbitrary_surface;
+    msh::SurfaceSpecification spec;
+
+    EXPECT_NO_THROW(
+        window_manager->modify_surface(arbitrary_session, arbitrary_surface, spec);
+    );
+}
+
+TEST_F(WindowManager, handles_keyboard_event)
+{
+    const MirInputDeviceId arbitrary_device{0};
+    const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
+    const auto arbitrary_action = mir_keyboard_action_down;
+    const xkb_keysym_t arbitrary_key_code{0};
+    const auto arbitrary_scan_code = 0;
+    const MirInputEventModifiers arbitrary_event_modifiers{0};
+
+    const auto generic_event = make_event(
+        arbitrary_device,
+        arbitrary_timestamp,
+        arbitrary_action,
+        arbitrary_key_code,
+        arbitrary_scan_code,
+        arbitrary_event_modifiers);
+
+    const auto input_event = mir_event_get_input_event(generic_event.get());
+    const auto event = mir_input_event_get_keyboard_event(input_event);
+
+    EXPECT_NO_THROW(window_manager->handle_keyboard_event(event));
+}
+
+//virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
+//
+//virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
