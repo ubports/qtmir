@@ -1,3 +1,32 @@
+qtmir (0.4.5+15.10.20150804.1-0ubuntu1) wily; urgency=medium
+
+  [ Alan Griffiths ]
+  * Start restructuring code to use the Mir WindowManager interface for
+    window management. (Instead of completely replacing the Shell.)
+
+  [ Andreas Pokorny ]
+  * ensure the argv passed to mir is a null terminated list (not a
+    nullptr)
+
+  [ Daniel d'Andrada ]
+  * Remove focus-based app lifecycle. Let shell control it.
+  * Remove focus-based app lifecycle. Let shell control it.
+
+  [ Daniel van Vugt ]
+  * ensure the argv passed to mir is a null terminated list (not a
+    nullptr)
+
+  [ Gerry Boland ]
+  * CMake should require mir 0.14
+  * Ubuntu Touch has no shared graphics cache implemented, QPA should
+    not say it does
+  * We depend on Qt 5.4, remove compatibility code for older versions
+
+  [ Lukáš Tinkl ]
+  * Extend the key table to cover full xkb range of keycodes.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 04 Aug 2015 17:21:12 +0000
+
 qtmir (0.4.5+15.10.20150728-0ubuntu2~gcc5.1) wily; urgency=medium
 
   * No change rebuild using GCC 5.
