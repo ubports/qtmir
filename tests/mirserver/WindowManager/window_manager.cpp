@@ -43,6 +43,11 @@ struct MockDisplayLayout : msh::DisplayLayout
     MOCK_METHOD2(place_in_output, void (mir::graphics::DisplayConfigurationOutputId id, Rectangle& rect));
 };
 
+struct MockSurface : StubSurface
+{
+    MOCK_METHOD2(configure, int (MirSurfaceAttrib attrib, int value));
+};
+
 struct WindowManager : Test
 {
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
@@ -108,13 +113,16 @@ TEST_F(WindowManager, SizesNewSurfaceToOutput)
 
 TEST_F(WindowManager, SettingStateAttributeConfiguresSurface)
 {
-    const auto surface = std::make_shared<StubSurface>();
+    const auto surface = std::make_shared<MockSurface>();
+
+    EXPECT_CALL(*surface, configure(mir_surface_attrib_state, mir_surface_state_restored)).
+        WillOnce(Return(mir_surface_state_restored));
 
     window_manager->set_surface_attribute(
         arbitrary_session,
         surface,
         mir_surface_attrib_state,
-        mir_surface_type_utility);
+        mir_surface_state_restored);
 }
 
 // The following calls are /currently/ ignored, but we can check they don't "blow up"
