@@ -47,13 +47,8 @@ public:
     QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    QAbstractEventDispatcher* guiThreadEventDispatcher() const override { return eventDispatcher_; }
-    void initialize();
-#else
     QAbstractEventDispatcher *createEventDispatcher() const override;
     void initialize() override;
-#endif
 
     QPlatformClipboard *clipboard() const override;
 
@@ -72,9 +67,6 @@ private:
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;
     QScopedPointer<QPlatformServices> m_services;
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    QScopedPointer<QAbstractEventDispatcher> m_eventDispatcher;
-#endif
 
     QScopedPointer<QMirServer> m_mirServer;
 
