@@ -50,14 +50,19 @@ TaskController::TaskController(
             &TaskController::processStopped);
 
     connect(m_appController.data(),
-            &ApplicationController::applicationFocusRequest,
+            &ApplicationController::applicationPaused,
             this,
-            &TaskController::onApplicationFocusRequest);
+            &TaskController::processSuspended);
 
     connect(m_appController.data(),
-            &ApplicationController::applicationResumeRequest,
+            &ApplicationController::applicationFocusRequest,
             this,
-            &TaskController::onApplicationResumeRequest);
+            &TaskController::focusRequested);
+
+    connect(m_appController.data(),
+            &ApplicationController::applicationResumeRequested,
+            this,
+            &TaskController::resumeRequested);
 
     connect(m_appController.data(),
             &ApplicationController::applicationError,
@@ -106,16 +111,6 @@ bool TaskController::resume(const QString &appId)
 {
     qCDebug(QTMIR_APPLICATIONS) << "TaskController::resume - appId=" << appId;
     return m_appController->resumeApplicationWithAppId(appId);
-}
-
-void TaskController::onApplicationFocusRequest(const QString& id)
-{
-    Q_EMIT requestFocus(id);
-}
-
-void TaskController::onApplicationResumeRequest(const QString& id)
-{
-    Q_EMIT requestResume(id);
 }
 
 void TaskController::onApplicationError(const QString& id, ApplicationController::Error error)

@@ -23,7 +23,7 @@
 #include <QTest>
 
 // the test subject
-#include <mirsurfaceitem.h>
+#include <Unity/Application/mirsurfaceitem.h>
 
 // mocks
 #include <mock_surface.h>

@@ -46,6 +46,7 @@ set(QMLMIRPLUGIN_SRC
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
 # Feed the automoc monster
+    mirsurfaceiteminterface.h
     session_interface.h
     applicationcontroller.h
     settings_interface.h

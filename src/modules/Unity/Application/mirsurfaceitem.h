@@ -22,8 +22,6 @@
 // Qt
 #include <QMutex>
 #include <QPointer>
-#include <QSet>
-#include <QQuickItem>
 #include <QTimer>
 #include <QQmlListProperty>
 
@@ -31,6 +29,7 @@
 #include <mir/scene/surface.h>
 #include <mir_toolkit/common.h>
 
+#include "mirsurfaceiteminterface.h"
 #include "session_interface.h"
 
 class SurfaceObserver;
@@ -41,24 +40,10 @@ namespace qtmir {
 class MirSurfaceManager;
 class QSGMirSurfaceNode;
 class QMirSurfaceTextureProvider;
-class Application;
 
-class MirSurfaceItem : public QQuickItem
+class MirSurfaceItem : public MirSurfaceItemInterface
 {
     Q_OBJECT
-    Q_ENUMS(Type)
-    Q_ENUMS(State)
-    Q_ENUMS(OrientationAngle)
-
-    Q_PROPERTY(Type type READ type NOTIFY typeChanged)
-    Q_PROPERTY(State state READ state NOTIFY stateChanged)
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(bool live READ live NOTIFY liveChanged)
-
-    // How many degrees, clockwise, the UI in the surface has to rotate to match with the
-    // shell UI orientation
-    Q_PROPERTY(OrientationAngle orientationAngle READ orientationAngle WRITE setOrientationAngle
-               NOTIFY orientationAngleChanged DESIGNABLE false)
 
 public:
     explicit MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
@@ -66,57 +51,29 @@ public:
                             MirShell *shell,
                             std::shared_ptr<SurfaceObserver> observer,
                             QQuickItem *parent = 0);
-    ~MirSurfaceItem();
-
-    enum Type {
-        Normal = mir_surface_type_normal,
-        Utility = mir_surface_type_utility,
-        Dialog = mir_surface_type_dialog,
-        Overlay = mir_surface_type_overlay,
-        Freestyle = mir_surface_type_freestyle,
-        Popover = mir_surface_type_popover,
-        InputMethod = mir_surface_type_inputmethod,
-        };
-
-    enum State {
-        Unknown = mir_surface_state_unknown,
-        Restored = mir_surface_state_restored,
-        Minimized = mir_surface_state_minimized,
-        Maximized = mir_surface_state_maximized,
-        VertMaximized = mir_surface_state_vertmaximized,
-        /* SemiMaximized = mir_surface_state_semimaximized, // see mircommon/mir_toolbox/common.h*/
-        Fullscreen = mir_surface_state_fullscreen,
-    };
-
-    enum OrientationAngle {
-        Angle0 = 0,
-        Angle90 = 90,
-        Angle180 = 180,
-        Angle270 = 270
-    };
+    virtual ~MirSurfaceItem();
 
     //getters
-    Type type() const;
-    State state() const;
-    QString name() const;
-    bool live() const;
-    SessionInterface *session() const;
+    Type type() const override;
+    State state() const override;
+    QString name() const override;
+    bool live() const override;
+    SessionInterface *session() const override;
+    OrientationAngle orientationAngle() const override;
 
-    Q_INVOKABLE void release();
+    Q_INVOKABLE void release() override;
 
     // Item surface/texture management
     bool isTextureProvider() const { return true; }
     QSGTextureProvider *textureProvider() const;
 
-    void stopFrameDropper();
-    void startFrameDropper();
+    void stopFrameDropper() override;
+    void startFrameDropper() override;
 
-    bool isFirstFrameDrawn() const { return m_firstFrameDrawn; }
+    bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
-    OrientationAngle orientationAngle() const;
-    void setOrientationAngle(OrientationAngle angle);
-
-    void setSession(SessionInterface *app);
+    void setOrientationAngle(OrientationAngle angle) override;
+    void setSession(SessionInterface *app) override;
 
     // to allow easy touch event injection from tests
     bool processTouchEvent(int eventType,
@@ -124,14 +81,6 @@ public:
             Qt::KeyboardModifiers modifiers,
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
-
-Q_SIGNALS:
-    void typeChanged();
-    void stateChanged();
-    void nameChanged();
-    void orientationAngleChanged(OrientationAngle angle);
-    void liveChanged(bool live);
-    void firstFrameDrawn(MirSurfaceItem *item);
 
 protected Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State state);
@@ -169,7 +118,7 @@ private:
 
     void setType(const Type&);
     void setState(const State&);
-    void setLive(const bool);
+    void setLive(bool) override;
 
     // called by MirSurfaceManager
     void setSurfaceValid(const bool);
@@ -226,13 +175,8 @@ private:
         QList<QTouchEvent::TouchPoint> touchPoints;
         Qt::TouchPointStates touchPointStates;
     } *m_lastTouchEvent;
-
-    friend class MirSurfaceManager;
 };
 
 } // namespace qtmir
-
-Q_DECLARE_METATYPE(qtmir::MirSurfaceItem*)
-Q_DECLARE_METATYPE(qtmir::MirSurfaceItem::OrientationAngle)
 
 #endif // MIRSURFACEITEM_H

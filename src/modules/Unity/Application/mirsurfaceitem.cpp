@@ -190,7 +190,7 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
                                MirShell *shell,
                                std::shared_ptr<SurfaceObserver> observer,
                                QQuickItem *parent)
-    : QQuickItem(parent)
+    : MirSurfaceItemInterface(parent)
     , m_surface(surface)
     , m_session(session)
     , m_shell(shell)
@@ -375,7 +375,7 @@ void MirSurfaceItem::surfaceDamaged()
 {
     if (!m_firstFrameDrawn) {
         m_firstFrameDrawn = true;
-        Q_EMIT firstFrameDrawn(this);
+        Q_EMIT firstFrameDrawn();
     }
 
     scheduleTextureUpdate();
@@ -561,7 +561,7 @@ void MirSurfaceItem::endCurrentTouchSequence(ulong timestamp)
 
         touchEvent.updateTouchPointStatesAndType();
 
-        auto ev = makeMirEvent(touchEvent.modifiers, touchEvent.touchPoints, 
+        auto ev = makeMirEvent(touchEvent.modifiers, touchEvent.touchPoints,
                                touchEvent.touchPointStates, touchEvent.timestamp);
         m_surface->consume(*ev);
 
@@ -672,7 +672,7 @@ void MirSurfaceItem::setState(const State &state)
     }
 }
 
-void MirSurfaceItem::setLive(const bool live)
+void MirSurfaceItem::setLive(bool live)
 {
     if (m_live != live) {
         m_live = live;
