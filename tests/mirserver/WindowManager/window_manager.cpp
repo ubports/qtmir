@@ -16,9 +16,10 @@
  */
 
 #include "mirwindowmanager.h"
-#include <mir/shell/display_layout.h>
-#include <mir/scene/surface_creation_parameters.h>
 #include <mir/events/event_builders.h>
+#include <mir/scene/surface.h>
+#include <mir/scene/surface_creation_parameters.h>
+#include <mir/shell/display_layout.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -46,13 +47,13 @@ struct WindowManager : Test
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
-    std::unique_ptr<MirWindowManager> window_manager =
+    const std::unique_ptr<MirWindowManager> window_manager =
         MirWindowManager::create(nullptr, mock_display_layout);
 
-    Rectangle const arbitrary_display{{0, 0}, {97, 101}};
-    std::shared_ptr<ms::Session> const arbitrary_session;
-    ms::SurfaceCreationParameters const arbitrary_params;
-    mf::SurfaceId const arbitrary_surface_id{__LINE__};
+    const Rectangle arbitrary_display{{0, 0}, {97, 101}};
+    const std::shared_ptr<ms::Session> arbitrary_session;
+    const ms::SurfaceCreationParameters arbitrary_params;
+    const mf::SurfaceId arbitrary_surface_id{__LINE__};
 
     MOCK_METHOD2(build_surface, mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params));
 
@@ -63,11 +64,11 @@ struct WindowManager : Test
 };
 }
 
-TEST_F(WindowManager, creates_surface_using_supplied_builder)
+TEST_F(WindowManager, CreatesSurfaceUsingSuppliedBuilder)
 {
     EXPECT_CALL(*this, build_surface(_, _));
 
-    auto const surface = window_manager->add_surface(
+    const auto surface = window_manager->add_surface(
         arbitrary_session,
         arbitrary_params,
         [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
@@ -78,7 +79,7 @@ TEST_F(WindowManager, creates_surface_using_supplied_builder)
     EXPECT_THAT(surface, Eq(arbitrary_surface_id));
 }
 
-TEST_F(WindowManager, sizes_new_surface_to_output)
+TEST_F(WindowManager, SizesNewSurfaceToOutput)
 {
     EXPECT_CALL(*this, build_surface(_, _)).Times(AnyNumber());
 
@@ -105,27 +106,27 @@ TEST_F(WindowManager, sizes_new_surface_to_output)
 }
 
 // The following calls are /currently/ ignored, but we can check they don't "blow up"
-TEST_F(WindowManager, handles_add_session)
+TEST_F(WindowManager, HandlesAddSession)
 {
     EXPECT_NO_THROW(window_manager->add_session(arbitrary_session));
 }
 
-TEST_F(WindowManager, handles_remove_session)
+TEST_F(WindowManager, HandlesRemoveSession)
 {
     EXPECT_NO_THROW(window_manager->remove_session(arbitrary_session));
 }
 
-TEST_F(WindowManager, handles_add_display)
+TEST_F(WindowManager, HandlesAddDisplay)
 {
     EXPECT_NO_THROW(window_manager->add_display(arbitrary_display));
 }
 
-TEST_F(WindowManager, handles_remove_display)
+TEST_F(WindowManager, HandlesRemoveDisplay)
 {
     EXPECT_NO_THROW(window_manager->remove_display(arbitrary_display));
 }
 
-TEST_F(WindowManager, handles_modify_surface)
+TEST_F(WindowManager, HandlesModifySurface)
 {
     const std::shared_ptr<ms::Surface> arbitrary_surface;
     msh::SurfaceSpecification spec;
@@ -135,7 +136,7 @@ TEST_F(WindowManager, handles_modify_surface)
     );
 }
 
-TEST_F(WindowManager, handles_keyboard_event)
+TEST_F(WindowManager, HandlesKeyboardEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
@@ -158,7 +159,7 @@ TEST_F(WindowManager, handles_keyboard_event)
     EXPECT_NO_THROW(window_manager->handle_keyboard_event(event));
 }
 
-TEST_F(WindowManager, handles_touch_event)
+TEST_F(WindowManager, HandlesTouchEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
@@ -175,7 +176,7 @@ TEST_F(WindowManager, handles_touch_event)
     EXPECT_NO_THROW(window_manager->handle_touch_event(event));
 }
 
-TEST_F(WindowManager, handles_pointer_event)
+TEST_F(WindowManager, HandlesPointerEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
