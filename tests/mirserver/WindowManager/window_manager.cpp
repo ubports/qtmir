@@ -22,7 +22,6 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "../../../../../../../usr/include/mirclient/mir_toolkit/events/input/input_event.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -159,6 +158,48 @@ TEST_F(WindowManager, handles_keyboard_event)
     EXPECT_NO_THROW(window_manager->handle_keyboard_event(event));
 }
 
-//virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
-//
-//virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
+TEST_F(WindowManager, handles_touch_event)
+{
+    const MirInputDeviceId arbitrary_device{0};
+    const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
+    const MirInputEventModifiers arbitrary_event_modifiers{0};
+
+    const auto generic_event = make_event(
+        arbitrary_device,
+        arbitrary_timestamp,
+        arbitrary_event_modifiers);
+
+    const auto input_event = mir_event_get_input_event(generic_event.get());
+    const auto event = mir_input_event_get_touch_event(input_event);
+
+    EXPECT_NO_THROW(window_manager->handle_touch_event(event));
+}
+
+TEST_F(WindowManager, handles_pointer_event)
+{
+    const MirInputDeviceId arbitrary_device{0};
+    const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
+    const MirInputEventModifiers arbitrary_event_modifiers{0};
+    const auto arbitrary_pointer_action = mir_pointer_action_button_down;
+    const auto arbitrary_pointer_buttons = mir_pointer_button_primary;
+    const float arbitrary_x_axis_value{0};
+    const float arbitrary_y_axis_value{0};
+    const float arbitrary_hscroll_value{0};
+    const float arbitrary_vscroll_value{0};
+
+    const auto generic_event = make_event(
+        arbitrary_device,
+        arbitrary_timestamp,
+        arbitrary_event_modifiers,
+        arbitrary_pointer_action,
+        arbitrary_pointer_buttons,
+        arbitrary_x_axis_value,
+        arbitrary_y_axis_value,
+        arbitrary_hscroll_value,
+        arbitrary_vscroll_value);
+
+    const auto input_event = mir_event_get_input_event(generic_event.get());
+    const auto event = mir_input_event_get_pointer_event(input_event);
+
+    EXPECT_NO_THROW(window_manager->handle_pointer_event(event));
+}
