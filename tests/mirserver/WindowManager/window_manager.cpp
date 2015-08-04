@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "../../../../../../../usr/include/mircommon/mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -40,8 +41,8 @@ struct MockDisplayLayout : msh::DisplayLayout
 
 struct WindowManager : Test
 {
-    const std::shared_ptr<mir::shell::DisplayLayout> mock_display_layout =
-        std::make_shared<MockDisplayLayout>();
+    const std::shared_ptr<MockDisplayLayout> mock_display_layout =
+        std::make_shared<NiceMock<MockDisplayLayout>>();
 
     std::unique_ptr<MirWindowManager> window_manager =
         MirWindowManager::create(nullptr, mock_display_layout);
@@ -51,13 +52,17 @@ struct WindowManager : Test
     mf::SurfaceId const arbitrary_surface_id{__LINE__};
 
     MOCK_METHOD2(build_surface, mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params));
+
+    void SetUp() override
+    {
+        ON_CALL(*this, build_surface(_, _)).WillByDefault(Return(arbitrary_surface_id));
+    }
 };
 }
 
-
 TEST_F(WindowManager, creates_surface_using_supplied_builder)
 {
-    EXPECT_CALL(*this, build_surface(_, _)).WillOnce(Return(arbitrary_surface_id));
+    EXPECT_CALL(*this, build_surface(_, _));
 
     auto const surface = window_manager->add_surface(
         arbitrary_session,
@@ -68,4 +73,30 @@ TEST_F(WindowManager, creates_surface_using_supplied_builder)
             });
 
     EXPECT_THAT(surface, Eq(arbitrary_surface_id));
+}
+
+TEST_F(WindowManager, sizes_new_surface_to_output)
+{
+    EXPECT_CALL(*this, build_surface(_, _)).Times(AnyNumber());
+
+    const Size request_size{0, 0};
+    const Size expect_size{57, 91};
+
+    ms::SurfaceCreationParameters params;
+    params.size = request_size;
+
+    EXPECT_CALL(*mock_display_layout, size_to_output(_)).
+        WillOnce(Invoke([&](Rectangle& rect)
+            {
+                EXPECT_THAT(rect.size, Eq(request_size));
+                rect.size = expect_size;
+            }));
+
+    window_manager->add_surface(
+        arbitrary_session,
+        arbitrary_params,
+        [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
+            {
+                return build_surface(session, params);
+            });
 }
