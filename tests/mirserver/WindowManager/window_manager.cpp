@@ -16,8 +16,9 @@
  */
 
 #include "mirwindowmanager.h"
+#include "stub_surface.h"
+
 #include <mir/events/event_builders.h>
-#include <mir/scene/surface.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
 
@@ -103,6 +104,17 @@ TEST_F(WindowManager, SizesNewSurfaceToOutput)
             {
                 return build_surface(session, params);
             });
+}
+
+TEST_F(WindowManager, SettingStateAttributeConfiguresSurface)
+{
+    const auto surface = std::make_shared<StubSurface>();
+
+    window_manager->set_surface_attribute(
+        arbitrary_session,
+        surface,
+        mir_surface_attrib_state,
+        mir_surface_type_utility);
 }
 
 // The following calls are /currently/ ignored, but we can check they don't "blow up"
