@@ -72,11 +72,14 @@ private:
         {std::make_shared<StubPromptSessionManager>()};
 };
 
+
+namespace {  char const* argv[] = { nullptr }; }
+
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(0, nullptr)
+    : MirServer(0, argv)
     {
     }
 
