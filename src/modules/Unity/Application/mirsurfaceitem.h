@@ -32,8 +32,10 @@
 #include "mirsurfaceiteminterface.h"
 #include "session_interface.h"
 
+namespace mir { namespace shell { class Shell; }}
+
 class SurfaceObserver;
-class MirShell;
+using MirShell = mir::shell::Shell;
 
 namespace qtmir {
 

@@ -26,7 +26,6 @@
 #include "nativeinterface.h"
 #include "mirserver.h"
 #include "sessionlistener.h"
-#include "mirshell.h"
 #include "logging.h"
 #include "promptsessionlistener.h"
 

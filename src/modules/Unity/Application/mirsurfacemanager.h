@@ -40,7 +40,6 @@ namespace mir {
 }
 
 class MirServer;
-class MirShell;
 
 namespace qtmir {
 
