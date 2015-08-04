@@ -89,7 +89,6 @@ bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) c
     case ThreadedPixmaps: return true;
     case OpenGL: return true;
     case ThreadedOpenGL: return true;
-    case SharedGraphicsCache: return true;
     case BufferQueueingOpenGL: return true;
     case MultipleWindows: return false; // multi-monitor support
     case WindowManagement: return false; // platform has no WM, as this implements the WM!
