@@ -111,19 +111,62 @@ TEST_F(WindowManager, SizesNewSurfaceToOutput)
             });
 }
 
-TEST_F(WindowManager, SettingStateAttributeConfiguresSurface)
+namespace
+{
+struct AttribValuePair
+{
+    MirSurfaceAttrib attribute;
+    int value;
+    friend std::ostream& operator<<(std::ostream& out, AttribValuePair const& pair)
+    { return out << "attribute:" << pair.attribute << ", value:" << pair.value; }
+};
+struct WindowManagerSetAttribute : WindowManager, ::testing::WithParamInterface<AttribValuePair> {};
+}
+
+TEST_P(WindowManagerSetAttribute, SettingStateConfiguresSurface)
 {
     const auto surface = std::make_shared<MockSurface>();
+    const auto attribute = GetParam().attribute;
+    const auto value = GetParam().value;
 
-    EXPECT_CALL(*surface, configure(mir_surface_attrib_state, mir_surface_state_restored)).
-        WillOnce(Return(mir_surface_state_restored));
+    EXPECT_CALL(*surface, configure(attribute, value)).
+        WillOnce(Return(value));
 
     window_manager->set_surface_attribute(
         arbitrary_session,
         surface,
-        mir_surface_attrib_state,
-        mir_surface_state_restored);
+        attribute,
+        value);
 }
+
+INSTANTIATE_TEST_CASE_P(WindowManager, WindowManagerSetAttribute,
+    Values(
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_restored},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_minimized},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_maximized},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_vertmaximized},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_fullscreen},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_horizmaximized},
+        AttribValuePair{mir_surface_attrib_state, mir_surface_state_hidden},
+
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_normal},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_utility},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_dialog},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_overlay},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_freestyle},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_popover},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_inputmethod},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_satellite},
+        AttribValuePair{mir_surface_attrib_type, mir_surface_type_tip},
+
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_portrait},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_landscape},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_portrait_inverted},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_landscape_inverted},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_portrait_any},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_landscape_any},
+        AttribValuePair{mir_surface_attrib_preferred_orientation, mir_orientation_mode_any}
+    ));
 
 // The following calls are /currently/ ignored, but we can check they don't "blow up"
 TEST_F(WindowManager, HandlesAddSession)
