@@ -6,6 +6,7 @@ include_directories(
 add_executable(WindowManagerTest
   window_manager.cpp
   stub_surface.cpp
+  stub_session.cpp
 )
 
 target_link_libraries(

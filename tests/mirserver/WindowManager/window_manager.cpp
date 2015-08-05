@@ -17,10 +17,12 @@
 
 #include "mirwindowmanager.h"
 #include "stub_surface.h"
+#include "stub_session.h"
 
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
+#include <mir/shell/focus_controller.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -48,16 +50,43 @@ struct MockSurface : StubSurface
     MOCK_METHOD2(configure, int (MirSurfaceAttrib attrib, int value));
 };
 
+struct MockSession : StubSession
+{
+    MOCK_CONST_METHOD1(surface, std::shared_ptr<ms::Surface> (mir::frontend::SurfaceId surface));
+};
+
+struct StubFocusController : msh::FocusController
+{
+public:
+    void focus_next_session() override {}
+
+    auto focused_session() const -> std::shared_ptr<ms::Session> override { return {}; }
+
+    void set_focus_to(
+        std::shared_ptr<ms::Session> const& /*focus_session*/,
+        std::shared_ptr<ms::Surface> const& /*focus_surface*/) override {}
+
+    std::shared_ptr<ms::Surface> focused_surface() const override { return {}; }
+
+    virtual auto surface_at(Point /*cursor*/) const -> std::shared_ptr<ms::Surface> override { return {}; }
+
+    void raise(msh::SurfaceSet const& /*surfaces*/) override {}
+};
+
+
 struct WindowManager : Test
 {
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
+    StubFocusController focus_controller;
+
     const std::unique_ptr<MirWindowManager> window_manager =
-        MirWindowManager::create(nullptr, mock_display_layout);
+        MirWindowManager::create(&focus_controller, mock_display_layout);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};
-    const std::shared_ptr<ms::Session> arbitrary_session;
+    const std::shared_ptr<MockSession> arbitrary_session = std::make_shared<NiceMock<MockSession>>();
+    const std::shared_ptr<ms::Surface> arbitrary_surface = std::make_shared<StubSurface>();
     const ms::SurfaceCreationParameters arbitrary_params;
     const mf::SurfaceId arbitrary_surface_id{__LINE__};
 
@@ -66,6 +95,27 @@ struct WindowManager : Test
     void SetUp() override
     {
         ON_CALL(*this, build_surface(_, _)).WillByDefault(Return(arbitrary_surface_id));
+        ON_CALL(*arbitrary_session, surface(_)).WillByDefault(Return(arbitrary_surface));
+
+        window_manager->add_session(arbitrary_session);
+    }
+
+    void TearDown() override
+    {
+        window_manager->remove_session(arbitrary_session);
+    }
+
+    void add_surface()
+    {
+        EXPECT_CALL(*this, build_surface(_, _));
+
+        window_manager->add_surface(
+            arbitrary_session,
+            arbitrary_params,
+            [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
+                {
+                    return build_surface(session, params);
+                });
     }
 };
 }
@@ -102,13 +152,7 @@ TEST_F(WindowManager, SizesNewSurfaceToOutput)
                 rect.size = expect_size;
             }));
 
-    window_manager->add_surface(
-        arbitrary_session,
-        arbitrary_params,
-        [this](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
-            {
-                return build_surface(session, params);
-            });
+    add_surface();
 }
 
 namespace
@@ -120,26 +164,25 @@ struct AttribValuePair
     friend std::ostream& operator<<(std::ostream& out, AttribValuePair const& pair)
     { return out << "attribute:" << pair.attribute << ", value:" << pair.value; }
 };
-struct WindowManagerSetAttribute : WindowManager, ::testing::WithParamInterface<AttribValuePair> {};
+struct SetAttribute : WindowManager, ::testing::WithParamInterface<AttribValuePair> {};
 }
 
-TEST_P(WindowManagerSetAttribute, SettingStateConfiguresSurface)
+TEST_P(SetAttribute, ConfiguresSurface)
 {
-    const auto surface = std::make_shared<MockSurface>();
     const auto attribute = GetParam().attribute;
     const auto value = GetParam().value;
 
-    EXPECT_CALL(*surface, configure(attribute, value)).
-        WillOnce(Return(value));
+    const auto surface = std::make_shared<MockSurface>();
 
-    window_manager->set_surface_attribute(
-        arbitrary_session,
-        surface,
-        attribute,
-        value);
+    EXPECT_CALL(*arbitrary_session, surface(_)).Times(AnyNumber()).WillRepeatedly(Return(surface));
+    add_surface();
+
+    EXPECT_CALL(*surface, configure(attribute, value)).WillOnce(Return(value));
+
+    window_manager->set_surface_attribute(arbitrary_session, surface, attribute, value);
 }
 
-INSTANTIATE_TEST_CASE_P(WindowManager, WindowManagerSetAttribute,
+INSTANTIATE_TEST_CASE_P(WindowManager, SetAttribute,
     Values(
         AttribValuePair{mir_surface_attrib_state, mir_surface_state_restored},
         AttribValuePair{mir_surface_attrib_state, mir_surface_state_minimized},
@@ -191,12 +234,15 @@ TEST_F(WindowManager, HandlesRemoveDisplay)
 
 TEST_F(WindowManager, HandlesModifySurface)
 {
-    const std::shared_ptr<ms::Surface> arbitrary_surface;
+    add_surface();
+
     msh::SurfaceSpecification spec;
 
     EXPECT_NO_THROW(
         window_manager->modify_surface(arbitrary_session, arbitrary_surface, spec);
     );
+
+    window_manager->remove_surface(arbitrary_session, arbitrary_surface);
 }
 
 TEST_F(WindowManager, HandlesKeyboardEvent)
