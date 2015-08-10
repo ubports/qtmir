@@ -736,7 +736,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
         return;
     }
 
-    QString desktopFileName = info->getParameter("--desktop_file_hint=");
+    const QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
     if (desktopFileName.isNull()) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
@@ -747,7 +747,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
 
     // Guess appId from the desktop file hint
-    QString appId = toShortAppIdIfPossible(desktopFileName.remove(QRegExp(".desktop$")).split('/').last());
+    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
 
     // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
     // case we didn't get an existing .desktop file path
