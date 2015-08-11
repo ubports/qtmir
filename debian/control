@@ -27,7 +27,6 @@ Build-Depends: cmake,
                libxkbcommon-dev,
                libxrender-dev,
                pkg-config,
-               protobuf-compiler,
 # lttng-gen-ts needs python3, but doesn't depend on it itself: bug 1359147
                python3:any,
                qt5-default,

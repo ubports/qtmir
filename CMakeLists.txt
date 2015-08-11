@@ -60,11 +60,6 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-find_package(Protobuf REQUIRED)
-if(PROTOBUF_PROTOC_EXECUTABLE STREQUAL "PROTOBUF_PROTOC_EXECUTABLE-NOTFOUND")
-    message(SEND_ERROR "protoc executable not found! Missing protobuf-compiler package?")
-endif()
-
 pkg_check_modules(MIRSERVER mirserver>=0.14 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.14 REQUIRED)
 
@@ -72,7 +67,6 @@ pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
 pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-2 REQUIRED)
 pkg_check_modules(URL_DISPATCHER url-dispatcher-1)
-pkg_check_modules(PROTOBUF protobuf)
 pkg_check_modules(EGL egl)
 pkg_check_modules(GIO gio-2.0)
 pkg_check_modules(GIO_UNIX gio-unix-2.0)
