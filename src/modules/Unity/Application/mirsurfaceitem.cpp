@@ -12,10 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authors:
- *     Daniel d'Andrada <daniel.dandrada@canonical.com>
- *     Gerry Boland <gerry.boland@canonical.com>
  */
 
 // local
@@ -233,7 +229,7 @@ MirSurfaceItem::MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 
     connect(&m_frameDropperTimer, &QTimer::timeout,
-            this, &MirSurfaceItem::dropPendingBuffers);
+            this, &MirSurfaceItem::dropPendingBuffer);
     // Rationale behind the frame dropper and its interval value:
     //
     // We want to give ample room for Qt scene graph to have a chance to fetch and render
@@ -735,22 +731,23 @@ void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
     }
 }
 
-void MirSurfaceItem::dropPendingBuffers()
+void MirSurfaceItem::dropPendingBuffer()
 {
     QMutexLocker locker(&m_mutex);
 
     const void* const userId = (void*)123;  // TODO: Multimonitor support
 
-    while (m_surface->buffers_ready_for_compositor(userId) > 0) {
+    int framesPending = m_surface->buffers_ready_for_compositor(userId);
+    if (framesPending > 0) {
         // The line below looks like an innocent, effect-less, getter. But as this
         // method returns a unique_pointer, not holding its reference causes the
         // buffer to be destroyed/released straight away.
         for (auto const & item : m_surface->generate_renderables(userId))
             item->buffer();
-        qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffers()"
+        qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffer()"
             << "surface =" << this
             << "buffer dropped."
-            << m_surface->buffers_ready_for_compositor(userId)
+            << framesPending-1
             << "left.";
     }
 }

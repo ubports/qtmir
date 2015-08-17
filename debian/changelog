@@ -1,3 +1,23 @@
+qtmir (0.4.5+15.04.20150812.1-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel van Vugt ]
+  * MirSurfaceItem: Remove an unnecessary and potentially infinite loop
+    (LP: #1477430) (LP: #1477430)
+
+  [ Gerry Boland ]
+  * Standardize licences to LGPLv3, update years, remove authors (LP:
+    #1483664)
+  * authorizeSession incorrectly edits desktopFilePath supplied by
+    desktop_file_hint (LP: #1483225)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 12 Aug 2015 11:36:06 +0000
+
+qtmir (0.4.5+15.04.20150804.1-0ubuntu1) vivid; urgency=medium
+
+  * Dual release with wily
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Tue, 04 Aug 2015 17:21:12 +0000
+
 qtmir (0.4.5+15.10.20150804.1-0ubuntu1) wily; urgency=medium
 
   [ Alan Griffiths ]

@@ -11,7 +11,7 @@ License: GPL-3
 
 Files: tests/*
 Copyright: 2013-2014 Canonical Ltd.
-License: GPL-3
+License: LGPL-3
 
 License: LGPL-3
  This package is free software; you can redistribute it and/or
