@@ -1,3 +1,9 @@
+qtmir (0.4.5+15.10.20150817-0ubuntu1) wily; urgency=medium
+
+  * 
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Mon, 17 Aug 2015 19:28:26 +0000
+
 qtmir (0.4.5+15.10.20150812.1-0ubuntu1) vivid; urgency=medium
 
   [ Daniel van Vugt ]
