@@ -1,6 +1,7 @@
 set(
   APPLICATION_TEST_SOURCES
   application_test.cpp
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_session.h
   ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
 )
 
