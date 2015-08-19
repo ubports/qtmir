@@ -52,6 +52,7 @@ Session::Session(const std::shared_ptr<ms::Session>& session,
     , m_fullscreen(false)
     , m_state(State::Starting)
     , m_live(true)
+    , m_released(false)
     , m_suspendTimer(new QTimer(this))
     , m_promptSessionManager(promptSessionManager)
 {
@@ -96,15 +97,10 @@ void Session::doSuspend()
 void Session::release()
 {
     qCDebug(QTMIR_SESSIONS) << "Session::release " << name();
-    Q_EMIT aboutToBeDestroyed();
 
-    if (m_parentSession) {
-        m_parentSession->removeChildSession(this);
-    }
-    if (m_application) {
-        m_application->setSession(nullptr);
-    }
-    if (!parent()) {
+    m_released = true;
+
+    if (m_state == Stopped) {
         deleteLater();
     }
 }
@@ -304,6 +300,9 @@ void Session::stop()
         });
 
         setState(Stopped);
+        if (m_released) {
+            deleteLater();
+        }
     }
 }
 
@@ -314,6 +313,9 @@ void Session::setLive(const bool live)
         Q_EMIT liveChanged(m_live);
         if (!live) {
             setState(Stopped);
+            if (m_released) {
+                deleteLater();
+            }
         }
     }
 }

@@ -79,7 +79,10 @@ Application::~Application()
         wipeQMLCache();
     }
 
-    delete m_session;
+    if (m_session) {
+        m_session->setApplication(nullptr);
+        delete m_session;
+    }
     delete m_desktopData;
 }
 
@@ -426,6 +429,9 @@ void Application::setSession(SessionInterface *newSession)
 
         if (oldFullscreen != fullscreen())
             Q_EMIT fullscreenChanged(fullscreen());
+    } else {
+        // this can only happen after the session has stopped and QML code called Session::release()
+        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedUnexpectedly);
     }
 
     Q_EMIT sessionChanged(m_session);
@@ -521,14 +527,30 @@ void Application::setProcessState(ProcessState newProcessState)
         Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
         setInternalState(InternalState::Suspended);
         break;
-    case ProcessStopped:
+    case ProcessKilled:
         // we assume the session always stop before the process
         Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+
         if (m_state == InternalState::Starting) {
+            // that was way too soon. let it go away
             setInternalState(InternalState::Stopped);
         } else {
             Q_ASSERT(m_state == InternalState::Stopped
                     || m_state == InternalState::StoppedUnexpectedly);
+        }
+        break;
+    case ProcessStopped:
+        // we assume the session always stop before the process
+        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+
+        if (m_state == InternalState::Starting) {
+            // that was way too soon. let it go away
+            setInternalState(InternalState::Stopped);
+        } else if (m_state == InternalState::StoppedUnexpectedly) {
+            // the application stopped nicely, likely closed itself. Thus not really unexpected after all.
+            setInternalState(InternalState::Stopped);
+        } else {
+            Q_ASSERT(m_state == InternalState::Stopped);
         }
         break;
     }

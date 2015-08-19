@@ -101,7 +101,6 @@ Q_SIGNALS:
     void surfaceChanged(MirSurfaceItemInterface*);
     void parentSessionChanged(SessionInterface*);
     void applicationChanged(unity::shell::application::ApplicationInfoInterface* application);
-    void aboutToBeDestroyed();
     void stateChanged(State state);
     void fullscreenChanged(bool fullscreen);
     void liveChanged(bool live);

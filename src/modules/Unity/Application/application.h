@@ -61,6 +61,7 @@ public:
         ProcessUnknown,
         ProcessRunning,
         ProcessSuspended,
+        ProcessKilled, // it stopped, but because it was killed.
         ProcessStopped
     };
 
@@ -103,7 +104,7 @@ public:
 
     void setStage(Stage stage);
 
-
+    ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
 
     QStringList arguments() const { return m_arguments; }
