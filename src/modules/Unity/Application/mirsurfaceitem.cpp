@@ -724,6 +724,13 @@ void MirSurfaceItem::updateMirSurfaceSize()
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::updateMirSurfaceFocus" << focused;
+
+    // Temporary hotfix for http://pad.lv/1483752
+    if (session()->childSessions()->rowCount() > 0) {
+        // has child trusted session, ignore any focus change attempts
+        return;
+    }
+
     if (focused) {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
     } else {
