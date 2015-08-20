@@ -19,7 +19,8 @@
 
 namespace qtmir {
 
-class FakeDesktopFileReader : public qtmir::DesktopFileReader {
+class FakeDesktopFileReader : public qtmir::DesktopFileReader
+{
 public:
     FakeDesktopFileReader() : DesktopFileReader()
         , m_appId("foo-app")

@@ -21,7 +21,8 @@
 
 namespace qtmir {
 
-class FakeSession : public SessionInterface {
+class FakeSession : public SessionInterface
+{
     Q_OBJECT
 
 public:
