@@ -726,7 +726,7 @@ void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::updateMirSurfaceFocus" << focused;
 
     // Temporary hotfix for http://pad.lv/1483752
-    if (session()->childSessions()->rowCount() > 0) {
+    if (session() && session()->childSessions()->rowCount() > 0) {
         // has child trusted session, ignore any focus change attempts
         return;
     }
