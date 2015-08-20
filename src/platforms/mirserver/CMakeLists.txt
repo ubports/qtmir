@@ -53,16 +53,18 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     promptsessionlistener.cpp
     mirserver.cpp
     mirserverstatuslistener.cpp
-    display.cpp
     screen.cpp
-    displaywindow.cpp
+    screencontroller.cpp
+    screenwindow.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     nativeinterface.cpp
+    offscreensurface.cpp
     qtcompositor.cpp
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
+    tileddisplayconfigurationpolicy.cpp
     tracepoints.c
     )
 

@@ -26,7 +26,8 @@
 #include <qpa/qplatforminputcontextfactory_p.h>
 #include <qpa/qwindowsysteminterface.h>
 
-#include <QCoreApplication>
+#include <QGuiApplication>
+#include <QStringList>
 #include <QOpenGLContext>
 #include <QDebug>
 
@@ -36,13 +37,16 @@
 
 // local
 #include "clipboard.h"
-#include "display.h"
-#include "displaywindow.h"
 #include "miropenglcontext.h"
 #include "nativeinterface.h"
+#include "offscreensurface.h"
 #include "qmirserver.h"
+#include "screen.h"
+#include "screencontroller.h"
+#include "screenwindow.h"
 #include "services.h"
 #include "ubuntutheme.h"
+#include "logging.h"
 
 namespace mg = mir::graphics;
 using qtmir::Clipboard;
@@ -52,7 +56,6 @@ MirServerIntegration::MirServerIntegration()
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
     , m_mirServer(new QMirServer(QCoreApplication::arguments()))
-    , m_display(nullptr)
     , m_nativeInterface(nullptr)
     , m_clipboard(new Clipboard)
 {
@@ -77,7 +80,6 @@ MirServerIntegration::MirServerIntegration()
 MirServerIntegration::~MirServerIntegration()
 {
     delete m_nativeInterface;
-    delete m_display;
 }
 
 bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) const
@@ -87,7 +89,7 @@ bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) c
     case OpenGL: return true;
     case ThreadedOpenGL: return true;
     case BufferQueueingOpenGL: return true;
-    case MultipleWindows: return false; // multi-monitor support
+    case MultipleWindows: return true; // multi-monitor support
     case WindowManagement: return false; // platform has no WM, as this implements the WM!
     case NonFullScreenWindows: return false;
     default: return QPlatformIntegration::hasCapability(cap);
@@ -98,44 +100,35 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 {
     QWindowSystemInterface::flushWindowSystemEvents();
 
-    DisplayWindow* displayWindow = nullptr;
-
-    auto const mirServer = m_mirServer->mirServer().lock();
-    mg::DisplayBuffer* first_buffer{nullptr};
-    mg::DisplaySyncGroup* first_group{nullptr};
-    if (mirServer) {
-        mirServer->the_display()->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
-            if (!first_group) {
-                first_group = &group;
-            }
-            group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
-                if (!first_buffer) {
-                    first_buffer = &buffer;
-                }
-            });
-        });
-    }
-
-    // FIXME(gerry) this will go very bad for >1 display buffer
-    if (first_group && first_buffer)
-        displayWindow = new DisplayWindow(window, first_group, first_buffer);
-
-    if (!displayWindow)
+    // FIXME: QWindow can be created specifying a destination QScreen. For now we
+    // will ignore it and just associate any unused Screen, if available.
+    auto screens = m_mirServer->screenController().lock();
+    if (!screens) {
+        qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
         return nullptr;
+    }
+    Screen *screen = screens->getUnusedScreen();
+    if (!screen) {
+        qCritical("No available Screens to create a new QWindow/ScreenWindow for");
+        return nullptr;
+    }
+    QScreen *qscreen = screen->screen();
+    window->setScreen(qscreen);
 
-    //displayWindow->requestActivateWindow();
-    return displayWindow;
+    auto platformWindow = new ScreenWindow(window);
+
+    qCDebug(QTMIR_SCREENS) << "New" << window << "with geom" << window->geometry()
+                           << "is backed by a" << screen << "with geometry" << screen->geometry();
+    return platformWindow;
 }
 
-QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow *window) const
+QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow */*window*/) const
 {
-    qDebug() << "createPlatformBackingStore" << window;
     return nullptr;
 }
 
 QPlatformOpenGLContext *MirServerIntegration::createPlatformOpenGLContext(QOpenGLContext *context) const
 {
-    qDebug() << "createPlatformOpenGLContext" << context;
     return new MirOpenGLContext(m_mirServer->mirServer(), context->format());
 }
 
@@ -151,11 +144,17 @@ void MirServerIntegration::initialize()
         exit(2);
     }
 
-    m_display = new Display(m_mirServer->mirServer().data()->the_display()->configuration());
-    m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
-
-    for (QPlatformScreen *screen : m_display->screens())
+    auto screens = m_mirServer->screenController().lock();
+    if (!screens) {
+        qFatal("ScreenController not initialized");
+    }
+    QObject::connect(screens.data(), &ScreenController::screenAdded,
+            [this](Screen *screen) { this->screenAdded(screen); });
+    Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);
+    }
+
+    m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
 
     m_clipboard->setupDBusService();
 }
@@ -194,4 +193,10 @@ QPlatformNativeInterface *MirServerIntegration::nativeInterface() const
 QPlatformClipboard *MirServerIntegration::clipboard() const
 {
     return m_clipboard.data();
+}
+
+QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
+        QOffscreenSurface *surface) const
+{
+    return new OffscreenSurface(surface);
 }

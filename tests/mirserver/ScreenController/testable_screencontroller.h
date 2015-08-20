@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,29 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTCOMPOSITOR_H
-#define QTCOMPOSITOR_H
+#include "screencontroller.h"
+#include "stub_screen.h"
 
-#include <mir/compositor/compositor.h>
-
-// Qt
-#include <QObject>
-
-class QtCompositor : public QObject, public mir::compositor::Compositor
+struct TestableScreenController : public ScreenController
 {
     Q_OBJECT
+
 public:
-    QtCompositor() = default;
-    virtual ~QtCompositor() noexcept = default;
+    Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const override
+    {
+        return new StubScreen(output);
+    }
 
-    void start();
-    void stop();
+    void do_init(const std::shared_ptr<mir::graphics::Display> &display,
+              const std::shared_ptr<mir::compositor::Compositor> &compositor,
+              const std::shared_ptr<mir::MainLoop> &mainLoop)
+    {
+        init(display, compositor, mainLoop);
+    }
 
-Q_SIGNALS:
-    void starting();
-    void stopping();
-
-private:
+    void do_terminate() { terminate(); }
 };
-
-#endif // QTCOMPOSITOR_H

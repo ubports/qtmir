@@ -18,37 +18,21 @@
 #include <gtest/gtest.h>
 
 #include "mir/graphics/display_configuration.h"
+#include "fake_displayconfigurationoutput.h"
 
 #include <screen.h>
+
+using namespace ::testing;
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mg::DisplayConfigurationOutput const fake_output
-{
-    mg::DisplayConfigurationOutputId{3},
-    mg::DisplayConfigurationCardId{2},
-    mg::DisplayConfigurationOutputType::dvid,
-    {
-        mir_pixel_format_abgr_8888
-    },
-    {
-        {geom::Size{10, 20}, 60.0},
-        {geom::Size{10, 20}, 59.0},
-        {geom::Size{15, 20}, 59.0}
-    },
-    0,
-    geom::Size{10, 20},
-    true,
-    true,
-    geom::Point(),
-    2,
-    mir_pixel_format_abgr_8888,
-    mir_power_mode_on,
-    mir_orientation_normal
+class ScreenTest : public ::testing::Test {
+protected:
+    void SetUp() override;
 };
 
-TEST(ScreenTest, OrientationSensor)
+void ScreenTest::SetUp()
 {
     if (!qEnvironmentVariableIsSet("QT_ACCEL_FILEPATH")) {
         // Trick Qt >= 5.4.1 to load the generic sensors
@@ -56,7 +40,11 @@ TEST(ScreenTest, OrientationSensor)
     }
 
     Screen::skipDBusRegistration = true;
-    Screen *screen = new Screen(fake_output);
+}
+
+TEST_F(ScreenTest, OrientationSensor)
+{
+    Screen *screen = new Screen(fakeOutput1);
 
     // Default state should be active
     ASSERT_TRUE(screen->orientationSensorEnabled());
@@ -66,4 +54,30 @@ TEST(ScreenTest, OrientationSensor)
 
     screen->onDisplayPowerStateChanged(1,0);
     ASSERT_TRUE(screen->orientationSensorEnabled());
+}
+
+TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
+{
+    Screen *screen = new Screen(fakeOutput1);
+
+    EXPECT_EQ(screen->geometry(), QRect(0, 0, 150, 200));
+    EXPECT_EQ(screen->availableGeometry(), QRect(0, 0, 150, 200));
+    EXPECT_EQ(screen->depth(), 32);
+    EXPECT_EQ(screen->format(), QImage::Format_RGBA8888);
+    EXPECT_EQ(screen->refreshRate(), 59);
+    EXPECT_EQ(screen->physicalSize(), QSize(1111, 2222));
+    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::dvid);
+}
+
+TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
+{
+    Screen *screen = new Screen(fakeOutput2);
+
+    EXPECT_EQ(screen->geometry(), QRect(500, 600, 1500, 2000));
+    EXPECT_EQ(screen->availableGeometry(), QRect(500, 600, 1500, 2000));
+    EXPECT_EQ(screen->depth(), 32);
+    EXPECT_EQ(screen->format(), QImage::Format_RGBX8888);
+    EXPECT_EQ(screen->refreshRate(), 75);
+    EXPECT_EQ(screen->physicalSize(), QSize(1000, 2000));
+    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::lvds);
 }

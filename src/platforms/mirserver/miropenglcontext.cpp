@@ -16,12 +16,14 @@
 
 #include "miropenglcontext.h"
 
-#include "displaywindow.h"
-#include "mirserver.h"
+#include "offscreensurface.h"
 #include "mirglconfig.h"
+#include "mirserver.h"
+#include "screenwindow.h"
 
 #include <QDebug>
 
+#include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
 
@@ -106,17 +108,30 @@ QSurfaceFormat MirOpenGLContext::format() const
 
 void MirOpenGLContext::swapBuffers(QPlatformSurface *surface)
 {
-    // ultimately calls Mir's DisplayBuffer::post_update()
-    DisplayWindow *displayBuffer = static_cast<DisplayWindow*>(surface);
-    displayBuffer->swapBuffers(); //blocks for vsync
+    if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
+        // NOOP
+    } else {
+        // ultimately calls Mir's DisplayBuffer::post_update()
+        ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
+        screenWindow->swapBuffers(); //blocks for vsync
+    }
 }
 
 bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 {
+    if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
+        auto offscreen = static_cast<OffscreenSurface *>(surface);
+        if (!offscreen->buffer()) {
+            auto buffer = new QOpenGLFramebufferObject(surface->surface()->size());
+            offscreen->setBuffer(buffer);
+        }
+        return offscreen->buffer()->bind();
+    }
+
     // ultimately calls Mir's DisplayBuffer::make_current()
-    DisplayWindow *displayBuffer = static_cast<DisplayWindow*>(surface);
-    if (displayBuffer) {
-        displayBuffer->makeCurrent();
+    ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
+    if (screenWindow) {
+        screenWindow->makeCurrent();
 
 #ifndef QT_NO_DEBUG
         if (!m_logger->isLogging() && m_logger->initialize()) {

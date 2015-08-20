@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,29 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTCOMPOSITOR_H
-#define QTCOMPOSITOR_H
+#ifndef STUBSCREEN_H
+#define STUBSCREEN_H
 
-#include <mir/compositor/compositor.h>
+#include "screen.h"
 
-// Qt
-#include <QObject>
-
-class QtCompositor : public QObject, public mir::compositor::Compositor
+class StubScreen : public Screen
 {
     Q_OBJECT
 public:
-    QtCompositor() = default;
-    virtual ~QtCompositor() noexcept = default;
+    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : Screen(output) {}
 
-    void start();
-    void stop();
-
-Q_SIGNALS:
-    void starting();
-    void stopping();
-
-private:
+    void makeCurrent() { Screen::makeCurrent(); }
 };
 
-#endif // QTCOMPOSITOR_H
+#endif // STUBSCREEN_H
