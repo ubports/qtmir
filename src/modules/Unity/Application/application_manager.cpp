@@ -465,7 +465,7 @@ void ApplicationManager::onProcessFailed(const QString &appId, const bool during
     }
 
     Q_UNUSED(duringStartup); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
-    application->setProcessState(Application::ProcessKilled);
+    application->setProcessState(Application::ProcessFailed);
     application->setPid(0);
 }
 
@@ -483,7 +483,7 @@ void ApplicationManager::onProcessStopped(const QString &appId)
 
     // if an application gets killed, onProcessFailed is called first, followed by onProcessStopped.
     // we don't want to override what onProcessFailed already set.
-    if (application->processState() != Application::ProcessKilled) {
+    if (application->processState() != Application::ProcessFailed) {
         application->setProcessState(Application::ProcessStopped);
         application->setPid(0);
     }

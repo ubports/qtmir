@@ -527,7 +527,7 @@ void Application::setProcessState(ProcessState newProcessState)
         Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
         setInternalState(InternalState::Suspended);
         break;
-    case ProcessKilled:
+    case ProcessFailed:
         // we assume the session always stop before the process
         Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
 

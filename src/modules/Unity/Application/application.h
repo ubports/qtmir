@@ -61,7 +61,7 @@ public:
         ProcessUnknown,
         ProcessRunning,
         ProcessSuspended,
-        ProcessKilled, // it stopped, but because it was killed.
+        ProcessFailed, // it stopped, but because it was killed or because it crashed
         ProcessStopped
     };
 
