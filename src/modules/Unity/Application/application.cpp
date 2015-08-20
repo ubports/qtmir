@@ -203,8 +203,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "SuspendingWaitProcess";
     case InternalState::Suspended:
         return "Suspended";
-    case InternalState::StoppedUnexpectedly:
-        return "StoppedUnexpectedly";
+    case InternalState::StoppedResumable:
+        return "StoppedResumable";
     case InternalState::Stopped:
         return "Stopped";
     default:
@@ -321,7 +321,7 @@ void Application::applyRequestedRunning()
     case InternalState::SuspendingWaitProcess:
         // should leave the app alone until it reaches Suspended state
         break;
-    case InternalState::StoppedUnexpectedly:
+    case InternalState::StoppedResumable:
         respawn();
         break;
     case InternalState::Stopped:
@@ -350,7 +350,7 @@ void Application::applyRequestedSuspended()
     case InternalState::Suspended:
         // it's already going where we it's wanted
         break;
-    case InternalState::StoppedUnexpectedly:
+    case InternalState::StoppedResumable:
     case InternalState::Stopped:
         // the app doesn't have a process in the first place, so there's nothing to suspend
         break;
@@ -431,7 +431,7 @@ void Application::setSession(SessionInterface *newSession)
             Q_EMIT fullscreenChanged(fullscreen());
     } else {
         // this can only happen after the session has stopped and QML code called Session::release()
-        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedUnexpectedly);
+        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable);
     }
 
     Q_EMIT sessionChanged(m_session);
@@ -474,7 +474,7 @@ void Application::setInternalState(Application::InternalState state)
         case InternalState::Suspended:
             releaseWakelock();
             break;
-        case InternalState::StoppedUnexpectedly:
+        case InternalState::StoppedResumable:
             releaseWakelock();
             break;
         case InternalState::Stopped:
@@ -519,7 +519,7 @@ void Application::setProcessState(ProcessState newProcessState)
         Q_ASSERT(false);
         break;
     case ProcessRunning:
-        if (m_state == InternalState::StoppedUnexpectedly) {
+        if (m_state == InternalState::StoppedResumable) {
             setInternalState(InternalState::Starting);
         }
         break;
@@ -536,7 +536,7 @@ void Application::setProcessState(ProcessState newProcessState)
             setInternalState(InternalState::Stopped);
         } else {
             Q_ASSERT(m_state == InternalState::Stopped
-                    || m_state == InternalState::StoppedUnexpectedly);
+                    || m_state == InternalState::StoppedResumable);
         }
         break;
     case ProcessStopped:
@@ -546,8 +546,8 @@ void Application::setProcessState(ProcessState newProcessState)
         if (m_state == InternalState::Starting) {
             // that was way too soon. let it go away
             setInternalState(InternalState::Stopped);
-        } else if (m_state == InternalState::StoppedUnexpectedly) {
-            // the application stopped nicely, likely closed itself. Thus not really unexpected after all.
+        } else if (m_state == InternalState::StoppedResumable) {
+            // The application stopped nicely, likely closed itself. Thus not meant to be resumed later.
             setInternalState(InternalState::Stopped);
         } else {
             Q_ASSERT(m_state == InternalState::Stopped);
@@ -668,7 +668,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
              */
             setInternalState(InternalState::Stopped);
         } else {
-            setInternalState(InternalState::StoppedUnexpectedly);
+            setInternalState(InternalState::StoppedResumable);
         }
     }
 }

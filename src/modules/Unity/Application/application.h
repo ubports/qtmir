@@ -72,7 +72,7 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
-        StoppedUnexpectedly,
+        StoppedResumable,
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
                 // In any case, this is a dead end.
     };

@@ -119,7 +119,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
     ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
     session->setState(SessionInterface::Stopped);
     application->setProcessState(Application::ProcessKilled);
-    ASSERT_EQ(Application::InternalState::StoppedUnexpectedly, application->internalState());
+    ASSERT_EQ(Application::InternalState::StoppedResumable, application->internalState());
 
     EXPECT_FALSE(sharedWakelock.enabled());
 
@@ -282,7 +282,7 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
 
     application->setProcessState(Application::ProcessKilled);
 
-    ASSERT_EQ(Application::InternalState::StoppedUnexpectedly, application->internalState());
+    ASSERT_EQ(Application::InternalState::StoppedResumable, application->internalState());
 
     ASSERT_EQ(0, spyAppStopped.count());
 
