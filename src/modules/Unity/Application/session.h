@@ -105,6 +105,7 @@ private:
     bool m_fullscreen;
     State m_state;
     bool m_live;
+    bool m_released;
     QTimer* m_suspendTimer;
     QList<std::shared_ptr<mir::scene::PromptSession>> m_promptSessions;
     std::shared_ptr<mir::scene::PromptSessionManager> const m_promptSessionManager;

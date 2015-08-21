@@ -61,6 +61,7 @@ public:
         ProcessUnknown,
         ProcessRunning,
         ProcessSuspended,
+        ProcessFailed, // it stopped, but because it was killed or because it crashed
         ProcessStopped
     };
 
@@ -71,9 +72,11 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
-        StoppedUnexpectedly,
+        StoppedResumable, // The process stopped but we want to keep the Application object around
+                          // so it can be respawned as if it never stopped running in the first place.
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
-                // In any case, this is a dead end.
+                // In any case, this is a dead end. The Application object can be deleted at
+                // any moment once in this state.
     };
 
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
@@ -103,7 +106,7 @@ public:
 
     void setStage(Stage stage);
 
-
+    ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
 
     QStringList arguments() const { return m_arguments; }
