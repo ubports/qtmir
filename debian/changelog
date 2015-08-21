@@ -1,3 +1,15 @@
+qtmir (0.4.5+15.04.20150821-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Improve handling of applications that are stopping or getting killed
+    (LP: #1483840, #1485608)
+
+  [ Gerry Boland ]
+  * AppMan: if app destroys surface while in Running state, it is
+    probably shutting down, so preempt it by removing it from the model
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Fri, 21 Aug 2015 11:40:14 +0000
+
 qtmir (0.4.5+15.04.20150820-0ubuntu1) vivid; urgency=medium
 
   [ Gerry Boland ]
