@@ -22,7 +22,7 @@
 
 #include <Unity/Application/applicationscreenshotprovider.h>
 
- #include <fake_mirsurfaceitem.h>
+ #include <fake_mirsurface.h>
  #include <mock_surface.h>
  #include <qtmir_test.h>
 
@@ -46,7 +46,7 @@ public:
         sessionManager.onSessionStopping(session);
     }
     inline void onSessionCreatedSurface(const mir::scene::Session *mirSession,
-            MirSurfaceItemInterface *qmlSurface) {
+            MirSurfaceInterface *qmlSurface) {
 
         SessionInterface* qmlSession = sessionManager.findSession(mirSession);
         if (qmlSession) {
@@ -78,7 +78,7 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     QByteArray cmdLine( "/usr/bin/dialer-app --desktop_file_hint=dialer-app");
     QByteArray secondcmdLine( "/usr/bin/dialer-app");
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
 
     EXPECT_CALL(procInfo,command_line(firstProcId))
         .Times(1)
@@ -316,7 +316,7 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     quint64 a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    FakeMirSurfaceItem *aSurface = new FakeMirSurfaceItem;
+    FakeMirSurface *aSurface = new FakeMirSurface;
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
@@ -346,7 +346,7 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
     quint64 a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd("/usr/bin/app1 --desktop_file_hint=some_app");
-    FakeMirSurfaceItem *aSurface = new FakeMirSurfaceItem;
+    FakeMirSurface *aSurface = new FakeMirSurface;
 
     ON_CALL(procInfo, command_line(_)).WillByDefault(Return(a_cmd));
     ON_CALL(appController, appIdHasProcessId(_,_)).WillByDefault(Return(false));
@@ -374,7 +374,7 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 {
     using namespace ::testing;
     quint64 procId = 5921;
-    FakeMirSurfaceItem *aSurface = new FakeMirSurfaceItem;
+    FakeMirSurface *aSurface = new FakeMirSurface;
     QByteArray cmdLine( "/usr/bin/app --desktop_file_hint=app");
 
     EXPECT_CALL(procInfo,command_line(procId))
@@ -841,7 +841,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
 
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
@@ -917,7 +917,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -961,7 +961,7 @@ TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
     onSessionStarting(session);
     applicationManager.onProcessStarting(appId);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1006,7 +1006,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1051,7 +1051,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1102,7 +1102,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1160,7 +1160,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1253,7 +1253,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1302,7 +1302,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1355,7 +1355,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     ASSERT_EQ(Application::InternalState::Starting, app->internalState());
 
     // Associate a surface so AppMan considers app Running
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
@@ -1501,7 +1501,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     applicationManager.authorizeSession(procId2, authed);
     onSessionStarting(session2);
     EXPECT_EQ(authed, true);
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session2.get(), surface);
     surface->drawFirstFrame();
 
@@ -1563,10 +1563,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     EXPECT_EQ(true, authed);
 
     // both sessions create surfaces, then get them all suspended
-    FakeMirSurfaceItem *surface1 = new FakeMirSurfaceItem;
+    FakeMirSurface *surface1 = new FakeMirSurface;
     onSessionCreatedSurface(session1.get(), surface1);
     surface1->drawFirstFrame();
-    FakeMirSurfaceItem *surface2 = new FakeMirSurfaceItem;
+    FakeMirSurface *surface2 = new FakeMirSurface;
     onSessionCreatedSurface(session2.get(), surface2);
     surface2->drawFirstFrame();
     suspend(app);
@@ -1615,7 +1615,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     onSessionStarting(session);
 
     // App creates surface, puts it in background, then is OOM killed.
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
     suspend(app);
@@ -1768,7 +1768,7 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     }
 
     onSessionStarting(first_session);
-    FakeMirSurfaceItem *aSurface = new FakeMirSurfaceItem;
+    FakeMirSurface *aSurface = new FakeMirSurface;
     onSessionCreatedSurface(first_session.get(), aSurface);
     aSurface->drawFirstFrame();
     onSessionStarting(second_session);
@@ -1843,7 +1843,7 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     onSessionStarting(session);
 
     // App creates surface, focuses it so state is running
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 

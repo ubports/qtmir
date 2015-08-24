@@ -22,12 +22,16 @@
 #include "application_manager.h"
 #include "applicationscreenshotprovider.h"
 #include "mirsurfacemanager.h"
+#include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
 #include "sessionmanager.h"
 #include "ubuntukeyboardinfo.h"
 
 // qtmir
 #include "logging.h"
+
+// unity-api
+#include <unity/shell/application/Mir.h>
 
 using namespace qtmir;
 
@@ -73,8 +77,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
 
         qRegisterMetaType<qtmir::ApplicationManager*>("ApplicationManager*"); //need for queueing signals
         qRegisterMetaType<qtmir::Application*>("Application*");
-        qRegisterMetaType<qtmir::MirSurfaceItemInterface*>("MirSurfaceItemInterface*");
-        qRegisterMetaType<qtmir::MirSurfaceItemModel*>("MirSurfaceItemModel*");
+        qRegisterMetaType<unity::shell::application::MirSurfaceInterface*>("MirSurfaceInterface*");
         qRegisterMetaType<qtmir::Session*>("Session*");
         qRegisterMetaType<qtmir::SessionInterface*>("SessionInterface*");
         qRegisterMetaType<qtmir::SessionModel*>("SessionModel*");
@@ -92,12 +95,14 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "SurfaceManager", surfaceManagerSingleton);
         qmlRegisterSingletonType<qtmir::SessionManager>(
                     uri, 0, 1, "SessionManager", sessionManagerSingleton);
-        qmlRegisterUncreatableType<qtmir::MirSurfaceItemInterface>(
-                    uri, 0, 1, "MirSurfaceItem", "MirSurfaceItem can't be instantiated from QML");
+        qmlRegisterUncreatableType<unity::shell::application::MirSurfaceInterface>(
+                    uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
+        qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
         qmlRegisterUncreatableType<qtmir::Session>(
                     uri, 0, 1, "Session", "Session can't be instantiated from QML");
         qmlRegisterSingletonType<qtmir::UbuntuKeyboardInfo>(
                 uri, 0, 1, "UbuntuKeyboardInfo", ubuntuKeyboardInfoSingleton);
+        qmlRegisterUncreatableType<Mir>(uri, 0, 1, "Mir", "Mir provides enum values, it can't be instantiated");
     }
 
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)

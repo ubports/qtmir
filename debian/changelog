@@ -1,3 +1,9 @@
+qtmir (0.4.6) UNRELEASED; urgency=medium
+
+  * Enable multiple MirSurfaceItems rendering the same MirSurface
+
+ -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Mon, 27 Jul 2015 13:16:20 -0300
+
 qtmir (0.4.5+15.04.20150821-0ubuntu1) vivid; urgency=medium
 
   [ Daniel d'Andrada ]

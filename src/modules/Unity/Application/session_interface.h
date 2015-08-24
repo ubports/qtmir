@@ -35,11 +35,11 @@ namespace mir {
 
 namespace qtmir {
 
-class MirSurfaceItemInterface;
+class MirSurfaceInterface;
 
 class SessionInterface : public QObject {
     Q_OBJECT
-    Q_PROPERTY(MirSurfaceItemInterface* surface READ surface NOTIFY surfaceChanged)
+    Q_PROPERTY(MirSurfaceInterface* surface READ surface NOTIFY surfaceChanged)
     Q_PROPERTY(unity::shell::application::ApplicationInfoInterface* application READ application NOTIFY applicationChanged DESIGNABLE false)
     Q_PROPERTY(SessionInterface* parentSession READ parentSession NOTIFY parentSessionChanged DESIGNABLE false)
     Q_PROPERTY(SessionModel* childSessions READ childSessions DESIGNABLE false CONSTANT)
@@ -62,7 +62,7 @@ public:
     //getters
     virtual QString name() const = 0;
     virtual unity::shell::application::ApplicationInfoInterface* application() const = 0;
-    virtual MirSurfaceItemInterface* surface() const = 0;
+    virtual MirSurfaceInterface* surface() const = 0;
     virtual SessionInterface* parentSession() const = 0;
     virtual SessionModel* childSessions() const = 0;
     virtual State state() const = 0;
@@ -71,9 +71,9 @@ public:
 
     virtual std::shared_ptr<mir::scene::Session> session() const = 0;
 
-    // For MirSurfaceItem and MirSurfaceManager use
+    // For MirSurface and MirSurfaceManager use
 
-    virtual void setSurface(MirSurfaceItemInterface* surface) = 0;
+    virtual void setSurface(MirSurfaceInterface* surface) = 0;
 
     // For Application use
 
@@ -98,7 +98,7 @@ public:
     virtual void removePromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) = 0;
 
 Q_SIGNALS:
-    void surfaceChanged(MirSurfaceItemInterface*);
+    void surfaceChanged(MirSurfaceInterface*);
     void parentSessionChanged(SessionInterface*);
     void applicationChanged(unity::shell::application::ApplicationInfoInterface* application);
     void stateChanged(State state);

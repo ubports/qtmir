@@ -8,11 +8,10 @@ Rectangle {
     property alias surface: surfaceItem.surface
     property bool touchMode: false
 
-    width: surfaceItem.implicitWidth + 2*borderThickness
-    height: surfaceItem.implicitHeight + 2*borderThickness + titleBar.height
+    width: surfaceItem.width + (borderThickness*2)
+    height: surfaceItem.height + titleBar.height + (borderThickness*2)
 
     signal cloneRequested()
-    property bool cloned: false
 
     onTouchModeChanged: {
         if (touchMode) {
@@ -60,6 +59,8 @@ Rectangle {
 
 
     MouseArea {
+        id: resizeArea
+
         anchors.fill: parent
 
         property real startX
@@ -76,8 +77,8 @@ Rectangle {
                 var pos = mapToItem(root.parent, mouseX, mouseY);
                 startX = pos.x;
                 startY = pos.y;
-                startWidth = width;
-                startHeight = height;
+                startWidth = surfaceItem.width;
+                startHeight = surfaceItem.height;
                 leftBorder = mouseX > 0 && mouseX < root.borderThickness;
                 rightBorder = mouseX > (root.width - root.borderThickness) && mouseX < root.width;
                 topBorder = mouseY > 0 && mouseY < root.borderThickness;
@@ -95,21 +96,18 @@ Rectangle {
 
             var pos = mapToItem(root.parent, mouseX, mouseY);
 
+            var deltaX = pos.x - startX;
             if (leftBorder) {
-
-                if (startX + startWidth - pos.x > root.minWidth) {
-                    root.x = pos.x;
-                    root.width = startX + startWidth - root.x;
-                    startX = root.x;
-                    startWidth = root.width;
-                }
-
-            } else if (rightBorder) {
-                var deltaX = pos.x - startX;
-                if (startWidth + deltaX >= root.minWidth) {
-                    root.width = startWidth + deltaX;
+                if (startWidth - deltaX >= root.minWidth) {
+                    surfaceItem.surfaceWidth = startWidth - deltaX;
                 } else {
-                    root.width = root.minWidth;
+                    surfaceItem.surfaceWidth = root.minWidth;
+                }
+            } else if (rightBorder) {
+                if (startWidth + deltaX >= root.minWidth) {
+                    surfaceItem.surfaceWidth = startWidth + deltaX;
+                } else {
+                    surfaceItem.surfaceWidth = root.minWidth;
                 }
             }
         }
@@ -121,21 +119,18 @@ Rectangle {
 
             var pos = mapToItem(root.parent, mouseX, mouseY);
 
+            var deltaY = pos.y - startY;
             if (topBorder) {
-
-                if (startY + startHeight - pos.y > root.minHeight) {
-                    root.y = pos.y;
-                    root.height = startY + startHeight - root.y;
-                    startY = root.y;
-                    startHeight = root.height;
-                }
-
-            } else if (bottomBorder) {
-                var deltaY = pos.y - startY;
-                if (startHeight + deltaY >= root.minHeight) {
-                    root.height = startHeight + deltaY;
+                if (startHeight - deltaY >= root.minHeight) {
+                    surfaceItem.surfaceHeight = startHeight - deltaY;
                 } else {
-                    root.height = root.minHeight;
+                    surfaceItem.surfaceHeight = root.minHeight;
+                }
+            } else if (bottomBorder) {
+                if (startHeight + deltaY >= root.minHeight) {
+                    surfaceItem.surfaceHeight = startHeight + deltaY;
+                } else {
+                    surfaceItem.surfaceHeight = root.minHeight;
                 }
             }
         }
@@ -158,16 +153,26 @@ Rectangle {
     MirSurfaceItem {
         id: surfaceItem
 
+        width: surface ? surface.size.width : 50
+        height: surface ? surface.size.height : 50
+
+        onWidthChanged: {
+            if (resizeArea.dragging && resizeArea.leftBorder) {
+                root.x = resizeArea.startX + resizeArea.startWidth - surfaceItem.width;
+            }
+        }
+
+        onHeightChanged: {
+            if (resizeArea.dragging && resizeArea.topBorder) {
+                root.y = resizeArea.startY + resizeArea.startHeight - surfaceItem.height;
+            }
+        }
+
         anchors.top: titleBar.bottom
         anchors.left: parent.left
         anchors.leftMargin: root.borderThickness
-        anchors.right: parent.right
-        anchors.rightMargin: root.borderThickness
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: root.borderThickness
 
-        consumesInput: !root.cloned
-        surfaceWidth: root.cloned ? -1 : width
-        surfaceHeight: root.cloned ? -1 : height
+        consumesInput: true
     }
 }
+
