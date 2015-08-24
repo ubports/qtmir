@@ -82,6 +82,8 @@ void connectToSessionListener(ApplicationManager *manager, SessionListener *list
                      manager, &ApplicationManager::onSessionStopping);
     QObject::connect(listener, &SessionListener::sessionCreatedSurface,
                      manager, &ApplicationManager::onSessionCreatedSurface);
+    QObject::connect(listener, &SessionListener::sessionDestroyingSurface,
+                     manager, &ApplicationManager::onSessionDestroyingSurface);
 }
 
 void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
@@ -465,7 +467,7 @@ void ApplicationManager::onProcessFailed(const QString &appId, const bool during
     }
 
     Q_UNUSED(duringStartup); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
-    application->setProcessState(Application::ProcessStopped);
+    application->setProcessState(Application::ProcessFailed);
     application->setPid(0);
 }
 
@@ -481,8 +483,12 @@ void ApplicationManager::onProcessStopped(const QString &appId)
         return;
     }
 
-    application->setProcessState(Application::ProcessStopped);
-    application->setPid(0);
+    // if an application gets killed, onProcessFailed is called first, followed by onProcessStopped.
+    // we don't want to override what onProcessFailed already set.
+    if (application->processState() != Application::ProcessFailed) {
+        application->setProcessState(Application::ProcessStopped);
+        application->setPid(0);
+    }
 }
 
 void ApplicationManager::onProcessSuspended(const QString &appId)
@@ -664,6 +670,23 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     Application* application = findApplicationWithSession(session);
     if (application) {
         m_dbusWindowStack->WindowCreated(0, application->appId());
+    }
+}
+
+void ApplicationManager::onSessionDestroyingSurface(ms::Session const* session,
+                                                    std::shared_ptr<ms::Surface> const& surface)
+{
+    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onSessionDestroyingSurface - sessionName=" << session->name().c_str();
+    Q_UNUSED(surface);
+
+    Application* application = findApplicationWithSession(session);
+    if (application && application->state() == Application::Running) {
+        // If app in Running state but it destroys its surface, it's probably shutting down,
+        // in which case, we can preempt it and remove it from the App list immediately.
+        // FIXME: this is not desktop application friendly, but resolves issue where trust-prompt
+        // helpers take a long time to shut down, but destroys their surface quickly.
+        remove(application);
+        application->deleteLater();
     }
 }
 
