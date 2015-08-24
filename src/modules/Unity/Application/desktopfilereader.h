@@ -63,11 +63,10 @@ public:
     static bool parseBoolean(const QString &rawString, bool &result);
 
 protected:
+    DesktopFileReader() : d_ptr(nullptr) {}
     DesktopFileReader(const QString &appId, const QFileInfo &desktopFile);
 
     DesktopFileReaderPrivate * const d_ptr;
-
-    friend class DesktopFileReaderFactory;
 
 private:
     Q_DECLARE_PRIVATE(DesktopFileReader)

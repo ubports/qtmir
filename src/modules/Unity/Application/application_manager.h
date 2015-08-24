@@ -121,6 +121,8 @@ public Q_SLOTS:
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
 
     void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
+    void onSessionDestroyingSurface(mir::scene::Session const* session,
+                                    std::shared_ptr<mir::scene::Surface> const& surface);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
