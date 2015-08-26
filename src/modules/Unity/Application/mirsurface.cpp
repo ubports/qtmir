@@ -587,7 +587,8 @@ bool MirSurface::clientIsRunning() const
 {
     return (m_session &&
             (m_session->state() == Session::State::Running
-             || m_session->state() == Session::State::Starting))
+             || m_session->state() == Session::State::Starting
+             || m_session->state() == Session::State::Suspending))
         || !m_session;
 }
 
