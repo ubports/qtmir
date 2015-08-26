@@ -79,7 +79,7 @@ Session::~Session()
     if (m_application) {
         m_application->setSession(nullptr);
     }
-    delete m_surface; m_surface = nullptr;
+
     delete m_children; m_children = nullptr;
 }
 
@@ -120,7 +120,7 @@ ApplicationInfoInterface* Session::application() const
     return m_application;
 }
 
-MirSurfaceItemInterface* Session::surface() const
+MirSurfaceInterface* Session::surface() const
 {
     // Only notify QML of surface creation once it has drawn its first frame.
     if (m_surface && m_surface->isFirstFrameDrawn()) {
@@ -166,7 +166,7 @@ void Session::setApplication(ApplicationInfoInterface* application)
     Q_EMIT applicationChanged(application);
 }
 
-void Session::setSurface(MirSurfaceItemInterface *newSurface)
+void Session::setSurface(MirSurfaceInterface *newSurface)
 {
     qCDebug(QTMIR_SESSIONS) << "Session::setSurface - session=" << name() << "surface=" << newSurface;
 
@@ -176,25 +176,20 @@ void Session::setSurface(MirSurfaceItemInterface *newSurface)
 
     if (m_surface) {
         m_surface->disconnect(this);
-        m_surface->setSession(nullptr);
-        m_surface->setParent(nullptr);
     }
 
-    MirSurfaceItemInterface *previousSurface = surface();
+    MirSurfaceInterface *previousSurface = surface();
     m_surface = newSurface;
 
     if (newSurface) {
-        m_surface->setParent(this);
-        m_surface->setSession(this);
-
-        connect(newSurface, &MirSurfaceItemInterface::stateChanged,
+        connect(newSurface, &MirSurfaceInterface::stateChanged,
             this, &Session::updateFullscreenProperty);
 
         // Only notify QML of surface creation once it has drawn its first frame.
         if (m_surface->isFirstFrameDrawn()) {
             setState(Running);
         } else {
-            connect(newSurface, &MirSurfaceItemInterface::firstFrameDrawn,
+            connect(newSurface, &MirSurfaceInterface::firstFrameDrawn,
                     this, &Session::onFirstSurfaceFrameDrawn);
         }
     }
@@ -219,7 +214,7 @@ void Session::onFirstSurfaceFrameDrawn()
 void Session::updateFullscreenProperty()
 {
     if (m_surface) {
-        setFullscreen(m_surface->state() == MirSurfaceItemInterface::Fullscreen);
+        setFullscreen(m_surface->state() == Mir::FullscreenState);
     } else {
         // Keep the current value of the fullscreen property until we get a new
         // surface

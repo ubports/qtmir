@@ -45,7 +45,9 @@ Q_SIGNALS:
     void sessionFocused(std::shared_ptr<mir::scene::Session> const& session);
     void sessionUnfocused();
 
-    void sessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&, std::shared_ptr<SurfaceObserver> const&);
+    void sessionCreatedSurface(mir::scene::Session const*,
+                               std::shared_ptr<mir::scene::Surface> const&,
+                               std::shared_ptr<SurfaceObserver> const&);
     void sessionDestroyingSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
 };
 

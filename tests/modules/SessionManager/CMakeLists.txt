@@ -4,7 +4,7 @@ set(
   session_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
   ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_mirsurfaceitem.h
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_mirsurface.h
 )
 
 include_directories(
