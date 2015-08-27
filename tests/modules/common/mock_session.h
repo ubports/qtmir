@@ -36,7 +36,7 @@ public:
 
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(application, unity::shell::application::ApplicationInfoInterface*());
-    MOCK_CONST_METHOD0(surface, MirSurfaceItemInterface*());
+    MOCK_CONST_METHOD0(surface, MirSurfaceInterface*());
     MOCK_CONST_METHOD0(parentSession, SessionInterface*());
 
     MOCK_CONST_METHOD0(state, State());
@@ -45,7 +45,7 @@ public:
     MOCK_CONST_METHOD0(live, bool());
 
     MOCK_METHOD1(setApplication, void(unity::shell::application::ApplicationInfoInterface* item));
-    MOCK_METHOD1(setSurface, void(MirSurfaceItemInterface* surface));
+    MOCK_METHOD1(setSurface, void(MirSurfaceInterface* surface));
 
     MOCK_METHOD0(suspend, void());
     MOCK_METHOD0(resume, void());

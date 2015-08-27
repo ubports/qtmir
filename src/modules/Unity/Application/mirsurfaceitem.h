@@ -21,61 +21,61 @@
 
 // Qt
 #include <QMutex>
-#include <QPointer>
 #include <QTimer>
-#include <QQmlListProperty>
 
-// mir
-#include <mir/scene/surface.h>
-#include <mir_toolkit/common.h>
+// Unity API
+#include <unity/shell/application/MirSurfaceItemInterface.h>
 
-#include "mirsurfaceiteminterface.h"
+#include "mirsurface.h"
 #include "session_interface.h"
-
-namespace mir { namespace shell { class Shell; }}
-
-class SurfaceObserver;
-using MirShell = mir::shell::Shell;
 
 namespace qtmir {
 
 class MirSurfaceManager;
 class QSGMirSurfaceNode;
-class QMirSurfaceTextureProvider;
+class MirTextureProvider;
 
-class MirSurfaceItem : public MirSurfaceItemInterface
+class MirSurfaceItem : public unity::shell::application::MirSurfaceItemInterface
 {
     Q_OBJECT
 
 public:
-    explicit MirSurfaceItem(std::shared_ptr<mir::scene::Surface> surface,
-                            SessionInterface* session,
-                            MirShell *shell,
-                            std::shared_ptr<SurfaceObserver> observer,
-                            QQuickItem *parent = 0);
+    explicit MirSurfaceItem(QQuickItem *parent = 0);
     virtual ~MirSurfaceItem();
 
-    //getters
-    Type type() const override;
-    State state() const override;
+    ////////
+    // MirSurfaceItemInterface
+
+    Mir::Type type() const override;
     QString name() const override;
     bool live() const override;
-    SessionInterface *session() const override;
-    OrientationAngle orientationAngle() const override;
 
-    Q_INVOKABLE void release() override;
+    Mir::State surfaceState() const override;
+    void setSurfaceState(Mir::State) override;
 
-    // Item surface/texture management
-    bool isTextureProvider() const { return true; }
-    QSGTextureProvider *textureProvider() const;
+    Mir::OrientationAngle orientationAngle() const override;
+    void setOrientationAngle(Mir::OrientationAngle angle) override;
 
-    void stopFrameDropper() override;
-    void startFrameDropper() override;
+    unity::shell::application::MirSurfaceInterface* surface() const override;
+    void setSurface(unity::shell::application::MirSurfaceInterface*) override;
 
-    bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
+    bool consumesInput() const override;
+    void setConsumesInput(bool value) override;
 
-    void setOrientationAngle(OrientationAngle angle) override;
-    void setSession(SessionInterface *app) override;
+    int surfaceWidth() const override;
+    void setSurfaceWidth(int value) override;
+
+    int surfaceHeight() const override;
+    void setSurfaceHeight(int value) override;
+
+    ////////
+    // QQuickItem
+
+    bool isTextureProvider() const override { return true; }
+    QSGTextureProvider *textureProvider() const override;
+
+    ////////
+    // own API
 
     // to allow easy touch event injection from tests
     bool processTouchEvent(int eventType,
@@ -84,8 +84,10 @@ public:
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
 
-protected Q_SLOTS:
-    void onSessionStateChanged(SessionInterface::State state);
+
+public Q_SLOTS:
+    // Called by QQuickWindow from the rendering thread
+    void invalidateSceneGraph();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -103,33 +105,21 @@ protected:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *);
 
-private Q_SLOTS:
-    void surfaceDamaged();
-    void dropPendingBuffer();
-    void scheduleTextureUpdate();
+    void releaseResources() override;
 
+private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
 
     void updateMirSurfaceFocus(bool focused);
-    void onAttributeChanged(const MirSurfaceAttrib, const int);
+
+    void onActualSurfaceSizeChanged(const QSize &size);
 
 private:
-    bool updateTexture();
-    void ensureProvider();
-
-    void setType(const Type&);
-    void setState(const State&);
-    void setLive(bool) override;
-
-    // called by MirSurfaceManager
-    void setSurfaceValid(const bool);
+    void ensureTextureProvider();
 
     bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);
     bool isMouseInsideUbuntuKeyboard(const QMouseEvent *event);
-    void syncSurfaceSizeWithItemSize();
-
-    bool clientIsRunning() const;
 
     QString appId() const;
     void endCurrentTouchSequence(ulong timestamp);
@@ -139,22 +129,10 @@ private:
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
 
+    MirSurface* m_surface;
+
     QMutex m_mutex;
-
-    std::shared_ptr<mir::scene::Surface> m_surface;
-    QPointer<SessionInterface> m_session;
-    MirShell *const m_shell;
-    bool m_firstFrameDrawn;
-    bool m_live;
-
-    //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
-    OrientationAngle m_orientationAngle;
-
-    QMirSurfaceTextureProvider *m_textureProvider;
-
-    std::shared_ptr<SurfaceObserver> m_surfaceObserver;
-
-    QTimer m_frameDropperTimer;
+    MirTextureProvider *m_textureProvider;
 
     QTimer m_updateMirSurfaceSizeTimer;
 
@@ -177,6 +155,14 @@ private:
         QList<QTouchEvent::TouchPoint> touchPoints;
         Qt::TouchPointStates touchPointStates;
     } *m_lastTouchEvent;
+
+    unsigned int *m_lastFrameNumberRendered;
+
+    int m_surfaceWidth;
+    int m_surfaceHeight;
+    Mir::OrientationAngle *m_orientationAngle;
+
+    bool m_consumesInput;
 };
 
 } // namespace qtmir

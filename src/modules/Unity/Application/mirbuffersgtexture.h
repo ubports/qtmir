@@ -29,7 +29,7 @@ class MirBufferSGTexture : public QSGTexture
 {
     Q_OBJECT
 public:
-    MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer>);
+    MirBufferSGTexture();
     virtual ~MirBufferSGTexture();
 
     void setBuffer(std::shared_ptr<mir::graphics::Buffer> buffer);
@@ -44,8 +44,8 @@ public:
 
 private:
     std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
-    int m_height;
     int m_width;
+    int m_height;
     GLuint m_textureId;
 };
 
