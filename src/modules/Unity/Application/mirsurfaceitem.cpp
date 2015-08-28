@@ -756,6 +756,12 @@ void MirSurfaceItem::dropPendingBuffer()
             << "buffer dropped."
             << framesPending-1
             << "left.";
+    } else {
+        // The client can't possibly be blocked in swap buffers if the
+        // queue is empty. So we can safely enter deep sleep now. If the
+        // client provides any new frames, the timer will get restarted
+        // via scheduleTextureUpdate()...
+        m_frameDropperTimer.stop();
     }
 }
 
