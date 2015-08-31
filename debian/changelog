@@ -1,3 +1,12 @@
+qtmir (0.4.6+15.04.20150827.1-0ubuntu1) vivid; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Enable multiple MirSurfaceItems rendering the same MirSurface
+  * Allow resizing an app that is in the process of getting suspended.
+    (LP: #1466510)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 27 Aug 2015 13:58:54 +0000
+
 qtmir (0.4.5+15.10.20150817-0ubuntu1) wily; urgency=medium
 
   * 

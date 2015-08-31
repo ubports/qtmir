@@ -3,7 +3,7 @@ set(
   application_manager_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
   ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
-  ../common/fake_mirsurfaceitem.h
+  ../common/fake_mirsurface.h
 )
 
 include_directories(

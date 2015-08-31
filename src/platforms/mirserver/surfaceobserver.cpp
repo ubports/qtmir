@@ -18,6 +18,8 @@
 
 #include <QMetaObject>
 
+#include <mir/geometry/size.h>
+
 SurfaceObserver::SurfaceObserver()
     : m_listener(nullptr)
     , m_framesPosted(false)
@@ -47,3 +49,7 @@ void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
     }
 }
 
+void SurfaceObserver::resized_to(mir::geometry::Size const&size)
+{
+    Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
+}

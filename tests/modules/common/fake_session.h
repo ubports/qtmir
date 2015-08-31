@@ -37,7 +37,7 @@ public:
 
     QString name() const override { return QString("foo-session"); }
     unity::shell::application::ApplicationInfoInterface* application() const override { return m_application; }
-    MirSurfaceItemInterface* surface() const override { return nullptr; }
+    MirSurfaceInterface* surface() const override { return nullptr; }
     SessionInterface* parentSession() const override { return nullptr; }
     SessionModel* childSessions() const override { return nullptr; }
     State state() const override { return m_state; }
@@ -48,7 +48,7 @@ public:
 
     // For MirSurfaceItem and MirSurfaceManager use
 
-    void setSurface(MirSurfaceItemInterface*) override {}
+    void setSurface(MirSurfaceInterface*) override {}
 
     // For Application use
 
