@@ -16,6 +16,8 @@
 
 #include "qteventfeeder.h"
 #include "logging.h"
+#include "timestamp.h"
+#include "tracepoints.h" // generated from tracepoints.tp
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
@@ -511,7 +513,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
-    auto timestamp = mir_input_event_get_event_time(ev) / 1000000;
+    auto timestamp = qtmir::compressTimestamp(mir_input_event_get_event_time(ev));
 
     auto pev = mir_input_event_get_pointer_event(ev);
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
@@ -529,7 +531,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
-    ulong timestamp = mir_input_event_get_event_time(event) / 1000000;
+    auto timestamp = qtmir::compressTimestamp(mir_input_event_get_event_time(event));
 
     auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
@@ -586,6 +588,10 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
+    qint64 timestamp = mir_input_event_get_event_time(event);
+
+    tracepoint(qtmirserver, touchEventDisptach_start, timestamp);
+
     auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
 
@@ -629,17 +635,21 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         touchPoints.append(touchPoint);
     }
 
+    auto compressedTimestamp = qtmir::compressTimestamp(timestamp);
+
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
-    validateTouches(mir_input_event_get_event_time(event) / 1000000, touchPoints);
+    validateTouches(compressedTimestamp, touchPoints);
 
     // Touch event propagation.
     qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
     mQtWindowSystem->handleTouchEvent(
         //scales down the nsec_t (int64) to fit a ulong, precision lost but time difference suitable
-        mir_input_event_get_event_time(event) / 1000000,
+        compressedTimestamp,
         mTouchDevice,
         touchPoints);
+
+    tracepoint(qtmirserver, touchEventDisptach_end, timestamp);
 }
 
 void QtEventFeeder::start()

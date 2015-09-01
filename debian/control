@@ -97,3 +97,22 @@ Description: Qt plugin for Unity specific Mir APIs
  QtMir provides Qt/QML bindings for Mir features that are exposed through the
  qtmir-desktop or qtmir-android QPA plugin such as Application management
  (start/stop/suspend/resume) and surface management.
+
+Package: qtmir-tests
+Architecture: all
+Pre-Depends: ${misc:Pre-Depends},
+Depends: autopilot-qt5,
+         lttng-tools,
+         mir-test-tools,
+         python3-autopilot,
+         python3-babeltrace,
+         python3-evdev,
+         python3-mir-perf-framework,
+         qtmir-desktop (= ${source:Version}) | qtmir-android (= ${source:Version}),
+         qtdeclarative5-qtmir-plugin,
+         simpler,
+         ${misc:Depends},
+         ${shlibs:Depends},
+Description: QtMir tests and demos
+ This package provides benchmark tests and a simple shell and client using the
+ QtMir QPA.

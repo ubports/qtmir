@@ -15,6 +15,7 @@
  */
 
 #include "mirsurface.h"
+#include "timestamp.h"
 
 // mirserver
 #include <surfaceobserver.h>
@@ -51,7 +52,7 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
 
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = std::chrono::nanoseconds(uncompressTimestamp(qtEvent->timestamp()));
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
 
     MirPointerButtons buttons = 0;
@@ -68,7 +69,7 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = std::chrono::nanoseconds(uncompressTimestamp(qtEvent->timestamp()));
 
     MirPointerButtons buttons = 0;
 
@@ -93,7 +94,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
+    return mir::events::make_event(0 /* DeviceID */, std::chrono::nanoseconds(uncompressTimestamp(qtEvent->timestamp())),
                            action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -105,7 +106,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
+    auto ev = mir::events::make_event(0, std::chrono::nanoseconds(uncompressTimestamp(qtTimestamp)),
                                       modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {

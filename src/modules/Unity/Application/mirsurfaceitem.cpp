@@ -20,6 +20,8 @@
 #include "mirsurfaceitem.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
+#include "tracepoints.h" // generated from tracepoints.tp
+#include "timestamp.h"
 
 // common
 #include <debughelpers.h>
@@ -401,10 +403,14 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
     m_lastTouchEvent->timestamp = timestamp;
     m_lastTouchEvent->touchPoints = touchPoints;
     m_lastTouchEvent->touchPointStates = touchPointStates;
+
+    tracepoint(qtmir, touchEventConsume_end, uncompressTimestamp(timestamp).count());
 }
 
 void MirSurfaceItem::touchEvent(QTouchEvent *event)
 {
+    tracepoint(qtmir, touchEventConsume_start, uncompressTimestamp(event->timestamp()).count());
+
     bool accepted = processTouchEvent(event->type(),
             event->timestamp(),
             event->modifiers(),
