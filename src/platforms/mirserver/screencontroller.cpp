@@ -88,7 +88,7 @@ void ScreenController::onCompositorStarting()
     for (auto screen : m_screenList) {
         auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window()) {
-            window->window()->show();
+            window->setExposed(true);
         }
     }
 }
@@ -102,7 +102,7 @@ void ScreenController::onCompositorStopping()
     for (auto screen : m_screenList) {
         auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window()) {
-            window->window()->hide();
+            window->setExposed(false);
         }
     }
 
@@ -172,7 +172,7 @@ void ScreenController::update()
 
     qCDebug(QTMIR_SCREENS) << "=======================================";
     for (auto screen: m_screenList) {
-        qCDebug(QTMIR_SCREENS) << "Screen - id:" << screen->m_outputId.as_value()
+        qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->window()
                                << "type" << static_cast<int>(screen->outputType());
@@ -237,6 +237,7 @@ Screen* ScreenController::getUnusedScreen()
         }
     }
 
+    qCDebug(QTMIR_SCREENS) << "Prioritized list of available outputs:" << priorityList;
     return priorityList.first(); // Map sorted by key, so first is the key with highest priority.
 }
 

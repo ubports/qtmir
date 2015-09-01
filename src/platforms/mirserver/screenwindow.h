@@ -29,6 +29,9 @@ public:
     explicit ScreenWindow(QWindow *window);
     virtual ~ScreenWindow();
 
+    bool isExposed() const override;
+    void setExposed(const bool exposed);
+
     WId winId() const override { return m_winId; }
 
     void swapBuffers();
@@ -36,6 +39,7 @@ public:
     void doneCurrent();
 
 private:
+    bool m_exposed;
     WId m_winId;
 };
 

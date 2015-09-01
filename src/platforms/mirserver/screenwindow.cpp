@@ -17,11 +17,16 @@
 #include "screenwindow.h"
 #include "screen.h"
 
+// Mir
 #include <mir/geometry/size.h>
 #include <mir/graphics/display_buffer.h>
 
+// Qt
 #include <qpa/qwindowsysteminterface.h>
 #include <qpa/qplatformscreen.h>
+#include <QQuickWindow>
+#include <QtQuick/private/qsgrenderloop_p.h>
+#include <QDebug>
 
 #include "logging.h"
 
@@ -37,18 +42,20 @@ static WId newWId()
 
 ScreenWindow::ScreenWindow(QWindow *window)
     : QPlatformWindow(window)
+    , m_exposed(false)
     , m_winId(newWId())
 {
-    qCDebug(QTMIR_SCREENS) << "Window" << this << "with window ID" << uint(m_winId);
-
     // Register with the Screen it is associated with
     auto myScreen = static_cast<Screen *>(screen());
     Q_ASSERT(myScreen);
     myScreen->setWindow(this);
 
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by" << myScreen;
+
     QRect screenGeometry(screen()->availableGeometry());
     if (window->geometry() != screenGeometry) {
         setGeometry(screenGeometry);
+        window->setGeometry(screenGeometry);
     }
     window->setSurfaceType(QSurface::OpenGLSurface);
 
@@ -59,7 +66,36 @@ ScreenWindow::ScreenWindow(QWindow *window)
 
 ScreenWindow::~ScreenWindow()
 {
+    qCDebug(QTMIR_SCREENS) << "Destroying ScreenWindow" << this;
     static_cast<Screen *>(screen())->setWindow(nullptr);
+}
+
+bool ScreenWindow::isExposed() const
+{
+    return m_exposed;
+}
+
+void ScreenWindow::setExposed(const bool exposed)
+{
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed;
+    if (m_exposed == exposed)
+        return;
+
+    m_exposed = exposed;
+    if (!window())
+        return;
+
+    // If backing a QQuickWindow, need to stop/start its renderer immediately
+    auto quickWindow = static_cast<QQuickWindow *>(window());
+    if (!quickWindow)
+        return;
+
+    if (exposed) {
+        QWindowSystemInterface::handleExposeEvent(window(), QRegion());
+    } else {
+        auto renderer = QSGRenderLoop::instance();
+        renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
+    }
 }
 
 void ScreenWindow::swapBuffers()

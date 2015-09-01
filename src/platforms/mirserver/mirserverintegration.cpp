@@ -75,6 +75,9 @@ MirServerIntegration::MirServerIntegration()
                      QCoreApplication::instance(), &QCoreApplication::quit);
 
     m_inputContext = QPlatformInputContextFactory::create();
+
+    // Default Qt behaviour doesn't match a shell's intentions, so customize:
+    qGuiApp->setQuitOnLastWindowClosed(false);
 }
 
 MirServerIntegration::~MirServerIntegration()
@@ -116,6 +119,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
     window->setScreen(qscreen);
 
     auto platformWindow = new ScreenWindow(window);
+    platformWindow->setExposed(true);
 
     qCDebug(QTMIR_SCREENS) << "New" << window << "with geom" << window->geometry()
                            << "is backed by a" << screen << "with geometry" << screen->geometry();
