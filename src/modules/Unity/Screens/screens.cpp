@@ -32,17 +32,24 @@ Screens::Screens(QObject *parent) :
     }
     connect(app, &QGuiApplication::screenAdded, this, &Screens::onScreenAdded);
     connect(app, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
+
+    m_screenList = QGuiApplication::screens();
+}
+
+QHash<int, QByteArray> Screens::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[ScreenRole] = "screen";
+    return roles;
 }
 
 QVariant Screens::data(const QModelIndex &index, int) const
 {
-    QList<QScreen *> qscreenList = QGuiApplication::screens();
-
-    if (!index.isValid() || index.row() >= qscreenList.size()) {
+    if (!index.isValid() || index.row() >= m_screenList.size()) {
         return QVariant();
     }
 
-    return QVariant::fromValue(qscreenList.at(index.row()));
+    return QVariant::fromValue(m_screenList.at(index.row()));
 }
 
 int Screens::rowCount(const QModelIndex &) const
@@ -52,17 +59,30 @@ int Screens::rowCount(const QModelIndex &) const
 
 int Screens::count() const
 {
-    return QGuiApplication::screens().size();
+    return m_screenList.size();
 }
 
 void Screens::onScreenAdded(QScreen *screen)
 {
+    if (m_screenList.contains(screen))
+        return;
+
+    beginInsertRows(QModelIndex(), count(), count());
+    m_screenList.push_back(screen);
+    endInsertRows();
     Q_EMIT screenAdded(screen);
     Q_EMIT countChanged();
 }
 
 void Screens::onScreenRemoved(QScreen *screen)
 {
+    int index = m_screenList.indexOf(screen);
+    if (index < 0)
+        return;
+
+    beginRemoveRows(QModelIndex(), index, index);
+    m_screenList.push_back(screen);
+    endRemoveRows();
     Q_EMIT screenRemoved(screen);
     Q_EMIT countChanged();
 }

@@ -30,12 +30,17 @@ class Screens : public QAbstractListModel
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
+    enum ItemRoles {
+        ScreenRole = Qt::UserRole + 1
+    };
+
     explicit Screens(QObject *parent = 0);
     virtual ~Screens() noexcept = default;
 
     /* QAbstractItemModel */
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     int count() const;
 
@@ -47,6 +52,9 @@ Q_SIGNALS:
 private Q_SLOTS:
     void onScreenAdded(QScreen *screen);
     void onScreenRemoved(QScreen *screen);
+
+private:
+    QList<QScreen *> m_screenList;
 };
 
 } // namespace qtmir
