@@ -81,7 +81,7 @@ void Screens::onScreenRemoved(QScreen *screen)
         return;
 
     beginRemoveRows(QModelIndex(), index, index);
-    m_screenList.push_back(screen);
+    m_screenList.removeAt(index);
     endRemoveRows();
     Q_EMIT screenRemoved(screen);
     Q_EMIT countChanged();
