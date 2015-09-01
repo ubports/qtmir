@@ -52,14 +52,14 @@ public:
     //getters
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceItemInterface* surface() const override;
+    MirSurfaceInterface* surface() const override;
     SessionInterface* parentSession() const override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
 
     void setApplication(unity::shell::application::ApplicationInfoInterface* item) override;
-    void setSurface(MirSurfaceItemInterface* surface) override;
+    void setSurface(MirSurfaceInterface* surface) override;
 
     void suspend() override;
     void resume() override;
@@ -99,7 +99,7 @@ private:
 
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
-    MirSurfaceItemInterface* m_surface;
+    MirSurfaceInterface* m_surface;
     SessionInterface* m_parentSession;
     SessionModel* m_children;
     bool m_fullscreen;
