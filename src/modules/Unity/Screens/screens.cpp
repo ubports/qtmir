@@ -16,6 +16,10 @@
 
 #include "screens.h"
 
+// mirserver
+#include "screen.h"
+
+// Qt
 #include <QGuiApplication>
 #include <QScreen>
 
@@ -40,16 +44,28 @@ QHash<int, QByteArray> Screens::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ScreenRole] = "screen";
+    roles[OutputTypeRole] = "outputType";
     return roles;
 }
 
-QVariant Screens::data(const QModelIndex &index, int) const
+QVariant Screens::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid() || index.row() >= m_screenList.size()) {
         return QVariant();
     }
 
-    return QVariant::fromValue(m_screenList.at(index.row()));
+    switch(role) {
+    case ScreenRole:
+        return QVariant::fromValue(m_screenList.at(index.row()));
+    case OutputTypeRole:
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return QVariant(static_cast<OutputTypes>(screen->outputType())); //FIXME: cheeky
+        } else
+            return OutputTypes::Unknown;
+    }
+
+    return QVariant();
 }
 
 int Screens::rowCount(const QModelIndex &) const

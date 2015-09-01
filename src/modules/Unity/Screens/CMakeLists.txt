@@ -1,3 +1,9 @@
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+    ${MIRSERVER_INCLUDE_DIRS}
+    )
+
 set(SCREENSPLUGIN_SRC
     plugin.cpp
     screens.cpp

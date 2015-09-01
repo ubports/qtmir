@@ -12,5 +12,8 @@ Instantiator {
         id: window
         visible: true
         Shell{ anchors.fill: parent }
+        Component.onCompleted: {
+            print("HEY", screen, screen.geometry, outputType, Screens.HDMIA)
+        }
     }
 }
