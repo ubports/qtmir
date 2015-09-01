@@ -275,7 +275,7 @@ ScreenWindow* Screen::window() const
 
 void Screen::setWindow(ScreenWindow *window)
 {
-    if (m_screenWindow) {
+    if (window && m_screenWindow) {
         qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::setWindow - overwriting existing ScreenWindow";
     }
     m_screenWindow = window;
