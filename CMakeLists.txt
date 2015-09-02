@@ -119,6 +119,7 @@ get_target_property(Qt5Gui_QPA_Plugin_Path Qt5::Gui IMPORTED_LOCATION_PLATFORMS)
 
 # Set QML module install path
 set(QML_MODULE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/qt5/qml")
+set(QTMIR_DATA_DIR ${CMAKE_INSTALL_DATADIR}/qtmir)
 
 
 # Customisations for the build type
@@ -155,6 +156,7 @@ else()
     message(STATUS "Tests disabled")
 endif()
 
-
 # add subdirectories to build
 add_subdirectory(src)
+add_subdirectory(demos)
+add_subdirectory(benchmarks)
