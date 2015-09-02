@@ -102,6 +102,7 @@ Package: qtmir-tests
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends},
 Depends: autopilot-qt5,
+         littler,
          lttng-tools,
          mir-test-tools,
          python3-autopilot,
@@ -110,7 +111,6 @@ Depends: autopilot-qt5,
          python3-mir-perf-framework,
          qtmir-desktop (= ${source:Version}) | qtmir-android (= ${source:Version}),
          qtdeclarative5-qtmir-plugin,
-         simpler,
          ${misc:Depends},
          ${shlibs:Depends},
 Description: QtMir tests and demos
