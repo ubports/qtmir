@@ -25,7 +25,6 @@
 // Mir
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
-#include <mir/main_loop.h>
 
 // Qt
 #include <QScreen>
@@ -42,14 +41,14 @@ namespace mg = mir::graphics;
 
 ScreenController::ScreenController(QObject *parent)
     : QObject(parent)
+    , m_compositing(false)
 {
     qCDebug(QTMIR_SCREENS) << "ScreenController::ScreenController";
 }
 
 // init only after MirServer has initialized - runs on MirServerThread!!!
 void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &display,
-                            const std::shared_ptr<mir::compositor::Compositor> &compositor,
-                            const std::shared_ptr<mir::MainLoop> &mainLoop)
+                            const std::shared_ptr<mir::compositor::Compositor> &compositor)
 {
     m_display = display;
     m_compositor = compositor;
@@ -62,12 +61,6 @@ void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &displ
             this, &ScreenController::onCompositorStarting);
     connect(qtCompositor, &QtCompositor::stopping,
             this, &ScreenController::onCompositorStopping, Qt::BlockingQueuedConnection);
-
-
-    display->register_configuration_change_handler(*mainLoop, [this]() {
-        // display hardware configuration changed, update! - not called when we set new configuration
-        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-    });
 }
 
 // terminate before shutting down the Mir server, or else liable to deadlock with the blocking connection above
@@ -81,6 +74,7 @@ void ScreenController::terminate()
 void ScreenController::onCompositorStarting()
 {
     qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStarting";
+    m_compositing = true;
 
     update();
 
@@ -96,6 +90,7 @@ void ScreenController::onCompositorStarting()
 void ScreenController::onCompositorStopping()
 {
     qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStopping";
+    m_compositing = false;
 
     // Stop Qt's render threads by setting all its windows it obscured. Must
     // block until all windows have their GL contexts released.

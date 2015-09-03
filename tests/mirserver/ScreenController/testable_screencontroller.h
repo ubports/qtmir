@@ -28,10 +28,9 @@ public:
     }
 
     void do_init(const std::shared_ptr<mir::graphics::Display> &display,
-              const std::shared_ptr<mir::compositor::Compositor> &compositor,
-              const std::shared_ptr<mir::MainLoop> &mainLoop)
+              const std::shared_ptr<mir::compositor::Compositor> &compositor)
     {
-        init(display, compositor, mainLoop);
+        init(display, compositor);
     }
 
     void do_terminate() { terminate(); }

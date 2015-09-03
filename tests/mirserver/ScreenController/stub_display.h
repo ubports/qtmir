@@ -52,6 +52,11 @@ public:
     {
         f(*buffer);
     }
+    std::chrono::milliseconds recommended_sleep() const
+    {
+        std::chrono::milliseconds one{1};
+        return one;
+    }
 private:
     MockDisplayBuffer *buffer;
 };

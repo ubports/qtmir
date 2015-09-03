@@ -27,7 +27,6 @@
 #include <memory>
 
 namespace mir {
-    class MainLoop;
     namespace graphics { class Display; }
     namespace compositor { class Compositor; }
 }
@@ -62,6 +61,7 @@ public:
 
     Screen* getUnusedScreen();
     QList<Screen*> screens() const { return m_screenList; }
+    bool compositing() const { return m_compositing; }
 
     QWindow* getWindowForPoint(const QPoint &point);
 
@@ -74,8 +74,7 @@ public Q_SLOTS:
 public:
     // called by MirServer
     void init(const std::shared_ptr<mir::graphics::Display> &display,
-              const std::shared_ptr<mir::compositor::Compositor> &compositor,
-              const std::shared_ptr<mir::MainLoop> &mainLoop);
+              const std::shared_ptr<mir::compositor::Compositor> &compositor);
     void terminate();
 
     // override for testing purposes
@@ -91,6 +90,7 @@ private:
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<mir::compositor::Compositor> m_compositor;
     QList<Screen*> m_screenList;
+    bool m_compositing;
 };
 
 #endif // SCREENCONTROLLER_H
