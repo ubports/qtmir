@@ -165,6 +165,7 @@ void ScreenController::update()
             for (auto screen : m_screenList) {
                 if (dbGeom == screen->geometry()) {
                     screen->setMirDisplayBuffer(&buffer, &group);
+                    break;
                 }
             }
         });
