@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,6 +18,7 @@
 #define SESSIONOBSERVER_H
 
 #include <QObject>
+#include <QSize>
 #include <mir/scene/surface_observer.h>
 
 class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver
@@ -30,7 +31,7 @@ public:
     void setListener(QObject *listener);
 
     void attrib_changed(MirSurfaceAttrib, int) override;
-    void resized_to(mir::geometry::Size const&) override {}
+    void resized_to(mir::geometry::Size const&) override;
     void moved_to(mir::geometry::Point const&) override {}
     void hidden_set_to(bool) override {}
 
@@ -49,6 +50,7 @@ public:
 Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
+    void resized(QSize size);
 
 private:
     QObject *m_listener;

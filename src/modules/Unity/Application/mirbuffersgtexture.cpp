@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,9 +22,10 @@
 
 namespace mg = mir::geometry;
 
-MirBufferSGTexture::MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer> buffer)
+MirBufferSGTexture::MirBufferSGTexture()
     : QSGTexture()
-    , m_mirBuffer(buffer)
+    , m_width(0)
+    , m_height(0)
     , m_textureId(0)
 {
     glGenTextures(1, &m_textureId);
@@ -32,10 +33,6 @@ MirBufferSGTexture::MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer> bu
     setFiltering(QSGTexture::Linear);
     setHorizontalWrapMode(QSGTexture::ClampToEdge);
     setVerticalWrapMode(QSGTexture::ClampToEdge);
-
-    mg::Size size = m_mirBuffer->size();
-    m_height = size.height.as_int();
-    m_width = size.width.as_int();
 }
 
 MirBufferSGTexture::~MirBufferSGTexture()
@@ -48,6 +45,8 @@ MirBufferSGTexture::~MirBufferSGTexture()
 void MirBufferSGTexture::freeBuffer()
 {
     m_mirBuffer.reset();
+    m_width = 0;
+    m_height = 0;
 }
 
 void MirBufferSGTexture::setBuffer(std::shared_ptr<mir::graphics::Buffer> buffer)

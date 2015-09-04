@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
@@ -23,23 +22,12 @@
 #include <QTest>
 
 // the test subject
-#include <mirsurfaceitem.h>
+#include <Unity/Application/mirsurfaceitem.h>
 
-// mocks
-#include <mock_surface.h>
-#include <mock_session.h>
+// tests/modules/common
+#include <fake_mirsurface.h>
 
 using namespace qtmir;
-
-using mir::scene::MockSurface;
-using qtmir::MockSession;
-
-// gtest stuff
-using ::testing::_;
-using ::testing::AnyNumber;
-using ::testing::Invoke;
-using ::testing::InSequence;
-using ::testing::Return;
 
 /*
   Tests that even if Qt fails to finish a touch sequence, MirSurfaceItem will
@@ -52,57 +40,13 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     // We don't want the logging spam cluttering the test results
     QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
 
-    std::shared_ptr<MockSurface> mockSurface = std::make_shared<MockSurface>();
-    MockSession *mockSession = new MockSession;
+    MirSurfaceItem *surfaceItem = new MirSurfaceItem;
 
-    // Set some expectations and behavior for calls we are not interested in
-    EXPECT_CALL(*mockSurface, add_observer(_)).Times(AnyNumber());
-    EXPECT_CALL(*mockSurface, remove_observer(_)).Times(AnyNumber());
-    EXPECT_CALL(*mockSurface, size()).Times(AnyNumber()).WillRepeatedly(Return(mir::geometry::Size(100,100)));
-    EXPECT_CALL(*mockSurface, type()).Times(AnyNumber()).WillRepeatedly(Return(mir_surface_type_normal));
-    EXPECT_CALL(*mockSession, setSurface(_)).Times(AnyNumber());
-
-    auto getTouchEvent = [](MirEvent const* event) -> MirTouchEvent const*
-    {
-        if (mir_event_get_type(event) != mir_event_type_input)
-            return nullptr;
-        auto const* input_event = mir_event_get_input_event(event);
-        if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
-            return nullptr;
-        return mir_input_event_get_touch_event(input_event);
-    };
-
-    auto eventMatches = [&](MirEvent const* event,
-                            int touch_count,
-                            MirTouchAction action,
-                            MirTouchId touch_id) ->void
-    {
-        auto const* touch_event = getTouchEvent(event);
-        ASSERT_NE(touch_event, nullptr);
-        ASSERT_EQ(touch_count, mir_touch_event_point_count(touch_event));
-        ASSERT_EQ(action, mir_touch_event_action(touch_event,0));
-        ASSERT_EQ(touch_id, mir_touch_event_id(touch_event,0));
-    };
-
-    // The touch event sequence we expect mir::input::surface to receive from MirSurfaceItem.
-    // It should properly finish the sequence for touch 0 ('down', 'move' and 'up') before starting
-    // the sequence for touch 1.
-    EXPECT_CALL(*mockSurface, consume(_))
-        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_action_down, 0);
-        }))
-        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_action_change, 0);
-        }))
-        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_action_up, 0);
-        }))
-        .WillOnce(Invoke([&] (MirEvent const* mirEvent) {
-            eventMatches(mirEvent, 1, mir_touch_action_down, 1);
-        }));
+    FakeMirSurface *fakeSurface = new FakeMirSurface;
 
 
-    MirSurfaceItem *surfaceItem = new MirSurfaceItem(mockSurface, mockSession, nullptr, nullptr);
+    surfaceItem->setSurface(fakeSurface);
+    surfaceItem->setConsumesInput(true);
 
     ulong timestamp = 1234;
     QList<QTouchEvent::TouchPoint> touchPoints;
@@ -124,6 +68,28 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     surfaceItem->processTouchEvent(QEvent::TouchBegin,
             timestamp + 20, Qt::NoModifier, touchPoints, touchPoints[0].state());
 
+
+    auto touchesReceived = fakeSurface->touchesReceived();
+
+    // MirSurface should have received 4 events:
+    // 1 - (id=0,down)
+    // 2 - (id=0,move)
+    // 3 - (id=0,up) <- that's the one MirSurfaceItem should have synthesized to keep the event stream sane.
+    // 4 - (id=1,down)
+    ASSERT_EQ(4, touchesReceived.count());
+
+    ASSERT_EQ(0, touchesReceived[0].touchPoints[0].id());
+    ASSERT_EQ(Qt::TouchPointPressed, touchesReceived[0].touchPoints[0].state());
+
+    ASSERT_EQ(0, touchesReceived[1].touchPoints[0].id());
+    ASSERT_EQ(Qt::TouchPointMoved, touchesReceived[1].touchPoints[0].state());
+
+    ASSERT_EQ(0, touchesReceived[2].touchPoints[0].id());
+    ASSERT_EQ(Qt::TouchPointReleased, touchesReceived[2].touchPoints[0].state());
+
+    ASSERT_EQ(1, touchesReceived[3].touchPoints[0].id());
+    ASSERT_EQ(Qt::TouchPointPressed, touchesReceived[3].touchPoints[0].state());
+
     delete surfaceItem;
-    delete mockSession;
+    delete fakeSurface;
 }

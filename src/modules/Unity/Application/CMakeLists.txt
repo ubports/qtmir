@@ -33,6 +33,8 @@ set(QMLMIRPLUGIN_SRC
     taskcontroller.cpp
     mirsurfacemanager.cpp
     ubuntukeyboardinfo.cpp
+    mirsurface.cpp
+    mirsurfaceinterface.h
     mirsurfaceitem.cpp
     mirbuffersgtexture.cpp
     proc_info.cpp
@@ -45,6 +47,9 @@ set(QMLMIRPLUGIN_SRC
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceItemInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
 # Feed the automoc monster
     session_interface.h
     applicationcontroller.h

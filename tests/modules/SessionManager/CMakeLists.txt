@@ -3,9 +3,12 @@ set(
   session_manager_test.cpp
   session_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_mirsurface.h
 )
 
 include_directories(
+  ${APPLICATION_API_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/modules/common

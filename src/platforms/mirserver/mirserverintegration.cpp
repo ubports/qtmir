@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authors: Gerry Boland <gerry.boland@canonical.com>
- *          Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #include "mirserverintegration.h"
@@ -31,11 +28,6 @@
 
 #include <QCoreApplication>
 #include <QOpenGLContext>
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-#include <private/qguiapplication_p.h>
-#endif
-
 #include <QDebug>
 
 // Mir
@@ -59,9 +51,6 @@ MirServerIntegration::MirServerIntegration()
     : m_accessibility(new QPlatformAccessibility())
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    , m_eventDispatcher(createUnixEventDispatcher())
-#endif
     , m_mirServer(new QMirServer(QCoreApplication::arguments()))
     , m_display(nullptr)
     , m_nativeInterface(nullptr)
@@ -82,11 +71,6 @@ MirServerIntegration::MirServerIntegration()
     QObject::connect(m_mirServer.data(), &QMirServer::stopped,
                      QCoreApplication::instance(), &QCoreApplication::quit);
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    QGuiApplicationPrivate::instance()->setEventDispatcher(eventDispatcher_);
-    initialize();
-#endif
-
     m_inputContext = QPlatformInputContextFactory::create();
 }
 
@@ -102,13 +86,10 @@ bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) c
     case ThreadedPixmaps: return true;
     case OpenGL: return true;
     case ThreadedOpenGL: return true;
-    case SharedGraphicsCache: return true;
     case BufferQueueingOpenGL: return true;
     case MultipleWindows: return false; // multi-monitor support
-#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
     case WindowManagement: return false; // platform has no WM, as this implements the WM!
     case NonFullScreenWindows: return false;
-#endif
     default: return QPlatformIntegration::hasCapability(cap);
     }
 }
@@ -158,12 +139,10 @@ QPlatformOpenGLContext *MirServerIntegration::createPlatformOpenGLContext(QOpenG
     return new MirOpenGLContext(m_mirServer->mirServer(), context->format());
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 2, 0)
 QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 {
     return createUnixEventDispatcher();
 }
-#endif
 
 void MirServerIntegration::initialize()
 {

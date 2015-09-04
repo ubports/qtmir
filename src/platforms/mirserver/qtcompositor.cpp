@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authors: Gerry Boland <gerry.boland@canonical.com>
- *          Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #include "qtcompositor.h"

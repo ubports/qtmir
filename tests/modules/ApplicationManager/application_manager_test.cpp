@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
@@ -23,8 +22,9 @@
 
 #include <Unity/Application/applicationscreenshotprovider.h>
 
- #include "mock_surface.h"
- #include "qtmir_test.h"
+ #include <fake_mirsurface.h>
+ #include <mock_surface.h>
+ #include <qtmir_test.h>
 
 using namespace qtmir;
 using mir::scene::MockSession;
@@ -45,99 +45,40 @@ public:
         applicationManager.onSessionStopping(session);
         sessionManager.onSessionStopping(session);
     }
+    inline void onSessionCreatedSurface(const mir::scene::Session *mirSession,
+            MirSurfaceInterface *qmlSurface) {
+
+        SessionInterface* qmlSession = sessionManager.findSession(mirSession);
+        if (qmlSession) {
+            qmlSession->setSurface(qmlSurface);
+        }
+
+        // I assume that applicationManager ignores the mirSurface parameter, so sending
+        // a null shared pointer must suffice
+        std::shared_ptr<mir::scene::Surface> mirSurface(nullptr);
+        applicationManager.onSessionCreatedSurface(mirSession, mirSurface);
+    }
+
+    inline void suspend(Application *application) {
+        application->setRequestedState(Application::RequestedSuspended);
+        ASSERT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
+        static_cast<qtmir::Session*>(application->session())->doSuspend();
+        ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
+        applicationManager.onProcessSuspended(application->appId());
+        ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
+    }
 };
-
-TEST_F(ApplicationManagerTests, SuspendingAndResumingARunningApplicationResultsInOomScoreAdjustment)
-{
-    using namespace ::testing;
-
-    const QString appId("com.canonical.does.not.exist");
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(_, _)).Times(1);
-    EXPECT_CALL(appController, findDesktopFileForAppId(appId)).Times(1);
-
-    EXPECT_CALL(desktopFileReaderFactory, createInstance(_, _)).Times(1);
-
-    auto application = applicationManager.startApplication(
-                appId,
-                ApplicationManager::NoFlag,
-                QStringList());
-
-    // FIXME - this is doesn't really excerise the actualt behaviour since suspend/resume should be
-    // controlled by state changes. Requires using suspend timer.
-    QMetaObject::invokeMethod(application, "onSessionSuspended");
-    QMetaObject::invokeMethod(application, "onSessionResumed");
-}
-
-TEST_F(ApplicationManagerTests, SuspendingAndResumingDashResultsInOomScoreAdjustment)
-{
-    using namespace ::testing;
-
-    quint64 procId = 5921;
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
-    QByteArray cmdLine( "/usr/bin/app1 --desktop_file_hint=unity8-dash");
-
-    EXPECT_CALL(procInfo,command_line(procId))
-        .Times(1)
-        .WillOnce(Return(cmdLine));
-
-    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("Oo", procId);
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    auto application = applicationManager.findApplication("unity8-dash");
-    applicationManager.onSessionCreatedSurface(session.get(), aSurface);
-
-    // FIXME - this is doesn't really excerise the actualt behaviour since suspend/resume should be
-    // controlled by state changes. Requires using suspend timer.
-    QMetaObject::invokeMethod(application, "onSessionSuspended");
-    QMetaObject::invokeMethod(application, "onSessionResumed");
-}
-
-// Currently disabled as we need to make sure that we have a corresponding mir session, too.
-TEST_F(ApplicationManagerTests, DISABLED_FocusingRunningApplicationResultsInOomScoreAdjustment)
-{
-    using namespace ::testing;
-
-    const QString appId("com.canonical.does.not.exist");
-
-    QSet<QString> appIds;
-
-    for (unsigned int i = 0; i < 50; i++)
-    {
-        QString appIdFormat("%1.does.not.exist");
-        auto appId = appIdFormat.arg(i);
-
-        auto application = applicationManager.startApplication(
-                    appId,
-                    ApplicationManager::NoFlag,
-                    QStringList());
-
-        std::shared_ptr<mir::scene::Session> mirSession = std::make_shared<MockSession>(appIdFormat.toStdString(), i);
-        onSessionStarting( mirSession );
-
-        EXPECT_NE(nullptr, application);
-    }
-
-    for (auto appId : appIds)
-    {
-        applicationManager.focusApplication(appId);
-    }
-}
 
 TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_authorize_and_gets_mixed_up_with_first_one)
 {
     using namespace ::testing;
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
     quint64 firstProcId = 5921;
     quint64 secondProcId = 5922;
     const char dialer_app_id[] = "dialer-app";
     QByteArray cmdLine( "/usr/bin/dialer-app --desktop_file_hint=dialer-app");
     QByteArray secondcmdLine( "/usr/bin/dialer-app");
+
+    FakeMirSurface *surface = new FakeMirSurface;
 
     EXPECT_CALL(procInfo,command_line(firstProcId))
         .Times(1)
@@ -150,18 +91,20 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
 
     std::shared_ptr<mir::scene::Session> mirSession = std::make_shared<MockSession>(dialer_app_id, firstProcId);
     applicationManager.authorizeSession(firstProcId, authed);
-    EXPECT_EQ(true, authed);
+    ASSERT_EQ(true, authed);
     onSessionStarting(mirSession);
-    applicationManager.onSessionCreatedSurface(mirSession.get(),aSurface);
-    Application * app = applicationManager.findApplication(dialer_app_id);
-    EXPECT_NE(nullptr,app);
+    onSessionCreatedSurface(mirSession.get(), surface);
+    surface->drawFirstFrame();
+    Application * application = applicationManager.findApplication(dialer_app_id);
+    ASSERT_NE(nullptr,application);
+    ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
     // now a second session without desktop file is launched:
     applicationManager.authorizeSession(secondProcId, authed);
     applicationManager.onProcessStarting(dialer_app_id);
 
     EXPECT_FALSE(authed);
-    EXPECT_EQ(app,applicationManager.findApplication(dialer_app_id));
+    EXPECT_EQ(application, applicationManager.findApplication(dialer_app_id));
 }
 
 TEST_F(ApplicationManagerTests,application_dies_while_starting)
@@ -182,40 +125,13 @@ TEST_F(ApplicationManagerTests,application_dies_while_starting)
     onSessionStarting(mirSession);
     Application * beforeFailure = applicationManager.findApplication(app_id);
     applicationManager.onProcessStarting(app_id);
+    onSessionStopping(mirSession);
     applicationManager.onProcessFailed(app_id, true);
     Application * afterFailure = applicationManager.findApplication(app_id);
 
     EXPECT_EQ(true, authed);
     EXPECT_NE(nullptr, beforeFailure);
     EXPECT_EQ(nullptr, afterFailure);
-}
-
-TEST_F(ApplicationManagerTests,application_start_failure_after_starting)
-{
-    using namespace ::testing;
-    quint64 procId = 5921;
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
-    const char app_id[] = "my-app";
-    QByteArray cmdLine( "/usr/bin/my-app --desktop_file_hint=my-app");
-
-    EXPECT_CALL(procInfo,command_line(procId))
-        .Times(1)
-        .WillOnce(Return(cmdLine));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> mirSession = std::make_shared<MockSession>(app_id, procId);
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(mirSession);
-    Application * beforeFailure = applicationManager.findApplication(app_id);
-    applicationManager.onSessionCreatedSurface(mirSession.get(), aSurface);
-    applicationManager.onProcessStarting(app_id);
-    applicationManager.onProcessFailed(app_id, false);
-    Application * afterFailure = applicationManager.findApplication(app_id);
-
-    EXPECT_EQ(true, authed);
-    EXPECT_NE(nullptr, beforeFailure);
-    EXPECT_EQ(beforeFailure, afterFailure);
 }
 
 TEST_F(ApplicationManagerTests,startApplicationSupportsShortAppId)
@@ -400,7 +316,7 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     quint64 a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
+    FakeMirSurface *aSurface = new FakeMirSurface;
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
@@ -413,8 +329,8 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     applicationManager.authorizeSession(a_procId, authed);
 
     onSessionStarting(first_session);
-    applicationManager.focusApplication(an_app_id);
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
+    onSessionCreatedSurface(first_session.get(), aSurface);
+    aSurface->drawFirstFrame();
     onSessionStarting(second_session);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
@@ -430,18 +346,19 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
     quint64 a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd("/usr/bin/app1 --desktop_file_hint=some_app");
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
+    FakeMirSurface *aSurface = new FakeMirSurface;
 
     ON_CALL(procInfo, command_line(_)).WillByDefault(Return(a_cmd));
     ON_CALL(appController, appIdHasProcessId(_,_)).WillByDefault(Return(false));
-    
+
     bool authed = true;
 
     std::shared_ptr<mir::scene::Session> a_session = std::make_shared<MockSession>("Oo", a_procId);
-   
+
     applicationManager.authorizeSession(a_procId, authed);
     onSessionStarting(a_session);
-    applicationManager.onSessionCreatedSurface(a_session.get(), aSurface);
+    onSessionCreatedSurface(a_session.get(), aSurface);
+    aSurface->drawFirstFrame();
 
     Application * the_app = applicationManager.findApplication(an_app_id);
     applicationManager.focusApplication(an_app_id);
@@ -453,188 +370,38 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
     EXPECT_EQ(true, the_app->focused());
 }
 
-TEST_F(ApplicationManagerTests,suspended_suspends_focused_app_and_marks_it_unfocused_in_the_model)
+TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_requested)
 {
     using namespace ::testing;
-    quint64 a_procId = 5921;
-    const char an_app_id[] = "some_app";
-    QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
+    quint64 procId = 5921;
+    FakeMirSurface *aSurface = new FakeMirSurface;
+    QByteArray cmdLine( "/usr/bin/app --desktop_file_hint=app");
 
-    ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
-
-    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", a_procId);
-    std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
-
-    onSessionStarting(first_session);
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
-    onSessionStarting(second_session);
-
-    Application * the_app = applicationManager.findApplication(an_app_id);
-    applicationManager.focusApplication(an_app_id);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-
-    applicationManager.setSuspended(true);
-
-    EXPECT_EQ(Application::Suspended, the_app->state());
-    EXPECT_FALSE(the_app->focused());
-
-    applicationManager.setSuspended(false);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-    EXPECT_EQ(true, the_app->focused());
-}
-
-TEST_F(ApplicationManagerTests,suspended_suspends_starting_app_when_it_gets_ready)
-{
-    using namespace ::testing;
-    quint64 a_procId = 5921;
-    const char an_app_id[] = "some_app";
-    QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
-
-    ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
-
-    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
-
-    onSessionStarting(first_session);
-
-    Application * the_app = applicationManager.findApplication(an_app_id);
-    applicationManager.focusApplication(an_app_id);
-    EXPECT_EQ(Application::Starting, the_app->state());
-
-    applicationManager.setSuspended(true);
-
-    // Not suspending yet, as it's still starting
-    EXPECT_EQ(Application::Starting, the_app->state());
-
-    // This signals the app is ready now
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
-
-    // And given that the AppManager is suspended now, this should go to suspended too
-    EXPECT_EQ(Application::Suspended, the_app->state());
-    EXPECT_FALSE(the_app->focused());
-
-    applicationManager.setSuspended(false);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-    EXPECT_EQ(true, the_app->focused());
-}
-
-TEST_F(ApplicationManagerTests,focus_change_suspends_starting_app_when_it_gets_ready)
-{
-    using namespace ::testing;
-    quint64 first_procId = 5921;
-    quint64 second_procId = 5922;
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
-    QByteArray first_cmdLine( "/usr/bin/app1 --desktop_file_hint=app1");
-    QByteArray second_cmdLine( "/usr/bin/app2--desktop_file_hint=app2");
-
-    EXPECT_CALL(procInfo,command_line(first_procId))
+    EXPECT_CALL(procInfo,command_line(procId))
         .Times(1)
-        .WillOnce(Return(first_cmdLine));
+        .WillOnce(Return(cmdLine));
 
     ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
 
-    EXPECT_CALL(procInfo,command_line(second_procId))
-        .Times(1)
-        .WillOnce(Return(second_cmdLine));
-
     bool authed = true;
 
-    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", first_procId);
-    std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", second_procId);
-    applicationManager.authorizeSession(first_procId, authed);
-    applicationManager.authorizeSession(second_procId, authed);
-    onSessionStarting(first_session);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("Oo", procId);
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
 
-    Application * app1 = applicationManager.findApplication("app1");
-    applicationManager.focusApplication("app1");
+    Application * app = applicationManager.findApplication("app");
+    app->setRequestedState(Application::RequestedSuspended);
 
     // First app starting...
-    EXPECT_EQ(Application::Starting, app1->state());
+    EXPECT_EQ(Application::Starting, app->state());
 
-    onSessionStarting(second_session);
-    Application * app2 = applicationManager.findApplication("app2");
-    applicationManager.focusApplication("app2");
+    // Signal app is ready now
+    applicationManager.onProcessStarting("app");
+    onSessionCreatedSurface(session.get(), aSurface);
+    aSurface->drawFirstFrame();
 
-    // Second app starting...
-    EXPECT_EQ(Application::Starting, app2->state());
-
-    // Make sure first one is still in starting state
-    EXPECT_EQ(Application::Starting, app1->state());
-
-    // Signal app1 is ready now
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
-
-    // Make sure AppMan suspended it now that its ready
-    EXPECT_EQ(Application::Suspended, app1->state());
-}
-
-TEST_F(ApplicationManagerTests,forceDashActive_activates_dash_while_not_focused)
-{
-    using namespace ::testing;
-    quint64 first_procId = 5921;
-    quint64 second_procId = 5922;
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
-    QByteArray first_cmdLine( "/usr/bin/app1 --desktop_file_hint=unity8-dash");
-    QByteArray second_cmdLine( "/usr/bin/app2--desktop_file_hint=app2");
-
-    EXPECT_CALL(procInfo,command_line(first_procId))
-        .Times(1)
-        .WillOnce(Return(first_cmdLine));
-
-    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
-
-    EXPECT_CALL(procInfo,command_line(second_procId))
-        .Times(1)
-        .WillOnce(Return(second_cmdLine));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", first_procId);
-    std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", second_procId);
-    applicationManager.authorizeSession(first_procId, authed);
-    applicationManager.authorizeSession(second_procId, authed);
-    onSessionStarting(first_session);
-
-    Application * dashApp = applicationManager.findApplication("unity8-dash");
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
-    applicationManager.focusApplication("unity8-dash");
-
-    // Dash app should be ready now...
-    EXPECT_EQ(Application::Running, dashApp->state());
-
-    // Launch second app
-    onSessionStarting(second_session);
-    applicationManager.onSessionCreatedSurface(second_session.get(), aSurface);
-    applicationManager.focusApplication("app2");
-    EXPECT_EQ(applicationManager.focusedApplicationId(), "app2");
-
-    // Make sure the dash is suspended
-    EXPECT_EQ(dashApp->state(), Application::Suspended);
-
-    // Now set the dashactive flag
-    applicationManager.setForceDashActive(true);
-
-    // And make sure the dash is woken up but not focused
-    EXPECT_EQ(applicationManager.focusedApplicationId(), "app2");
-    EXPECT_EQ(dashApp->state(), Application::Running);
-
-    // Unset the dashactive flag
-    applicationManager.setForceDashActive(false);
-    EXPECT_EQ(dashApp->state(), Application::Suspended);
+    // now that its ready, suspend process should have begun
+    EXPECT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
 }
 
 TEST_F(ApplicationManagerTests,requestFocusApplication)
@@ -713,20 +480,20 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     Application *theApp = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
 
     // check application data
-    EXPECT_EQ(theApp->state(), Application::Starting);
-    EXPECT_EQ(theApp->appId(), appId);
-    EXPECT_EQ(theApp->name(), name);
-    EXPECT_EQ(theApp->canBeResumed(), true);
+    EXPECT_EQ(Application::Starting, theApp->state());
+    EXPECT_EQ(appId, theApp->appId());
+    EXPECT_EQ(name, theApp->name());
+    EXPECT_FALSE(theApp->canBeResumed());
 
     // check signals were emitted
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(addedSpy.count(), 1);
-    EXPECT_EQ(addedSpy.takeFirst().at(0).toString(), appId);
+    EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
+    EXPECT_EQ(1, applicationManager.count());
+    EXPECT_EQ(1, addedSpy.count());
+    EXPECT_EQ(appId, addedSpy.takeFirst().at(0).toString());
 
     // check application in list of apps
     Application *theAppAgain = applicationManager.findApplication(appId);
-    EXPECT_EQ(theAppAgain, theApp);
+    EXPECT_EQ(theApp, theAppAgain);
 }
 
 /*
@@ -757,18 +524,18 @@ TEST_F(ApplicationManagerTests,appStartedByUpstart)
     Application *theApp = applicationManager.findApplication(appId);
 
     // check application data
-    EXPECT_EQ(theApp->state(), Application::Starting);
-    EXPECT_EQ(theApp->appId(), appId);
-    EXPECT_EQ(theApp->name(), name);
-    EXPECT_EQ(theApp->canBeResumed(), true);
+    EXPECT_EQ(Application::Starting, theApp->state());
+    EXPECT_EQ(appId, theApp->appId());
+    EXPECT_EQ(name, theApp->name());
+    EXPECT_EQ(true, theApp->canBeResumed());
 
     // check signals were emitted
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(addedSpy.count(), 1);
-    EXPECT_EQ(addedSpy.takeFirst().at(0).toString(), appId);
-    EXPECT_EQ(focusSpy.count(), 1);
-    EXPECT_EQ(focusSpy.takeFirst().at(0).toString(), appId);
+    EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
+    EXPECT_EQ(1, applicationManager.count());
+    EXPECT_EQ(1, addedSpy.count());
+    EXPECT_EQ(appId, addedSpy.takeFirst().at(0).toString());
+    EXPECT_EQ(1, focusSpy.count());
+    EXPECT_EQ(appId, focusSpy.takeFirst().at(0).toString());
 }
 
 /*
@@ -1067,7 +834,6 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
 
     applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
-    applicationManager.focusApplication(appId);
 
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
 
@@ -1075,9 +841,10 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
+    FakeMirSurface *surface = new FakeMirSurface;
 
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     // Check application state is correctly set
     Application *theApp = applicationManager.findApplication(appId);
@@ -1124,7 +891,7 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
 }
 
 /*
- * Test that the foreground application is stopped correctly (is in Running state, has surface)
+ * Test that a running application is stopped correctly (is in Running state, has surface)
  */
 TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 {
@@ -1150,10 +917,9 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    EXPECT_EQ(applicationManager.focusedApplicationId(), appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1168,9 +934,9 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 }
 
 /*
- * Test that the background application is stopped correctly
+ * Test that a suspended application is stopped correctly
  */
-TEST_F(ApplicationManagerTests,shellStopsBackgroundAppCorrectly)
+TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
 {
     using namespace ::testing;
     const QString appId("testAppId");
@@ -1187,63 +953,25 @@ TEST_F(ApplicationManagerTests,shellStopsBackgroundAppCorrectly)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
+    applicationManager.onProcessStarting(appId);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.unfocusCurrentApplication();
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    suspend(application);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Stop app
     applicationManager.stopApplication(appId);
-
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
-}
-
-/*
- * Test that if an application is stopped by upstart, before it has created a surface, AppMan cleans up after it ok
- */
-TEST_F(ApplicationManagerTests,upstartNotificationOfStartingAppBeingStopped)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    // Upstart notifies of stopping app
-    applicationManager.onProcessStopped(appId);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -1278,28 +1006,28 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    EXPECT_EQ(applicationManager.focusedApplicationId(), appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
+    onSessionStopping(session);
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
 
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
+    EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
+    EXPECT_EQ(0, applicationManager.count());
+    EXPECT_EQ(1, removedSpy.count());
+    EXPECT_EQ(appId, removedSpy.takeFirst().at(0).toString());
 }
 
 /*
- * Test that if the foreground Running application is reported to unexpectedly stop by upstart, AppMan
- * cleans up after it ok (as was not in background, had not lifecycle saved its state, so cannot be resumed)
+ * Test that if a running application is reported to have stopped unexpectedly by upstart, AppMan
+ * cleans up after it ok (as was not suspended, had not lifecycle saved its state, so cannot be resumed)
  */
-TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfForegroundApp)
+TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
@@ -1323,13 +1051,14 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfForegroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    EXPECT_EQ(applicationManager.focusedApplicationId(), appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
+
+    onSessionStopping(session);
 
     // Upstart notifies of crashing / OOM killed app
     applicationManager.onProcessFailed(appId, false);
@@ -1339,53 +1068,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfForegroundApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
-}
-
-/*
- * Test that if a background application is stopped by upstart, AppMan removes it from the app list
- * as the event is a result of direct user interaction
- */
-TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingBackgroundApp)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    // Upstart notifies of stopping app
-    applicationManager.onProcessStopped(appId);
-
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(focusSpy.count(), 0);
     EXPECT_EQ(removedSpy.count(), 1);
     EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
@@ -1413,18 +1095,18 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    suspend(app);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
@@ -1436,14 +1118,14 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     // Upstart notifies of crashing / OOM-killed app
     applicationManager.onProcessFailed(appId, false);
 
-    EXPECT_EQ(focusSpy.count(), 0);
+    EXPECT_EQ(0, focusSpy.count());
 
     // Upstart finally notifies the app stopped
     applicationManager.onProcessStopped(appId);
 
-    EXPECT_EQ(countSpy.count(), 0);
-    EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(removedSpy.count(), 0);
+    EXPECT_EQ(0, countSpy.count());
+    EXPECT_EQ(1, applicationManager.count());
+    EXPECT_EQ(0, removedSpy.count());
 }
 
 /*
@@ -1471,18 +1153,18 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    suspend(app);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
@@ -1571,10 +1253,9 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    EXPECT_EQ(applicationManager.focusedApplicationId(), appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1589,10 +1270,10 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
 }
 
 /*
- * Test that if a foreground application (one launched via desktop_file_hint) is reported to be stopping by
+ * Test that if an application (one launched via desktop_file_hint) is reported to be stopping by
  * Mir, AppMan removes it from the model immediately
  */
-TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundAppLaunchedWithDesktopFileHint)
+TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHint)
 {
     using namespace ::testing;
     const QString appId("testAppId");
@@ -1621,10 +1302,9 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundAppLaunchedWithDes
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    EXPECT_EQ(applicationManager.focusedApplicationId(), appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1661,73 +1341,31 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
+    EXPECT_EQ(Application::Starting, app->state());
 
-    // Associate a surface so AppMan considers app Running, check in background
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    app->setRequestedState(Application::RequestedSuspended);
 
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
+    // should not suspend an app that`s still starting up
+    ASSERT_EQ(Application::InternalState::Starting, app->internalState());
 
-    // Mir notifies of stopping app
-    onSessionStopping(session);
+    // Associate a surface so AppMan considers app Running
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
-    EXPECT_EQ(countSpy.count(), 0);
-    EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(removedSpy.count(), 0);
+    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
 
-    Application * app = applicationManager.findApplication(appId);
-    EXPECT_NE(nullptr,app);
-    EXPECT_EQ(app->state(), Application::Stopped);
-}
+    static_cast<qtmir::Session*>(app->session())->doSuspend();
+    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, app->internalState());
 
-/*
- * Test that if a background application (one launched via desktop_file_hint) is reported to be stopping by
- * Mir, AppMan removes it from the model immediately
- */
-TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundAppLaunchedWithDesktopFileHint)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    const QString name("Test App");
-    quint64 procId = 5551;
-    QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
-    cmdLine = cmdLine.append(appId);
-
-    // Set up Mocks & signal watcher
-    EXPECT_CALL(procInfo,command_line(procId))
-        .Times(1)
-        .WillOnce(Return(cmdLine));
-
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, name()).WillByDefault(Return(name));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    // Mir requests authentication for an application that was started
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    EXPECT_EQ(authed, true);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    onSessionStarting(session);
-
-    // Associate a surface so AppMan considers app Running, check in background
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    applicationManager.onProcessSuspended(app->appId());
+    ASSERT_EQ(Application::InternalState::Suspended, app->internalState());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1735,12 +1373,11 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundAppLaunchedWithDes
     // Mir notifies of stopping app
     onSessionStopping(session);
 
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
+    EXPECT_EQ(0, countSpy.count());
+    EXPECT_EQ(1, applicationManager.count());
+    EXPECT_EQ(0, removedSpy.count());
 
-    Application * app = applicationManager.findApplication(appId);
-    EXPECT_EQ(nullptr,app);
+    EXPECT_EQ(Application::Stopped, app->state());
 }
 
 /*
@@ -1822,45 +1459,6 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_mirSessionStoppingEventIgnored)
 }
 
 /*
- * Test that if an application is stopped by upstart, the Mir stopping event is ignored
- */
-TEST_F(ApplicationManagerTests,appStoppedByUpstart_mirSessionStoppingEventIgnored)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    applicationManager.onProcessStopped(appId);
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    // Mir notifies of stopping app
-    onSessionStopping(session);
-
-    EXPECT_EQ(countSpy.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 0);
-}
-
-/*
  * Webapps have multiple sessions, but only one is linked to the application (other is considered a hidden session).
  * If webapp in foreground stops unexpectedly, remove it and it alone from app list
  */
@@ -1903,8 +1501,9 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     applicationManager.authorizeSession(procId2, authed);
     onSessionStarting(session2);
     EXPECT_EQ(authed, true);
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session2.get(), surface);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session2.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1950,7 +1549,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session1 = std::make_shared<MockSession>("", procId1);
     std::shared_ptr<mir::scene::Session> session2 = std::make_shared<MockSession>("", procId2);
@@ -1958,19 +1557,20 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     bool authed = false;
     applicationManager.authorizeSession(procId1, authed);
     onSessionStarting(session1);
-    EXPECT_EQ(authed, true);
+    EXPECT_EQ(true, authed);
     applicationManager.authorizeSession(procId2, authed);
     onSessionStarting(session2);
-    EXPECT_EQ(authed, true);
+    EXPECT_EQ(true, authed);
 
-    // both sessions create surfaces, then unfocus everything.
-    std::shared_ptr<mir::scene::Surface> surface1(nullptr);
-    applicationManager.onSessionCreatedSurface(session1.get(), surface1);
-    std::shared_ptr<mir::scene::Surface> surface2(nullptr);
-    applicationManager.onSessionCreatedSurface(session2.get(), surface2);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
-    EXPECT_EQ(applicationManager.focusedApplicationId(), QString());
+    // both sessions create surfaces, then get them all suspended
+    FakeMirSurface *surface1 = new FakeMirSurface;
+    onSessionCreatedSurface(session1.get(), surface1);
+    surface1->drawFirstFrame();
+    FakeMirSurface *surface2 = new FakeMirSurface;
+    onSessionCreatedSurface(session2.get(), surface2);
+    surface2->drawFirstFrame();
+    suspend(app);
+    EXPECT_EQ(Application::Suspended, app->state());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
@@ -1979,8 +1579,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     onSessionStopping(session2);
     onSessionStopping(session1);
 
-    EXPECT_EQ(countSpy.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 0);
+    EXPECT_EQ(0, countSpy.count());
+    EXPECT_EQ(0, removedSpy.count());
 }
 
 /*
@@ -2007,34 +1607,33 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    // App creates surface, focuses it, puts it in background, then is OOM killed.
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-    applicationManager.unfocusCurrentApplication();
+    // App creates surface, puts it in background, then is OOM killed.
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+    suspend(app);
 
     onSessionStopping(session);
     applicationManager.onProcessFailed(appId, false);
     applicationManager.onProcessStopped(appId);
 
-    Application *app = applicationManager.findApplication(appId);
-    EXPECT_EQ(app->state(), Application::Stopped);
+    EXPECT_EQ(Application::Stopped, app->state());
 
     QSignalSpy focusRequestSpy(&applicationManager, SIGNAL(focusRequested(const QString &)));
 
     // Upstart re-launches app
     applicationManager.onProcessStarting(appId);
 
-    EXPECT_EQ(app->state(), Application::Starting);
-    EXPECT_EQ(focusRequestSpy.count(), 1);
-    EXPECT_EQ(applicationManager.count(), 1);
+    EXPECT_EQ(Application::Starting, app->state());
+    EXPECT_EQ(1, focusRequestSpy.count());
+    EXPECT_EQ(1, applicationManager.count());
 }
 
 /*
@@ -2138,127 +1737,41 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
     }
 }
 
-/*
-   1 - launch and focus a main stage app
-     * main stage app is running and focused
-   2 - launch and focus a side stage app
-     * main stage app is running but is not focused
-     * side stage app is running and has focus
-   3 - focus the main stage app
-     * main stage app is running and has focus
-     * side stage app is running but is not focused
-
-   This is a regression test for the bug where on step 3, the main stage app was momentarily
-   suspended and then resumed again.
- */
-TEST_F(ApplicationManagerTests, focusMainStageAfterSideStage)
-{
-    using namespace testing;
-
-    QString webbrowserAppId("webbrowser-app");
-    quint64 webbrowserPID = 123;
-    std::shared_ptr<mir::scene::Surface> webbrowserSurface(nullptr);
-
-    QString dialerAppId("dialer-app");
-    quint64 dialerPID = 456;
-    std::shared_ptr<mir::scene::Surface> dialerSurface(nullptr);
-
-    /*** Start webbrowser-app (main stage) ***/
-
-    ON_CALL(appController,appIdHasProcessId(webbrowserPID, webbrowserAppId)).WillByDefault(Return(true));
-
-    {
-        auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(webbrowserAppId, QFileInfo());
-        ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-        ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(webbrowserAppId));
-        ON_CALL(*mockDesktopFileReader, stageHint()).WillByDefault(Return("MainStage"));
-
-        ON_CALL(desktopFileReaderFactory, createInstance(webbrowserAppId, _))
-            .WillByDefault(Return(mockDesktopFileReader));
-    }
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(webbrowserAppId, _))
-            .Times(1)
-            .WillOnce(Return(true));
-
-    /*auto application =*/ applicationManager.startApplication(webbrowserAppId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(webbrowserAppId);
-
-    {
-        bool authed = false;
-        applicationManager.authorizeSession(webbrowserPID, authed);
-        EXPECT_EQ(authed, true);
-    }
-
-    auto webbrowserSession = std::make_shared<mir::scene::MockSession>(webbrowserAppId.toStdString(), webbrowserPID);
-    sessionManager.onSessionStarting(webbrowserSession);
-    applicationManager.focusApplication(webbrowserAppId);
-    applicationManager.onSessionCreatedSurface(webbrowserSession.get(), webbrowserSurface);
-
-    /*** Start dialer-app (side stage) ***/
-
-    ON_CALL(appController, appIdHasProcessId(dialerPID, dialerAppId)).WillByDefault(Return(true));
-
-    {
-        auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(dialerAppId, QFileInfo());
-        ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-        ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(dialerAppId));
-        ON_CALL(*mockDesktopFileReader, stageHint()).WillByDefault(Return("SideStage"));
-
-        ON_CALL(desktopFileReaderFactory, createInstance(dialerAppId, _))
-            .WillByDefault(Return(mockDesktopFileReader));
-    }
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(dialerAppId, _))
-            .Times(1)
-            .WillOnce(Return(true));
-
-    /*auto application =*/ applicationManager.startApplication(dialerAppId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(dialerAppId);
-
-    {
-        bool authed = false;
-        applicationManager.authorizeSession(dialerPID, authed);
-        EXPECT_EQ(authed, true);
-    }
-
-    auto dialerSession = std::make_shared<mir::scene::MockSession>(dialerAppId.toStdString(), dialerPID);
-    sessionManager.onSessionStarting(dialerSession);
-    applicationManager.focusApplication(dialerAppId);
-    applicationManager.onSessionCreatedSurface(dialerSession.get(), dialerSurface);
-
-    /*** Focus webbrowser ***/
-
-    // Nothing should happen as it's already the running main stage app
-    EXPECT_CALL(*webbrowserSession.get(), set_lifecycle_state(_))
-            .Times(0);
-    applicationManager.focusApplication(webbrowserAppId);
-}
-
 TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
 {
     using namespace ::testing;
     quint64 a_procId = 5921;
-    const char an_app_id[] = "some_app";
-    QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
+    const QString appId("some_app");
+    QByteArray a_cmd("/usr/bin/app1");
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
-    ON_CALL(appController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+    ON_CALL(appController,appIdHasProcessId(a_procId, appId)).WillByDefault(Return(true));
 
-    bool authed = true;
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+
+    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
 
     std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", a_procId);
     std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
+    {
+        bool authed = false;
+        applicationManager.authorizeSession(a_procId, authed);
+        ASSERT_EQ(authed, true);
+    }
 
     onSessionStarting(first_session);
-    applicationManager.onSessionCreatedSurface(first_session.get(), aSurface);
+    FakeMirSurface *aSurface = new FakeMirSurface;
+    onSessionCreatedSurface(first_session.get(), aSurface);
+    aSurface->drawFirstFrame();
     onSessionStarting(second_session);
-
-    Application * the_app = applicationManager.findApplication(an_app_id);
-    applicationManager.focusApplication(an_app_id);
 
     // Add to other apps to the list (Not "some_app")
     QVariantList lifecycleExemptAppIds;
@@ -2266,14 +1779,19 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
     settings.changed("lifecycleExemptAppids");
 
-    EXPECT_EQ(Application::Running, the_app->state());
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
-    applicationManager.setSuspended(true);
+    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_will_suspend));
+    the_app->setRequestedState(Application::RequestedSuspended);
+    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, the_app->internalState());
 
-    // And expect "some_app" to get suspended
-    EXPECT_EQ(Application::Suspended, the_app->state());
+    static_cast<qtmir::Session*>(the_app->session())->doSuspend();
+    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, the_app->internalState());
+    applicationManager.onProcessSuspended(the_app->appId());
+    ASSERT_EQ(Application::InternalState::Suspended, the_app->internalState());
 
-    applicationManager.setSuspended(false);
+    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_resumed));
+    the_app->setRequestedState(Application::RequestedRunning);
 
     EXPECT_EQ(Application::Running, the_app->state());
 
@@ -2284,14 +1802,16 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
 
     EXPECT_EQ(Application::Running, the_app->state());
 
-    applicationManager.setSuspended(true);
+    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(_)).Times(0);
+    the_app->setRequestedState(Application::RequestedSuspended);
 
     // And expect it to be running still
-    EXPECT_EQ(Application::Running, the_app->state());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
 
-    applicationManager.setSuspended(false);
+    the_app->setRequestedState(Application::RequestedRunning);
 
     EXPECT_EQ(Application::Running, the_app->state());
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 }
 
 /*
@@ -2323,51 +1843,13 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     onSessionStarting(session);
 
     // App creates surface, focuses it so state is running
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
 
-    applicationManager.unfocusCurrentApplication();
-
-    EXPECT_FALSE(sharedWakelock.enabled());
-    EXPECT_EQ(application->state(), Application::Running);
-}
-
-/*
- * Test lifecycle exempt applications have their wakelocks released on suspend
- */
-TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnUnSuspend)
-{
-    using namespace ::testing;
-
-    const QString appId("com.ubuntu.music"); // member of lifecycle exemption list
-    const quint64 procId = 12345;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-            .Times(1)
-            .WillOnce(Return(true));
-
-    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    // App creates surface, focuses it so state is running
-    std::shared_ptr<mir::scene::Surface> surface(nullptr);
-    applicationManager.onSessionCreatedSurface(session.get(), surface);
-    applicationManager.focusApplication(appId);
-
-    applicationManager.setSuspended(true);
+    application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
-    EXPECT_EQ(application->state(), Application::Running);
+    ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
+    EXPECT_EQ(Application::Running, application->state());
 }

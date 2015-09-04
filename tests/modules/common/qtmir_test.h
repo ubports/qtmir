@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,18 +12,21 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #ifndef QT_MIR_TEST_FRAMEWORK_H
 #define QT_MIR_TEST_FRAMEWORK_H
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
+#include <Unity/Application/application.h>
 #include <Unity/Application/application_manager.h>
 #include <Unity/Application/applicationcontroller.h>
 #include <Unity/Application/mirsurfacemanager.h>
 #include <Unity/Application/sessionmanager.h>
+#include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/taskcontroller.h>
 #include <Unity/Application/proc_info.h>
@@ -42,6 +45,10 @@ namespace ms = mir::scene;
 using namespace qtmir;
 
 namespace qtmir {
+
+// For better output in ASSERT_* and EXPECT_* error messages
+void PrintTo(const Application::InternalState& state, ::std::ostream* os);
+void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
 
 // Initialization of mir::Server needed for by tests
 class TestMirServerInit : virtual mir::Server
@@ -64,11 +71,14 @@ private:
         {std::make_shared<StubPromptSessionManager>()};
 };
 
+
+namespace {  char const* argv[] = { nullptr }; }
+
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(0, nullptr)
+    : MirServer(0, argv)
     {
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -21,15 +21,14 @@
 #include <memory>
 
 // Qt
+#include <QObject>
 #include <QHash>
 #include <QMutex>
+#include <QSharedPointer>
 
 // Mir
 #include <mir_toolkit/common.h>
 
-// local
-#include "mirsurfaceitem.h"
-#include "mirsurfaceitemmodel.h"
 
 namespace mir {
     namespace scene {
@@ -37,24 +36,27 @@ namespace mir {
         class Session;
         class PromptSession;
     }
+    namespace shell { class Shell; }
 }
 
 class MirServer;
+class SurfaceObserver;
 
 namespace qtmir {
 
 class Application;
 class ApplicationManager;
+class MirSurfaceInterface;
 class SessionManager;
 
-class MirSurfaceManager : public MirSurfaceItemModel
+class MirSurfaceManager : public QObject
 {
     Q_OBJECT
 
 public:
     explicit MirSurfaceManager(
         const QSharedPointer<MirServer>& mirServer,
-        MirShell *shell,
+        mir::shell::Shell *shell,
         SessionManager* sessionManager,
         QObject *parent = 0
     );
@@ -63,24 +65,24 @@ public:
     static MirSurfaceManager* singleton();
 
 Q_SIGNALS:
-    void surfaceCreated(MirSurfaceItem* surface);
-    void surfaceDestroyed(MirSurfaceItem* surface);
-//    void surfaceResized(MirSurface*);
-//    void fullscreenSurfaceChanged();
+    void surfaceCreated(MirSurfaceInterface* surface);
+    void surfaceDestroyed(MirSurfaceInterface* surface);
 
 public Q_SLOTS:
-    void onSessionCreatedSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &, std::shared_ptr<SurfaceObserver> const&);
+    void onSessionCreatedSurface(const mir::scene::Session *,
+                                 const std::shared_ptr<mir::scene::Surface> &,
+                                 std::shared_ptr<SurfaceObserver> const&);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:
-    QHash<const mir::scene::Surface *, MirSurfaceItem *> m_mirSurfaceToItemHash;
+    QHash<const mir::scene::Surface *, MirSurfaceInterface *> m_mirSurfaceToQmlSurfaceHash;
     QMutex m_mutex;
 
 private:
     QSharedPointer<MirServer> m_mirServer;
-    MirShell *const m_shell;
+    mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
-    static MirSurfaceManager *the_surface_manager;
+    static MirSurfaceManager *instance;
 };
 
 } // namespace qtmir

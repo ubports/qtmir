@@ -2,10 +2,11 @@ set(
   MIR_SURFACE_ITEM_TEST_SOURCES
   mirsurfaceitem_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_mirsurface.h
 )
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}/src/modules/Unity/Application
+  ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/modules/common
   ${MIRSERVER_INCLUDE_DIRS}
 )

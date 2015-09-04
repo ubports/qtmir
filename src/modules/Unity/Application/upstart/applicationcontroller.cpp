@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014,2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -40,6 +40,7 @@ struct ApplicationController::Private
     UbuntuAppLaunchAppObserver stopCallback = nullptr;
     UbuntuAppLaunchAppObserver focusCallback = nullptr;
     UbuntuAppLaunchAppObserver resumeCallback = nullptr;
+    UbuntuAppLaunchAppPausedResumedObserver pausedCallback = nullptr;
     UbuntuAppLaunchAppFailedObserver failureCallback = nullptr;
 };
 
@@ -125,7 +126,12 @@ ApplicationController::ApplicationController()
 
     impl->resumeCallback = [](const gchar * appId, gpointer userData) {
         auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationResumeRequest(toShortAppIdIfPossible(appId)));
+        Q_EMIT(thiz->applicationResumeRequested(toShortAppIdIfPossible(appId)));
+    };
+
+    impl->pausedCallback = [](const gchar * appId, GPid *, gpointer userData) {
+        auto thiz = static_cast<ApplicationController*>(userData);
+        Q_EMIT(thiz->applicationPaused(toShortAppIdIfPossible(appId)));
     };
 
     impl->failureCallback = [](const gchar * appId, UbuntuAppLaunchAppFailed failureType, gpointer userData) {
@@ -145,6 +151,7 @@ ApplicationController::ApplicationController()
     ubuntu_app_launch_observer_add_app_stop(impl->stopCallback, this);
     ubuntu_app_launch_observer_add_app_focus(impl->focusCallback, this);
     ubuntu_app_launch_observer_add_app_resume(impl->resumeCallback, this);
+    ubuntu_app_launch_observer_add_app_paused(impl->pausedCallback, this);
     ubuntu_app_launch_observer_add_app_failed(impl->failureCallback, this);
 }
 
@@ -155,6 +162,7 @@ ApplicationController::~ApplicationController()
     ubuntu_app_launch_observer_delete_app_stop(impl->stopCallback, this);
     ubuntu_app_launch_observer_delete_app_focus(impl->focusCallback, this);
     ubuntu_app_launch_observer_delete_app_resume(impl->resumeCallback, this);
+    ubuntu_app_launch_observer_delete_app_paused(impl->pausedCallback, this);
     ubuntu_app_launch_observer_delete_app_failed(impl->failureCallback, this);
 }
 
