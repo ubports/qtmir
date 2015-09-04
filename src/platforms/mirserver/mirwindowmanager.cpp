@@ -85,11 +85,10 @@ void MirWindowManagerImpl::remove_session(std::shared_ptr<ms::Session> const& /*
 {
 }
 
-auto MirWindowManagerImpl::add_surface(
+mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& requestParameters,
     std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
--> mir::frontend::SurfaceId
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
@@ -156,10 +155,9 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     // TODO support surface modifications
 }
 
-auto MirWindowManager::create(
+std::unique_ptr<MirWindowManager> MirWindowManager::create(
     mir::shell::FocusController* /*focus_controller*/, 
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
--> std::unique_ptr<MirWindowManager>
 {
     return std::make_unique<MirWindowManagerImpl>(displayLayout);
 }
