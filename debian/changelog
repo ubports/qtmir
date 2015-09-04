@@ -1,3 +1,9 @@
+qtmir (0.4.6+15.04.20150827.1-0ubuntu2) UNRELEASED; urgency=medium
+
+  * No change rebuild to resync vivid+overlay and wily
+
+ -- Michal Sawicz <michal.sawicz@canonical.com>  Thu, 03 Sep 2015 10:47:50 +0200
+
 qtmir (0.4.6+15.04.20150827.1-0ubuntu1) vivid; urgency=medium
 
   [ Daniel d'Andrada ]
