@@ -1937,6 +1937,8 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     EXPECT_EQ(nullptr, applicationManager.startApplication(appId, ApplicationManager::NoFlag));
 
     QSignalSpy spy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
+    applicationManager.onProcessStopped(appId);
+
     QObject::connect(&applicationManager, &ApplicationManager::applicationAdded,
                      &applicationManager, [&qtApp, appId](const QString& startedApp) {
         if (startedApp == appId) {
@@ -1974,4 +1976,35 @@ TEST_F(ApplicationManagerTests,suspendedApplicationResumesClosesAndDeletes)
     applicationManager.stopApplication(appId);
     EXPECT_EQ(Application::InternalState::Closing, app->internalState());
     EXPECT_EQ(SessionInterface::Running,  app->session()->state());
+}
+
+/*
+ * Test that if an application is started while it is still attempting to close, it is queued to start again.
+ */
+TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+
+    QSignalSpy spy(app, SIGNAL(destroyed(QObject*)));
+    QObject::connect(app, &QObject::destroyed, app, [&qtApp](){ qtApp.quit(); });
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    qtApp.exec();
+    EXPECT_EQ(1, spy.count());
 }
