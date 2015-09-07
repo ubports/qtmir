@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -63,11 +63,10 @@ public:
     static bool parseBoolean(const QString &rawString, bool &result);
 
 protected:
+    DesktopFileReader() : d_ptr(nullptr) {}
     DesktopFileReader(const QString &appId, const QFileInfo &desktopFile);
 
     DesktopFileReaderPrivate * const d_ptr;
-
-    friend class DesktopFileReaderFactory;
 
 private:
     Q_DECLARE_PRIVATE(DesktopFileReader)

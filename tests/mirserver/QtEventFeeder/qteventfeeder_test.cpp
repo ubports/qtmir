@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #include <gmock/gmock.h>
@@ -118,7 +117,7 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd)
                                                               Contains(AllOf(HasId(0),
                                                                              IsPressed()))),_)).Times(1);
 
-    auto ev1 = mev::make_event(MirInputDeviceId(), 123*1000000, 0);
+    auto ev1 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(123), 0);
     mev::add_touch(*ev1, 0 /* touch ID */, mir_touch_action_down, mir_touch_tooltype_unknown,
                    10, 10, 10 /* x, y, pressure */,
                    1, 1, 10 /* touch major, minor, size */);
@@ -143,7 +142,7 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd)
                                                ),_)).Times(1);
     }
 
-    auto ev2 = mev::make_event(MirInputDeviceId(), 125*1000000, 0);
+    auto ev2 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(125), 0);
     mev::add_touch(*ev2, 1 /* touch ID */, mir_touch_action_down, mir_touch_tooltype_unknown,
                    20, 20, 10 /* x, y, pressure*/,
                    1, 1, 10 /* touch major, minor, size */);
@@ -157,7 +156,7 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd2)
 
     setIrrelevantMockWindowSystemExpectations();
 
-    auto ev1 = mev::make_event(MirInputDeviceId(), 123*1000000, 0);
+    auto ev1 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(123), 0);
     mev::add_touch(*ev1, 0 /* touch ID */, mir_touch_action_down, mir_touch_tooltype_unknown,
                    10, 10, 10 /* x, y, pressure*/,
                    1, 1, 10 /* touch major, minor, size */);
@@ -173,7 +172,7 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd2)
 
     setIrrelevantMockWindowSystemExpectations();
 
-    auto ev2 = mev::make_event(MirInputDeviceId(), 124*1000000, 0);
+    auto ev2 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(124), 0);
     mev::add_touch(*ev2, 0 /* touch ID */, mir_touch_action_change, mir_touch_tooltype_unknown,
                    10, 10, 10 /* x, y, pressure*/,
                    1, 1, 10 /* touch major, minor, size */);
@@ -195,7 +194,7 @@ TEST_F(QtEventFeederTest, GenerateMissingTouchEnd2)
     setIrrelevantMockWindowSystemExpectations();
 
     // touch 0 disappeared and touch 2 got pressed
-    auto ev3 = mev::make_event(MirInputDeviceId(), 125*1000000, 0);
+    auto ev3 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(125), 0);
     mev::add_touch(*ev3, 1 /* touch ID */, mir_touch_action_change, mir_touch_tooltype_unknown,
                    20, 20, 10 /* x, y, pressure*/,
                    1, 1, 10 /* touch major, minor, size */);
@@ -235,7 +234,7 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
                                                               Contains(AllOf(HasId(0),
                                                                              IsPressed()))),_)).Times(1);
 
-    auto ev1 = mev::make_event(MirInputDeviceId(), 123*1000000, 0);
+    auto ev1 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(123), 0);
     mev::add_touch(*ev1, /* touch ID */ 0, mir_touch_action_down, mir_touch_tooltype_unknown,
                    10, 10, 10, 1, 1, 10);
     qtEventFeeder->dispatch(*ev1);
@@ -248,7 +247,7 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
                                                               Contains(AllOf(HasId(0), StateIsMoved()))
                                                              ),_)).Times(1);
 
-    auto ev2 = mev::make_event(MirInputDeviceId(), 123*1000000, 0);
+    auto ev2 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(123), 0);
     mev::add_touch(*ev2, /* touch ID */ 0, mir_touch_action_down, mir_touch_tooltype_unknown,
                    10, 10, 10, 1, 1, 10);
     qtEventFeeder->dispatch(*ev2);

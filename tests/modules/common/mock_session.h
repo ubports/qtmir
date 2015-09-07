@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #ifndef MOCK_QTMIR_SESSION_H
@@ -31,14 +30,13 @@ public:
         ON_CALL(*this, resume()).WillByDefault(::testing::Invoke(this, &MockSession::doResume));
         ON_CALL(*this, stop()).WillByDefault(::testing::Invoke(this, &MockSession::doStop));
         ON_CALL(*this, state()).WillByDefault(::testing::Invoke(this, &MockSession::doState));
-        ON_CALL(*this, close()).WillByDefault(::testing::Return(true));
     }
 
     MOCK_METHOD0(release, void());
 
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(application, unity::shell::application::ApplicationInfoInterface*());
-    MOCK_CONST_METHOD0(surface, MirSurfaceItemInterface*());
+    MOCK_CONST_METHOD0(surface, MirSurfaceInterface*());
     MOCK_CONST_METHOD0(parentSession, SessionInterface*());
 
     MOCK_CONST_METHOD0(state, State());
@@ -47,12 +45,12 @@ public:
     MOCK_CONST_METHOD0(live, bool());
 
     MOCK_METHOD1(setApplication, void(unity::shell::application::ApplicationInfoInterface* item));
-    MOCK_METHOD1(setSurface, void(MirSurfaceItemInterface* surface));
+    MOCK_METHOD1(setSurface, void(MirSurfaceInterface* surface));
 
     MOCK_METHOD0(suspend, void());
     MOCK_METHOD0(resume, void());
+    MOCK_METHOD0(close, void());
     MOCK_METHOD0(stop, void());
-    MOCK_METHOD0(close, bool());
 
     MOCK_METHOD1(addChildSession, void(SessionInterface* session));
     MOCK_METHOD2(insertChildSession, void(uint index, SessionInterface* session));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014,2015 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,11 +12,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #include <qtmir_test.h>
-#include <fake_mirsurfaceitem.h>
+#include <fake_mirsurface.h>
 
 #include <Unity/Application/application.h>
 #include <Unity/Application/mirsurfaceitem.h>
@@ -58,7 +57,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
     // On Starting as it has no surface.
     EXPECT_EQ(Session::Starting, session->state());
 
-    FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+    FakeMirSurface *surface = new FakeMirSurface;
     session->setSurface(surface);
 
     // Still on Starting as the surface hasn't drawn its first frame yet
@@ -228,7 +227,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
     {
-        FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+        FakeMirSurface *surface = new FakeMirSurface;
         session->setSurface(surface);
         surface->drawFirstFrame();
     }
@@ -259,7 +258,7 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
     {
-        FakeMirSurfaceItem *surface = new FakeMirSurfaceItem;
+        FakeMirSurface *surface = new FakeMirSurface;
         session->setSurface(surface);
         surface->drawFirstFrame();
     }

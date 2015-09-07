@@ -5,21 +5,15 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                cmake-extras (>= 0.3),
                debhelper (>= 9),
-# We rely on C++11 features, and to prevent from ABI breaks
-# in libstdc++ causing us issues, we explicitly select a G++
-# version. To allow cross-compiling to work, we also must
-# append :native to g++-4.9 so we don't try to run armhf g++
-# on an x86 CPU for example, when cross-compiling.
-               g++-4.9:native,
                google-mock (>= 1.6.0+svn437),
                libfontconfig1-dev,
                libgles2-mesa-dev,
                libglib2.0-dev,
                libgsettings-qt-dev,
                liblttng-ust-dev,
-               libmirclient-dev (>= 0.13.0),
-               libmircommon-dev (>= 0.13.0),
-               libmirserver-dev (>= 0.13.0),
+               libmirclient-dev (>= 0.14.0),
+               libmircommon-dev (>= 0.14.0),
+               libmirserver-dev (>= 0.14.0),
                libmtdev-dev,
                libprocess-cpp-dev,
                libqtdbusmock1-dev (>= 0.2),
@@ -28,12 +22,11 @@ Build-Depends: cmake,
                libubuntu-app-launch2-dev,
                libubuntu-application-api-dev (>= 2.1.0),
                libudev-dev,
-               libunity-api-dev (>= 7.98),
+               libunity-api-dev (>= 7.100),
                liburl-dispatcher1-dev,
                libxkbcommon-dev,
                libxrender-dev,
                pkg-config,
-               protobuf-compiler,
 # lttng-gen-ts needs python3, but doesn't depend on it itself: bug 1359147
                python3:any,
                qt5-default,

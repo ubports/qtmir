@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,6 +17,8 @@
 #include "surfaceobserver.h"
 
 #include <QMetaObject>
+
+#include <mir/geometry/size.h>
 
 SurfaceObserver::SurfaceObserver()
     : m_listener(nullptr)
@@ -47,3 +49,7 @@ void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
     }
 }
 
+void SurfaceObserver::resized_to(mir::geometry::Size const&size)
+{
+    Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
+}

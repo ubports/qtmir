@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #ifndef MIR_QT_EVENT_FEEDER_H
@@ -61,9 +59,7 @@ public:
     static const int MirEventActionPointerIndexMask;
     static const int MirEventActionPointerIndexShift;
 
-    void configuration_changed(std::chrono::nanoseconds when) override;
-    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
-    void dispatch(MirEvent const& event) override;
+    bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
 

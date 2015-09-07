@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #ifndef MOCK_MIR_SCENE_SESSION_H
@@ -70,6 +69,7 @@ struct MockSession : public Session
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override {};
 
 private:
     std::string m_sessionName;

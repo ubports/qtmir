@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,7 +23,7 @@
 class QtEventFeeder;
 class SessionListener;
 class SessionAuthorizer;
-class MirShell;
+using MirShell = mir::shell::Shell;
 class PromptSessionListener;
 
 // We use virtual inheritance of mir::Server to facilitate derived classes (e.g. testing)
@@ -61,7 +61,6 @@ public:
 
 private:
     std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
-    std::weak_ptr<MirShell> m_shell;
 };
 
 #endif // MIRSERVER_H

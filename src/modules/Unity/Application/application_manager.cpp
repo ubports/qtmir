@@ -82,6 +82,8 @@ void connectToSessionListener(ApplicationManager *manager, SessionListener *list
                      manager, &ApplicationManager::onSessionStopping);
     QObject::connect(listener, &SessionListener::sessionCreatedSurface,
                      manager, &ApplicationManager::onSessionCreatedSurface);
+    QObject::connect(listener, &SessionListener::sessionDestroyingSurface,
+                     manager, &ApplicationManager::onSessionDestroyingSurface);
 }
 
 void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
@@ -477,7 +479,7 @@ void ApplicationManager::onProcessFailed(const QString &appId, const bool during
     }
 
     Q_UNUSED(duringStartup); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
-    application->setProcessState(Application::ProcessStopped);
+    application->setProcessState(Application::ProcessFailed);
     application->setPid(0);
 }
 
@@ -497,8 +499,12 @@ void ApplicationManager::onProcessStopped(const QString &appId)
         return;
     }
 
-    application->setProcessState(Application::ProcessStopped);
-    application->setPid(0);
+    // if an application gets killed, onProcessFailed is called first, followed by onProcessStopped.
+    // we don't want to override what onProcessFailed already set.
+    if (application->processState() != Application::ProcessFailed) {
+        application->setProcessState(Application::ProcessStopped);
+        application->setPid(0);
+    }
 }
 
 void ApplicationManager::onProcessSuspended(const QString &appId)
@@ -592,7 +598,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
         return;
     }
 
-    QString desktopFileName = info->getParameter("--desktop_file_hint=");
+    const QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
     if (desktopFileName.isNull()) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
@@ -603,7 +609,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
 
     // Guess appId from the desktop file hint
-    QString appId = toShortAppIdIfPossible(desktopFileName.remove(QRegExp(".desktop$")).split('/').last());
+    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
 
     // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
     // case we didn't get an existing .desktop file path
@@ -683,6 +689,23 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     }
 }
 
+void ApplicationManager::onSessionDestroyingSurface(ms::Session const* session,
+                                                    std::shared_ptr<ms::Surface> const& surface)
+{
+    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onSessionDestroyingSurface - sessionName=" << session->name().c_str();
+    Q_UNUSED(surface);
+
+    Application* application = findApplicationWithSession(session);
+    if (application && application->state() == Application::Running) {
+        // If app in Running state but it destroys its surface, it's probably shutting down,
+        // in which case, we can preempt it and remove it from the App list immediately.
+        // FIXME: this is not desktop application friendly, but resolves issue where trust-prompt
+        // helpers take a long time to shut down, but destroys their surface quickly.
+        remove(application);
+        application->deleteLater();
+    }
+}
+
 Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
 {
     return findApplicationWithSession(session.get());
@@ -747,6 +770,7 @@ void ApplicationManager::add(Application* application)
         remove(application);
         application->deleteLater();
     });
+
 
     beginInsertRows(QModelIndex(), m_applications.count(), m_applications.count());
     m_applications.append(application);

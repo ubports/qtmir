@@ -1,16 +1,16 @@
 /*
- * Copyright (C) 2014,2015 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 3.
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License version 3, as published by
+ * the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranties of MERCHANTABILITY,
+ * SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -52,6 +52,7 @@ Session::Session(const std::shared_ptr<ms::Session>& session,
     , m_fullscreen(false)
     , m_state(State::Starting)
     , m_live(true)
+    , m_released(false)
     , m_suspendTimer(new QTimer(this))
     , m_promptSessionManager(promptSessionManager)
 {
@@ -78,7 +79,7 @@ Session::~Session()
     if (m_application) {
         m_application->setSession(nullptr);
     }
-    delete m_surface; m_surface = nullptr;
+
     delete m_children; m_children = nullptr;
 }
 
@@ -96,15 +97,10 @@ void Session::doSuspend()
 void Session::release()
 {
     qCDebug(QTMIR_SESSIONS) << "Session::release " << name();
-    Q_EMIT aboutToBeDestroyed();
 
-    if (m_parentSession) {
-        m_parentSession->removeChildSession(this);
-    }
-    if (m_application) {
-        m_application->setSession(nullptr);
-    }
-    if (!parent()) {
+    m_released = true;
+
+    if (m_state == Stopped) {
         deleteLater();
     }
 }
@@ -124,7 +120,7 @@ ApplicationInfoInterface* Session::application() const
     return m_application;
 }
 
-MirSurfaceItemInterface* Session::surface() const
+MirSurfaceInterface* Session::surface() const
 {
     // Only notify QML of surface creation once it has drawn its first frame.
     if (m_surface && m_surface->isFirstFrameDrawn()) {
@@ -170,7 +166,7 @@ void Session::setApplication(ApplicationInfoInterface* application)
     Q_EMIT applicationChanged(application);
 }
 
-void Session::setSurface(MirSurfaceItemInterface *newSurface)
+void Session::setSurface(MirSurfaceInterface *newSurface)
 {
     qCDebug(QTMIR_SESSIONS) << "Session::setSurface - session=" << name() << "surface=" << newSurface;
 
@@ -180,25 +176,20 @@ void Session::setSurface(MirSurfaceItemInterface *newSurface)
 
     if (m_surface) {
         m_surface->disconnect(this);
-        m_surface->setSession(nullptr);
-        m_surface->setParent(nullptr);
     }
 
-    MirSurfaceItemInterface *previousSurface = surface();
+    MirSurfaceInterface *previousSurface = surface();
     m_surface = newSurface;
 
     if (newSurface) {
-        m_surface->setParent(this);
-        m_surface->setSession(this);
-
-        connect(newSurface, &MirSurfaceItemInterface::stateChanged,
+        connect(newSurface, &MirSurfaceInterface::stateChanged,
             this, &Session::updateFullscreenProperty);
 
         // Only notify QML of surface creation once it has drawn its first frame.
         if (m_surface->isFirstFrameDrawn()) {
             setState(Running);
         } else {
-            connect(newSurface, &MirSurfaceItemInterface::firstFrameDrawn,
+            connect(newSurface, &MirSurfaceInterface::firstFrameDrawn,
                     this, &Session::onFirstSurfaceFrameDrawn);
         }
     }
@@ -223,7 +214,7 @@ void Session::onFirstSurfaceFrameDrawn()
 void Session::updateFullscreenProperty()
 {
     if (m_surface) {
-        setFullscreen(m_surface->state() == MirSurfaceItemInterface::Fullscreen);
+        setFullscreen(m_surface->state() == Mir::FullscreenState);
     } else {
         // Keep the current value of the fullscreen property until we get a new
         // surface
@@ -290,6 +281,14 @@ void Session::doResume()
     setState(Running);
 }
 
+void Session::close()
+{
+    qCDebug(QTMIR_SESSIONS) << "Session::close - " << name() << m_surface;
+    if (m_surface) {
+        m_surface->close();
+    }
+}
+
 void Session::stop()
 {
     if (m_state != Stopped) {
@@ -304,6 +303,9 @@ void Session::stop()
         });
 
         setState(Stopped);
+        if (m_released) {
+            deleteLater();
+        }
     }
 }
 
@@ -314,6 +316,9 @@ void Session::setLive(const bool live)
         Q_EMIT liveChanged(m_live);
         if (!live) {
             setState(Stopped);
+            if (m_released) {
+                deleteLater();
+            }
         }
     }
 }
@@ -392,15 +397,6 @@ void Session::removePromptSession(const std::shared_ptr<ms::PromptSession>& prom
             << "promptSession=" << (promptSession ? promptSession.get() : nullptr);
 
     m_promptSessions.removeAll(promptSession);
-}
-
-bool Session::close()
-{
-    qCDebug(QTMIR_SESSIONS) << "Session::close - " << name() << m_surface;
-    if (m_surface) {
-        return m_surface->close();
-    }
-    return false;
 }
 
 void Session::stopPromptSessions()

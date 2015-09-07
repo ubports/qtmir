@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authors: Gerry Boland <gerry.boland@canonical.com>
- *          Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #ifndef MIRSERVERINTEGRATION_H
@@ -47,13 +44,8 @@ public:
     QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    QAbstractEventDispatcher* guiThreadEventDispatcher() const override { return eventDispatcher_; }
-    void initialize();
-#else
     QAbstractEventDispatcher *createEventDispatcher() const override;
     void initialize() override;
-#endif
 
     QPlatformClipboard *clipboard() const override;
 
@@ -72,9 +64,6 @@ private:
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;
     QScopedPointer<QPlatformServices> m_services;
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-    QScopedPointer<QAbstractEventDispatcher> m_eventDispatcher;
-#endif
 
     QScopedPointer<QMirServer> m_mirServer;
 

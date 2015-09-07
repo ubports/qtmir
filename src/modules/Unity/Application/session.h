@@ -1,16 +1,16 @@
 /*
  * Copyright (C) 2014-2015 Canonical, Ltd.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; version 3.
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License version 3, as published by
+ * the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranties of MERCHANTABILITY,
+ * SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -52,19 +52,19 @@ public:
     //getters
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceItemInterface* surface() const override;
+    MirSurfaceInterface* surface() const override;
     SessionInterface* parentSession() const override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
 
     void setApplication(unity::shell::application::ApplicationInfoInterface* item) override;
-    void setSurface(MirSurfaceItemInterface* surface) override;
+    void setSurface(MirSurfaceInterface* surface) override;
 
     void suspend() override;
     void resume() override;
+    void close() override;
     void stop() override;
-    bool close() override;
 
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;
@@ -100,12 +100,13 @@ private:
 
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
-    MirSurfaceItemInterface* m_surface;
+    MirSurfaceInterface* m_surface;
     SessionInterface* m_parentSession;
     SessionModel* m_children;
     bool m_fullscreen;
     State m_state;
     bool m_live;
+    bool m_released;
     QTimer* m_suspendTimer;
     QList<std::shared_ptr<mir::scene::PromptSession>> m_promptSessions;
     std::shared_ptr<mir::scene::PromptSessionManager> const m_promptSessionManager;

@@ -24,7 +24,6 @@ include_directories(
     ${MIRSERVER_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
-    ${PROTOBUF_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${LTTNG_INCLUDE_DIRS}
 
@@ -42,7 +41,7 @@ add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
-    mirshell.cpp
+    mirwindowmanager.cpp
     qteventfeeder.cpp
     plugin.cpp
     qmirserver.cpp
@@ -76,7 +75,6 @@ target_link_libraries(
     ${MIRSERVER_LDFLAGS}
     ${MIRCLIENT_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
-    ${PROTOBUF_LDFLAGS}
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}
     ${LTTNG_LIBRARIES}

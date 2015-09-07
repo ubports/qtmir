@@ -17,18 +17,27 @@ $ cmake -DCMAKE_BUILD_TYPE=Debug
 To avoid building the tests (to speed up the build):
 $ cmake -DNO_TESTS=true
 
-To test, enter the demos directory, run:
+To test the server, enter the demos directory, and run (NB: server should be run as root):
 
+$ sudo su
 $ export QT_QPA_PLATFORM=mirserver
+$ export MIR_SERVER_FILE=/tmp/mir_socket
+$ unset QT_QPA_PLATFORMTHEME
 
 then run the Qt application of your choice (qmlscene best). As example, try
 
 $ qmlscene qml-demo-shell/qml-demo-shell.qml
 
+prepare the environment for running mir clients:
+
+$ sudo chmod a+rw /tmp/mir_socket
+$ export MIR_SOCKET=/tmp/mir_socket
+
 and then try running an application:
 
 $ mir_demo_client_egltriangle --desktop_file_hint=/usr/share/applications/gallery-app.desktop
 or
+$ unset QT_QPA_PLATFORMTHEME
 $ export QT_QPA_PLATFORM=ubuntumirclient
 $ qmlscene qml-demo-client/qml-demo-client.qml --desktop_file_hint=/usr/share/click/preinstalled/com.ubuntu.calendar/0.4.172/calendar-app.desktop
 

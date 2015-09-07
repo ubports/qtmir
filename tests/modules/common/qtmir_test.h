@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014,2015 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 
 #ifndef QT_MIR_TEST_FRAMEWORK_H
@@ -72,11 +71,14 @@ private:
         {std::make_shared<StubPromptSessionManager>()};
 };
 
+
+namespace {  char const* argv[] = { nullptr }; }
+
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(0, nullptr)
+    : MirServer(0, argv)
     {
     }
 
@@ -137,7 +139,9 @@ public:
         ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
         ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
 
-        ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+        EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
+                .Times(1)
+                .WillOnce(Return(mockDesktopFileReader));
 
         EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
                 .Times(1)
@@ -153,7 +157,7 @@ public:
         auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
         applicationManager.onSessionStarting(appSession);
         sessionManager.onSessionStarting(appSession);
-
+        
         Mock::VerifyAndClearExpectations(&appController);
         Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
         return application;

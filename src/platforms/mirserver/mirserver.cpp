@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,7 +19,7 @@
 #include "mirserver.h"
 
 // local
-#include "mirshell.h"
+#include "mirwindowmanager.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
@@ -86,17 +86,10 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_shell([this]
+    override_the_window_manager_builder([this](mir::shell::FocusController* /*focus_controller*/)
+        -> std::shared_ptr<mir::shell::WindowManager>
         {
-            auto const shell = std::make_shared<MirShell>(
-                the_input_targeter(),
-                the_surface_coordinator(),
-                the_session_coordinator(),
-                the_prompt_session_manager(),
-                the_shell_display_layout());
-
-            m_shell = shell;
-            return shell;
+            return std::make_shared<MirWindowManager>(the_shell_display_layout());
         });
 
     set_terminator([&](int)
@@ -151,5 +144,6 @@ PromptSessionListener *MirServer::promptSessionListener()
 
 MirShell *MirServer::shell()
 {
+    std::weak_ptr<MirShell> m_shell = the_shell();
     return m_shell.lock().get();
 }
