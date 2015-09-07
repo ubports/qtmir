@@ -1947,3 +1947,31 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     qtApp.exec();
     EXPECT_EQ(1, spy.count());
 }
+
+/*
+ * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
+ */
+TEST_F(ApplicationManagerTests,suspendedApplicationResumesClosesAndDeletes)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
+
+    // Suspend the application.
+    suspend(app);
+    EXPECT_EQ(Application::InternalState::Suspended, app->internalState());
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
+    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
+}

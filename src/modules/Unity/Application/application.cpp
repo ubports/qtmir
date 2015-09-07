@@ -388,7 +388,7 @@ pid_t Application::pid() const
 
 void Application::close()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId() << (int)m_state;
+    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
 
     switch (m_state) {
     case InternalState::Starting:
@@ -401,7 +401,7 @@ void Application::close()
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
-        resume();
+        setRequestedState(RequestedRunning);
         doClose();
         break;
     case InternalState::Closing:
