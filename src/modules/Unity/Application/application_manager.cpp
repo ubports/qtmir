@@ -457,11 +457,11 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
 
     remove(application);
 
-    application->close();
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {
         m_closingApplications.removeAll(application);
     });
     m_closingApplications.append(application);
+    application->close();
     return true;
 }
 
