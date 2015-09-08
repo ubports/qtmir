@@ -139,10 +139,10 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 
 } // namespace {
 
-MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
+MirSurface::MirSurface(const std::shared_ptr<mir::scene::Surface>& surface,
         SessionInterface* session,
         mir::shell::Shell* shell,
-        std::shared_ptr<SurfaceObserver> observer)
+        const std::shared_ptr<SurfaceObserver>& observer)
     : MirSurfaceInterface()
     , m_surface(surface)
     , m_session(session)

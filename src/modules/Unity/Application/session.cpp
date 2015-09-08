@@ -362,7 +362,7 @@ void Session::removeChildSession(SessionInterface* session)
     }
 }
 
-void Session::foreachChildSession(std::function<void(SessionInterface* session)> f) const
+void Session::foreachChildSession(const std::function<void(SessionInterface* session)>& f) const
 {
     QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
@@ -398,8 +398,8 @@ void Session::stopPromptSessions()
         static_cast<Session*>(child)->stopPromptSessions();
     }
 
-    QList<std::shared_ptr<ms::PromptSession>> copy(m_promptSessions);
-    QListIterator<std::shared_ptr<ms::PromptSession>> it(copy);
+    QVector<std::shared_ptr<ms::PromptSession>> copy(m_promptSessions);
+    QVectorIterator<std::shared_ptr<ms::PromptSession>> it(copy);
     for ( it.toBack(); it.hasPrevious(); ) {
         std::shared_ptr<ms::PromptSession> promptSession = it.previous();
         qCDebug(QTMIR_SESSIONS) << "Session::stopPromptSessions - promptSession=" << promptSession.get();
@@ -415,7 +415,7 @@ std::shared_ptr<ms::PromptSession> Session::activePromptSession() const
     return nullptr;
 }
 
-void Session::foreachPromptSession(std::function<void(const std::shared_ptr<ms::PromptSession>&)> f) const
+void Session::foreachPromptSession(const std::function<void(const std::shared_ptr<ms::PromptSession>&)>& f) const
 {
     for (std::shared_ptr<ms::PromptSession> promptSession : m_promptSessions) {
         f(promptSession);

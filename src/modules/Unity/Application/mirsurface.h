@@ -45,10 +45,10 @@ class MirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
-    MirSurface(std::shared_ptr<mir::scene::Surface> surface,
+    MirSurface(const std::shared_ptr<mir::scene::Surface>& surface,
             SessionInterface* session,
             mir::shell::Shell *shell,
-            std::shared_ptr<SurfaceObserver> observer);
+            const std::shared_ptr<SurfaceObserver>& observer);
     virtual ~MirSurface();
 
     ////

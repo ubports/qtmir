@@ -54,7 +54,7 @@ QString toShortAppIdIfPossible(const QString &appId) {
     gchar *package, *application;
     if (ubuntu_app_launch_app_id_parse(appId.toLatin1().constData(), &package, &application, nullptr)) {
         // is long appId, so assemble its short appId
-        QString shortAppId = QString("%1_%2").arg(package).arg(application);
+        QString shortAppId = QStringLiteral("%1_%2").arg(package).arg(application);
         g_free(package);
         g_free(application);
         return shortAppId;
@@ -75,14 +75,14 @@ QString toLongAppIdIfPossible(const QString &shortAppId) {
         return shortAppId;
     } else {
         // try to parse the string in the form "$package_$application"
-        QRegExp shortAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+");
+        QRegExp shortAppIdMask(QStringLiteral("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+"));
         if (!shortAppIdMask.exactMatch(shortAppId)) {
             // input string not a short appId, so just return it unchanged
             return shortAppId;
         }
 
         // ask upstart for the long appId corresponding to this short appId
-        QStringList parts = shortAppId.split("_");
+        QStringList parts = shortAppId.split(QStringLiteral("_"));
         gchar *longAppId;
         longAppId = ubuntu_app_launch_triplet_to_app_id(parts.first().toLatin1().constData(),
                                                          parts.last().toLatin1().constData(),
@@ -244,10 +244,10 @@ QFileInfo ApplicationController::findDesktopFileForAppId(const QString &appId) c
             helper = helper.replace(dashPos, 1, '/');
         }
 
-        desktopFile = QStandardPaths::locate(QStandardPaths::ApplicationsLocation, QString("%1.desktop").arg(helper));
+        desktopFile = QStandardPaths::locate(QStandardPaths::ApplicationsLocation, QStringLiteral("%1.desktop").arg(helper));
         if (!desktopFile.isEmpty()) return desktopFile;
 
-        dashPos = helper.indexOf("-");
+        dashPos = helper.indexOf(QStringLiteral("-"));
     } while (dashPos != -1);
 
     return QFileInfo();

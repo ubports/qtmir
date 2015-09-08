@@ -85,7 +85,7 @@ MirSurfaceManager::MirSurfaceManager(
     , m_sessionManager(sessionManager)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::MirSurfaceManager - this=" << this;
-    setObjectName("qtmir::SurfaceManager");
+    setObjectName(QStringLiteral("qtmir::SurfaceManager"));
 }
 
 MirSurfaceManager::~MirSurfaceManager()

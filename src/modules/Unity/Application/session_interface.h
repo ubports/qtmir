@@ -87,10 +87,10 @@ public:
     virtual void addChildSession(SessionInterface* session) = 0;
     virtual void insertChildSession(uint index, SessionInterface* session) = 0;
     virtual void removeChildSession(SessionInterface* session) = 0;
-    virtual void foreachChildSession(std::function<void(SessionInterface* session)> f) const = 0;
+    virtual void foreachChildSession(const std::function<void(SessionInterface* session)>& f) const = 0;
 
     virtual std::shared_ptr<mir::scene::PromptSession> activePromptSession() const = 0;
-    virtual void foreachPromptSession(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> f) const = 0;
+    virtual void foreachPromptSession(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)>& f) const = 0;
 
     virtual void setFullscreen(bool fullscreen) = 0;
     virtual void setLive(const bool) = 0;

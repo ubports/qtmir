@@ -84,25 +84,25 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<MirSurfaceAttrib>("MirSurfaceAttrib");
 
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
-                    uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
+                    uri, 0, 1, "ApplicationManagerInterface", QStringLiteral("Abstract interface. Cannot be created in QML"));
         qmlRegisterSingletonType<qtmir::ApplicationManager>(
                     uri, 0, 1, "ApplicationManager", applicationManagerSingleton);
         qmlRegisterUncreatableType<unity::shell::application::ApplicationInfoInterface>(
-                    uri, 0, 1, "ApplicationInfoInterface", "Abstract interface. Cannot be created in QML");
+                    uri, 0, 1, "ApplicationInfoInterface", QStringLiteral("Abstract interface. Cannot be created in QML"));
         qmlRegisterUncreatableType<qtmir::Application>(
-                    uri, 0, 1, "ApplicationInfo", "Application can't be instantiated");
+                    uri, 0, 1, "ApplicationInfo", QStringLiteral("Application can't be instantiated"));
         qmlRegisterSingletonType<qtmir::MirSurfaceManager>(
                     uri, 0, 1, "SurfaceManager", surfaceManagerSingleton);
         qmlRegisterSingletonType<qtmir::SessionManager>(
                     uri, 0, 1, "SessionManager", sessionManagerSingleton);
         qmlRegisterUncreatableType<unity::shell::application::MirSurfaceInterface>(
-                    uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
+                    uri, 0, 1, "MirSurface", QStringLiteral("MirSurface can't be instantiated from QML"));
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
         qmlRegisterUncreatableType<qtmir::Session>(
-                    uri, 0, 1, "Session", "Session can't be instantiated from QML");
+                    uri, 0, 1, "Session", QStringLiteral("Session can't be instantiated from QML"));
         qmlRegisterSingletonType<qtmir::UbuntuKeyboardInfo>(
                 uri, 0, 1, "UbuntuKeyboardInfo", ubuntuKeyboardInfoSingleton);
-        qmlRegisterUncreatableType<Mir>(uri, 0, 1, "Mir", "Mir provides enum values, it can't be instantiated");
+        qmlRegisterUncreatableType<Mir>(uri, 0, 1, "Mir", QStringLiteral("Mir provides enum values, it can't be instantiated"));
     }
 
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)
@@ -111,7 +111,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
 
         qtmir::ApplicationManager* appManager
                 = static_cast<qtmir::ApplicationManager*>(applicationManagerSingleton(engine, nullptr));
-        engine->addImageProvider(QLatin1String("application"), new qtmir::ApplicationScreenshotProvider(appManager));
+        engine->addImageProvider(QStringLiteral("application"), new qtmir::ApplicationScreenshotProvider(appManager));
     }
 };
 

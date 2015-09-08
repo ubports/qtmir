@@ -62,7 +62,7 @@ QString touchEventToString(const QTouchEvent *ev)
 
         const QTouchEvent::TouchPoint& touchPoint = ev->touchPoints().at(i);
         message.append(
-            QString("(id:%1, state:%2, scenePos:(%3,%4), pos:(%5,%6)) ")
+            QStringLiteral("(id:%1, state:%2, scenePos:(%3,%4), pos:(%5,%6)) ")
                 .arg(touchPoint.id())
                 .arg(touchPointStateToString(touchPoint.state()))
                 .arg(touchPoint.scenePos().x())
@@ -81,30 +81,30 @@ QString mirSurfaceAttribAndValueToString(MirSurfaceAttrib attrib, int value)
 
     switch (attrib) {
     case mir_surface_attrib_type:
-        str = QString("type=%1").arg(mirSurfaceTypeToStr(value));
+        str = QStringLiteral("type=%1").arg(mirSurfaceTypeToStr(value));
         break;
 
     case mir_surface_attrib_state:
-        str = QString("state=%1").arg(mirSurfaceStateToStr(value));
+        str = QStringLiteral("state=%1").arg(mirSurfaceStateToStr(value));
         break;
 
     case mir_surface_attrib_swapinterval:
-        str = QString("swapinterval=%1").arg(value);
+        str = QStringLiteral("swapinterval=%1").arg(value);
         break;
 
     case mir_surface_attrib_focus:
-        str = QString("focus=%1").arg(mirSurfaceFocusStateToStr(value));
+        str = QStringLiteral("focus=%1").arg(mirSurfaceFocusStateToStr(value));
         break;
 
     case mir_surface_attrib_dpi:
-        str = QString("dpi=%1").arg(value);
+        str = QStringLiteral("dpi=%1").arg(value);
         break;
 
     case mir_surface_attrib_visibility:
-        str = QString("visibility=%1").arg(mirSurfaceVisibilityToStr(value));
+        str = QStringLiteral("visibility=%1").arg(mirSurfaceVisibilityToStr(value));
         break;
     default:
-        str = QString("type'%1'=%2").arg((int)attrib).arg(value);
+        str = QStringLiteral("type'%1'=%2").arg((int)attrib).arg(value);
     }
 
     return str;
@@ -212,7 +212,7 @@ QString mirTouchEventToString(MirTouchEvent const* event)
 {
     const int pointerCount = mir_touch_event_point_count(event);
 
-    QString string("MirTouchInputEvent(");
+    QString string(QStringLiteral("MirTouchInputEvent("));
 
     for (int i = 0; i < pointerCount; ++i) {
 
@@ -222,7 +222,7 @@ QString mirTouchEventToString(MirTouchEvent const* event)
 
         MirTouchAction touchAction = mir_touch_event_action(event, i);
 
-        QString touchStr = QString("(id=%1,action=%2,x=%3,y=%4)")
+        QString touchStr = QStringLiteral("(id=%1,action=%2,x=%3,y=%4)")
             .arg(mir_touch_event_id(event, i))
             .arg(mirTouchActionToString(touchAction))
             .arg(mir_touch_event_axis_value(event, i, mir_touch_axis_x))

@@ -64,12 +64,12 @@ namespace {
 
 // FIXME: To be removed once shell has fully adopted short appIds!!
 QString toShortAppIdIfPossible(const QString &appId) {
-    QRegExp longAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*");
+    QRegExp longAppIdMask(QStringLiteral("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*"));
     if (longAppIdMask.exactMatch(appId)) {
         qWarning() << "WARNING: long App ID encountered:" << appId;
         // input string a long AppId, chop the version string off the end
-        QStringList parts = appId.split("_");
-        return QString("%1_%2").arg(parts.first()).arg(parts.at(1));
+        QStringList parts = appId.split(QStringLiteral("_"));
+        return QStringLiteral("%1_%2").arg(parts.first()).arg(parts.at(1));
     }
     return appId;
 }
@@ -192,13 +192,13 @@ ApplicationManager::ApplicationManager(
     , m_settings(settings)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
-    setObjectName("qtmir::ApplicationManager");
+    setObjectName(QStringLiteral("qtmir::ApplicationManager"));
 
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
 
     if (settings.data()) {
-        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
+        Application::lifecycleExceptions = m_settings->get(QStringLiteral("lifecycleExemptAppids")).toStringList();
         connect(m_settings.data(), &Settings::changed, this, &ApplicationManager::onSettingsChanged);
     }
 }
@@ -539,8 +539,8 @@ void ApplicationManager::onAppDataChanged(const int role)
 
 void ApplicationManager::onSettingsChanged(const QString &key)
 {
-    if (key == "lifecycleExemptAppids") {
-        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
+    if (key == QLatin1String("lifecycleExemptAppids")) {
+        Application::lifecycleExceptions = m_settings->get(QStringLiteral("lifecycleExemptAppids")).toStringList();
     }
 }
 
@@ -593,7 +593,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
 
     // Guess appId from the desktop file hint
-    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
+    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(QStringLiteral(".desktop$"))));
 
     // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
     // case we didn't get an existing .desktop file path
@@ -629,7 +629,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
     Application::Stage stage = Application::MainStage;
     QString stageParam = info->getParameter("--stage_hint=");
 
-    if (stageParam == "side_stage") {
+    if (stageParam == QLatin1String("side_stage")) {
         stage = Application::SideStage;
     }
 

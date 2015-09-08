@@ -31,8 +31,9 @@
 class QMirServer;
 class MirServerThread;
 
-struct QMirServerPrivate
+class QMirServerPrivate
 {
+public:
     QSharedPointer<MirServer> server;
     MirServerThread *serverThread;
 };

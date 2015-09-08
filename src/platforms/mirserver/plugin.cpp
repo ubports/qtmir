@@ -19,12 +19,12 @@
 
 QStringList MirServerIntegrationPlugin::keys() const {
     QStringList list;
-    list << "mirserver";
+    list << QStringLiteral("mirserver");
     return list;
 }
 
 QPlatformIntegration* MirServerIntegrationPlugin::create(const QString &system, const QStringList &) {
-    if (system.toLower() == "mirserver")
+    if (system.toLower() == QLatin1String("mirserver"))
         return new MirServerIntegration;
     return 0;
 }

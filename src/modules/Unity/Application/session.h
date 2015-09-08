@@ -68,12 +68,12 @@ public:
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;
     void removeChildSession(SessionInterface* session) override;
-    void foreachChildSession(std::function<void(SessionInterface* session)> f) const override;
+    void foreachChildSession(const std::function<void(SessionInterface* session)>& f) const override;
 
     std::shared_ptr<mir::scene::Session> session() const override;
 
     std::shared_ptr<mir::scene::PromptSession> activePromptSession() const override;
-    void foreachPromptSession(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> f) const override;
+    void foreachPromptSession(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)>& f) const override;
 
     SessionModel* childSessions() const override;
 
@@ -107,7 +107,7 @@ private:
     bool m_live;
     bool m_released;
     QTimer* m_suspendTimer;
-    QList<std::shared_ptr<mir::scene::PromptSession>> m_promptSessions;
+    QVector<std::shared_ptr<mir::scene::PromptSession>> m_promptSessions;
     std::shared_ptr<mir::scene::PromptSessionManager> const m_promptSessionManager;
 };
 

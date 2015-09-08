@@ -164,7 +164,7 @@ void UbuntuKeyboardInfo::buildSocketFilePath()
     if (xdgRuntimeDir) {
         m_socketFilePath = QDir(xdgRuntimeDir).filePath(gServerName);
     } else {
-        m_socketFilePath = QDir("/tmp").filePath(gServerName);
+        m_socketFilePath = QDir(QStringLiteral("/tmp")).filePath(gServerName);
     }
 }
 

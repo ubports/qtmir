@@ -47,7 +47,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_desktopData(desktopFileReader)
     , m_pid(0)
-    , m_stage((m_desktopData->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage((m_desktopData->stageHint() == QLatin1String("SideStage")) ? Application::SideStage : Application::MainStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
@@ -61,7 +61,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     acquireWakelock();
 
     // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
-    m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
+    m_longAppId = desktopFileReader->file().remove(QRegExp(QStringLiteral(".desktop$"))).split('/').last();
 
     m_supportedOrientations = m_desktopData->supportedOrientations();
 
@@ -156,7 +156,7 @@ QUrl Application::splashImage() const
             return QUrl::fromLocalFile(imageFileInfo.canonicalFilePath());
         } else {
             qCWarning(QTMIR_APPLICATIONS)
-                << QString("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
+                << QStringLiteral("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
                     .arg(appId()).arg(imageFileInfo.absoluteFilePath());
 
             return QUrl();
@@ -180,7 +180,7 @@ QColor Application::colorFromString(const QString &colorString, const char *colo
             color.setAlpha(255);
         } else {
             color.setRgba(qRgba(0, 0, 0, 0));
-            qCWarning(QTMIR_APPLICATIONS) << QString("Invalid %1: \"%2\"")
+            qCWarning(QTMIR_APPLICATIONS) << QStringLiteral("Invalid %1: \"%2\"")
                 .arg(colorName).arg(colorString);
         }
     }
@@ -215,7 +215,7 @@ const char* Application::internalStateToStr(InternalState state)
 bool Application::splashShowHeader() const
 {
     QString showHeader = m_desktopData->splashShowHeader();
-    if (showHeader.toLower() == "true") {
+    if (showHeader.toLower() == QLatin1String("true")) {
         return true;
     } else {
         return false;
@@ -623,7 +623,7 @@ SessionInterface* Application::session() const
 
 void Application::acquireWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->acquire(this);
@@ -631,7 +631,7 @@ void Application::acquireWakelock() const
 
 void Application::releaseWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->release(this);

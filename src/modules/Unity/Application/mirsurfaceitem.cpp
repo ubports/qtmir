@@ -57,7 +57,7 @@ class MirTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    MirTextureProvider(QSharedPointer<QSGTexture> texture) : t(texture) {}
+    MirTextureProvider(const QSharedPointer<QSGTexture>& texture) : t(texture) {}
     QSGTexture *texture() const {
         if (t)
             t->setFiltering(smooth ? QSGTexture::Linear : QSGTexture::Nearest);
@@ -70,7 +70,7 @@ public:
         t.reset();
     }
 
-    void setTexture(QSharedPointer<QSGTexture> newTexture) {
+    void setTexture(const QSharedPointer<QSGTexture>& newTexture) {
         t = newTexture;
     }
 
@@ -386,7 +386,7 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
             Qt::TouchPointStates touchPointStates)
 {
     if (eventType == QEvent::TouchBegin && m_lastTouchEvent && m_lastTouchEvent->type != QEvent::TouchEnd) {
-        qCWarning(QTMIR_SURFACES) << qPrintable(QString("MirSurfaceItem(%1) - Got a QEvent::TouchBegin while "
+        qCWarning(QTMIR_SURFACES) << qPrintable(QStringLiteral("MirSurfaceItem(%1) - Got a QEvent::TouchBegin while "
             "there's still an active/unfinished touch sequence.").arg(appId()));
         // Qt forgot to end the last touch sequence. Let's do it ourselves.
         endCurrentTouchSequence(timestamp);

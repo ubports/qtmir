@@ -37,8 +37,9 @@ DesktopFileReader* DesktopFileReader::Factory::createInstance(const QString &app
 
 typedef GObjectScopedPointer<GAppInfo> GAppInfoPointer;
 
-struct DesktopFileReaderPrivate
+class DesktopFileReaderPrivate
 {
+public:
     DesktopFileReaderPrivate(DesktopFileReader *parent):
             q_ptr( parent )
     {}
@@ -160,7 +161,7 @@ QString DesktopFileReader::splashTitle() const
     QLocale defaultLocale;
     QStringList locales = defaultLocale.uiLanguages();
 
-    QString keyTemplate("X-Ubuntu-Splash-Title[%1]");
+    QString keyTemplate(QStringLiteral("X-Ubuntu-Splash-Title[%1]"));
     for (QString locale: locales) {
         // Desktop files use local specifiers with underscore separators but Qt uses hyphens
         locale = locale.replace('-', '_');
@@ -243,12 +244,12 @@ bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOr
 
     QStringList orientationsList = rawString
             .simplified()
-            .replace(QChar(','), ";")
+            .replace(QChar(','), QStringLiteral(";"))
             .remove(QChar(' '))
             .remove(QChar('-'))
             .remove(QChar('_'))
             .toLower()
-            .split(";");
+            .split(QStringLiteral(";"));
 
     for (int i = 0; i < orientationsList.count() && ok; ++i) {
         const QString &orientationString = orientationsList.at(i);
@@ -257,15 +258,15 @@ bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOr
             continue;
         }
 
-        if (orientationString == "portrait") {
+        if (orientationString == QLatin1String("portrait")) {
             parsedOrientations |= Qt::PortraitOrientation;
-        } else if (orientationString == "landscape") {
+        } else if (orientationString == QLatin1String("landscape")) {
             parsedOrientations |= Qt::LandscapeOrientation;
-        } else if (orientationString == "invertedportrait") {
+        } else if (orientationString == QLatin1String("invertedportrait")) {
             parsedOrientations |= Qt::InvertedPortraitOrientation;
-        } else if (orientationString == "invertedlandscape") {
+        } else if (orientationString == QLatin1String("invertedlandscape")) {
             parsedOrientations |= Qt::InvertedLandscapeOrientation;
-        } else if (orientationsList.count() == 1 && orientationString == "primary") {
+        } else if (orientationsList.count() == 1 && orientationString == QLatin1String("primary")) {
             // Special case: primary orientation must be alone
             // There's no sense in supporting primary orientation + other orientations
             // like "primary,landscape"
@@ -286,16 +287,16 @@ bool DesktopFileReader::parseBoolean(const QString &rawString, bool &result)
 {
     QString cookedString = rawString.trimmed().toLower();
 
-    result = cookedString == "y"
-          || cookedString == "1"
-          || cookedString == "yes"
-          || cookedString == "true";
+    result = cookedString == QLatin1String("y")
+          || cookedString == QLatin1String("1")
+          || cookedString == QLatin1String("yes")
+          || cookedString == QLatin1String("true");
 
     return result || rawString.isEmpty()
-        || cookedString == "n"
-        || cookedString == "0"
-        || cookedString == "no"
-        || cookedString == "false";
+        || cookedString == QLatin1String("n")
+        || cookedString == QLatin1String("0")
+        || cookedString == QLatin1String("no")
+        || cookedString == QLatin1String("false");
 }
 
 bool DesktopFileReader::loaded() const
