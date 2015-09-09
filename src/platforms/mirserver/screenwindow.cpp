@@ -90,10 +90,11 @@ void ScreenWindow::setExposed(const bool exposed)
     if (!quickWindow)
         return;
 
+    auto renderer = QSGRenderLoop::instance();
     if (exposed) {
-        QWindowSystemInterface::handleExposeEvent(window(), QRegion());
+        renderer->show(quickWindow);
+        QWindowSystemInterface::handleExposeEvent(window(), QRegion()); // else it won't redraw
     } else {
-        auto renderer = QSGRenderLoop::instance();
         renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
     }
 }
