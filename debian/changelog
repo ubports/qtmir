@@ -1,3 +1,16 @@
+qtmir (0.4.6+15.10.20150914-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * MirSurfaceItem gets dirty when it's set to draw a different (or no)
+    surface (LP: #1492185)
+  * QtEventFeeder: log the pointer events it gets from Mir
+
+  [ Daniel van Vugt ]
+  * Stop waking up every 200ms if there's nothing to wake up for. It's
+    just wasting battery. (LP: #1479250)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Mon, 14 Sep 2015 13:11:56 +0000
+
 qtmir (0.4.6+15.10.20150904-0ubuntu1) wily; urgency=medium
 
   [ Michal Sawicz ]
