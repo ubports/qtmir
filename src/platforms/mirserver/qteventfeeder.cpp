@@ -590,7 +590,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
 
     qint64 timestamp = mir_input_event_get_event_time(event);
 
-    tracepoint(qtmirserver, touchEventDisptach_start, timestamp);
+    tracepoint(qtmirserver, touchEventDispatch_start, timestamp);
 
     auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
@@ -649,7 +649,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         mTouchDevice,
         touchPoints);
 
-    tracepoint(qtmirserver, touchEventDisptach_end, timestamp);
+    tracepoint(qtmirserver, touchEventDispatch_end, timestamp);
 }
 
 void QtEventFeeder::start()

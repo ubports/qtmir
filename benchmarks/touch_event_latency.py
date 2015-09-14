@@ -94,11 +94,11 @@ def perform_test():
             if pid not in server_touch_data_timestamps: server_touch_data_timestamps[pid] = []
             server_touch_data_timestamps[pid].append(event["event_time"])
 
-        elif event.name == "qtmirserver:touchEventDisptach_start":
+        elif event.name == "qtmirserver:touchEventDispatch_start":
             if pid not in qtmir_touch_dispatch_start: qtmir_touch_dispatch_start[pid] = []
             qtmir_touch_dispatch_start[pid].append(event.timestamp)
 
-        elif event.name == "qtmirserver:touchEventDisptach_end":
+        elif event.name == "qtmirserver:touchEventDispatch_end":
             if pid not in qtmir_touch_dispatch_end: qtmir_touch_dispatch_end[pid] = []
             qtmir_touch_dispatch_end[pid].append(event.timestamp)
 
