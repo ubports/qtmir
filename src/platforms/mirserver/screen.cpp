@@ -283,6 +283,7 @@ void Screen::setWindow(ScreenWindow *window)
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
 {
+    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << buffer << group;
     // This operation should only be performed while rendering is stopped
     m_displayBuffer = buffer;
     m_displayGroup = group;
