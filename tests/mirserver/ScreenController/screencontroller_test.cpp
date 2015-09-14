@@ -53,9 +53,6 @@ void ScreenControllerTest::SetUp()
     display = std::make_shared<StubDisplay>();
     compositor = std::make_shared<QtCompositor>();
 
-    EXPECT_CALL(*display, register_configuration_change_handler(_,_))
-        .Times(1);
-
     static_cast<TestableScreenController*>(screenController)->do_init(display, compositor);
 
     int argc = 0;
