@@ -322,7 +322,9 @@ void MirSurface::updateTexture()
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
-    if (m_surface->buffers_ready_for_compositor(userId) > 0 && renderables.size() > 0) {
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor(userId) > 0 || !texture->hasBuffer())
+        ) {
         // Avoid holding two buffers for the compositor at the same time. Thus free the current
         // before acquiring the next
         texture->freeBuffer();

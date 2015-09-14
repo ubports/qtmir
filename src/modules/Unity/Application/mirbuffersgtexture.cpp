@@ -57,6 +57,11 @@ void MirBufferSGTexture::setBuffer(std::shared_ptr<mir::graphics::Buffer> buffer
     m_width = size.width.as_int();
 }
 
+bool MirBufferSGTexture::hasBuffer() const
+{
+    return !!m_mirBuffer;
+}
+
 int MirBufferSGTexture::textureId() const
 {
     return m_textureId;
