@@ -95,6 +95,8 @@ void ScreenWindow::setExposed(const bool exposed)
         renderer->show(quickWindow);
         QWindowSystemInterface::handleExposeEvent(window(), QRegion()); // else it won't redraw
     } else {
+        quickWindow->setPersistentOpenGLContext(false);
+        quickWindow->setPersistentSceneGraph(false);
         renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
     }
 }
