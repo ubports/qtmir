@@ -40,10 +40,10 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
     : m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
-    m_display = server->the_display();
+    auto display = server->the_display();
 
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
-    std::unique_ptr<mir::graphics::GLContext> mirContext = m_display->create_gl_context();
+    std::unique_ptr<mir::graphics::GLContext> mirContext = display->create_gl_context();
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -149,8 +149,6 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 void MirOpenGLContext::doneCurrent()
 {
     // FIXME: create a temporary GL context just to release? Would be better to get existing one.
-    std::unique_ptr<mir::graphics::GLContext> mirContext = m_display->create_gl_context();
-    mirContext->release_current();
 }
 
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)

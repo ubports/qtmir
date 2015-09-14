@@ -23,9 +23,6 @@
 #include <QOpenGLDebugLogger>
 #endif
 
-#include <memory>
-
-namespace mir { namespace graphics { class Display; }}
 
 class MirServer;
 
@@ -51,7 +48,6 @@ public:
 #endif
 
 private:
-    std::shared_ptr<mir::graphics::Display> m_display;
     QSurfaceFormat m_format;
 #ifndef QT_NO_DEBUG
     QOpenGLDebugLogger *m_logger;
