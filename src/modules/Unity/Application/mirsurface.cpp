@@ -360,12 +360,12 @@ void MirSurface::setFocus(bool focus)
     // Temporary hotfix for http://pad.lv/1483752
     if (m_session->childSessions()->rowCount() > 0) {
         // has child trusted session, ignore any focus change attempts
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << (focus ? "true" : "false")
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus
             << ") - has child trusted session, ignore any focus change attempts";
         return;
     }
 
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << (focus ? "true" : "false") << ")";
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus << ")";
 
     if (focus) {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
