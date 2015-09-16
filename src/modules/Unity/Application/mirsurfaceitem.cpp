@@ -404,12 +404,12 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
     m_lastTouchEvent->touchPoints = touchPoints;
     m_lastTouchEvent->touchPointStates = touchPointStates;
 
-    tracepoint(qtmir, touchEventConsume_end, uncompressTimestamp(timestamp).count());
+    tracepoint(qtmir, touchEventConsume_end, uncompressTimestamp<ulong>(timestamp).count());
 }
 
 void MirSurfaceItem::touchEvent(QTouchEvent *event)
 {
-    tracepoint(qtmir, touchEventConsume_start, uncompressTimestamp(event->timestamp()).count());
+    tracepoint(qtmir, touchEventConsume_start, uncompressTimestamp<ulong>(event->timestamp()).count());
 
     bool accepted = processTouchEvent(event->type(),
             event->timestamp(),

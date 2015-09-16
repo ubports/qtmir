@@ -26,7 +26,6 @@ set(QMLMIRPLUGIN_SRC
     application.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
-    ../../../common/timestamp.cpp
     desktopfilereader.cpp
     plugin.cpp
     applicationscreenshotprovider.cpp

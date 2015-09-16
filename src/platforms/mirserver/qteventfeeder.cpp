@@ -513,7 +513,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
-    auto timestamp = qtmir::compressTimestamp(mir_input_event_get_event_time(ev));
+    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
 
     auto pev = mir_input_event_get_pointer_event(ev);
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
@@ -531,7 +531,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
-    auto timestamp = qtmir::compressTimestamp(mir_input_event_get_event_time(event));
+    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
     auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
@@ -588,9 +588,9 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     if (!mQtWindowSystem->hasTargetWindow())
         return;
 
-    qint64 timestamp = mir_input_event_get_event_time(event);
+    auto timestamp = std::chrono::nanoseconds(mir_input_event_get_event_time(event));
 
-    tracepoint(qtmirserver, touchEventDispatch_start, timestamp);
+    tracepoint(qtmirserver, touchEventDispatch_start, timestamp.count());
 
     auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
@@ -635,7 +635,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         touchPoints.append(touchPoint);
     }
 
-    auto compressedTimestamp = qtmir::compressTimestamp(timestamp);
+    auto compressedTimestamp = qtmir::compressTimestamp<ulong>(timestamp);
 
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
@@ -649,7 +649,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         mTouchDevice,
         touchPoints);
 
-    tracepoint(qtmirserver, touchEventDispatch_end, timestamp);
+    tracepoint(qtmirserver, touchEventDispatch_end, timestamp.count());
 }
 
 void QtEventFeeder::start()

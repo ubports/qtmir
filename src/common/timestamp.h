@@ -22,13 +22,18 @@
 
 namespace qtmir {
 
-// Converts a mir timestamp (in nanoseconds) to a timestamp in milliseconds.
-// Qt system events only work with ulong timestamps, so we truncate the result by using time since "first call"
-ulong compressTimestamp(qint64 timestamp);
+// Converts a mir timestamp (in nanoseconds) to and from a timestamp in milliseconds.
+// Qt system events only work with ulong timestamps. On 32bit archs a ulong is 4 bytes long, so the 64 bit nanoseconds
+// will be truncated and skewed. In order to fix this, we truncate the result by using time since "first call"
+template<typename T>
+T compressTimestamp(std::chrono::nanoseconds timestamp);
 
-// "Re-inflate" a truncated timestamp.
-std::chrono::nanoseconds uncompressTimestamp(ulong timestamp);
+	// "Re-inflate" a truncated timestamp.
+template<typename T>
+std::chrono::nanoseconds uncompressTimestamp(T timestamp);
 
 }
+
+#include "timestamp_impl.h"
 
 #endif // QTMIR_TIMESTAMP_H
