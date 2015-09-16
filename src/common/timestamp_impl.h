@@ -1,31 +1,12 @@
 #include <QCoreApplication>
 #include <QVariant>
 
+extern "C" {
+	void resetStartTime(std::chrono::nanoseconds timestamp);
+	std::chrono::nanoseconds getStartTime(std::chrono::nanoseconds timestamp, bool allowReset = true);
+}
+
 namespace qtmir {
-
-namespace {
-
-void resetStartTime(std::chrono::nanoseconds timestamp)
-{
-    if (qApp) {
-        qApp->setProperty("appStartTime", (qint64)timestamp.count());
-    }
-}
-std::chrono::nanoseconds getStartTime(std::chrono::nanoseconds timestamp, bool allowReset = true)
-{
-    if (!qApp) return std::chrono::nanoseconds(0);
-    QVariant vData = qApp->property("appStartTime");
-    if (!vData.isValid()) {
-        if (allowReset) {
-            resetStartTime(timestamp);
-            return timestamp;
-        }
-        return std::chrono::nanoseconds(0);
-    }
-    return std::chrono::nanoseconds(vData.value<qint64>());
-}
-
-}
 
 template<typename T>
 T compressTimestamp(std::chrono::nanoseconds timestamp)

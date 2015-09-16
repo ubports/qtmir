@@ -2,7 +2,7 @@ set(
   GENERAL_TEST_SOURCES
   objectlistmodel_test.cpp
   timestamp_test.cpp
-  ${CMAKE_SOURCE_DIR}/src/common/timestamp_impl.h
+  ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
 )
 
 include_directories(
