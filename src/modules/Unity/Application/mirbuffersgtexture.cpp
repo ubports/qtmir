@@ -79,6 +79,11 @@ void MirBufferSGTexture::bind()
 {
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
-    auto const texture_source = dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
+
+    auto const texture_source =
+        dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
+    if (!texture_source)
+        throw std::logic_error("Buffer does not support GL rendering");
+
     texture_source->gl_bind_to_texture();
 }
