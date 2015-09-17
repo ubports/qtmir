@@ -98,6 +98,9 @@ void QtEventFeederTest::setIrrelevantMockWindowSystemExpectations()
         .WillRepeatedly(Return(QRect(0,0,100,100)));
 }
 
+// for make_event
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 /*
    Mir sends a MirEvent([touch(id=0,state=pressed)]. QtEventFeeder happily forwards that to Qt.
@@ -254,3 +257,5 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
 
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
 }
+
+#pragma GCC diagnostic pop

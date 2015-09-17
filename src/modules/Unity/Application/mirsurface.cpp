@@ -49,6 +49,10 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
     return m_mods;
 }
 
+// for make_event
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
     auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
@@ -136,6 +140,8 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 
     return ev;
 }
+
+#pragma GCC diagnostic pop
 
 } // namespace {
 
