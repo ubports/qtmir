@@ -28,9 +28,12 @@
 
 #include <private/qobject_p.h>
 
+// REMOVEME - Should be able to use qmlscene, but in order to use the mir benchmarking we need
+// to parse command line switches. Wait until MIR_SOCKET supported by the benchmark framework.
+
 int main(int argc, const char *argv[])
 {
-    QGuiApplication::setApplicationName("unity8");
+    QGuiApplication::setApplicationName("qml-demo-shell");
     QGuiApplication *application;
 
     application = new QGuiApplication(argc, (char**)argv);

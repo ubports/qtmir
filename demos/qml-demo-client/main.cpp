@@ -23,6 +23,9 @@
 #include <getopt.h>
 #include "../paths.h"
 
+// REMOVEME - Should be able to use qmlscene, but in order to use the mir benchmarking we need
+// to parse command line switches. Wait until MIR_SOCKET supported by the benchmark framework.
+
 int main(int argc, char **argv)
 {
     int arg;
@@ -46,14 +49,14 @@ int main(int argc, char **argv)
         }
     }
 
-    QGuiApplication::setApplicationName("unity8");
+    QGuiApplication::setApplicationName("qml-demo-client");
     QGuiApplication *application;
 
     application = new QGuiApplication(argc, (char**)argv);
     QQuickView* view = new QQuickView();
     view->setResizeMode(QQuickView::SizeRootObjectToView);
     view->setColor("black");
-    view->setTitle("Demo Shell");
+    view->setTitle("Demo Client");
     
     QUrl source(::qmlDirectory() + "qtmir-demo-client/qml-demo-client.qml");
 
