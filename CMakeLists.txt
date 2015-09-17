@@ -62,6 +62,7 @@ find_package(Threads REQUIRED)
 
 pkg_check_modules(MIRSERVER mirserver>=0.14 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.14 REQUIRED)
+pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.16 REQUIRED)
 
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
