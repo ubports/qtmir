@@ -64,7 +64,7 @@ public:
         return t.data();
     }
 
-    bool smooth;
+    bool smooth{false};
 
     void releaseTexture() {
         t.reset();
@@ -207,12 +207,12 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QTimer::singleShot(0, this, SLOT(update()));
     }
 
+    m_textureProvider->smooth = smooth();
+
     if (!m_textureProvider->texture()) {
         delete oldNode;
         return 0;
     }
-
-    m_textureProvider->smooth = smooth();
 
     QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
     if (!node) {
