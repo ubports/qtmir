@@ -222,11 +222,6 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
     }
 }
 
-SessionInterface* MirSurface::session() const
-{
-    return m_session.data();
-}
-
 Mir::Type MirSurface::type() const
 {
     switch (m_surface->type()) {
@@ -364,11 +359,19 @@ bool MirSurface::numBuffersReadyForCompositor()
 
 void MirSurface::setFocus(bool focus)
 {
-    // Temporary hotfix for http://pad.lv/1483752
-    if (session() && session()->childSessions()->rowCount() > 0) {
-        // has child trusted session, ignore any focus change attempts
+    if (!m_session) {
         return;
     }
+
+    // Temporary hotfix for http://pad.lv/1483752
+    if (m_session->childSessions()->rowCount() > 0) {
+        // has child trusted session, ignore any focus change attempts
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus
+            << ") - has child trusted session, ignore any focus change attempts";
+        return;
+    }
+
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus << ")";
 
     if (focus) {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
@@ -640,4 +643,16 @@ void MirSurface::onSessionDestroyed()
 void MirSurface::emitSizeChanged()
 {
     Q_EMIT sizeChanged(m_size);
+}
+
+QString MirSurface::appId() const
+{
+    QString appId;
+
+    if (m_session && m_session->application()) {
+        appId = m_session->application()->appId();
+    } else {
+        appId.append("-");
+    }
+    return appId;
 }
