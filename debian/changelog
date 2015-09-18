@@ -1,3 +1,11 @@
+qtmir (0.4.6+15.10.20150918-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Update surface focus when a surface enters or leaves a
+    MirSurfaceItem (LP: #1491034, #1495437)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 18 Sep 2015 20:11:52 +0000
+
 qtmir (0.4.6+15.10.20150914-0ubuntu1) wily; urgency=medium
 
   [ Daniel d'Andrada ]
