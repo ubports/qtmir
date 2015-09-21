@@ -142,10 +142,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         QMutexLocker lock(&m_mutex);
         auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
         if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
-
-            qmlSurface = it.value();
-
-            m_mirSurfaceToQmlSurfaceHash.remove(m_mirSurfaceToQmlSurfaceHash.key(qmlSurface));
+            m_mirSurfaceToQmlSurfaceHash.erase(it);
         } else {
             qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurface corresponding"
                         << "to surface=" << surface.get() << "surface.name=" << surface->name().c_str();
