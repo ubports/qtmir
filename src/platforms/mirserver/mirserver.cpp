@@ -32,6 +32,9 @@
 // egl
 #include <EGL/egl.h>
 
+// mir
+#include <mir/graphics/cursor.h>
+
 namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -99,6 +102,9 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
         });
 
     apply_settings();
+
+    // We will draw our own cursor.
+    add_init_callback([this](){ the_cursor()->hide(); });
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
 }

@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.4
 import Unity.Application 0.1
 
 Rectangle {
@@ -88,6 +88,7 @@ Rectangle {
     }
 
     Rectangle {
+        id: resizeButton
         width: 90
         height: 40
         color: "blue"
@@ -100,6 +101,23 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             onClicked: { root.resizeModeStretch = !root.resizeModeStretch; }
+        }
+    }
+
+    Rectangle {
+        width: 40
+        height: 40
+        color: "green"
+        anchors { right: resizeButton.left; bottom: parent.bottom }
+        Text {
+            anchors.centerIn: parent
+            text: "⟳"
+            color: "white"
+            font.pixelSize: 35
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: { root.rotation += 180; }
         }
     }
 

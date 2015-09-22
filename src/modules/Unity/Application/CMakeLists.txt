@@ -91,4 +91,3 @@ add_lttng_gen_tp(NAME tracepoints)
 # install
 add_qml_plugin(Unity.Application 0.1 Unity/Application TARGETS unityapplicationplugin)
 install(FILES com.canonical.qtmir.gschema.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas)
-

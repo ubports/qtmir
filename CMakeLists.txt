@@ -60,7 +60,7 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-pkg_check_modules(MIRSERVER mirserver>=0.14 REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.15 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.14 REQUIRED)
 
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
@@ -74,7 +74,7 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=8)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=9)
 
 include_directories(${APPLICATION_API_INCLUDE_DIRS})
 
