@@ -519,9 +519,32 @@ void MirSurface::setLive(bool value)
     }
 }
 
+void MirSurface::setVisibility(Mir::Visibility visibility)
+{
+    switch (visibility) {
+    case Mir::Occluded:
+        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+        break;
+    case Mir::Exposed:
+        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+        break;
+    }
+}
+
 bool MirSurface::live() const
 {
     return m_live;
+}
+
+Mir::Visibility MirSurface::visibility() const
+{
+    switch (m_surface->query(mir_surface_attrib_visibility)) {
+    case mir_surface_visibility_occluded:
+        return Mir::Occluded;
+    case mir_surface_visibility_exposed:
+    default:
+        return Mir::Exposed;
+    }
 }
 
 void MirSurface::mousePressEvent(QMouseEvent *event)

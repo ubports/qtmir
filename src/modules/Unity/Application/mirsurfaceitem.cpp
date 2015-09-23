@@ -413,6 +413,14 @@ void MirSurfaceItem::touchEvent(QTouchEvent *event)
     event->setAccepted(accepted);
 }
 
+void MirSurfaceItem::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    if (change == QQuickItem::ItemVisibleHasChanged) {
+        updateMirSurfaceVisibility();
+    }
+    QQuickItem::itemChange(change, value);
+}
+
 bool MirSurfaceItem::processTouchEvent(
         int eventType,
         ulong timestamp,
@@ -504,6 +512,15 @@ void MirSurfaceItem::updateMirSurfaceSize()
     int height = m_surfaceHeight > 0 ? m_surfaceHeight : m_surface->size().height();
 
     m_surface->resize(width, height);
+}
+
+void MirSurfaceItem::updateMirSurfaceVisibility()
+{
+    if (!m_surface || !m_surface->live()) {
+        return;
+    }
+
+    m_surface->setVisibility(isVisible() ? Mir::Exposed : Mir::Occluded);
 }
 
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
@@ -611,6 +628,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
+        updateMirSurfaceVisibility();
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);

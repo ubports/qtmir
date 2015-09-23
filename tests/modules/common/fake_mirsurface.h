@@ -56,6 +56,7 @@ public:
         , m_live(true)
         , m_state(Mir::RestoredState)
         , m_orientationAngle(Mir::Angle0)
+        , m_visibility(Mir::Exposed)
         , m_viewCount(0)
         , m_focused(false)
     {}
@@ -87,6 +88,8 @@ public:
 
     bool live() const override { return m_live; }
 
+    Mir::Visibility visibility() const override { return m_visibility; }
+
     Mir::OrientationAngle orientationAngle() const override { return m_orientationAngle; }
     void setOrientationAngle(Mir::OrientationAngle angle) override {
         if (m_orientationAngle != angle) {
@@ -115,6 +118,13 @@ public:
         if (m_live != value) {
             m_live = value;
             Q_EMIT liveChanged(m_live);
+        }
+    }
+
+    void setVisibility(Mir::Visibility visibility) override {
+        if (m_visibility != visibility) {
+            m_visibility = visibility;
+            Q_EMIT visibilityChanged(m_visibility);
         }
     }
 
@@ -187,6 +197,7 @@ private:
     bool m_live;
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
+    Mir::Visibility m_visibility;
     QSize m_size;
     int m_viewCount;
     bool m_focused;

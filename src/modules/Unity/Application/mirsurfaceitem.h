@@ -103,6 +103,8 @@ protected:
 
     void touchEvent(QTouchEvent *event) override;
 
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
+
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *);
 
     void releaseResources() override;
@@ -117,6 +119,7 @@ private Q_SLOTS:
 
 private:
     void ensureTextureProvider();
+    void updateMirSurfaceVisibility();
 
     bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);
     bool isMouseInsideUbuntuKeyboard(const QMouseEvent *event);

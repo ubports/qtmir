@@ -67,6 +67,8 @@ public:
 
     bool live() const override;
 
+    Mir::Visibility visibility() const;
+
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
 
@@ -74,6 +76,8 @@ public:
     // qtmir::MirSurfaceInterface
 
     void setLive(bool value) override;
+
+    void setVisibility(Mir::Visibility visibility);
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 

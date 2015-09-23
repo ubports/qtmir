@@ -41,6 +41,8 @@ public:
 
     virtual void setLive(bool value) = 0;
 
+    virtual void setVisibility(Mir::Visibility visibility) = 0;
+
     virtual bool isFirstFrameDrawn() const = 0;
 
     virtual SessionInterface *session() const = 0;
