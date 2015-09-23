@@ -217,6 +217,9 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
     case mir_surface_attrib_state:
         Q_EMIT stateChanged(state());
         break;
+    case mir_surface_attrib_visibility:
+        Q_EMIT visibleChanged(visible());
+        break;
     default:
         break;
     }
@@ -519,15 +522,12 @@ void MirSurface::setLive(bool value)
     }
 }
 
-void MirSurface::setVisibility(Mir::Visibility visibility)
+void MirSurface::setVisible(bool visible)
 {
-    switch (visibility) {
-    case Mir::Occluded:
-        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
-        break;
-    case Mir::Exposed:
+    if (visible) {
         m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
-        break;
+    } else {
+        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
     }
 }
 
@@ -536,15 +536,9 @@ bool MirSurface::live() const
     return m_live;
 }
 
-Mir::Visibility MirSurface::visibility() const
+bool MirSurface::visible() const
 {
-    switch (m_surface->query(mir_surface_attrib_visibility)) {
-    case mir_surface_visibility_occluded:
-        return Mir::Occluded;
-    case mir_surface_visibility_exposed:
-    default:
-        return Mir::Exposed;
-    }
+    return m_surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed;
 }
 
 void MirSurface::mousePressEvent(QMouseEvent *event)

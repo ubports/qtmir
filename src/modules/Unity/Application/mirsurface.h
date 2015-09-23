@@ -67,7 +67,7 @@ public:
 
     bool live() const override;
 
-    Mir::Visibility visibility() const;
+    bool visible() const;
 
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
@@ -77,7 +77,7 @@ public:
 
     void setLive(bool value) override;
 
-    void setVisibility(Mir::Visibility visibility);
+    void setVisible(bool visible);
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 

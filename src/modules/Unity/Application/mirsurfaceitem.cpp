@@ -103,6 +103,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
+    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -413,14 +414,6 @@ void MirSurfaceItem::touchEvent(QTouchEvent *event)
     event->setAccepted(accepted);
 }
 
-void MirSurfaceItem::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
-{
-    if (change == QQuickItem::ItemVisibleHasChanged) {
-        updateMirSurfaceVisibility();
-    }
-    QQuickItem::itemChange(change, value);
-}
-
 bool MirSurfaceItem::processTouchEvent(
         int eventType,
         ulong timestamp,
@@ -520,7 +513,7 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
         return;
     }
 
-    m_surface->setVisibility(isVisible() ? Mir::Exposed : Mir::Occluded);
+    m_surface->setVisible(isVisible());
 }
 
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
