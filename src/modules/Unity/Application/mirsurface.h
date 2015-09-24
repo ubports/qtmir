@@ -77,8 +77,6 @@ public:
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
-    SessionInterface *session() const override;
-
     void stopFrameDropper() override;
     void startFrameDropper() override;
 
@@ -111,6 +109,8 @@ public:
             const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
             Qt::TouchPointStates qtTouchPointStates,
             ulong qtTimestamp) override;
+
+    QString appId() const override;
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;

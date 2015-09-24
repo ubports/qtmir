@@ -43,8 +43,6 @@ public:
 
     virtual bool isFirstFrameDrawn() const = 0;
 
-    virtual SessionInterface *session() const = 0;
-
     virtual void stopFrameDropper() = 0;
     virtual void startFrameDropper() = 0;
 
@@ -77,6 +75,8 @@ public:
             const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
             Qt::TouchPointStates qtTouchPointStates,
             ulong qtTimestamp) = 0;
+
+    virtual QString appId() const = 0;
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
