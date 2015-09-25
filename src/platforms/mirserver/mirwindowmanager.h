@@ -64,7 +64,8 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
+    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>& surface,
+                        const mir::shell::SurfaceSpecification& modifications) override;
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;

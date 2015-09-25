@@ -28,6 +28,8 @@
 // mirserver
 #include <logging.h>
 
+#include <QDebug>
+
 using namespace qtmir;
 
 namespace {
@@ -222,6 +224,7 @@ void MirSurface::onFramesPostedObserved()
 
 void MirSurface::onNameChanged(const QString &name)
 {
+    qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface name changed:" << name;
     if (!name.isEmpty() && name != m_name) {
         m_name = name;
         Q_EMIT nameChanged(m_name);
@@ -488,6 +491,7 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
+    qWarning() << "CAYBRO:" << Q_FUNC_INFO << "returning name:" << m_name;
     return m_name;
 }
 

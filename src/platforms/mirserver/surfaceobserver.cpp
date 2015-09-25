@@ -17,6 +17,7 @@
 #include "surfaceobserver.h"
 
 #include <QMetaObject>
+#include <QDebug>
 
 #include <mir/geometry/size.h>
 
@@ -44,6 +45,7 @@ void SurfaceObserver::frame_posted(int /*frames_available*/)
 
 void SurfaceObserver::renamed(char const * name)
 {
+    qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface renamed:" << name;
     Q_EMIT nameChanged(QString::fromUtf8(name));
 }
 

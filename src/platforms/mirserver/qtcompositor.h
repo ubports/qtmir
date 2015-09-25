@@ -24,8 +24,8 @@ class QtCompositor : public mir::compositor::Compositor
 public:
     QtCompositor();
 
-    void start();
-    void stop();
+    void start() override;
+    void stop() override;
 
 private:
     void setAllWindowsExposed(const bool exposed);

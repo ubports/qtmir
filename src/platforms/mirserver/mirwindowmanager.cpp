@@ -106,7 +106,13 @@ int MirWindowManager::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&,
+                                      const std::shared_ptr<mir::scene::Surface>& surface,
+                                      const mir::shell::SurfaceSpecification& modifications)
 {
-    // TODO support surface modifications
+    qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface modified";
+    if (modifications.name.is_set()) {
+        surface->rename(modifications.name.value());
+        qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface renamed to:" << QString::fromStdString(modifications.name.value());
+    }
 }

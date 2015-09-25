@@ -124,6 +124,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
         return nullptr;
 
     //displayWindow->requestActivateWindow();
+    displayWindow->setWindowTitle(window->title());
     return displayWindow;
 }
 
