@@ -1,3 +1,22 @@
+qtmir (0.4.6+15.10.20150923-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Cemil Azizoglu ]
+  * Port gl_bind_to_texture to the new TextureSource interface. Update
+    for Mir 0.16 release.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 23 Sep 2015 15:17:13 +0000
+
+qtmir (0.4.6+15.10.20150918-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Update surface focus when a surface enters or leaves a
+    MirSurfaceItem (LP: #1491034, #1495437)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 18 Sep 2015 20:11:52 +0000
+
 qtmir (0.4.6+15.10.20150914-0ubuntu1) wily; urgency=medium
 
   [ Daniel d'Andrada ]
