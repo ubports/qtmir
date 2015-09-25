@@ -51,7 +51,7 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
 
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp()));
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
 
     MirPointerButtons buttons = 0;
@@ -59,20 +59,24 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
         buttons |= mir_pointer_button_primary;
     if (qtEvent->buttons() & Qt::RightButton)
         buttons |= mir_pointer_button_secondary;
-    if (qtEvent->buttons() & Qt::MidButton)
+    if (qtEvent->buttons() & Qt::MiddleButton)
         buttons |= mir_pointer_button_tertiary;
+    if (qtEvent->buttons() & Qt::BackButton)
+        buttons |= mir_pointer_button_back;
+    if (qtEvent->buttons() & Qt::ForwardButton)
+        buttons |= mir_pointer_button_forward;
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, modifiers, action,
+    return mir::events::make_event(MirInputDeviceId(), timestamp, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp()));
 
     MirPointerButtons buttons = 0;
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, mir_input_event_modifier_none, action,
+    return mir::events::make_event(MirInputDeviceId(), timestamp, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0);
 }
 
@@ -93,7 +97,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
+    return mir::events::make_event(0 /* DeviceID */, std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp())),
                            action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -105,8 +109,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
-                                      modifiers);
+    auto ev = mir::events::make_event(0, std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtTimestamp)), modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
         auto touchPoint = qtTouchPoints.at(i);
@@ -158,6 +161,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::onNameChanged);
         observer->setListener(this);
     }
 
@@ -179,6 +183,10 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     // in practice rarely happen.
     m_frameDropperTimer.setInterval(200);
     m_frameDropperTimer.setSingleShot(false);
+
+    if (m_surface) {
+        m_name = QString::fromStdString(m_surface->name());
+    }
 }
 
 MirSurface::~MirSurface()
@@ -206,6 +214,14 @@ void MirSurface::onFramesPostedObserved()
     m_frameDropperTimer.start();
 
     Q_EMIT framesPosted();
+}
+
+void MirSurface::onNameChanged(const QString &name)
+{
+    if (!name.isEmpty() && name != m_name) {
+        m_name = name;
+        Q_EMIT nameChanged(m_name);
+    }
 }
 
 void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int /*value*/)
@@ -468,8 +484,7 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
-    //FIXME - how to listen to change in this property?
-    return QString::fromStdString(m_surface->name());
+    return m_name;
 }
 
 void MirSurface::setState(Mir::State qmlState)
