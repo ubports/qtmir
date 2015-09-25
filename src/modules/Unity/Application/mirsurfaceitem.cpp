@@ -115,7 +115,10 @@ MirSurfaceItem::~MirSurfaceItem()
     delete m_lastTouchEvent;
     delete m_lastFrameNumberRendered;
     delete m_orientationAngle;
-    delete m_textureProvider;
+
+    // Belongs to the scene graph thread. Can't delete here.
+    // Scene graph should call MirSurfaceItem::releaseResources() or invalidateSceneGraph()
+    // delete m_textureProvider;
 }
 
 Mir::Type MirSurfaceItem::type() const
@@ -188,6 +191,15 @@ void MirSurfaceItem::ensureTextureProvider()
         m_textureProvider = new MirTextureProvider(m_surface->texture());
     } else if (!m_textureProvider->texture()) {
         m_textureProvider->setTexture(m_surface->texture());
+    } else {
+        // Check that the item is indeed using the texture from the MirSurface it currently holds
+        // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
+        // we will still hold the texture from "A" until the first time we're asked to draw "B".
+        // That's the moment when we finally discard the texture from "A" and get the one from "B".
+
+        if (m_surface->weakTexture() != m_textureProvider->texture()) {
+            m_textureProvider->setTexture(m_surface->texture());
+        }
     }
 }
 
@@ -196,6 +208,9 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     QMutexLocker mutexLocker(&m_mutex);
 
     if (!m_surface) {
+        if (m_textureProvider) {
+            m_textureProvider->releaseTexture();
+        }
         delete oldNode;
         return 0;
     }
@@ -585,9 +600,6 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
-        }
-        if (m_textureProvider) {
-            m_textureProvider->releaseTexture();
         }
     }
 
