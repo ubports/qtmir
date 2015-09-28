@@ -563,8 +563,9 @@ void Application::suspend()
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
-    if (!lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
-        // Present in exceptions list.
+    if (!m_desktopData->isTouchApp()
+            || !lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
+        // Either a non-Touch app (like LibreOffice) or present in exceptions list.
         // There's no need to keep the wakelock as the process is never suspended
         // and thus has no cleanup to perform when (for example) the display is
         // blanked.

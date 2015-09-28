@@ -38,6 +38,7 @@ struct MockDesktopFileReader : public qtmir::DesktopFileReader
         ON_CALL(*this, exec()).WillByDefault(Invoke(this, &MockDesktopFileReader::doExec));
         ON_CALL(*this, path()).WillByDefault(Invoke(this, &MockDesktopFileReader::doPath));
         ON_CALL(*this, stageHint()).WillByDefault(Invoke(this, &MockDesktopFileReader::doStageHint));
+        ON_CALL(*this, isTouchApp()).WillByDefault(Invoke(this, &MockDesktopFileReader::doIsTouchApp));
         ON_CALL(*this, loaded()).WillByDefault(Invoke(this, &MockDesktopFileReader::doLoaded));
     }
 
@@ -49,6 +50,7 @@ struct MockDesktopFileReader : public qtmir::DesktopFileReader
     MOCK_CONST_METHOD0(exec, QString());
     MOCK_CONST_METHOD0(path, QString());
     MOCK_CONST_METHOD0(stageHint, QString());
+    MOCK_CONST_METHOD0(isTouchApp, bool());
     MOCK_CONST_METHOD0(loaded, bool());
 
     QString doFile() const
@@ -91,6 +93,11 @@ struct MockDesktopFileReader : public qtmir::DesktopFileReader
         return DesktopFileReader::stageHint();
     }
 
+    bool doIsTouchApp() const
+    {
+        return DesktopFileReader::isTouchApp();
+    }
+
     bool doLoaded() const
     {
         return DesktopFileReader::loaded();
@@ -114,6 +121,7 @@ struct MockDesktopFileReaderFactory : public qtmir::DesktopFileReader::Factory
         using namespace ::testing;
         auto instance = new NiceMock<MockDesktopFileReader>(appId, fi);
         ON_CALL(*instance, loaded()).WillByDefault(Return(true));
+        ON_CALL(*instance, isTouchApp()).WillByDefault(Return(true));
 
         return instance;
     }
