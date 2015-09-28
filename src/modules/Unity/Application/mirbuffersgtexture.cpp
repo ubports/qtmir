@@ -19,8 +19,10 @@
 // Mir
 #include <mir/graphics/buffer.h>
 #include <mir/geometry/size.h>
+#include <mir/renderer/gl/texture_source.h>
 
 namespace mg = mir::geometry;
+namespace mrg = mir::renderer::gl;
 
 MirBufferSGTexture::MirBufferSGTexture()
     : QSGTexture()
@@ -82,5 +84,11 @@ void MirBufferSGTexture::bind()
 {
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
-    m_mirBuffer->gl_bind_to_texture();
+
+    auto const texture_source =
+        dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
+    if (!texture_source)
+        throw std::logic_error("Buffer does not support GL rendering");
+
+    texture_source->gl_bind_to_texture();
 }
