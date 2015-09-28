@@ -189,17 +189,8 @@ void MirSurfaceItem::ensureTextureProvider()
 
     if (!m_textureProvider) {
         m_textureProvider = new MirTextureProvider(m_surface->texture());
-    } else if (!m_textureProvider->texture()) {
+    } else if (!m_textureProvider->texture() || m_textureProvider->texture() != m_surface->weakTexture()) {
         m_textureProvider->setTexture(m_surface->texture());
-    } else {
-        // Check that the item is indeed using the texture from the MirSurface it currently holds
-        // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
-        // we will still hold the texture from "A" until the first time we're asked to draw "B".
-        // That's the moment when we finally discard the texture from "A" and get the one from "B".
-
-        if (m_surface->weakTexture() != m_textureProvider->texture()) {
-            m_textureProvider->setTexture(m_surface->texture());
-        }
     }
 }
 
