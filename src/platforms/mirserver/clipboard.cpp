@@ -67,12 +67,13 @@ QByteArray serializeMimeData(QMimeData *mimeData)
         int offset = headerSize;
         header[0] = formatCount;
         for (int i = 0; i < formatCount; i++) {
+            const QByteArray data = mimeData->data(formats[i]);
             const int formatOffset = offset;
             const int formatSize = formats[i].size();
             const int dataOffset = offset + formatSize;
-            const int dataSize = mimeData->data(formats[i]).size();
+            const int dataSize = data.size();
             memcpy(&buffer[formatOffset], formats[i].toLatin1().data(), formatSize);
-            memcpy(&buffer[dataOffset], mimeData->data(formats[i]).data(), dataSize);
+            memcpy(&buffer[dataOffset], data.data(), dataSize);
             header[i*4+1] = formatOffset;
             header[i*4+2] = formatSize;
             header[i*4+3] = dataOffset;
