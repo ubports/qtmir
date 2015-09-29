@@ -1,3 +1,9 @@
+qtmir (0.4.6+15.10.20150925-0ubuntu1) wily; urgency=medium
+
+  * Bump application API version
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 25 Sep 2015 12:11:11 +0000
+
 qtmir (0.4.6+15.10.20150923-0ubuntu1) wily; urgency=medium
 
   [ CI Train Bot ]
