@@ -208,6 +208,17 @@ const char *applicationStateToStr(int state)
     }
 }
 
+QString mirPointerEventToString(MirPointerEvent const* event)
+{
+    QString string = QString("MirPointerEvent(x=%1,y=%2,relative_x=%3,relative_y=%4)")
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_x))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_y))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
+
+    return string;
+}
+
 QString mirTouchEventToString(MirTouchEvent const* event)
 {
     const int pointerCount = mir_touch_event_point_count(event);

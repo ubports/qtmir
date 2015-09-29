@@ -33,6 +33,7 @@
 #include <QScreen>
 #include <private/qsgdefaultimagenode_p.h>
 #include <QTimer>
+#include <QSGTextureProvider>
 
 #include <QRunnable>
 
@@ -333,16 +334,11 @@ void MirSurfaceItem::keyReleaseEvent(QKeyEvent *event)
 
 QString MirSurfaceItem::appId() const
 {
-    QString appId;
-
-    SessionInterface *session = m_surface ? m_surface->session() : nullptr;
-
-    if (session && session->application()) {
-        appId = session->application()->appId();
+    if (m_surface) {
+        return m_surface->appId();
     } else {
-        appId.append("-");
+        return QString("-");
     }
-    return appId;
 }
 
 void MirSurfaceItem::endCurrentTouchSequence(ulong timestamp)
@@ -571,7 +567,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 {
     QMutexLocker mutexLocker(&m_mutex);
 
-    qtmir::MirSurface *surface = static_cast<qtmir::MirSurface*>(unitySurface);
+    auto surface = static_cast<qtmir::MirSurfaceInterface*>(unitySurface);
     qCDebug(QTMIR_SURFACES).nospace() << "MirSurfaceItem::setSurface surface=" << surface;
 
     if (surface == m_surface) {
@@ -580,7 +576,13 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
     if (m_surface) {
         disconnect(m_surface, nullptr, this, nullptr);
+
+        if (hasActiveFocus() && m_consumesInput && m_surface->live()) {
+            m_surface->setFocus(false);
+        }
+
         m_surface->decrementViewCount();
+
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
         }
@@ -596,13 +598,13 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
-        connect(m_surface, &MirSurface::framesPosted, this, &QQuickItem::update);
+        connect(m_surface, &MirSurfaceInterface::framesPosted, this, &QQuickItem::update);
 
-        connect(m_surface, &MirSurface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
-        connect(m_surface, &MirSurface::liveChanged, this, &MirSurfaceItem::liveChanged);
-        connect(m_surface, &MirSurface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
+        connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
+        connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
+        connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
 
-        connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurface::onCompositorSwappedBuffers,
+        connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
             (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
 
         Q_EMIT typeChanged(m_surface->type());
@@ -614,14 +616,20 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);
-            connect(m_surface, &MirSurface::orientationAngleChanged, this, &MirSurfaceItem::orientationAngleChanged);
+            connect(m_surface, &MirSurfaceInterface::orientationAngleChanged, this, &MirSurfaceItem::orientationAngleChanged);
             delete m_orientationAngle;
             m_orientationAngle = nullptr;
         } else {
-            connect(m_surface, &MirSurface::orientationAngleChanged, this, &MirSurfaceItem::orientationAngleChanged);
+            connect(m_surface, &MirSurfaceInterface::orientationAngleChanged, this, &MirSurfaceItem::orientationAngleChanged);
             Q_EMIT orientationAngleChanged(m_surface->orientationAngle());
         }
+
+        if (m_consumesInput) {
+            m_surface->setFocus(hasActiveFocus());
+        }
     }
+
+    update();
 
     Q_EMIT surfaceChanged(m_surface);
 }
