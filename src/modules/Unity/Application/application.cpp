@@ -37,8 +37,6 @@ namespace ms = mir::scene;
 namespace qtmir
 {
 
-QStringList Application::lifecycleExceptions;
-
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                          DesktopFileReader *desktopFileReader,
                          const QStringList &arguments,
@@ -54,6 +52,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
+    , m_canSuspend(true)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
 
@@ -563,9 +562,7 @@ void Application::suspend()
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
-    if (!m_desktopData->isTouchApp()
-            || !lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
-        // Either a non-Touch app (like LibreOffice) or present in exceptions list.
+    if (!canSuspend()) {
         // There's no need to keep the wakelock as the process is never suspended
         // and thus has no cleanup to perform when (for example) the display is
         // blanked.
@@ -600,6 +597,25 @@ void Application::respawn()
     setInternalState(InternalState::Starting);
 
     Q_EMIT startProcessRequested();
+}
+
+bool Application::isTouchApp() const
+{
+    return m_desktopData->isTouchApp();
+}
+
+bool Application::canSuspend() const
+{
+    return m_canSuspend;
+}
+
+void Application::setCanSuspend(bool canSuspend)
+{
+    if (m_canSuspend != canSuspend)
+    {
+        m_canSuspend = canSuspend;
+        Q_EMIT canSuspendChanged(canSuspend);
+    }
 }
 
 QString Application::longAppId() const

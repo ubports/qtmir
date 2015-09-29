@@ -946,7 +946,6 @@ TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1089,7 +1088,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1148,7 +1146,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1337,7 +1334,6 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1486,7 +1482,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1547,7 +1542,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1606,7 +1600,6 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1744,7 +1737,7 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
     }
 }
 
-TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
+TEST_F(ApplicationManagerTests, unsuspendableAppIsNotSuspended)
 {
     using namespace ::testing;
     quint64 a_procId = 5921;
@@ -1759,7 +1752,6 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1781,34 +1773,11 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
     aSurface->drawFirstFrame();
     onSessionStarting(second_session);
 
-    // Add to other apps to the list (Not "some_app")
-    QVariantList lifecycleExemptAppIds;
-    lifecycleExemptAppIds << "one_app" << "another_app";
-    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
-    settings.changed("lifecycleExemptAppids");
+    // Mark app as unsuspendable
+    the_app->setCanSuspend(false);
+    ASSERT_EQ(false, the_app->canSuspend());
 
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_will_suspend));
-    the_app->setRequestedState(Application::RequestedSuspended);
-    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, the_app->internalState());
-
-    static_cast<qtmir::Session*>(the_app->session())->doSuspend();
-    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, the_app->internalState());
-    applicationManager.onProcessSuspended(the_app->appId());
-    ASSERT_EQ(Application::InternalState::Suspended, the_app->internalState());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_resumed));
-    the_app->setRequestedState(Application::RequestedRunning);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-
-    // Now add "some_app" to the exception list
-    lifecycleExemptAppIds << "some_app";
-    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
-    settings.changed("lifecycleExemptAppids");
-
-    EXPECT_EQ(Application::Running, the_app->state());
 
     EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(_)).Times(0);
     the_app->setRequestedState(Application::RequestedSuspended);
@@ -1823,20 +1792,19 @@ TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
 }
 
 /*
- * Test lifecycle exempt applications have their wakelocks released when shell tries to suspend them
+ * Test unsuspendable applications have their wakelocks released when shell tries to suspend them
  */
-TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttemptedSuspend)
+TEST_F(ApplicationManagerTests, unsuspendableAppsHaveWakelockReleasedOnAttemptedSuspend)
 {
     using namespace ::testing;
 
-    const QString appId("com.ubuntu.music"); // member of lifecycle exemption list
+    const QString appId("some_app");
     const quint64 procId = 12345;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
 
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
@@ -1856,52 +1824,11 @@ TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttempte
     onSessionCreatedSurface(session.get(), surface);
     surface->drawFirstFrame();
 
+    application->setCanSuspend(false);
     application->setRequestedState(Application::RequestedSuspended);
 
     EXPECT_FALSE(sharedWakelock.enabled());
     ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
-}
-
-TEST_F(ApplicationManagerTests,nonTouchAppIsNotSuspended)
-{
-    using namespace ::testing;
-    quint64 procId = 5921;
-    const QString appId("some_app");
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(false));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(_, _))
-            .Times(1)
-            .WillOnce(Return(true));
-
-    auto the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    // App creates surface, focuses it so state is running
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
-
-    EXPECT_EQ(Application::Running, the_app->state());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)session.get(), set_lifecycle_state(_)).Times(0);
-    the_app->setRequestedState(Application::RequestedSuspended);
-    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
-
-    the_app->setRequestedState(Application::RequestedRunning);
-    EXPECT_EQ(Application::Running, the_app->state());
-    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 }
 

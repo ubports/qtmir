@@ -121,7 +121,6 @@ struct MockDesktopFileReaderFactory : public qtmir::DesktopFileReader::Factory
         using namespace ::testing;
         auto instance = new NiceMock<MockDesktopFileReader>(appId, fi);
         ON_CALL(*instance, loaded()).WillByDefault(Return(true));
-        ON_CALL(*instance, isTouchApp()).WillByDefault(Return(true));
 
         return instance;
     }

@@ -196,11 +196,6 @@ ApplicationManager::ApplicationManager(
 
     m_roleNames.insert(RoleSession, "session");
     m_roleNames.insert(RoleFullscreen, "fullscreen");
-
-    if (settings.data()) {
-        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
-        connect(m_settings.data(), &Settings::changed, this, &ApplicationManager::onSettingsChanged);
-    }
 }
 
 ApplicationManager::~ApplicationManager()
@@ -534,13 +529,6 @@ void ApplicationManager::onAppDataChanged(const int role)
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update" <<  application->appId();
     } else {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
-    }
-}
-
-void ApplicationManager::onSettingsChanged(const QString &key)
-{
-    if (key == "lifecycleExemptAppids") {
-        Application::lifecycleExceptions = m_settings->get("lifecycleExemptAppids").toStringList();
     }
 }
 

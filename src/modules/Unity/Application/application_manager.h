@@ -137,7 +137,6 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
-    void onSettingsChanged(const QString &key);
 
 private:
     void setFocused(Application *application);

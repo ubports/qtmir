@@ -103,6 +103,9 @@ public:
     QColor splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
+    bool isTouchApp() const override;
+    bool canSuspend() const override;
+    void setCanSuspend(bool canSuspend) override;
 
     void setStage(Stage stage);
 
@@ -127,8 +130,6 @@ public:
 
     // for tests
     InternalState internalState() const { return m_state; }
-
-    static QStringList lifecycleExceptions;
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
@@ -177,6 +178,7 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    bool m_canSuspend;
 
     friend class ApplicationManager;
     friend class SessionManager;
