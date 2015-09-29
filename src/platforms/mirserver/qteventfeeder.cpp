@@ -369,8 +369,11 @@ class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
 
     bool hasTargetWindow() override
     {
-        if (mTopLevelWindow.isNull() && !QGuiApplication::topLevelWindows().isEmpty()) {
-            mTopLevelWindow = QGuiApplication::topLevelWindows().first();
+        if (mTopLevelWindow.isNull()) {
+            const QWindowList windowList = QGuiApplication::topLevelWindows();
+            if (!windowList.isEmpty()) {
+                mTopLevelWindow = windowList.first();
+            }
         }
         return !mTopLevelWindow.isNull();
     }

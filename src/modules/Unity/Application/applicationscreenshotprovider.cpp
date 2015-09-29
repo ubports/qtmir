@@ -45,7 +45,8 @@ QImage ApplicationScreenshotProvider::requestImage(const QString &imageId, QSize
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationScreenshotProvider::requestImage - imageId=" << imageId;
 
-    QString appId = imageId.split('/').first();
+    const QStringList splitImageId = imageId.split('/');
+    QString appId = splitImageId.first();
 
     Application* app = static_cast<Application*>(m_appManager->findApplication(appId));
     if (app == nullptr) {

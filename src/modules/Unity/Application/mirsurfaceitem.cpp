@@ -205,7 +205,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     m_surface->updateTexture();
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
-        QTimer::singleShot(0, this, SLOT(update()));
+        QTimer::singleShot(0, this, &MirSurfaceItem::update);
     }
 
     if (!m_textureProvider->texture()) {
@@ -337,7 +337,7 @@ QString MirSurfaceItem::appId() const
     if (m_surface) {
         return m_surface->appId();
     } else {
-        return QString("-");
+        return QStringLiteral("-");
     }
 }
 

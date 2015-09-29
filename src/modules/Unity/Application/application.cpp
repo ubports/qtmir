@@ -61,7 +61,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     acquireWakelock();
 
     // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
-    m_longAppId = desktopFileReader->file().remove(QRegExp(QStringLiteral(".desktop$"))).split('/').last();
+    const QStringList splitFileName = desktopFileReader->file().remove(QRegExp(QStringLiteral(".desktop$"))).split('/');
+    m_longAppId = splitFileName.last();
 
     m_supportedOrientations = m_desktopData->supportedOrientations();
 
