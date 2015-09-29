@@ -1775,7 +1775,6 @@ TEST_F(ApplicationManagerTests, unsuspendableAppIsNotSuspended)
 
     // Mark app as unsuspendable
     the_app->setCanSuspend(false);
-    ASSERT_EQ(false, the_app->canSuspend());
 
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
