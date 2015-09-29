@@ -62,8 +62,8 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
     if (qtEvent->buttons() & Qt::MidButton)
         buttons |= mir_pointer_button_tertiary;
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, modifiers, action,
-                                   buttons, qtEvent->x(), qtEvent->y(), 0, 0);
+    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, action,
+                                   buttons, qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
@@ -72,8 +72,8 @@ mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 
     MirPointerButtons buttons = 0;
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, mir_input_event_modifier_none, action,
-                                   buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0);
+    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, mir_input_event_modifier_none, action,
+                                   buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0, 0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
@@ -94,7 +94,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
         action = mir_keyboard_action_repeat;
 
     return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
-                           action, qtEvent->nativeVirtualKey(),
+                           0 /* mac */, action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
 }
@@ -106,7 +106,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 {
     auto modifiers = getMirModifiersFromQt(qmods);
     auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
-                                      modifiers);
+                                      0 /* mac */, modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
         auto touchPoint = qtTouchPoints.at(i);
