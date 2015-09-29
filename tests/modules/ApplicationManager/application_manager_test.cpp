@@ -1830,4 +1830,3 @@ TEST_F(ApplicationManagerTests, unsuspendableAppsHaveWakelockReleasedOnAttempted
     ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
 }
-
