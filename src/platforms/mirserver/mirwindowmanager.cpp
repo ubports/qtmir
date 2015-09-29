@@ -110,9 +110,7 @@ void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>
                                       const std::shared_ptr<mir::scene::Surface>& surface,
                                       const mir::shell::SurfaceSpecification& modifications)
 {
-    qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface modified";
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
-        qWarning() << "CAYBRO:" << Q_FUNC_INFO << "surface renamed to:" << QString::fromStdString(modifications.name.value());
     }
 }
