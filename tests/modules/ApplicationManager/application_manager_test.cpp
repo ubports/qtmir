@@ -1979,7 +1979,7 @@ TEST_F(ApplicationManagerTests,suspendedApplicationResumesClosesAndDeletes)
 }
 
 /*
- * Test that if an application is started while it is still attempting to close, it is queued to start again.
+ * Test that a application which fails to close will eventually be forceable closed.
  */
 TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication)
 {
