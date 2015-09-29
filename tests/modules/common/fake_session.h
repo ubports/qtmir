@@ -77,12 +77,12 @@ public:
     void addChildSession(SessionInterface*) override {}
     void insertChildSession(uint, SessionInterface*) override {}
     void removeChildSession(SessionInterface*) override {}
-    void foreachChildSession(std::function<void(SessionInterface* session)>) const override {}
+    void foreachChildSession(const std::function<void(SessionInterface* session)>& ) const override {}
 
     std::shared_ptr<mir::scene::PromptSession> activePromptSession() const override {
         return std::shared_ptr<mir::scene::PromptSession>();
     }
-    void foreachPromptSession(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)>) const override {}
+    void foreachPromptSession(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> &) const override {}
 
     void setFullscreen(bool) override {}
     void setLive(const bool) override {}

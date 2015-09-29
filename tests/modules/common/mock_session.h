@@ -54,12 +54,12 @@ public:
     MOCK_METHOD1(addChildSession, void(SessionInterface* session));
     MOCK_METHOD2(insertChildSession, void(uint index, SessionInterface* session));
     MOCK_METHOD1(removeChildSession, void(SessionInterface* session));
-    MOCK_CONST_METHOD1(foreachChildSession, void(std::function<void(SessionInterface* session)> f));
+    MOCK_CONST_METHOD1(foreachChildSession, void(const std::function<void(SessionInterface* session)> &f));
 
     MOCK_CONST_METHOD0(session, std::shared_ptr<mir::scene::Session>());
 
     MOCK_CONST_METHOD0(activePromptSession, std::shared_ptr<mir::scene::PromptSession>());
-    MOCK_CONST_METHOD1(foreachPromptSession, void(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> f));
+    MOCK_CONST_METHOD1(foreachPromptSession, void(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> &f));
 
     MOCK_CONST_METHOD0(childSessions, SessionModel*());
 
