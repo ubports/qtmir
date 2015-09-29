@@ -94,9 +94,9 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
         action = mir_keyboard_action_repeat;
 
     return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
-                                   0 /* mac */, action, qtEvent->nativeVirtualKey(),
-                                   qtEvent->nativeScanCode(),
-                                   qtEvent->nativeModifiers());
+                           0 /* mac */, action, qtEvent->nativeVirtualKey(),
+                           qtEvent->nativeScanCode(),
+                           qtEvent->nativeModifiers());
 }
 
 mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
@@ -215,7 +215,7 @@ void MirSurface::onFramesPostedObserved()
 
 void MirSurface::onNameChanged(const QString &name)
 {
-    if (!name.isEmpty() && name != m_name) {
+    if (name != m_name) {
         m_name = name;
         Q_EMIT nameChanged(m_name);
     }
