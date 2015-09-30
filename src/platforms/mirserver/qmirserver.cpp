@@ -33,15 +33,14 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
 
     // convert arguments back into argc-argv form that Mir wants
     int argc = arguments.size();
-    const char **argv = new const char*[argc + 1];
+    char **argv = new char*[argc + 1];
     for (int i = 0; i < argc; i++) {
-        char *argvi = new char[strlen(arguments.at(i).toStdString().c_str())+1];
-        strcpy(argvi, arguments.at(i).toStdString().c_str());
-        argv[i] = argvi;
+        argv[i] = new char[strlen(arguments.at(i).toStdString().c_str())+1];
+        memcpy(argv[i], arguments.at(i).toStdString().c_str(), strlen(arguments.at(i).toStdString().c_str())+1);
     }
-    argv[argc] = "\0";
+    argv[argc] = nullptr;
 
-    d->server = QSharedPointer<MirServer>(new MirServer(argc, argv));
+    d->server = QSharedPointer<MirServer>(new MirServer(argc, const_cast<const char**>(argv)));
 
     d->serverThread = new MirServerThread(d->server);
 
