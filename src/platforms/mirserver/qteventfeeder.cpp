@@ -404,13 +404,32 @@ class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
         QWindowSystemInterface::handleTouchEvent(mTopLevelWindow.data(), timestamp, device, points, mods);
     }
 
-    void handleMouseEvent(ulong timestamp, QPointF point, Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) override
+    void handleMouseEvent(ulong timestamp, QPointF point, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers) override
     {
         Q_ASSERT(!mTopLevelWindow.isNull());
         QWindowSystemInterface::handleMouseEvent(mTopLevelWindow.data(), timestamp, point, point, // local and global point are the same
             buttons, modifiers);
     }
 
+    void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint, QPoint pixelDelta, QPoint angleDelta,
+                          Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
+    {
+        Q_ASSERT(!mTopLevelWindow.isNull());
+        QWindowSystemInterface::handleWheelEvent(mTopLevelWindow.data(), timestamp, localPoint, globalPoint, pixelDelta, angleDelta,
+                                                 mods, phase);
+    }
+
+    void handleEnterEvent(const QPointF &localPoint, const QPointF &globalPoint) override
+    {
+        Q_ASSERT(!mTopLevelWindow.isNull());
+        QWindowSystemInterface::handleEnterEvent(mTopLevelWindow.data(), localPoint, globalPoint);
+    }
+
+    void handleLeaveEvent() override
+    {
+        Q_ASSERT(!mTopLevelWindow.isNull());
+        QWindowSystemInterface::handleLeaveEvent(mTopLevelWindow.data());
+    }
 
 private:
     QPointer<QWindow> mTopLevelWindow;
@@ -472,7 +491,7 @@ namespace
 
 Qt::KeyboardModifiers getQtModifiersFromMir(MirInputEventModifiers modifiers)
 {
-    int qtModifiers = Qt::NoModifier;
+    Qt::KeyboardModifiers qtModifiers = Qt::NoModifier;
     if (modifiers & mir_input_event_modifier_shift) {
         qtModifiers |= Qt::ShiftModifier;
     }
@@ -485,12 +504,12 @@ Qt::KeyboardModifiers getQtModifiersFromMir(MirInputEventModifiers modifiers)
     if (modifiers & mir_input_event_modifier_meta) {
         qtModifiers |= Qt::MetaModifier;
     }
-    return static_cast<Qt::KeyboardModifiers>(qtModifiers);
+    return qtModifiers;
 }
 
-Qt::MouseButton getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
+Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
 {
-    int buttons = Qt::NoButton;
+    Qt::MouseButtons buttons = Qt::NoButton;
     if (mir_pointer_event_button_state(pev, mir_pointer_button_primary))
         buttons |= Qt::LeftButton;
     if (mir_pointer_event_button_state(pev, mir_pointer_button_secondary))
@@ -502,7 +521,7 @@ Qt::MouseButton getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
     if (mir_pointer_event_button_state(pev, mir_pointer_button_forward))
         buttons |= Qt::ForwardButton;
 
-    return static_cast<Qt::MouseButton>(buttons);
+    return buttons;
 }
 }
 
@@ -512,18 +531,45 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         return;
 
     auto timestamp = mir_input_event_get_event_time(ev) / 1000000;
-
     auto pev = mir_input_event_get_pointer_event(ev);
+    auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
 
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
-    auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
 
     auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
                                mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
-    mQtWindowSystem->handleMouseEvent(timestamp, local_point,
-                                      buttons, modifiers);
+    switch (action) {
+    case mir_pointer_action_button_up:
+    case mir_pointer_action_button_down:
+    case mir_pointer_action_motion:
+    {
+        const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
+        const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
+
+        qDebug() << "WHEEL mir: ACTION" << "hor:" << hDelta << "vert:" << vDelta;
+
+        if (hDelta != 0 || vDelta != 0) {
+            const QPoint angleDelta = QPoint(hDelta, vDelta);
+            qDebug() << "Delta point" << angleDelta;
+            mQtWindowSystem->handleWheelEvent(timestamp, local_point, local_point,
+                                              QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
+        } else {
+            auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
+            mQtWindowSystem->handleMouseEvent(timestamp, local_point, buttons, modifiers);
+        }
+        break;
+    }
+    case mir_pointer_action_enter:
+        mQtWindowSystem->handleEnterEvent(local_point, local_point);
+        break;
+    case mir_pointer_action_leave:
+        mQtWindowSystem->handleLeaveEvent();
+        break;
+    default:
+        qCDebug(QTMIR_MIR_INPUT) << "Unrecognized pointer event";
+    }
 }
 
 void QtEventFeeder::dispatchKey(MirInputEvent const* event)
