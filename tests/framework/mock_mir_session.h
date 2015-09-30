@@ -29,20 +29,13 @@ namespace scene {
 
 struct MockSession : public Session
 {
-    MockSession() {}
-    MockSession(std::string const& sessionName, pid_t processId)
-        : m_sessionName(sessionName), m_sessionId(processId)
-    {}
+    MockSession();
+    MockSession(std::string const& sessionName, pid_t processId);
+    virtual ~MockSession();
 
-    std::string name() const override
-    {
-        return m_sessionName;
-    }
+    std::string name() const override;
 
-    pid_t process_id() const override
-    {
-        return m_sessionId;
-    }
+    pid_t process_id() const override;
 
     MOCK_METHOD0(force_requests_to_complete, void());
 
@@ -60,16 +53,16 @@ struct MockSession : public Session
     MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 
-    void start_prompt_session() override {};
-    void stop_prompt_session() override {};
-    void suspend_prompt_session() override {};
-    void resume_prompt_session() override {};
-    std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override { return {}; }
+    void start_prompt_session() override;
+    void stop_prompt_session() override;
+    void suspend_prompt_session() override;
+    void resume_prompt_session() override;
+    std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
 
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
-    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override {};
+    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;;
 
 private:
     std::string m_sessionName;

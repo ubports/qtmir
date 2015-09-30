@@ -28,6 +28,9 @@ namespace scene {
 class MockPromptSessionManager: public PromptSessionManager
 {
 public:
+    MockPromptSessionManager();
+    virtual ~MockPromptSessionManager();
+
     MOCK_CONST_METHOD2(start_prompt_session_for, std::shared_ptr<PromptSession>(std::shared_ptr<mir::scene::Session> const&,
         mir::scene::PromptSessionCreationParameters const&));
 

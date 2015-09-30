@@ -2,27 +2,29 @@ set(
   APPLICATION_MANAGER_TEST_SOURCES
   application_manager_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
-  ../common/fake_mirsurface.h
 )
 
 include_directories(
   ${APPLICATION_API_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
-  ${CMAKE_SOURCE_DIR}/tests/modules/common
+  ${CMAKE_SOURCE_DIR}/tests/framework
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
 add_executable(applicationmanager_test ${APPLICATION_MANAGER_TEST_SOURCES})
 
+add_dependencies(applicationmanager_test qtmir-test-framework-static)
+
 target_link_libraries(
   applicationmanager_test
 
-  qpa-mirserver
+  Qt5::Test
+  
   unityapplicationplugin
 
-  Qt5::Test
+  -L${CMAKE_BINARY_DIR}/tests/framework
+  qtmir-test-framework-static
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

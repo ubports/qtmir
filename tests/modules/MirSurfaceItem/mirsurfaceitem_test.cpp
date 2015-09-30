@@ -24,7 +24,7 @@
 // the test subject
 #include <Unity/Application/mirsurfaceitem.h>
 
-// tests/modules/common
+// tests/framework
 #include <fake_mirsurface.h>
 
 using namespace qtmir;

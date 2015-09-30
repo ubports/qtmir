@@ -21,16 +21,17 @@
 
 #include <gmock/gmock.h>
 
-namespace testing
-{
+namespace testing {
+
 struct MockProcInfo : public qtmir::ProcInfo
 {
+    MockProcInfo();
+    virtual ~MockProcInfo();
+
     MOCK_METHOD1(command_line, QByteArray(quint64));
-    std::unique_ptr<CommandLine> commandLine(quint64 pid)
-    {
-      return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
-    }
+    std::unique_ptr<CommandLine> commandLine(quint64 pid);
 };
-}
+
+} // namespace testing
 
 #endif // MOCK_PROC_INFO_H

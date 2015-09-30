@@ -1,0 +1,44 @@
+include_directories(
+    ${APPLICATION_API_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+    ${CMAKE_SOURCE_DIR}/src/modules
+    ${CMAKE_SOURCE_DIR}/tests/modules/common
+    ${MIRSERVER_INCLUDE_DIRS}
+
+    ${LTTNG_INCLUDE_DIRS}
+
+    ${Qt5Gui_INCLUDE_DIRS}
+    ${Qt5Quick_INCLUDE_DIRS}
+    ${Qt5DBus_INCLUDE_DIRS}
+)
+
+set(QTMIR_TEST_PRIVATE_SRC
+    fake_desktopfilereader.cpp
+    fake_mirsurface.cpp
+    fake_session.cpp
+    mock_application_controller.cpp
+    mock_desktop_file_reader.cpp
+    mock_mir_session.cpp
+    mock_proc_info.cpp
+    mock_prompt_session.cpp
+    mock_prompt_session_manager.cpp
+    mock_renderable.cpp
+    mock_session.cpp
+    mock_settings.cpp
+    mock_shared_wakelock.cpp
+    mock_surface.cpp
+    stub_input_channel.cpp
+    stub_scene_surface.cpp
+    qtmir_test.cpp
+)
+
+add_library(qtmir-test-framework-static STATIC
+    ${QTMIR_TEST_PRIVATE_SRC}
+)
+
+target_link_libraries(
+    qtmir-test-framework-static
+
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARIES}
+)

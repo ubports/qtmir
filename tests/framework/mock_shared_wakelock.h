@@ -26,42 +26,16 @@ namespace testing
 class MockSharedWakelock : public qtmir::SharedWakelock
 {
 public:
-    MockSharedWakelock(const QDBusConnection& /*connection*/= QDBusConnection::systemBus())
-    {
-        ON_CALL(*this, enabled()).WillByDefault(Invoke(this, &MockSharedWakelock::doEnabled));
-        ON_CALL(*this, acquire(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doAcquire));
-        ON_CALL(*this, release(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doRelease));
-    }
+    MockSharedWakelock(const QDBusConnection& /*connection*/= QDBusConnection::systemBus());
+    virtual ~MockSharedWakelock();
 
     MOCK_CONST_METHOD0(enabled, bool());
     MOCK_METHOD1(acquire, void(const QObject *));
     MOCK_METHOD1(release, void(const QObject *));
 
-    bool doEnabled()
-    {
-        return !m_owners.isEmpty();
-    }
-
-    void doAcquire(const QObject *object)
-    {
-        if (m_owners.contains(object)) {
-            return;
-        }
-        m_owners.insert(object);
-        if (m_owners.size() == 1) {
-            Q_EMIT enabledChanged(true);
-        }
-    }
-
-    void doRelease(const QObject *object)
-    {
-        if (!m_owners.remove(object)) {
-            return;
-        }
-        if (m_owners.isEmpty()) {
-            Q_EMIT enabledChanged(false);
-        }
-    }
+    bool doEnabled();
+    void doAcquire(const QObject *object);
+    void doRelease(const QObject *object);
 
 private:
     QSet<const QObject *> m_owners;

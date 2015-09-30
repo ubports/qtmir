@@ -28,7 +28,8 @@ namespace scene {
 
 struct MockSurface : public mir::scene::Surface
 {
-    MockSurface() {}
+    MockSurface();
+    virtual ~MockSurface();
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(client_size, geometry::Size());
@@ -62,15 +63,15 @@ struct MockSurface : public mir::scene::Surface
     MOCK_METHOD1(set_reception_mode, void(input::InputReceptionMode mode));
     MOCK_METHOD0(request_client_surface_close, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
-    void set_keymap(xkb_rule_names const &) override {}
-    void rename(std::string const&) override {}
+    void set_keymap(xkb_rule_names const &) override;
+    void rename(std::string const&) override;
     MOCK_METHOD1(set_streams, void(std::list<StreamInfo> const&));
 
     // from mir::input::surface
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const& point));
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
     MOCK_METHOD1(consume, void(MirEvent const* event));
-    void consume(MirEvent const& event) override { consume(&event); }
+    void consume(MirEvent const& event) override;
 
     // from mir::frontend::surface
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());

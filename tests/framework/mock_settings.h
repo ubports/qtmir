@@ -18,22 +18,17 @@
 #define MOCK_SETTINGS_H
 
 #include <Unity/Application/settings_interface.h>
-
+#include <QVariant>
+ 
 #include <gmock/gmock.h>
 
 namespace testing
 {
 struct MockSettings : public qtmir::SettingsInterface
 {
-    MockSettings()
-    {
-        QVariantList lifecycleExemptAppIds;
-        lifecycleExemptAppIds << "com.ubuntu.music";
-        ON_CALL(*this, get(_))
-                .WillByDefault(
-                    Return(lifecycleExemptAppIds));
+    MockSettings();
+    virtual ~MockSettings();
 
-    }
     MOCK_CONST_METHOD1(get, QVariant(const QString &));
 };
 

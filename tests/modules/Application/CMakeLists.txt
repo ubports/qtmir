@@ -1,27 +1,28 @@
 set(
   APPLICATION_TEST_SOURCES
   application_test.cpp
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_session.h
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/qtmir_test.cpp
 )
 
 include_directories(
-  ${APPLICATION_API_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
-  ${CMAKE_SOURCE_DIR}/tests/modules/common
+  ${CMAKE_SOURCE_DIR}/tests/framework
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
 add_executable(application_test ${APPLICATION_TEST_SOURCES})
 
+add_dependencies(application_test qtmir-test-framework-static)
+
 target_link_libraries(
   application_test
 
-  unityapplicationplugin
-  qpa-mirserver
-
   Qt5::Test
+  
+  unityapplicationplugin
+
+  -L${CMAKE_BINARY_DIR}/tests/framework
+  qtmir-test-framework-static
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

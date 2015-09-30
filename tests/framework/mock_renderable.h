@@ -14,25 +14,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_MIR_PROMPT_SESSION_H
-#define MOCK_MIR_PROMPT_SESSION_H
+#ifndef MOCK_MIR_GRAPHICS_RENDERABLE_H
+#define MOCK_MIR_GRAPHICS_RENDERABLE_H
 
-#include <mir/scene/prompt_session.h>
+#include <mir/graphics/renderable.h>
 #include <gmock/gmock.h>
 
 namespace mir {
-namespace scene {
+namespace graphics {
 
-struct MockPromptSession : public PromptSession
+struct MockRenderable : public Renderable
 {
-public:
-    MOCK_METHOD1(start, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(stop, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(suspend, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(resume, void(std::shared_ptr<Session> const&));
+    MockRenderable();
+    virtual ~MockRenderable();
+
+    MOCK_CONST_METHOD0(id, ID());
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<Buffer>());
+    MOCK_CONST_METHOD0(alpha_enabled, bool());
+    MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
+    MOCK_CONST_METHOD0(alpha, float() );
+    MOCK_CONST_METHOD0(transformation, glm::mat4());
+    MOCK_CONST_METHOD0(shaped, bool());
 };
 
-} // namespace scene
+} // namespace graphics
 } // namespace mir
 
-#endif // MOCK_MIR_PROMPT_SESSION_H
+#endif // MOCK_MIR_GRAPHICS_RENDERABLE_H
+

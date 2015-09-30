@@ -24,13 +24,8 @@ namespace qtmir {
 
 class MockSession : public SessionInterface {
 public:
-    MockSession() : SessionInterface(0) {
-        m_state = Starting;
-        ON_CALL(*this, suspend()).WillByDefault(::testing::Invoke(this, &MockSession::doSuspend));
-        ON_CALL(*this, resume()).WillByDefault(::testing::Invoke(this, &MockSession::doResume));
-        ON_CALL(*this, stop()).WillByDefault(::testing::Invoke(this, &MockSession::doStop));
-        ON_CALL(*this, state()).WillByDefault(::testing::Invoke(this, &MockSession::doState));
-    }
+    MockSession();
+    virtual ~MockSession();
 
     MOCK_METHOD0(release, void());
 
@@ -63,29 +58,12 @@ public:
 
     MOCK_CONST_METHOD0(childSessions, SessionModel*());
 
-    void setState(State state) {
-        if (m_state != state) {
-            m_state = state;
-            Q_EMIT stateChanged(m_state);
-        }
-    }
+    void setState(State state);
 
-    void doSuspend() {
-        if (m_state == Running) {
-            setState(Suspending);
-        }
-    }
-    void doResume() {
-        if (m_state == Suspending || m_state == Suspended) {
-            setState(Running);
-        }
-    }
-    void doStop() {
-        setState(Stopped);
-    }
-    State doState() const {
-        return m_state;
-    }
+    void doSuspend();
+    void doResume();
+    void doStop();
+    State doState() const;
 
 protected:
     MOCK_METHOD1(setFullscreen, void(bool fullscreen));
@@ -94,7 +72,6 @@ protected:
     MOCK_METHOD1(removePromptSession, void(const std::shared_ptr<mir::scene::PromptSession>& session));
 
 private:
-
     State m_state;
 };
 

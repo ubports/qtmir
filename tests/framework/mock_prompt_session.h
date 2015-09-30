@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,44 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#ifndef MOCK_MIR_PROMPT_SESSION_H
+#define MOCK_MIR_PROMPT_SESSION_H
 
-#include "mir/input/input_channel.h"
+#include <mir/scene/prompt_session.h>
+#include <gmock/gmock.h>
 
-namespace mir
+namespace mir {
+namespace scene {
+
+struct MockPromptSession : public PromptSession
 {
-namespace test
-{
-namespace doubles
-{
+public:
+    MockPromptSession();
+    virtual ~MockPromptSession();
 
-struct StubInputChannel : public input::InputChannel
-{
-    StubInputChannel(int fd)
-      : input_fd(fd)
-    {
-    }
-
-    StubInputChannel()
-     : StubInputChannel(0)
-    {
-    }
-
-    int client_fd() const override
-    {
-        return input_fd;
-    }
-    int server_fd() const override
-    {
-        return input_fd;
-    }
-    int input_fd;
+    MOCK_METHOD1(start, void(std::shared_ptr<Session> const&));
+    MOCK_METHOD1(stop, void(std::shared_ptr<Session> const&));
+    MOCK_METHOD1(suspend, void(std::shared_ptr<Session> const&));
+    MOCK_METHOD1(resume, void(std::shared_ptr<Session> const&));
 };
 
-}
-}
+} // namespace scene
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-
+#endif // MOCK_MIR_PROMPT_SESSION_H
