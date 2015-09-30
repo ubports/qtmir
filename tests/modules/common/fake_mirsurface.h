@@ -51,7 +51,6 @@ public:
     FakeMirSurface(QObject *parent = nullptr)
         : MirSurfaceInterface(parent)
         , m_isFirstFrameDrawn(false)
-        , m_session(nullptr)
         , m_isFrameDropperRunning(true)
         , m_live(true)
         , m_state(Mir::RestoredState)
@@ -182,7 +181,6 @@ public:
 private:
 
     bool m_isFirstFrameDrawn;
-    SessionInterface *m_session;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;
