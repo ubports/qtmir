@@ -24,9 +24,10 @@
 #include <qpa/qplatformscreen.h>
 
 // Mir
-#include "mir/graphics/display_configuration.h"
+#include <mir/graphics/display_configuration.h>
 
 // local
+#include "cursor.h"
 #include "screenwindow.h"
 
 class QOrientationSensor;
@@ -47,6 +48,7 @@ public:
     qreal refreshRate() const override { return m_refreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return m_nativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
+    QPlatformCursor *cursor() const override;
 
     void toggleSensors(const bool enable) const;
     mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
@@ -93,6 +95,8 @@ private:
 
     ScreenWindow *m_screenWindow;
     QDBusInterface *m_unityScreen;
+
+    qtmir::Cursor m_cursor;
 
     friend class ScreenController;
     friend class ScreenWindow;

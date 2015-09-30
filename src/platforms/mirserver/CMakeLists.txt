@@ -42,7 +42,9 @@ add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+    cursor.cpp
     mirwindowmanager.cpp
+    mirsingleton.cpp
     qteventfeeder.cpp
     plugin.cpp
     qmirserver.cpp
@@ -66,6 +68,8 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     clipboard.cpp
     tileddisplayconfigurationpolicy.cpp
     tracepoints.c
+# We need to run moc on these headers
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     )
 
 add_library(qpa-mirserver SHARED
@@ -85,7 +89,7 @@ target_link_libraries(
     ${QT5PLATFORM_SUPPORT_LDFLAGS}
     # TODO Qt5Platform support LDFLAGS dont provide actual required ldflags...
     # I found these were needed...perhaps there is some way to query qmake/qconfig?
-    -lfreetype 
+    -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
 

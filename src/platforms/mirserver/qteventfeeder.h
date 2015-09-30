@@ -50,7 +50,7 @@ public:
         virtual void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
-        virtual void handleMouseEvent(QWindow *window, ulong timestamp, QPointF point,
+        virtual void handleMouseEvent(ulong timestamp, QPointF movement,
                 Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) = 0;
     };
 

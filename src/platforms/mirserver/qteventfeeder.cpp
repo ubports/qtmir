@@ -15,7 +15,9 @@
  */
 
 #include "qteventfeeder.h"
+#include "cursor.h"
 #include "logging.h"
+#include "screen.h" // NEEDED?
 #include "screencontroller.h"
 
 #include <qpa/qplatforminputcontext.h>
@@ -368,6 +370,14 @@ namespace {
 
 class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface
 {
+public:
+    QtWindowSystem()
+    {
+        // because we're using QMetaObject::invoke with arguments of those types
+        qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+        qRegisterMetaType<Qt::MouseButton>("Qt::MouseButton");
+    }
+
     void setScreenController(const QSharedPointer<ScreenController> &sc) override
     {
         m_screenController = sc;
@@ -404,11 +414,23 @@ class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
     }    
 
-    void handleMouseEvent(QWindow *window, ulong timestamp, QPointF point, Qt::MouseButton buttons,
+    void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons,
                           Qt::KeyboardModifiers modifiers) override
     {
-        QWindowSystemInterface::handleMouseEvent(window, timestamp, point, point, // local and global point are the same
-            buttons, modifiers);
+        // Send to the first screen that handles the mouse event
+        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
+        //       (because they all might have their own separate graphical mouse pointer item)
+        //       This will probably come once we implement the feature of having the mouse pointer
+        //       crossing adjacent screens.
+
+        QList<Screen*> screens = m_screenController->screens();
+        bool eventHandled = false;
+        int i = 0;
+        while (i < screens.count() && !eventHandled) {
+            auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
+            eventHandled = platformCursor->handleMouseEvent(timestamp, movement, buttons, modifiers);
+            ++i;
+        }
     }
 
 private:
@@ -517,19 +539,10 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
     auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
 
-    auto localPoint = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
+    auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+                            mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
 
-    auto window = mQtWindowSystem->getWindowForTouchPoint(localPoint.toPoint());
-    if (!window) {
-        qCDebug(QTMIR_MIR_INPUT) << "REJECTING INPUT EVENT, no matching window";
-        return;
-    }
-
-    localPoint -= window->geometry().topLeft(); // make position relative to window
-
-    mQtWindowSystem->handleMouseEvent(window, timestamp, localPoint,
-                                      buttons, modifiers);
+    mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
 }
 
 void QtEventFeeder::dispatchKey(MirInputEvent const* event)
