@@ -36,6 +36,7 @@ const char *mirMotionActionToStr(int value);
 
 const char *applicationStateToStr(int state);
 
+QString mirPointerEventToString(MirPointerEvent const* event);
 QString mirTouchEventToString(MirTouchEvent const* event);
 const char *mirTouchActionToString(MirTouchAction touchAction);
 

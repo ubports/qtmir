@@ -516,6 +516,8 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
 
     auto pev = mir_input_event_get_pointer_event(ev);
+    qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
+
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
     auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
 
