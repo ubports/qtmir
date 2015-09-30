@@ -117,7 +117,6 @@ private Q_SLOTS:
     void dropPendingBuffer();
     void onAttributeChanged(const MirSurfaceAttrib, const int);
     void onFramesPostedObserved();
-    void onNameChanged(const QString &name);
     void onSessionDestroyed();
     void emitSizeChanged();
 
@@ -148,7 +147,6 @@ private:
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 
     QSize m_size;
-    QString m_name;
 };
 
 } // namespace qtmir

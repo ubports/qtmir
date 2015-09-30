@@ -158,7 +158,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
-        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::onNameChanged);
+        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         observer->setListener(this);
     }
 
@@ -180,10 +180,6 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     // in practice rarely happen.
     m_frameDropperTimer.setInterval(200);
     m_frameDropperTimer.setSingleShot(false);
-
-    if (m_surface) {
-        m_name = QString::fromStdString(m_surface->name());
-    }
 }
 
 MirSurface::~MirSurface()
@@ -211,14 +207,6 @@ void MirSurface::onFramesPostedObserved()
     m_frameDropperTimer.start();
 
     Q_EMIT framesPosted();
-}
-
-void MirSurface::onNameChanged(const QString &name)
-{
-    if (name != m_name) {
-        m_name = name;
-        Q_EMIT nameChanged(m_name);
-    }
 }
 
 void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int /*value*/)
@@ -481,7 +469,7 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
-    return m_name;
+    return QString::fromStdString(m_surface->name());
 }
 
 void MirSurface::setState(Mir::State qmlState)
