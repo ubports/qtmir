@@ -64,7 +64,7 @@ public:
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override { return Mir::NormalType; }
 
-    QString name() const { return QString("Fake MirSurface"); }
+    QString name() const override { return QString("Fake MirSurface"); }
 
     QSize size() const override { return m_size; }
 
