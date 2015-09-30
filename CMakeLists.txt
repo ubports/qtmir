@@ -81,6 +81,9 @@ include_directories(${APPLICATION_API_INCLUDE_DIRS})
 
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
+# Use the fast string builder
+add_definitions(-DQT_USE_QSTRINGBUILDER)
+
 include_directories( ${APPLICATION_API_INCLUDE_DIRS} )
 
 # We expect this to be set via debian/rules for GLES builds
