@@ -1736,3 +1736,137 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
         cv.wait(lk, [&] { return done; } );
     }
 }
+
+/*
+ * Test that when user stops an application, application does not delete QML cache
+ */
+TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
+{
+    using namespace ::testing;
+    const QString appId("testAppId1234");
+    quint64 procId = 5551;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // Create fake QML cache for this app
+    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QDir dir(path);
+    dir.mkpath(path);
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+
+    EXPECT_EQ(0, applicationManager.count());
+    EXPECT_TRUE(dir.exists());
+}
+
+/*
+ * Test that if running application stops unexpectedly, AppMan deletes the QML cache
+ */
+TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
+{
+    using namespace ::testing;
+    const QString appId("testAppId12345");
+    quint64 procId = 5551;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // Have app in fully Running state
+    FakeMirSurface *aSurface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), aSurface);
+    aSurface->drawFirstFrame();
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
+
+    // Create fake QML cache for this app
+    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QDir dir(path);
+    dir.mkpath(path);
+
+    // Report app crash
+    onSessionStopping(session);
+    // Upstart notifies of **crashing** app
+    applicationManager.onProcessFailed(appId, true);
+    applicationManager.onProcessStopped(appId);
+
+    EXPECT_EQ(0, applicationManager.count());
+    EXPECT_FALSE(dir.exists());
+}
+
+/*
+ * Test that if running application stops itself cleanly, AppMan retains the QML cache
+ */
+TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
+{
+    using namespace ::testing;
+    const QString appId("testAppId123456");
+    quint64 procId = 5551;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // Have app in fully Running state
+    FakeMirSurface *aSurface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), aSurface);
+    aSurface->drawFirstFrame();
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
+
+    // Create fake QML cache for this app
+    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QDir dir(path);
+    dir.mkpath(path);
+
+    // Report app stop
+    onSessionStopping(session);
+    // Upstart notifies of stopping app
+    applicationManager.onProcessStopped(appId);
+
+    EXPECT_EQ(0, applicationManager.count());
+    EXPECT_TRUE(dir.exists());
+}
