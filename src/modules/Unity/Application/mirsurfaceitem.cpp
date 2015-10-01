@@ -284,7 +284,11 @@ void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 
 void MirSurfaceItem::wheelEvent(QWheelEvent *event)
 {
-    Q_UNUSED(event);
+    if (m_consumesInput && m_surface && m_surface->live()) {
+        m_surface->wheelEvent(event);
+    } else {
+        event->ignore();
+    }
 }
 
 void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)

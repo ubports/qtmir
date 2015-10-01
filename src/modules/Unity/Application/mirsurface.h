@@ -99,6 +99,7 @@ public:
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
     void hoverMoveEvent(QHoverEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;

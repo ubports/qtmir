@@ -145,6 +145,7 @@ public:
     void hoverEnterEvent(QHoverEvent *) override {}
     void hoverLeaveEvent(QHoverEvent *) override {}
     void hoverMoveEvent(QHoverEvent *) override {}
+    void wheelEvent(QWheelEvent *) override {}
 
     void keyPressEvent(QKeyEvent *) override {}
     void keyReleaseEvent(QKeyEvent *) override {}
