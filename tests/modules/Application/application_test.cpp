@@ -288,20 +288,6 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
 
 }
 
-TEST_F(ApplicationTests, canSuspendIsTrueByDefault)
-{
-    using namespace ::testing;
-
-    QScopedPointer<Application> application(new Application(
-            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
-
-    ASSERT_EQ(true, application->canSuspend());
-
-    application->setCanSuspend(false);
-    ASSERT_EQ(false, application->canSuspend());
-}
-
 TEST_F(ApplicationTests, passesIsTouchAppThrough)
 {
     using namespace ::testing;
