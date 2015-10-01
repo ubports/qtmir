@@ -29,6 +29,7 @@ class FakeMirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
+
     class TouchEvent {
     public:
         TouchEvent(Qt::KeyboardModifiers mods,
