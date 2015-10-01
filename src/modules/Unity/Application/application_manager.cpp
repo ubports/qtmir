@@ -227,6 +227,8 @@ QVariant ApplicationManager::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue((int)application->state());
             case RoleFocused:
                 return QVariant::fromValue(application->focused());
+            case RoleIsTouchApp:
+                return QVariant::fromValue(application->isTouchApp());
             case RoleSession:
                 return QVariant::fromValue(application->session());
             case RoleFullscreen:
