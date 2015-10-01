@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/mod
 set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fno-strict-aliasing -Werror -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -fno-strict-aliasing -Werror -Wextra")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 
@@ -75,7 +75,7 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=8)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=9)
 
 include_directories(${APPLICATION_API_INCLUDE_DIRS})
 

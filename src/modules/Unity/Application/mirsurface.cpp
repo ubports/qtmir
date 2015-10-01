@@ -158,6 +158,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         observer->setListener(this);
     }
 
@@ -468,7 +469,6 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
-    //FIXME - how to listen to change in this property?
     return QString::fromStdString(m_surface->name());
 }
 
