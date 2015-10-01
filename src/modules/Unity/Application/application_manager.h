@@ -68,7 +68,7 @@ public:
 
     // FIXME: these roles should be added to unity-api and removed from here
     enum MoreRoles {
-        RoleSession = RoleFocused+1,
+        RoleSession = RoleIsTouchApp+1,
         RoleFullscreen,
     };
 

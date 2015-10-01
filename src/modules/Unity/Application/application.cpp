@@ -78,7 +78,6 @@ Application::~Application()
     switch (m_state) {
     case InternalState::Starting:
     case InternalState::Running:
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
         wipeQMLCache();
@@ -409,7 +408,6 @@ void Application::close()
     case InternalState::Running:
         setInternalState(InternalState::Closing);
         break;
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
