@@ -46,44 +46,11 @@ using namespace qtmir;
 
 namespace qtmir {
 
+typedef testing::NiceMock<mir::scene::MockPromptSessionManager> StubPromptSessionManager;
+
 // For better output in ASSERT_* and EXPECT_* error messages
 void PrintTo(const Application::InternalState& state, ::std::ostream* os);
 void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
-
-// Initialization of mir::Server needed for by tests
-class TestMirServerInit : virtual mir::Server
-{
-public:
-    TestMirServerInit()
-    {
-        override_the_prompt_session_manager(
-            [this]{ return the_mock_prompt_session_manager(); });
-    }
-
-    std::shared_ptr<mir::scene::MockPromptSessionManager> the_mock_prompt_session_manager()
-    {
-        return mock_prompt_session_manager;
-    }
-
-private:
-    typedef testing::NiceMock<mir::scene::MockPromptSessionManager> StubPromptSessionManager;
-    std::shared_ptr<StubPromptSessionManager> const mock_prompt_session_manager
-        {std::make_shared<StubPromptSessionManager>()};
-};
-
-
-namespace {  char const* argv[] = { nullptr }; }
-
-class FakeMirServer: private TestMirServerInit, public MirServer
-{
-public:
-    FakeMirServer()
-    : MirServer(0, argv)
-    {
-    }
-
-    using TestMirServerInit::the_mock_prompt_session_manager;
-};
 
 } // namespace qtmir
 
@@ -102,7 +69,8 @@ public:
     testing::NiceMock<MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
-    QSharedPointer<FakeMirServer> mirServer;
+    std::shared_ptr<StubPromptSessionManager> const promptSessionManager;
+    QSharedPointer<MirServer> mirServer;
     MirShell *mirShell{nullptr};
     QSharedPointer<TaskController> taskController;
     ApplicationManager applicationManager;

@@ -75,13 +75,48 @@ void PrintTo(const Session::State& state, ::std::ostream* os)
     }
 }
 
+// Initialization of mir::Server needed for by tests
+class TestMirServerInit : virtual mir::Server
+{
+public:
+    TestMirServerInit(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
+        : mock_prompt_session_manager(promptSessionManager)
+    {
+        override_the_prompt_session_manager(
+            [this]{ return the_mock_prompt_session_manager(); });
+    }
+
+    std::shared_ptr<mir::scene::MockPromptSessionManager> the_mock_prompt_session_manager()
+    {
+        return mock_prompt_session_manager;
+    }
+
+private:
+    std::shared_ptr<StubPromptSessionManager> const mock_prompt_session_manager;
+};
+
+
+namespace {  char const* argv[] = { nullptr }; }
+
+class FakeMirServer: private TestMirServerInit, public MirServer
+{
+public:
+    FakeMirServer(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
+    : TestMirServerInit(promptSessionManager), MirServer(0, argv)
+    {
+    }
+
+    using TestMirServerInit::the_mock_prompt_session_manager;
+};
+
 } // namespace qtmir
 
 namespace testing
 {
 
 QtMirTest::QtMirTest()
-    : mirServer(QSharedPointer<FakeMirServer>(new FakeMirServer))
+    : promptSessionManager(std::make_shared<StubPromptSessionManager>())
+    , mirServer(QSharedPointer<MirServer>(new FakeMirServer(promptSessionManager)))
     , taskController(QSharedPointer<TaskController>(
                         new TaskController(
                             nullptr,
