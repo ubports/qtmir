@@ -2,12 +2,8 @@ include_directories(
     ${APPLICATION_API_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/modules
-    ${CMAKE_SOURCE_DIR}/tests/modules/common
     ${MIRSERVER_INCLUDE_DIRS}
 
-    ${LTTNG_INCLUDE_DIRS}
-
-    ${Qt5Gui_INCLUDE_DIRS}
     ${Qt5Quick_INCLUDE_DIRS}
     ${Qt5DBus_INCLUDE_DIRS}
 )

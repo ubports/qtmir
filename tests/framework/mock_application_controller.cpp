@@ -1,6 +1,9 @@
 #include "mock_application_controller.h"
 
-testing::MockApplicationController::MockApplicationController()
+namespace qtmir
+{
+
+MockApplicationController::MockApplicationController()
 {
     using namespace ::testing;
     ON_CALL(*this, primaryPidForAppId(_))
@@ -32,12 +35,12 @@ testing::MockApplicationController::MockApplicationController()
                 Invoke(this, &MockApplicationController::doResumeApplicationWithAppId));
 }
 
-testing::MockApplicationController::~MockApplicationController()
+MockApplicationController::~MockApplicationController()
 {
 
 }
 
-pid_t testing::MockApplicationController::doPrimaryPidForAppId(const QString &appId)
+pid_t MockApplicationController::doPrimaryPidForAppId(const QString &appId)
 {
     auto it = children.find(appId);
     if (it == children.end())
@@ -47,7 +50,7 @@ pid_t testing::MockApplicationController::doPrimaryPidForAppId(const QString &ap
 }
 
 
-bool testing::MockApplicationController::doAppIdHasProcessId(pid_t pid, const QString &appId)
+bool MockApplicationController::doAppIdHasProcessId(pid_t pid, const QString &appId)
 {
     auto it = children.find(appId);
     if (it == children.end())
@@ -57,14 +60,14 @@ bool testing::MockApplicationController::doAppIdHasProcessId(pid_t pid, const QS
 }
 
 
-QFileInfo testing::MockApplicationController::doFindDesktopFileForAppId(const QString &appId) const
+QFileInfo MockApplicationController::doFindDesktopFileForAppId(const QString &appId) const
 {
     QString path = QString("/usr/share/applications/%1.desktop").arg(appId);
     return QFileInfo(path);
 }
 
 
-bool testing::MockApplicationController::doStopApplicationWithAppId(const QString &appId)
+bool MockApplicationController::doStopApplicationWithAppId(const QString &appId)
 {
     Q_UNUSED(appId);
 
@@ -72,7 +75,7 @@ bool testing::MockApplicationController::doStopApplicationWithAppId(const QStrin
 }
 
 
-bool testing::MockApplicationController::doStartApplicationWithAppIdAndArgs(const QString &appId, const QStringList &args)
+bool MockApplicationController::doStartApplicationWithAppIdAndArgs(const QString &appId, const QStringList &args)
 {
     Q_UNUSED(args);
 
@@ -93,17 +96,18 @@ bool testing::MockApplicationController::doStartApplicationWithAppIdAndArgs(cons
 }
 
 
-bool testing::MockApplicationController::doPauseApplicationWithAppId(const QString &appId)
+bool MockApplicationController::doPauseApplicationWithAppId(const QString &appId)
 {
     Q_UNUSED(appId);
 
     return false;
 }
 
-
-bool testing::MockApplicationController::doResumeApplicationWithAppId(const QString &appId)
+bool MockApplicationController::doResumeApplicationWithAppId(const QString &appId)
 {
     Q_UNUSED(appId);
 
     return false;
 }
+
+} // namespace qtmir

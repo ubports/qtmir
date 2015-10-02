@@ -1,16 +1,23 @@
 #include "mock_surface.h"
 
+namespace mir
+{
+namespace scene
+{
 
-mir::scene::MockSurface::MockSurface()
+MockSurface::MockSurface()
 {
 }
 
-mir::scene::MockSurface::~MockSurface()
+MockSurface::~MockSurface()
 {
 }
 
-void mir::scene::MockSurface::rename(const std::string &) {}
+void MockSurface::rename(const std::string &) {}
 
-void mir::scene::MockSurface::set_keymap(const xkb_rule_names &) {}
+void MockSurface::set_keymap(const xkb_rule_names &) {}
 
-void mir::scene::MockSurface::consume(const MirEvent &event) { consume(&event); }
+void MockSurface::consume(const MirEvent &event) { consume(&event); }
+
+} // namespace scene
+} // namespace mir

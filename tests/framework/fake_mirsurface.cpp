@@ -1,9 +1,12 @@
 #include "fake_mirsurface.h"
 
-qtmir::FakeMirSurface::TouchEvent::TouchEvent(Qt::KeyboardModifiers mods,
-                                              const QList<QTouchEvent::TouchPoint> &points,
-                                              Qt::TouchPointStates states,
-                                              ulong timestamp)
+namespace qtmir
+{
+
+FakeMirSurface::TouchEvent::TouchEvent(Qt::KeyboardModifiers mods,
+                                       const QList<QTouchEvent::TouchPoint> &points,
+                                       Qt::TouchPointStates states,
+                                       ulong timestamp)
     : keyboardModifiers(mods)
     , touchPoints(points)
     , states(states)
@@ -11,11 +14,11 @@ qtmir::FakeMirSurface::TouchEvent::TouchEvent(Qt::KeyboardModifiers mods,
 {
 }
 
-qtmir::FakeMirSurface::TouchEvent::~TouchEvent()
+FakeMirSurface::TouchEvent::~TouchEvent()
 {
 }
 
-qtmir::FakeMirSurface::FakeMirSurface(QObject *parent)
+FakeMirSurface::FakeMirSurface(QObject *parent)
     : MirSurfaceInterface(parent)
     , m_isFirstFrameDrawn(false)
     , m_session(nullptr)
@@ -28,17 +31,18 @@ qtmir::FakeMirSurface::FakeMirSurface(QObject *parent)
 {
 }
 
-qtmir::FakeMirSurface::~FakeMirSurface()
+FakeMirSurface::~FakeMirSurface()
 {
 }
 
-Mir::Type qtmir::FakeMirSurface::type() const { return Mir::NormalType; }
+Mir::Type FakeMirSurface::type() const { return Mir::NormalType; }
 
-QString qtmir::FakeMirSurface::name() const { return QString("Fake MirSurface"); }
+QString FakeMirSurface::name() const { return QString("Fake MirSurface"); }
 
-QSize qtmir::FakeMirSurface::size() const { return m_size; }
+QSize FakeMirSurface::size() const { return m_size; }
 
-void qtmir::FakeMirSurface::resize(int width, int height) {
+void FakeMirSurface::resize(int width, int height)
+{
     if (m_size.width() != width || m_size.height() != height) {
         m_size.setWidth(width);
         m_size.setHeight(height);
@@ -46,106 +50,119 @@ void qtmir::FakeMirSurface::resize(int width, int height) {
     }
 }
 
-void qtmir::FakeMirSurface::resize(const QSize &size) { resize(size.width(), size.height()); }
+void FakeMirSurface::resize(const QSize &size) { resize(size.width(), size.height()); }
 
-Mir::State qtmir::FakeMirSurface::state() const { return m_state; }
+Mir::State FakeMirSurface::state() const { return m_state; }
 
-void qtmir::FakeMirSurface::setState(Mir::State qmlState) {
+void FakeMirSurface::setState(Mir::State qmlState)
+{
     if (qmlState != m_state) {
         m_state = qmlState;
         Q_EMIT stateChanged(m_state);
     }
 }
 
-bool qtmir::FakeMirSurface::live() const { return m_live; }
+bool FakeMirSurface::live() const { return m_live; }
 
-Mir::OrientationAngle qtmir::FakeMirSurface::orientationAngle() const { return m_orientationAngle; }
+Mir::OrientationAngle FakeMirSurface::orientationAngle() const { return m_orientationAngle; }
 
-void qtmir::FakeMirSurface::setOrientationAngle(Mir::OrientationAngle angle) {
+void FakeMirSurface::setOrientationAngle(Mir::OrientationAngle angle)
+{
     if (m_orientationAngle != angle) {
         m_orientationAngle = angle;
         Q_EMIT orientationAngleChanged(m_orientationAngle);
     }
 }
 
-bool qtmir::FakeMirSurface::isFirstFrameDrawn() const {
+bool FakeMirSurface::isFirstFrameDrawn() const
+{
     return m_isFirstFrameDrawn;
 }
 
-void qtmir::FakeMirSurface::stopFrameDropper() {
+void FakeMirSurface::stopFrameDropper()
+{
     m_isFrameDropperRunning = false;
 }
 
-void qtmir::FakeMirSurface::startFrameDropper() {
+void FakeMirSurface::startFrameDropper()
+{
     m_isFrameDropperRunning = true;
 }
 
-void qtmir::FakeMirSurface::setLive(bool value) {
+void FakeMirSurface::setLive(bool value)
+{
     if (m_live != value) {
         m_live = value;
         Q_EMIT liveChanged(m_live);
     }
 }
 
-bool qtmir::FakeMirSurface::isBeingDisplayed() const { return m_viewCount > 0; }
+bool FakeMirSurface::isBeingDisplayed() const { return m_viewCount > 0; }
 
-void qtmir::FakeMirSurface::incrementViewCount() {
+void FakeMirSurface::incrementViewCount()
+{
     ++m_viewCount;
     if (m_viewCount == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
 }
 
-void qtmir::FakeMirSurface::decrementViewCount() {
+void FakeMirSurface::decrementViewCount()
+{
     --m_viewCount;
     if (m_viewCount == 0) {
         Q_EMIT isBeingDisplayedChanged();
     }
 }
 
-QSharedPointer<QSGTexture> qtmir::FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
+QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
 
-void qtmir::FakeMirSurface::updateTexture() {}
+void FakeMirSurface::updateTexture() {}
 
-unsigned int qtmir::FakeMirSurface::currentFrameNumber() const { return 0; }
+unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
 
-bool qtmir::FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
+bool FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
 
-void qtmir::FakeMirSurface::setFocus(bool focus) { m_focused = focus; }
+void FakeMirSurface::setFocus(bool focus) { m_focused = focus; }
 
-void qtmir::FakeMirSurface::mousePressEvent(QMouseEvent *) {}
+void FakeMirSurface::mousePressEvent(QMouseEvent *) {}
 
-void qtmir::FakeMirSurface::mouseMoveEvent(QMouseEvent *) {}
+void FakeMirSurface::mouseMoveEvent(QMouseEvent *) {}
 
-void qtmir::FakeMirSurface::mouseReleaseEvent(QMouseEvent *) {}
+void FakeMirSurface::mouseReleaseEvent(QMouseEvent *) {}
 
-void qtmir::FakeMirSurface::hoverEnterEvent(QHoverEvent *) {}
+void FakeMirSurface::hoverEnterEvent(QHoverEvent *) {}
 
-void qtmir::FakeMirSurface::hoverLeaveEvent(QHoverEvent *) {}
+void FakeMirSurface::hoverLeaveEvent(QHoverEvent *) {}
 
-void qtmir::FakeMirSurface::hoverMoveEvent(QHoverEvent *) {}
+void FakeMirSurface::hoverMoveEvent(QHoverEvent *) {}
 
-void qtmir::FakeMirSurface::keyPressEvent(QKeyEvent *) {}
+void FakeMirSurface::keyPressEvent(QKeyEvent *) {}
 
-void qtmir::FakeMirSurface::keyReleaseEvent(QKeyEvent *) {}
+void FakeMirSurface::keyReleaseEvent(QKeyEvent *) {}
 
-void qtmir::FakeMirSurface::touchEvent(Qt::KeyboardModifiers mods, const QList<QTouchEvent::TouchPoint> &points, Qt::TouchPointStates states, ulong timestamp) {
+void FakeMirSurface::touchEvent(Qt::KeyboardModifiers mods,
+                                const QList<QTouchEvent::TouchPoint> &points,
+                                Qt::TouchPointStates states,
+                                ulong timestamp)
+{
     m_touchesReceived.append(TouchEvent(mods, points, states, timestamp));
 }
 
-QString qtmir::FakeMirSurface::appId() const { return "foo-app"; }
+QString FakeMirSurface::appId() const { return "foo-app"; }
 
-void qtmir::FakeMirSurface::onCompositorSwappedBuffers() {}
+void FakeMirSurface::onCompositorSwappedBuffers() {}
 
-void qtmir::FakeMirSurface::drawFirstFrame() {
+void FakeMirSurface::drawFirstFrame()
+{
     if (!m_isFirstFrameDrawn) {
         m_isFirstFrameDrawn = true;
         Q_EMIT firstFrameDrawn();
     }
 }
 
-bool qtmir::FakeMirSurface::isFrameDropperRunning() const {
-    return m_isFrameDropperRunning;
-}
+bool FakeMirSurface::isFrameDropperRunning() const { return m_isFrameDropperRunning; }
 
-QList<qtmir::FakeMirSurface::TouchEvent> &qtmir::FakeMirSurface::touchesReceived() { return m_touchesReceived; }
+QList<FakeMirSurface::TouchEvent> &FakeMirSurface::touchesReceived() { return m_touchesReceived; }
+
+} // namespace qtmir

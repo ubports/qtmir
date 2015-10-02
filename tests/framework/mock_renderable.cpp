@@ -1,9 +1,17 @@
 #include "mock_renderable.h"
 
-mir::graphics::MockRenderable::MockRenderable()
+namespace mir
+{
+namespace graphics
+{
+
+MockRenderable::MockRenderable()
 {
 }
 
-mir::graphics::MockRenderable::~MockRenderable()
+MockRenderable::~MockRenderable()
 {
 }
+
+} // namespace graphics
+} // namespace mir

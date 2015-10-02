@@ -18,7 +18,8 @@
 
 namespace qtmir {
 
-void PrintTo(const Application::InternalState& state, ::std::ostream* os) {
+void PrintTo(const Application::InternalState& state, ::std::ostream* os)
+{
     switch (state) {
     case Application::InternalState::Starting:
         *os << "Starting";
@@ -75,3 +76,59 @@ void PrintTo(const Session::State& state, ::std::ostream* os)
 }
 
 } // namespace qtmir
+
+namespace testing
+{
+
+QtMirTest::QtMirTest()
+    : mirServer(QSharedPointer<FakeMirServer>(new FakeMirServer))
+    , taskController(QSharedPointer<TaskController>(
+                        new TaskController(
+                            nullptr,
+                            QSharedPointer<ApplicationController>(&appController, [](ApplicationController*){}))))
+    , applicationManager(mirServer,
+                         taskController,
+                         QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+                         QSharedPointer<DesktopFileReader::Factory>(&desktopFileReaderFactory,[](DesktopFileReader::Factory*){}),
+                         QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
+                         QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
+    , sessionManager(mirServer, &applicationManager)
+    , surfaceManager(mirServer, mirShell, &sessionManager)
+{
+}
+
+QtMirTest::~QtMirTest()
+{
+
+}
+
+Application *QtMirTest::startApplication(quint64 procId, const QString &appId)
+{
+    using namespace testing;
+
+    ON_CALL(appController,appIdHasProcessId(procId, appId)).WillByDefault(Return(true));
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+
+    bool authed = false;
+    applicationManager.authorizeSession(procId, authed);
+    EXPECT_EQ(authed, true);
+
+    auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
+    sessionManager.onSessionStarting(appSession);
+    return application;
+    }
+
+} // namespace testing

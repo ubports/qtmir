@@ -24,7 +24,7 @@
 
 #include <gmock/gmock.h>
 
-namespace testing
+namespace qtmir
 {
 struct MockApplicationController : public qtmir::ApplicationController
 {
@@ -57,6 +57,7 @@ struct MockApplicationController : public qtmir::ApplicationController
 private:
     QMap<QString, core::posix::ChildProcess> children;
 };
-} // namespace testing
+
+} // namespace qtmir
 
 #endif // MOCK_APPLICATION_CONTROLLER_H

@@ -21,7 +21,7 @@
 
 #include <gmock/gmock.h>
 
-namespace testing {
+namespace qtmir {
 
 struct MockProcInfo : public qtmir::ProcInfo
 {
@@ -32,6 +32,6 @@ struct MockProcInfo : public qtmir::ProcInfo
     std::unique_ptr<CommandLine> commandLine(quint64 pid);
 };
 
-} // namespace testing
+} // namespace qtmir
 
 #endif // MOCK_PROC_INFO_H

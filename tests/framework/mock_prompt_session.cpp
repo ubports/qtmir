@@ -1,9 +1,17 @@
 #include "mock_prompt_session.h"
 
-mir::scene::MockPromptSession::MockPromptSession()
+namespace mir
+{
+namespace scene
+{
+
+MockPromptSession::MockPromptSession()
 {
 }
 
-mir::scene::MockPromptSession::~MockPromptSession()
+MockPromptSession::~MockPromptSession()
 {
 }
+
+} // namespace scene
+} // namespace mir

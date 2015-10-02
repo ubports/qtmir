@@ -1,7 +1,12 @@
 #include "mock_settings.h"
 
-testing::MockSettings::MockSettings()
+namespace qtmir
 {
+
+MockSettings::MockSettings()
+{
+    using namespace ::testing;
+
     QVariantList lifecycleExemptAppIds;
     lifecycleExemptAppIds << "com.ubuntu.music";
     ON_CALL(*this, get(_))
@@ -10,7 +15,10 @@ testing::MockSettings::MockSettings()
 
 }
 
-testing::MockSettings::~MockSettings()
+MockSettings::~MockSettings()
 {
 
 }
+
+} // namespace qtmir
+

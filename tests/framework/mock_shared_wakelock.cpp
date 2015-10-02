@@ -1,17 +1,22 @@
 #include "mock_shared_wakelock.h"
 
-testing::MockSharedWakelock::MockSharedWakelock(const QDBusConnection &)
+namespace qtmir
 {
+
+MockSharedWakelock::MockSharedWakelock(const QDBusConnection &)
+{
+    using namespace ::testing;
+
     ON_CALL(*this, enabled()).WillByDefault(Invoke(this, &MockSharedWakelock::doEnabled));
     ON_CALL(*this, acquire(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doAcquire));
     ON_CALL(*this, release(_)).WillByDefault(Invoke(this, &MockSharedWakelock::doRelease));
 }
 
-testing::MockSharedWakelock::~MockSharedWakelock()
+MockSharedWakelock::~MockSharedWakelock()
 {
 }
 
-void testing::MockSharedWakelock::doRelease(const QObject *object)
+void MockSharedWakelock::doRelease(const QObject *object)
 {
     if (!m_owners.remove(object)) {
         return;
@@ -21,7 +26,7 @@ void testing::MockSharedWakelock::doRelease(const QObject *object)
     }
 }
 
-void testing::MockSharedWakelock::doAcquire(const QObject *object)
+void MockSharedWakelock::doAcquire(const QObject *object)
 {
     if (m_owners.contains(object)) {
         return;
@@ -32,7 +37,9 @@ void testing::MockSharedWakelock::doAcquire(const QObject *object)
     }
 }
 
-bool testing::MockSharedWakelock::doEnabled()
+bool MockSharedWakelock::doEnabled()
 {
     return !m_owners.isEmpty();
 }
+
+} // namespace qtmir

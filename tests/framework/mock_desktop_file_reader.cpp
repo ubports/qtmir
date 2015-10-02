@@ -1,6 +1,9 @@
 #include "mock_desktop_file_reader.h"
 
-testing::MockDesktopFileReader::MockDesktopFileReader(const QString &appId, const QFileInfo &fileInfo)
+namespace qtmir
+{
+
+MockDesktopFileReader::MockDesktopFileReader(const QString &appId, const QFileInfo &fileInfo)
     : DesktopFileReader(appId, fileInfo)
 {
     using namespace ::testing;
@@ -16,57 +19,57 @@ testing::MockDesktopFileReader::MockDesktopFileReader(const QString &appId, cons
     ON_CALL(*this, loaded()).WillByDefault(Invoke(this, &MockDesktopFileReader::doLoaded));
 }
 
-testing::MockDesktopFileReader::~MockDesktopFileReader()
+MockDesktopFileReader::~MockDesktopFileReader()
 {
 }
 
-QString testing::MockDesktopFileReader::doFile() const
+QString MockDesktopFileReader::doFile() const
 {
     return DesktopFileReader::file();
 }
 
-QString testing::MockDesktopFileReader::doAppId() const
+QString MockDesktopFileReader::doAppId() const
 {
     return DesktopFileReader::appId();
 }
 
-QString testing::MockDesktopFileReader::doName() const
+QString MockDesktopFileReader::doName() const
 {
     return DesktopFileReader::name();
 }
 
-QString testing::MockDesktopFileReader::doComment() const
+QString MockDesktopFileReader::doComment() const
 {
     return DesktopFileReader::comment();
 }
 
-QString testing::MockDesktopFileReader::doIcon() const
+QString MockDesktopFileReader::doIcon() const
 {
     return DesktopFileReader::icon();
 }
 
-QString testing::MockDesktopFileReader::doExec() const
+QString MockDesktopFileReader::doExec() const
 {
     return DesktopFileReader::exec();
 }
 
-QString testing::MockDesktopFileReader::doPath() const
+QString MockDesktopFileReader::doPath() const
 {
     return DesktopFileReader::path();
 }
 
-QString testing::MockDesktopFileReader::doStageHint() const
+QString MockDesktopFileReader::doStageHint() const
 {
     return DesktopFileReader::stageHint();
 }
 
-bool testing::MockDesktopFileReader::doLoaded() const
+bool MockDesktopFileReader::doLoaded() const
 {
     return DesktopFileReader::loaded();
 }
 
 
-testing::MockDesktopFileReaderFactory::MockDesktopFileReaderFactory()
+MockDesktopFileReaderFactory::MockDesktopFileReaderFactory()
 {
     using namespace ::testing;
     ON_CALL(*this, createInstance(_, _))
@@ -76,11 +79,11 @@ testing::MockDesktopFileReaderFactory::MockDesktopFileReaderFactory()
                     &MockDesktopFileReaderFactory::doCreateInstance));
 }
 
-testing::MockDesktopFileReaderFactory::~MockDesktopFileReaderFactory()
+MockDesktopFileReaderFactory::~MockDesktopFileReaderFactory()
 {
 }
 
-qtmir::DesktopFileReader *testing::MockDesktopFileReaderFactory::doCreateInstance(const QString &appId, const QFileInfo &fi)
+qtmir::DesktopFileReader *MockDesktopFileReaderFactory::doCreateInstance(const QString &appId, const QFileInfo &fi)
 {
     using namespace ::testing;
     auto instance = new NiceMock<MockDesktopFileReader>(appId, fi);
@@ -88,3 +91,5 @@ qtmir::DesktopFileReader *testing::MockDesktopFileReaderFactory::doCreateInstanc
 
     return instance;
 }
+
+} // namespace qtmir

@@ -1,14 +1,19 @@
 #include "mock_proc_info.h"
 
-testing::MockProcInfo::MockProcInfo()
+namespace qtmir
+{
+
+MockProcInfo::MockProcInfo()
 {
 }
 
-testing::MockProcInfo::~MockProcInfo()
+MockProcInfo::~MockProcInfo()
 {
 }
 
-std::unique_ptr<qtmir::ProcInfo::CommandLine> testing::MockProcInfo::commandLine(quint64 pid)
+std::unique_ptr<qtmir::ProcInfo::CommandLine> MockProcInfo::commandLine(quint64 pid)
 {
     return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
 }
+
+} // namespace qtmir

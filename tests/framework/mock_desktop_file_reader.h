@@ -21,7 +21,7 @@
 
 #include <gmock/gmock.h>
 
-namespace testing
+namespace qtmir
 {
 
 struct MockDesktopFileReader : public qtmir::DesktopFileReader
@@ -60,6 +60,6 @@ struct MockDesktopFileReaderFactory : public qtmir::DesktopFileReader::Factory
     MOCK_METHOD2(createInstance, qtmir::DesktopFileReader*(const QString &appId, const QFileInfo &fi));
 };
 
-}
+} // namespace qtmir
 
 #endif // MOCK_DESKTOP_FILE_READER_H

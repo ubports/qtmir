@@ -21,7 +21,7 @@
 
 #include <gmock/gmock.h>
 
-namespace testing
+namespace qtmir
 {
 class MockSharedWakelock : public qtmir::SharedWakelock
 {
@@ -41,5 +41,6 @@ private:
     QSet<const QObject *> m_owners;
 };
 
-} // namespace testing
+} // namespace qtmir
+
 #endif // MOCK_SHARED_WAKELOCK_H

@@ -22,7 +22,7 @@
  
 #include <gmock/gmock.h>
 
-namespace testing
+namespace qtmir
 {
 struct MockSettings : public qtmir::SettingsInterface
 {
@@ -32,5 +32,6 @@ struct MockSettings : public qtmir::SettingsInterface
     MOCK_CONST_METHOD1(get, QVariant(const QString &));
 };
 
-} // namespace testing
+} // namespace qtmir
+
 #endif // MOCK_SETTINGS_H

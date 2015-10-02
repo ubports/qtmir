@@ -1,45 +1,50 @@
 #include "fake_desktopfilereader.h"
 
-qtmir::FakeDesktopFileReader::FakeDesktopFileReader()
+namespace qtmir
+{
+
+FakeDesktopFileReader::FakeDesktopFileReader()
 	: DesktopFileReader()
 	, m_appId("foo-app")
 {
 }
 
-qtmir::FakeDesktopFileReader::~FakeDesktopFileReader()
+FakeDesktopFileReader::~FakeDesktopFileReader()
 {
 }
 
-QString qtmir::FakeDesktopFileReader::file() const { return QString(); }
+QString FakeDesktopFileReader::file() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::appId() const { return m_appId; }
+QString FakeDesktopFileReader::appId() const { return m_appId; }
 
-QString qtmir::FakeDesktopFileReader::name() const { return QString(); }
+QString FakeDesktopFileReader::name() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::comment() const { return QString(); }
+QString FakeDesktopFileReader::comment() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::icon() const { return QString(); }
+QString FakeDesktopFileReader::icon() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::exec() const { return QString(); }
+QString FakeDesktopFileReader::exec() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::path() const { return QString(); }
+QString FakeDesktopFileReader::path() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::stageHint() const { return QString(); }
+QString FakeDesktopFileReader::stageHint() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashTitle() const { return QString(); }
+QString FakeDesktopFileReader::splashTitle() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashImage() const { return QString(); }
+QString FakeDesktopFileReader::splashImage() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashShowHeader() const { return QString(); }
+QString FakeDesktopFileReader::splashShowHeader() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashColor() const { return QString(); }
+QString FakeDesktopFileReader::splashColor() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashColorHeader() const { return QString(); }
+QString FakeDesktopFileReader::splashColorHeader() const { return QString(); }
 
-QString qtmir::FakeDesktopFileReader::splashColorFooter() const { return QString(); }
+QString FakeDesktopFileReader::splashColorFooter() const { return QString(); }
 
-Qt::ScreenOrientations qtmir::FakeDesktopFileReader::supportedOrientations() const { return Qt::PortraitOrientation; }
+Qt::ScreenOrientations FakeDesktopFileReader::supportedOrientations() const { return Qt::PortraitOrientation; }
 
-bool qtmir::FakeDesktopFileReader::rotatesWindowContents() const { return false; }
+bool FakeDesktopFileReader::rotatesWindowContents() const { return false; }
 
-bool qtmir::FakeDesktopFileReader::loaded() const { return true; }
+bool FakeDesktopFileReader::loaded() const { return true; }
+
+} // namespace qtmir
