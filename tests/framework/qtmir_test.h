@@ -69,7 +69,7 @@ public:
     testing::NiceMock<MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
-    std::shared_ptr<StubPromptSessionManager> const promptSessionManager;
+    std::shared_ptr<StubPromptSessionManager> promptSessionManager;
     QSharedPointer<MirServer> mirServer;
     MirShell *mirShell{nullptr};
     QSharedPointer<TaskController> taskController;
