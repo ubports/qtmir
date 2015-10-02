@@ -87,7 +87,7 @@ public:
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
     QSGTexture *weakTexture() const override { return m_texture.data(); }
-    void updateTexture() override;
+    bool updateTexture() override;
     unsigned int currentFrameNumber() const override;
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
