@@ -59,7 +59,6 @@ class ScreenController : public QObject
 public:
     explicit ScreenController(QObject *parent = 0);
 
-    Screen* getUnusedScreen();
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
 

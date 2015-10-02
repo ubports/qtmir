@@ -103,28 +103,20 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 {
     QWindowSystemInterface::flushWindowSystemEvents();
 
-    // FIXME: QWindow can be created specifying a destination QScreen. For now we
-    // will ignore it and just associate any unused Screen, if available.
     auto screens = m_mirServer->screenController().lock();
     if (!screens) {
         qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
         return nullptr;
     }
-    Screen *screen = screens->getUnusedScreen();
-    if (!screen) {
-        qCritical("No available Screens to create a new QWindow/ScreenWindow for");
-        return nullptr;
-    }
-    QScreen *qscreen = screen->screen();
-    window->setScreen(qscreen);
 
     auto platformWindow = new ScreenWindow(window);
     if (screens->compositing()) {
         platformWindow->setExposed(true);
     }
 
-    qCDebug(QTMIR_SCREENS) << "New" << window << "with geom" << window->geometry()
-                           << "is backed by a" << screen << "with geometry" << screen->geometry();
+    qCDebug(QTMIR_SCREENS) << "QWindow" << window << "with geom" << window->geometry()
+                           << "is backed by a" << static_cast<Screen *>(window->screen()->handle())
+                           << "with geometry" << window->screen()->geometry();
     return platformWindow;
 }
 

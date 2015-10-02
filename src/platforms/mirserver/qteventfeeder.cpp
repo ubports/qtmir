@@ -412,7 +412,7 @@ public:
             const QList<struct QWindowSystemInterface::TouchPoint> &points, Qt::KeyboardModifiers mods) override
     {
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
-    }    
+    }
 
     void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons,
                           Qt::KeyboardModifiers modifiers) override
@@ -588,10 +588,14 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
                             text, is_auto_rep);
         qKeyEvent.setTimestamp(timestamp);
         if (context->filterEvent(&qKeyEvent)) {
-            // key event filtered out by input context
+            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
+                << "but not dispatching as it was filtered out by input context";
             return;
         }
     }
+
+    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received" << qPrintable(mirKeyboardEventToString(kev))
+        << ". Dispatching to " << mQtWindowSystem->focusedWindow();
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
         timestamp, keyType, keyCode, modifiers,

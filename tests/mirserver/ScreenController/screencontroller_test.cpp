@@ -135,18 +135,6 @@ TEST_F(ScreenControllerTest, ScreenRemoved)
     EXPECT_EQ(QRect(500, 600, 1500, 2000), screenController->screens().at(0)->geometry());
 }
 
-TEST_F(ScreenControllerTest, CheckPrioritizedGetUnusedScreen)
-{
-    std::vector<mg::DisplayConfigurationOutput> config{fakeOutput2, fakeOutput1};
-    std::vector<MockDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
-    display->setFakeConfiguration(config, bufferConfig);
-
-    screenController->update();
-
-    auto screen = screenController->getUnusedScreen();
-    EXPECT_EQ(mg::DisplayConfigurationOutputType::lvds, screen->outputType());
-}
-
 TEST_F(ScreenControllerTest, MatchBufferWithDisplay)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1};
