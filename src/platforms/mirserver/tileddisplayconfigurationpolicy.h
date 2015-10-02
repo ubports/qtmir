@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,24 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef TILEDDISPLAYCONFIGURATIONPOLICY_H
+#define TILEDDISPLAYCONFIGURATIONPOLICY_H
 
-#include <qpa/qplatformscreen.h>
+#include <mir/graphics/display_configuration_policy.h>
+
 #include <memory>
 
-namespace mir { namespace graphics { class DisplayConfiguration; }}
-
-class Display
+class TiledDisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
-    Display(const std::shared_ptr<mir::graphics::DisplayConfiguration> &displayConfig);
-    virtual ~Display();
+    TiledDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped);
 
-    QList<QPlatformScreen *> screens() const { return m_screens; }
+    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
 private:
-    QList<QPlatformScreen *> m_screens;
+    const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
 };
 
-#endif // DISPLAY_H
+#endif // TILEDDISPLAYCONFIGURATIONPOLICY_H

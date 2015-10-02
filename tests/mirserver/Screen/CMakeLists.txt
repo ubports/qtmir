@@ -5,6 +5,7 @@ set(
 )
 
 include_directories(
+  ${CMAKE_SOURCE_DIR}/tests/common
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common
   ${Qt5Gui_PRIVATE_INCLUDE_DIRS}

@@ -17,18 +17,26 @@
 #ifndef QTCOMPOSITOR_H
 #define QTCOMPOSITOR_H
 
-#include "mir/compositor/compositor.h"
+#include <mir/compositor/compositor.h>
 
-class QtCompositor : public mir::compositor::Compositor
+// Qt
+#include <QObject>
+
+class QtCompositor : public QObject, public mir::compositor::Compositor
 {
+    Q_OBJECT
 public:
-    QtCompositor();
+    QtCompositor() = default;
+    virtual ~QtCompositor() noexcept = default;
 
     void start();
     void stop();
 
+Q_SIGNALS:
+    void starting();
+    void stopping();
+
 private:
-    void setAllWindowsExposed(const bool exposed);
 };
 
 #endif // QTCOMPOSITOR_H
