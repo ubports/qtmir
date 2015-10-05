@@ -117,6 +117,8 @@ void FakeMirSurface::decrementViewCount()
 
 QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
 
+QSGTexture *FakeMirSurface::weakTexture() const { return nullptr; }
+
 void FakeMirSurface::updateTexture() {}
 
 unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
