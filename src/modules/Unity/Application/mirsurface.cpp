@@ -527,6 +527,8 @@ void MirSurface::setLive(bool value)
 
 void MirSurface::setVisible(bool visible)
 {
+    qCDebug(QTMIR_SURFACES) << "MirSurface::setVisible(" << (visible ? "true" : "false") << ") surface = " << this;
+
     if (visible) {
         m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
     } else {
