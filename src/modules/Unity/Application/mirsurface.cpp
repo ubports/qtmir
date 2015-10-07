@@ -71,9 +71,10 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
     auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, action,
-                                   getMirButtonsFromQt(qtEvent->buttons()), qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
+                                   buttons, qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
@@ -90,9 +91,10 @@ mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
 {
     auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp()));
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, mir_pointer_action_motion,
-                                   getMirButtonsFromQt(qtEvent->buttons()), qtEvent->x(), qtEvent->y(),
+                                   buttons, qtEvent->x(), qtEvent->y(),
                                    qtEvent->angleDelta().x(), qtEvent->angleDelta().y(),
                                    0, 0);
 }
