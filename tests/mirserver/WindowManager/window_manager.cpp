@@ -60,7 +60,7 @@ struct StubFocusController : msh::FocusController
 public:
     void focus_next_session() override {}
 
-    auto focused_session() const -> std::shared_ptr<ms::Session> override { return {}; }
+    std::shared_ptr<ms::Session> focused_session() const override { return {}; }
 
     void set_focus_to(
         std::shared_ptr<ms::Session> const& /*focus_session*/,
@@ -68,7 +68,7 @@ public:
 
     std::shared_ptr<ms::Surface> focused_surface() const override { return {}; }
 
-    virtual auto surface_at(Point /*cursor*/) const -> std::shared_ptr<ms::Surface> override { return {}; }
+    std::shared_ptr<ms::Surface> surface_at(Point /*cursor*/) const override { return {}; }
 
     void raise(msh::SurfaceSet const& /*surfaces*/) override {}
 };
@@ -251,7 +251,7 @@ TEST_F(WindowManager, HandlesKeyboardEvent)
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
     const auto arbitrary_action = mir_keyboard_action_down;
     const xkb_keysym_t arbitrary_key_code{0};
-    const auto arbitrary_scan_code = 0;
+    const int arbitrary_scan_code = 0;
     const MirInputEventModifiers arbitrary_event_modifiers{0};
 
     const auto generic_event = make_event(

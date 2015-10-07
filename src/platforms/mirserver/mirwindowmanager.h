@@ -34,10 +34,9 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
 
 public:
 
-    static auto create(
+    static std::unique_ptr<MirWindowManager> create(
         mir::shell::FocusController* focus_controller,
-        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
-        -> std::unique_ptr<MirWindowManager>;
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

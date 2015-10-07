@@ -156,10 +156,9 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     // TODO support surface modifications
 }
 
-auto MirWindowManager::create(
+std::unique_ptr<MirWindowManager> MirWindowManager::create(
     mir::shell::FocusController* /*focus_controller*/, 
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
--> std::unique_ptr<MirWindowManager>
 {
     return std::make_unique<MirWindowManagerImpl>(displayLayout);
 }
