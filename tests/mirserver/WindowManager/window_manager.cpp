@@ -117,6 +117,8 @@ struct WindowManager : Test
                     return build_surface(session, params);
                 });
     }
+
+    static constexpr uint64_t arbitrary_mac = __LINE__;
 };
 }
 
@@ -257,6 +259,7 @@ TEST_F(WindowManager, HandlesKeyboardEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
+        arbitrary_mac,
         arbitrary_action,
         arbitrary_key_code,
         arbitrary_scan_code,
@@ -277,6 +280,7 @@ TEST_F(WindowManager, HandlesTouchEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
+        arbitrary_mac,
         arbitrary_event_modifiers);
 
     const auto input_event = mir_event_get_input_event(generic_event.get());
@@ -296,17 +300,22 @@ TEST_F(WindowManager, HandlesPointerEvent)
     const float arbitrary_y_axis_value{0};
     const float arbitrary_hscroll_value{0};
     const float arbitrary_vscroll_value{0};
+    const float arbitrary_relative_x_value{0};
+    const float arbitrary_relative_y_value{0};
 
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
+        arbitrary_mac,
         arbitrary_event_modifiers,
         arbitrary_pointer_action,
         arbitrary_pointer_buttons,
         arbitrary_x_axis_value,
         arbitrary_y_axis_value,
         arbitrary_hscroll_value,
-        arbitrary_vscroll_value);
+        arbitrary_vscroll_value,
+        arbitrary_relative_x_value,
+        arbitrary_relative_y_value);
 
     const auto input_event = mir_event_get_input_event(generic_event.get());
     const auto event = mir_input_event_get_pointer_event(input_event);
