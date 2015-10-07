@@ -548,11 +548,8 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
-        qDebug() << "WHEEL mir: ACTION" << "hor:" << hDelta << "vert:" << vDelta;
-
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            qDebug() << "Delta point" << angleDelta;
             mQtWindowSystem->handleWheelEvent(timestamp, local_point, local_point,
                                               QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         } else {
