@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -28,6 +28,8 @@
 // Unity API
 #include <unity/shell/application/ApplicationInfoInterface.h>
 
+#include "session_interface.h"
+
 namespace mir {
     namespace scene {
         class Session;
@@ -39,7 +41,6 @@ namespace qtmir
 
 class ApplicationManager;
 class DesktopFileReader;
-class TaskController;
 class Session;
 class SharedWakelock;
 
@@ -51,15 +52,36 @@ class Application : public unity::shell::application::ApplicationInfoInterface
     Q_PROPERTY(QString exec READ exec CONSTANT)
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
     Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
-    Q_PROPERTY(Session* session READ session NOTIFY sessionChanged DESIGNABLE false)
+    Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
 
 public:
     Q_DECLARE_FLAGS(Stages, Stage)
 
-    Application(const QSharedPointer<TaskController>& taskController,
-                const QSharedPointer<SharedWakelock>& sharedWakelock,
+    enum ProcessState {
+        ProcessUnknown,
+        ProcessRunning,
+        ProcessSuspended,
+        ProcessFailed, // it stopped, but because it was killed or because it crashed
+        ProcessStopped
+    };
+
+    enum class InternalState {
+        Starting,
+        Running,
+        RunningInBackground,
+        SuspendingWaitSession,
+        SuspendingWaitProcess,
+        Suspended,
+        Closing, // The user has requested the app be closed
+        StoppedResumable, // The process stopped but we want to keep the Application object around
+                          // so it can be respawned as if it never stopped running in the first place.
+        Stopped // It closed itself, crashed or it stopped and we can't respawn it
+                // In any case, this is a dead end. The Application object can be deleted at
+                // any moment once in this state.
+    };
+
+    Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                 DesktopFileReader *desktopFileReader,
-                State state,
                 const QStringList &arguments,
                 ApplicationManager *parent);
     virtual ~Application();
@@ -71,6 +93,8 @@ public:
     QUrl icon() const override;
     Stage stage() const override;
     State state() const override;
+    RequestedState requestedState() const override;
+    void setRequestedState(RequestedState) override;
     bool focused() const override;
     QString splashTitle() const override;
     QUrl splashImage() const override;
@@ -82,12 +106,16 @@ public:
     bool rotatesWindowContents() const override;
 
     void setStage(Stage stage);
-    void setState(State state);
 
-    Session* session() const;
+    ProcessState processState() const { return m_processState; }
+    void setProcessState(ProcessState value);
+
+    QStringList arguments() const { return m_arguments; }
+
+    SessionInterface* session() const;
+    void setSession(SessionInterface *session);
 
     bool canBeResumed() const;
-    void setCanBeResumed(const bool);
 
     bool isValid() const;
     QString desktopFile() const;
@@ -98,40 +126,60 @@ public:
 
     pid_t pid() const;
 
+    void close();
+
+    // for tests
+    InternalState internalState() const { return m_state; }
+
+    static QStringList lifecycleExceptions;
+
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
     void stageChanged(Stage stage);
-    void sessionChanged(Session *session);
+    void sessionChanged(SessionInterface *session);
+
+    void startProcessRequested();
+    void suspendProcessRequested();
+    void resumeProcessRequested();
+    void stopped();
 
 private Q_SLOTS:
-    void onSessionSuspended();
-    void onSessionResumed();
+    void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
 
 private:
+
     QString longAppId() const;
-    void holdWakelock(bool enable) const;
+    void acquireWakelock() const;
+    void releaseWakelock() const;
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
     void setFocused(bool focus);
-    void setSession(Session *session);
+    void setInternalState(InternalState state);
+    void wipeQMLCache();
+    void suspend();
+    void resume();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
+    static const char* internalStateToStr(InternalState state);
+    void applyRequestedState();
+    void applyRequestedRunning();
+    void applyRequestedSuspended();
 
-    QSharedPointer<TaskController> m_taskController;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
     QString m_longAppId;
     qint64 m_pid;
     Stage m_stage;
     Stages m_supportedStages;
-    State m_state;
+    InternalState m_state;
     bool m_focused;
-    bool m_canBeResumed;
     QStringList m_arguments;
     Qt::ScreenOrientations m_supportedOrientations;
     bool m_rotatesWindowContents;
-    Session *m_session;
+    SessionInterface *m_session;
+    RequestedState m_requestedState;
+    ProcessState m_processState;
 
     friend class ApplicationManager;
     friend class SessionManager;

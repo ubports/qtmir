@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -93,10 +93,6 @@ public:
 
     // ApplicationManagerInterface
     QString focusedApplicationId() const override;
-    bool suspended() const override;
-    void setSuspended(bool suspended) override;
-    bool forceDashActive() const override;
-    void setForceDashActive(bool forceDashActive) override;
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
@@ -125,9 +121,12 @@ public Q_SLOTS:
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
 
     void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
+    void onSessionDestroyingSurface(mir::scene::Session const* session,
+                                    std::shared_ptr<mir::scene::Surface> const& surface);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
+    void onProcessSuspended(const QString& appId);
     void onProcessFailed(const QString& appId, const bool duringStartup);
     void onFocusRequested(const QString& appId);
     void onResumeRequested(const QString& appId);
@@ -146,9 +145,7 @@ private:
     void remove(Application* application);
     Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
     Application* findApplicationWithSession(const mir::scene::Session *session);
-    Application* applicationForStage(Application::Stage stage);
     QModelIndex findIndex(Application* application);
-    bool suspendApplication(Application *application);
     void resumeApplication(Application *application);
     QString toString() const;
 
@@ -158,9 +155,6 @@ private:
 
     QList<Application*> m_applications;
     Application* m_focusedApplication;
-    Application* m_mainStageApplication;
-    Application* m_sideStageApplication;
-    QStringList m_lifecycleExceptions;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
@@ -168,9 +162,6 @@ private:
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
     static ApplicationManager* the_application_manager;
-    QList<pid_t> m_hiddenPIDs;
-    bool m_suspended;
-    bool m_forceDashActive;
 
     friend class Application;
     friend class DBusWindowStack;

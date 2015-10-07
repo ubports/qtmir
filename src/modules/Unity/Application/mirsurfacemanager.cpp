@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,12 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mirsurfacemanager.h"
+
 // Qt
 #include <QGuiApplication>
 #include <QMutexLocker>
 
 // local
-#include "mirsurfacemanager.h"
+#include "mirsurface.h"
 #include "sessionmanager.h"
 #include "application_manager.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -39,7 +41,7 @@ namespace ms = mir::scene;
 
 namespace qtmir {
 
-MirSurfaceManager *MirSurfaceManager::the_surface_manager = nullptr;
+MirSurfaceManager *MirSurfaceManager::instance = nullptr;
 
 
 void connectToSessionListener(MirSurfaceManager *manager, SessionListener *listener)
@@ -52,7 +54,7 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
 
 MirSurfaceManager* MirSurfaceManager::singleton()
 {
-    if (!the_surface_manager) {
+    if (!instance) {
 
         NativeInterface *nativeInterface = dynamic_cast<NativeInterface*>(QGuiApplication::platformNativeInterface());
 
@@ -65,11 +67,11 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        the_surface_manager = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
+        instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
-        connectToSessionListener(the_surface_manager, sessionListener);
+        connectToSessionListener(instance, sessionListener);
     }
-    return the_surface_manager;
+    return instance;
 }
 
 MirSurfaceManager::MirSurfaceManager(
@@ -77,7 +79,7 @@ MirSurfaceManager::MirSurfaceManager(
         MirShell *shell,
         SessionManager* sessionManager,
         QObject *parent)
-    : MirSurfaceItemModel(parent)
+    : QObject(parent)
     , m_mirServer(mirServer)
     , m_shell(shell)
     , m_sessionManager(sessionManager)
@@ -90,7 +92,7 @@ MirSurfaceManager::~MirSurfaceManager()
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::~MirSurfaceManager - this=" << this;
 
-    m_mirSurfaceToItemHash.clear();
+    m_mirSurfaceToQmlSurfaceHash.clear();
 }
 
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
@@ -101,32 +103,29 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurfaceItem(surface, session, m_shell, observer);
+    auto qmlSurface = new MirSurface(surface, session, m_shell, observer);
     {
         QMutexLocker lock(&m_mutex);
-        m_mirSurfaceToItemHash.insert(surface.get(), qmlSurface);
+        m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);
     }
 
     if (session)
         session->setSurface(qmlSurface);
 
     // Only notify QML of surface creation once it has drawn its first frame.
-    connect(qmlSurface, &MirSurfaceItem::firstFrameDrawn, this, [&](MirSurfaceItem *item) {
+    connect(qmlSurface, &MirSurfaceInterface::firstFrameDrawn, this, [=]() {
         tracepoint(qtmir, firstFrameDrawn);
-        Q_EMIT surfaceCreated(item);
-
-        insert(0, item);
+        Q_EMIT surfaceCreated(qmlSurface);
     });
 
-    // clean up after MirSurfaceItem is destroyed
-    connect(qmlSurface, &MirSurfaceItem::destroyed, this, [&](QObject *item) {
-        auto mirSurfaceItem = static_cast<MirSurfaceItem*>(item);
+    // clean up after MirSurface is destroyed
+    connect(qmlSurface, &QObject::destroyed, this, [&](QObject *obj) {
+        auto qmlSurface = static_cast<MirSurfaceInterface*>(obj);
         {
             QMutexLocker lock(&m_mutex);
-            m_mirSurfaceToItemHash.remove(m_mirSurfaceToItemHash.key(mirSurfaceItem));
+            m_mirSurfaceToQmlSurfaceHash.remove(m_mirSurfaceToQmlSurfaceHash.key(qmlSurface));
         }
 
-        remove(mirSurfaceItem);
         tracepoint(qtmir, surfaceDestroyed);
     });
     tracepoint(qtmir, surfaceCreated);
@@ -138,25 +137,24 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionDestroyingSurface - session=" << session
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
-    MirSurfaceItem* item = nullptr;
+    MirSurfaceInterface* qmlSurface = nullptr;
     {
         QMutexLocker lock(&m_mutex);
-        auto it = m_mirSurfaceToItemHash.find(surface.get());
-        if (it != m_mirSurfaceToItemHash.end()) {
+        auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
+        if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
 
-            item = it.value();
+            qmlSurface = it.value();
 
-            m_mirSurfaceToItemHash.remove(m_mirSurfaceToItemHash.key(item));
+            m_mirSurfaceToQmlSurfaceHash.remove(m_mirSurfaceToQmlSurfaceHash.key(qmlSurface));
         } else {
-            qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurfaceItem corresponding"
+            qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurface corresponding"
                         << "to surface=" << surface.get() << "surface.name=" << surface->name().c_str();
             return;
         }
     }
 
-    item->setEnabled(false); //disable input events
-    item->setLive(false); //disable input events
-    Q_EMIT surfaceDestroyed(item);
+    qmlSurface->setLive(false);
+    Q_EMIT surfaceDestroyed(qmlSurface);
 }
 
 } // namespace qtmir

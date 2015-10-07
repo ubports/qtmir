@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Author: Gerry Boland <gerry.boland@canonical.com>
  */
 
 #include "miropenglcontext.h"
@@ -36,7 +34,7 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
     : m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
@@ -96,10 +94,8 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
     qDebug() << "OpenGL ES extensions:" << qPrintable(string);
     q_printEglConfig(eglDisplay, eglConfig);
 
-#if GL_DEBUG
     QObject::connect(m_logger, &QOpenGLDebugLogger::messageLogged,
                      this, &MirOpenGLContext::onGlDebugMessageLogged, Qt::DirectConnection);
-#endif // Qt>=5.2
 #endif // debug
 }
 
@@ -122,7 +118,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     if (displayBuffer) {
         displayBuffer->makeCurrent();
 
-#if GL_DEBUG
+#ifndef QT_NO_DEBUG
         if (!m_logger->isLogging() && m_logger->initialize()) {
             m_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
             m_logger->enableMessages();

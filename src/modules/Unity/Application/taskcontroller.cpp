@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Ricardo Mendoza <ricardo.mendoza@canonical.com>
  */
 
 // local
@@ -50,14 +48,19 @@ TaskController::TaskController(
             &TaskController::processStopped);
 
     connect(m_appController.data(),
-            &ApplicationController::applicationFocusRequest,
+            &ApplicationController::applicationPaused,
             this,
-            &TaskController::onApplicationFocusRequest);
+            &TaskController::processSuspended);
 
     connect(m_appController.data(),
-            &ApplicationController::applicationResumeRequest,
+            &ApplicationController::applicationFocusRequest,
             this,
-            &TaskController::onApplicationResumeRequest);
+            &TaskController::focusRequested);
+
+    connect(m_appController.data(),
+            &ApplicationController::applicationResumeRequested,
+            this,
+            &TaskController::resumeRequested);
 
     connect(m_appController.data(),
             &ApplicationController::applicationError,
@@ -106,16 +109,6 @@ bool TaskController::resume(const QString &appId)
 {
     qCDebug(QTMIR_APPLICATIONS) << "TaskController::resume - appId=" << appId;
     return m_appController->resumeApplicationWithAppId(appId);
-}
-
-void TaskController::onApplicationFocusRequest(const QString& id)
-{
-    Q_EMIT requestFocus(id);
-}
-
-void TaskController::onApplicationResumeRequest(const QString& id)
-{
-    Q_EMIT requestResume(id);
 }
 
 void TaskController::onApplicationError(const QString& id, ApplicationController::Error error)

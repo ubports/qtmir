@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2014 Canonical, Ltd.
+ * Copyright (C) 2013-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,12 +19,15 @@
 // Mir
 #include <mir/graphics/buffer.h>
 #include <mir/geometry/size.h>
+#include <mir/renderer/gl/texture_source.h>
 
 namespace mg = mir::geometry;
+namespace mrg = mir::renderer::gl;
 
-MirBufferSGTexture::MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer> buffer)
+MirBufferSGTexture::MirBufferSGTexture()
     : QSGTexture()
-    , m_mirBuffer(buffer)
+    , m_width(0)
+    , m_height(0)
     , m_textureId(0)
 {
     glGenTextures(1, &m_textureId);
@@ -32,10 +35,6 @@ MirBufferSGTexture::MirBufferSGTexture(std::shared_ptr<mir::graphics::Buffer> bu
     setFiltering(QSGTexture::Linear);
     setHorizontalWrapMode(QSGTexture::ClampToEdge);
     setVerticalWrapMode(QSGTexture::ClampToEdge);
-
-    mg::Size size = m_mirBuffer->size();
-    m_height = size.height.as_int();
-    m_width = size.width.as_int();
 }
 
 MirBufferSGTexture::~MirBufferSGTexture()
@@ -48,6 +47,8 @@ MirBufferSGTexture::~MirBufferSGTexture()
 void MirBufferSGTexture::freeBuffer()
 {
     m_mirBuffer.reset();
+    m_width = 0;
+    m_height = 0;
 }
 
 void MirBufferSGTexture::setBuffer(std::shared_ptr<mir::graphics::Buffer> buffer)
@@ -78,5 +79,11 @@ void MirBufferSGTexture::bind()
 {
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
-    m_mirBuffer->gl_bind_to_texture();
+
+    auto const texture_source =
+        dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
+    if (!texture_source)
+        throw std::logic_error("Buffer does not support GL rendering");
+
+    texture_source->gl_bind_to_texture();
 }
