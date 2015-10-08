@@ -100,7 +100,8 @@ Description: Qt plugin for Unity specific Mir APIs
  (start/stop/suspend/resume) and surface management.
 
 Package: qtmir-tests
-Architecture: all
+Architecture: any
+Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends},
 Depends: autopilot-qt5,
          littler,
