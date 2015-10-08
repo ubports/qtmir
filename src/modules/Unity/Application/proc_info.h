@@ -47,7 +47,7 @@ public:
         QString getParameter(const char* name) const;
         QStringList asStringList() const;
     };
-    virtual std::unique_ptr<CommandLine> commandLine(quint64 pid);
+    virtual std::unique_ptr<CommandLine> commandLine(pid_t pid);
     virtual ~ProcInfo();
 };
 
