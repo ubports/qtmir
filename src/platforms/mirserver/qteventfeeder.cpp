@@ -411,12 +411,13 @@ class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
             buttons, modifiers);
     }
 
-    void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint, QPoint pixelDelta, QPoint angleDelta,
+    void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint,
+                          QPoint pixelDelta, QPoint angleDelta,
                           Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
     {
         Q_ASSERT(!mTopLevelWindow.isNull());
-        QWindowSystemInterface::handleWheelEvent(mTopLevelWindow.data(), timestamp, localPoint, globalPoint, pixelDelta, angleDelta,
-                                                 mods, phase);
+        QWindowSystemInterface::handleWheelEvent(mTopLevelWindow.data(), timestamp, localPoint, globalPoint,
+                                                 pixelDelta, angleDelta, mods, phase);
     }
 
     void handleEnterEvent(const QPointF &localPoint, const QPointF &globalPoint) override
