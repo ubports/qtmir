@@ -21,6 +21,7 @@
 
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
+#include <mir/renderer/gl/render_target.h>
 
 #include <QObject>
 
@@ -50,7 +51,7 @@ private:
     bool m_isExposed;
     WId m_winId;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
-    mir::graphics::DisplayBuffer *m_displayBuffer;
+    mir::renderer::gl::RenderTarget *m_renderTarget;
 };
 
 #endif // DISPLAYWINDOW_H

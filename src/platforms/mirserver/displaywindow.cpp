@@ -33,6 +33,18 @@ static WId newWId()
     return ++id;
 }
 
+static mir::renderer::gl::RenderTarget *as_render_target(
+    mir::graphics::DisplayBuffer *displayBuffer)
+{
+    auto const render_target =
+        dynamic_cast<mir::renderer::gl::RenderTarget*>(
+            displayBuffer->native_display_buffer());
+    if (!render_target)
+        throw std::logic_error("DisplayBuffer does not support GL rendering");
+
+    return render_target;
+}
+
 DisplayWindow::DisplayWindow(
     QWindow *window,
     mir::graphics::DisplaySyncGroup *displayGroup,
@@ -41,7 +53,7 @@ DisplayWindow::DisplayWindow(
     , m_isExposed(true)
     , m_winId(newWId())
     , m_displayGroup(displayGroup)
-    , m_displayBuffer(displayBuffer)
+    , m_renderTarget(as_render_target(displayBuffer))
 {
     qDebug() << "DisplayWindow::DisplayWindow";
     qWarning("Window %p: %p 0x%x\n", this, window, uint(m_winId));
@@ -101,7 +113,7 @@ bool DisplayWindow::event(QEvent *event)
 
 void DisplayWindow::swapBuffers()
 {
-    m_displayBuffer->gl_swap_buffers();
+    m_renderTarget->swap_buffers();
 
     // FIXME this exposes a QtMir architecture problem now, as DisplayWindow
     // is supposed to wrap a mg::DisplayBuffer. We use Qt's multithreaded
@@ -117,10 +129,10 @@ void DisplayWindow::swapBuffers()
 
 void DisplayWindow::makeCurrent()
 {
-    m_displayBuffer->make_current();
+    m_renderTarget->make_current();
 }
 
 void DisplayWindow::doneCurrent()
 {
-    m_displayBuffer->release_current();
+    m_renderTarget->release_current();
 }
