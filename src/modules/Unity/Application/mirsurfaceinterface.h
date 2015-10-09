@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QSharedPointer>
 #include <QTouchEvent>
 
 class QHoverEvent;
@@ -43,8 +44,6 @@ public:
 
     virtual bool isFirstFrameDrawn() const = 0;
 
-    virtual SessionInterface *session() const = 0;
-
     virtual void stopFrameDropper() = 0;
     virtual void startFrameDropper() = 0;
 
@@ -54,6 +53,7 @@ public:
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
+    virtual QSGTexture *weakTexture() const = 0;
     virtual void updateTexture() = 0;
     virtual unsigned int currentFrameNumber() const = 0;
     virtual bool numBuffersReadyForCompositor() = 0;
@@ -75,6 +75,8 @@ public:
             const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
             Qt::TouchPointStates qtTouchPointStates,
             ulong qtTimestamp) = 0;
+
+    virtual QString appId() const = 0;
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;

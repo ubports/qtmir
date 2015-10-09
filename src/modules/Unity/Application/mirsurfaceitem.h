@@ -26,7 +26,7 @@
 // Unity API
 #include <unity/shell/application/MirSurfaceItemInterface.h>
 
-#include "mirsurface.h"
+#include "mirsurfaceinterface.h"
 #include "session_interface.h"
 
 namespace qtmir {
@@ -129,7 +129,7 @@ private:
             const QList<QTouchEvent::TouchPoint> &touchPoints,
             Qt::TouchPointStates touchPointStates);
 
-    MirSurface* m_surface;
+    MirSurfaceInterface* m_surface;
 
     QMutex m_mutex;
     MirTextureProvider *m_textureProvider;

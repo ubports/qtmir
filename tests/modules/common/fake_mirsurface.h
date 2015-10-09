@@ -102,8 +102,6 @@ public:
         return m_isFirstFrameDrawn;
     }
 
-    SessionInterface *session() const override { return m_session; }
-
     void stopFrameDropper() override {
         m_isFrameDropperRunning = false;
     }
@@ -134,6 +132,7 @@ public:
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override { return QSharedPointer<QSGTexture>(); }
+    QSGTexture *weakTexture() const override { return nullptr; }
     void updateTexture() override {}
     unsigned int currentFrameNumber() const override { return 0; }
     bool numBuffersReadyForCompositor() override { return 0; }
@@ -157,6 +156,8 @@ public:
             ulong timestamp) override {
         m_touchesReceived.append(TouchEvent(mods, points, states, timestamp));
     }
+
+    QString appId() const override { return "foo-app"; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override {}

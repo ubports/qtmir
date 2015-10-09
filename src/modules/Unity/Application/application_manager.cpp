@@ -438,6 +438,7 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
         return false;
     }
 
+    application->close();
     remove(application);
 
     bool result = m_taskController->stop(application->longAppId());
