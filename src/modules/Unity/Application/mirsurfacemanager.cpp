@@ -144,7 +144,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
 
             qmlSurface = it.value();
-            
+
             m_mirSurfaceToQmlSurfaceHash.erase(it);
         } else {
             qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurface corresponding"
