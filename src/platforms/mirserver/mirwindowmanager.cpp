@@ -160,5 +160,5 @@ std::unique_ptr<MirWindowManager> MirWindowManager::create(
     mir::shell::FocusController* /*focus_controller*/, 
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
 {
-    return std::make_unique<MirWindowManagerImpl>(displayLayout);
+    return std::unique_ptr<MirWindowManager>{new MirWindowManagerImpl(displayLayout)};
 }
