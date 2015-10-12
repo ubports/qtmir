@@ -122,7 +122,7 @@ struct WindowManager : Test
 };
 }
 
-TEST_F(WindowManager, CreatesSurfaceUsingSuppliedBuilder)
+TEST_F(WindowManager, DISABLED_CreatesSurfaceUsingSuppliedBuilder)
 {
     EXPECT_CALL(*this, build_surface(_, _));
 
@@ -137,7 +137,7 @@ TEST_F(WindowManager, CreatesSurfaceUsingSuppliedBuilder)
     EXPECT_THAT(surface, Eq(arbitrary_surface_id));
 }
 
-TEST_F(WindowManager, SizesNewSurfaceToOutput)
+TEST_F(WindowManager, DISABLED_SizesNewSurfaceToOutput)
 {
     EXPECT_CALL(*this, build_surface(_, _)).Times(AnyNumber());
 
@@ -214,27 +214,27 @@ INSTANTIATE_TEST_CASE_P(WindowManager, SetAttribute,
     ));
 
 // The following calls are /currently/ ignored, but we can check they don't "blow up"
-TEST_F(WindowManager, HandlesAddSession)
+TEST_F(WindowManager, DISABLED_HandlesAddSession)
 {
     EXPECT_NO_THROW(window_manager->add_session(arbitrary_session));
 }
 
-TEST_F(WindowManager, HandlesRemoveSession)
+TEST_F(WindowManager, DISABLED_HandlesRemoveSession)
 {
     EXPECT_NO_THROW(window_manager->remove_session(arbitrary_session));
 }
 
-TEST_F(WindowManager, HandlesAddDisplay)
+TEST_F(WindowManager, DISABLED_HandlesAddDisplay)
 {
     EXPECT_NO_THROW(window_manager->add_display(arbitrary_display));
 }
 
-TEST_F(WindowManager, HandlesRemoveDisplay)
+TEST_F(WindowManager, DISABLED_HandlesRemoveDisplay)
 {
     EXPECT_NO_THROW(window_manager->remove_display(arbitrary_display));
 }
 
-TEST_F(WindowManager, HandlesModifySurface)
+TEST_F(WindowManager, DISABLED_HandlesModifySurface)
 {
     add_surface();
 
@@ -247,7 +247,7 @@ TEST_F(WindowManager, HandlesModifySurface)
     window_manager->remove_surface(arbitrary_session, arbitrary_surface);
 }
 
-TEST_F(WindowManager, HandlesKeyboardEvent)
+TEST_F(WindowManager, DISABLED_HandlesKeyboardEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
@@ -271,7 +271,7 @@ TEST_F(WindowManager, HandlesKeyboardEvent)
     EXPECT_NO_THROW(window_manager->handle_keyboard_event(event));
 }
 
-TEST_F(WindowManager, HandlesTouchEvent)
+TEST_F(WindowManager, DISABLED_HandlesTouchEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
@@ -289,7 +289,7 @@ TEST_F(WindowManager, HandlesTouchEvent)
     EXPECT_NO_THROW(window_manager->handle_touch_event(event));
 }
 
-TEST_F(WindowManager, HandlesPointerEvent)
+TEST_F(WindowManager, DISABLED_HandlesPointerEvent)
 {
     const MirInputDeviceId arbitrary_device{0};
     const auto arbitrary_timestamp = std::chrono::steady_clock().now().time_since_epoch();
