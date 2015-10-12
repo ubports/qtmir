@@ -132,7 +132,7 @@ public:
         }
     }
 
-    bool isBeingDisplayed() const override { return m_surfaceItems.count() > 0; }
+    bool isBeingDisplayed() const override { return !m_surfaceItems.isEmpty(); }
     void registerView(unity::shell::application::MirSurfaceItemInterface* item) override {
         m_surfaceItems.append(item);
         if (m_surfaceItems.count() == 1) {
