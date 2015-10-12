@@ -532,9 +532,10 @@ void MirSurface::updateVisibility()
             newVisible |= surface->isVisible();
         }
     }
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
 
     if (newVisible != visible()) {
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
+
         m_surface->configure(mir_surface_attrib_visibility,
                              newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
     }
