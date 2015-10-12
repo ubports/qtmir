@@ -12,10 +12,7 @@ add_executable(WindowManagerTest
 target_link_libraries(
   WindowManagerTest
 
-  unityapplicationplugin
   qpa-mirserver
-
-  Qt5::Test
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
