@@ -26,21 +26,66 @@
 
 namespace ms = mir::scene;
 
-MirWindowManager::MirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
+namespace 
+{
+class MirWindowManagerImpl : public MirWindowManager
+{
+public:
+
+    MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+
+    void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
+
+    void remove_session(std::shared_ptr<mir::scene::Session> const& session) override;
+
+    mir::frontend::SurfaceId add_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::function<mir::frontend::SurfaceId(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params)> const& build) override;
+
+    void remove_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::weak_ptr<mir::scene::Surface> const& surface) override;
+
+    void add_display(mir::geometry::Rectangle const& area) override;
+
+    void remove_display(mir::geometry::Rectangle const& area) override;
+
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
+
+    bool handle_touch_event(MirTouchEvent const* event) override;
+
+    bool handle_pointer_event(MirPointerEvent const* event) override;
+
+    int set_surface_attribute(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        MirSurfaceAttrib attrib,
+        int value) override;
+
+    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
+
+private:
+    std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
+};
+
+}
+
+MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
     m_displayLayout{displayLayout}
 {
-    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManager::MirWindowManager";
+    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::MirWindowManagerImpl";
 }
 
-void MirWindowManager::add_session(std::shared_ptr<ms::Session> const& /*session*/)
+void MirWindowManagerImpl::add_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-void MirWindowManager::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
+void MirWindowManagerImpl::remove_session(std::shared_ptr<ms::Session> const& /*session*/)
 {
 }
 
-auto MirWindowManager::add_surface(
+auto MirWindowManagerImpl::add_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& requestParameters,
     std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
@@ -59,7 +104,7 @@ auto MirWindowManager::add_surface(
     m_displayLayout->size_to_output(rect);
     placedParameters.size = rect.size;
 
-    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManager::add_surface(): size requested ("
+    qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): size requested ("
                                 << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
                                 << placedParameters.size.width.as_int() << "," << placedParameters.size.height.as_int() << ")";
 
@@ -68,36 +113,36 @@ auto MirWindowManager::add_surface(
     return build(session, placedParameters);
 }
 
-void MirWindowManager::remove_surface(
+void MirWindowManagerImpl::remove_surface(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::weak_ptr<ms::Surface> const& /*surface*/)
 {
 }
 
-void MirWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
+void MirWindowManagerImpl::add_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-void MirWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
+void MirWindowManagerImpl::remove_display(mir::geometry::Rectangle const& /*area*/)
 {
 }
 
-bool MirWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
-{
-    return false;
-}
-
-bool MirWindowManager::handle_touch_event(MirTouchEvent const* /*event*/)
+bool MirWindowManagerImpl::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool MirWindowManager::handle_pointer_event(MirPointerEvent const* /*event*/)
+bool MirWindowManagerImpl::handle_touch_event(MirTouchEvent const* /*event*/)
 {
     return false;
 }
 
-int MirWindowManager::set_surface_attribute(
+bool MirWindowManagerImpl::handle_pointer_event(MirPointerEvent const* /*event*/)
+{
+    return false;
+}
+
+int MirWindowManagerImpl::set_surface_attribute(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface,
     MirSurfaceAttrib attrib,
@@ -106,7 +151,14 @@ int MirWindowManager::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-void MirWindowManager::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
 {
     // TODO support surface modifications
+}
+
+std::unique_ptr<MirWindowManager> MirWindowManager::create(
+    mir::shell::FocusController* /*focus_controller*/, 
+    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
+{
+    return std::unique_ptr<MirWindowManager>{new MirWindowManagerImpl(displayLayout)};
 }
