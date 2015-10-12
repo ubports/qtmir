@@ -67,7 +67,7 @@ public:
 
     bool live() const override;
 
-    bool visible() const;
+    bool visible() const override;
 
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
@@ -77,7 +77,7 @@ public:
 
     void setLive(bool value) override;
 
-    void setVisible(bool visible);
+    void updateVisibility() override;
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
@@ -85,8 +85,8 @@ public:
     void startFrameDropper() override;
 
     bool isBeingDisplayed() const override;
-    void incrementViewCount() override;
-    void decrementViewCount() override;
+    void registerView(unity::shell::application::MirSurfaceItemInterface* item) override;
+    void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
@@ -147,7 +147,8 @@ private:
     unsigned int m_currentFrameNumber;
 
     bool m_live;
-    int m_viewCount;
+    typedef QPointer<unity::shell::application::MirSurfaceItemInterface> MirSurfaceItemPtr;
+    QList<MirSurfaceItemPtr> m_surfaceItems;
 
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 

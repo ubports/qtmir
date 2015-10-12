@@ -19,6 +19,7 @@
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
+#include <unity/shell/application/MirSurfaceItemInterface.h>
 
 #include "session_interface.h"
 
@@ -42,7 +43,7 @@ public:
 
     virtual void setLive(bool value) = 0;
 
-    virtual void setVisible(bool visible) = 0;
+    virtual void updateVisibility() = 0;
 
     virtual bool isFirstFrameDrawn() const = 0;
 
@@ -50,8 +51,8 @@ public:
     virtual void startFrameDropper() = 0;
 
     virtual bool isBeingDisplayed() const = 0;
-    virtual void incrementViewCount() = 0;
-    virtual void decrementViewCount() = 0;
+    virtual void registerView(unity::shell::application::MirSurfaceItemInterface* item) = 0;
+    virtual void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) = 0;
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;

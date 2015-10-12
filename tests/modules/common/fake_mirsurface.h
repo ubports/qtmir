@@ -21,6 +21,7 @@
 
 #include <QSharedPointer>
 #include <QSGTexture>
+#include <QPointer>
 
 namespace qtmir {
 
@@ -57,7 +58,6 @@ public:
         , m_state(Mir::RestoredState)
         , m_orientationAngle(Mir::Angle0)
         , m_visible(true)
-        , m_viewCount(0)
         , m_focused(false)
     {}
 
@@ -119,25 +119,33 @@ public:
         }
     }
 
-    void setVisible(bool visible) override {
-        if (m_visible != visible) {
-            m_visible = visible;
-            Q_EMIT visibleChanged(m_visible);
+    void updateVisibility() override {
+        bool newVisible = false;
+        Q_FOREACH(const MirSurfaceItemPtr& surface, m_surfaceItems) {
+            if (surface.isNull()) continue;
+            newVisible |= surface->isVisible();
+        }
+
+        if (m_visible != newVisible) {
+            m_visible = newVisible;
+            Q_EMIT visibleChanged(newVisible);
         }
     }
 
-    bool isBeingDisplayed() const override { return m_viewCount > 0; }
-    void incrementViewCount() override {
-        ++m_viewCount;
-        if (m_viewCount == 1) {
+    bool isBeingDisplayed() const override { return m_surfaceItems.count() > 0; }
+    void registerView(unity::shell::application::MirSurfaceItemInterface* item) override {
+        m_surfaceItems.append(item);
+        if (m_surfaceItems.count() == 1) {
             Q_EMIT isBeingDisplayedChanged();
         }
+        updateVisibility();
     }
-    void decrementViewCount() override {
-        --m_viewCount;
-        if (m_viewCount == 0) {
+    void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) override {
+        m_surfaceItems.removeAll(item);
+        if (m_surfaceItems.count() == 0) {
             Q_EMIT isBeingDisplayedChanged();
         }
+        updateVisibility();
     }
 
     // methods called from the rendering (scene graph) thread:
@@ -200,7 +208,8 @@ private:
     Mir::OrientationAngle m_orientationAngle;
     bool m_visible;
     QSize m_size;
-    int m_viewCount;
+    typedef QPointer<unity::shell::application::MirSurfaceItemInterface> MirSurfaceItemPtr;
+    QList<MirSurfaceItemPtr> m_surfaceItems;
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;

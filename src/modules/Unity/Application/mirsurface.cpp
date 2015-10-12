@@ -152,7 +152,6 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_textureUpdated(false)
     , m_currentFrameNumber(0)
     , m_live(true)
-    , m_viewCount(0)
 {
     m_surfaceObserver = observer;
     if (observer) {
@@ -183,9 +182,9 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_viewCount;
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_surfaceItems.count();
 
-    Q_ASSERT(m_viewCount == 0);
+    Q_ASSERT(m_surfaceItems.count() == 0);
 
     if (m_session) {
         m_session->setSurface(nullptr);
@@ -525,14 +524,19 @@ void MirSurface::setLive(bool value)
     }
 }
 
-void MirSurface::setVisible(bool visible)
+void MirSurface::updateVisibility()
 {
-    qCDebug(QTMIR_SURFACES) << "MirSurface::setVisible(" << (visible ? "true" : "false") << ") surface = " << this;
+    bool newVisible = false;
+    Q_FOREACH(const MirSurfaceItemPtr& surface, m_surfaceItems) {
+        if (!surface.isNull()) {
+            newVisible |= surface->isVisible();
+        }
+    }
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
 
-    if (visible) {
-        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
-    } else {
-        m_surface->configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+    if (newVisible != visible()) {
+        m_surface->configure(mir_surface_attrib_visibility,
+                             newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
     }
 }
 
@@ -622,29 +626,32 @@ bool MirSurface::clientIsRunning() const
 
 bool MirSurface::isBeingDisplayed() const
 {
-    return m_viewCount > 0;
+    return !m_surfaceItems.isEmpty();
 }
 
-void MirSurface::incrementViewCount()
+void MirSurface::registerView(unity::shell::application::MirSurfaceItemInterface *item)
 {
-    ++m_viewCount;
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::incrementViewCount after=" << m_viewCount;
-    if (m_viewCount == 1) {
+    m_surfaceItems.append(item);
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::registerView view=" << item << " after=" << m_surfaceItems.count();
+    if (m_surfaceItems.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
+
+    updateVisibility();
 }
 
-void MirSurface::decrementViewCount()
+void MirSurface::unregisterView(unity::shell::application::MirSurfaceItemInterface *item)
 {
-    Q_ASSERT(m_viewCount > 0);
-    --m_viewCount;
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::decrementViewCount after=" << m_viewCount;
-    if (m_viewCount == 0) {
+    m_surfaceItems.removeAll(item);
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::unregisterView view=" << item << " after=" << m_surfaceItems.count();
+    if (m_surfaceItems.isEmpty()) {
         Q_EMIT isBeingDisplayedChanged();
         if (m_session.isNull() || !m_live) {
             deleteLater();
         }
     }
+
+    updateVisibility();
 }
 
 unsigned int MirSurface::currentFrameNumber() const
@@ -654,7 +661,7 @@ unsigned int MirSurface::currentFrameNumber() const
 
 void MirSurface::onSessionDestroyed()
 {
-    if (m_viewCount == 0) {
+    if (m_surfaceItems.count() == 0) {
         deleteLater();
     }
 }

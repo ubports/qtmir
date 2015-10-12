@@ -38,7 +38,7 @@ using namespace qtmir;
 TEST(MirSurfaceItemTest, MissingTouchEnd)
 {
     // We don't want the logging spam cluttering the test results
-    QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
 
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
 
@@ -91,5 +91,54 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     ASSERT_EQ(Qt::TouchPointPressed, touchesReceived[3].touchPoints[0].state());
 
     delete surfaceItem;
+    delete fakeSurface;
+}
+
+TEST(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
+{
+    // We don't want the logging spam cluttering the test results
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+
+    MirSurfaceItem *surfaceItem = new MirSurfaceItem;
+    surfaceItem->setVisible(false);
+    
+    FakeMirSurface *fakeSurface = new FakeMirSurface;
+    surfaceItem->setSurface(fakeSurface);
+
+    EXPECT_FALSE(fakeSurface->visible());
+
+    delete surfaceItem;
+    delete fakeSurface;
+}
+
+TEST(MirSurfaceItemTest, AggregateSurfaceVisibility)
+{
+    // We don't want the logging spam cluttering the test results
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+
+    MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
+    surfaceItem1->setVisible(true);
+    MirSurfaceItem *surfaceItem2 = new MirSurfaceItem;
+    surfaceItem1->setVisible(true);
+    
+    FakeMirSurface *fakeSurface = new FakeMirSurface;
+    surfaceItem1->setSurface(fakeSurface);
+    surfaceItem2->setSurface(fakeSurface);
+
+    EXPECT_TRUE(fakeSurface->visible());
+
+    surfaceItem1->setVisible(false);
+    EXPECT_TRUE(fakeSurface->visible());
+
+    surfaceItem2->setVisible(false);
+    EXPECT_FALSE(fakeSurface->visible());
+
+    surfaceItem1->setVisible(true);
+    EXPECT_TRUE(fakeSurface->visible());
+
+    delete surfaceItem1;
+    EXPECT_FALSE(fakeSurface->visible());
+
+    delete surfaceItem2;
     delete fakeSurface;
 }
