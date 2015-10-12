@@ -184,7 +184,7 @@ MirSurface::~MirSurface()
 {
     qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_surfaceItems.count();
 
-    Q_ASSERT(m_surfaceItems.count() == 0);
+    Q_ASSERT(m_surfaceItems.isEmpty());
 
     if (m_session) {
         m_session->setSurface(nullptr);
@@ -662,7 +662,7 @@ unsigned int MirSurface::currentFrameNumber() const
 
 void MirSurface::onSessionDestroyed()
 {
-    if (m_surfaceItems.count() == 0) {
+    if (m_surfaceItems.isEmpty()) {
         deleteLater();
     }
 }

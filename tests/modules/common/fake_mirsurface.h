@@ -142,7 +142,7 @@ public:
     }
     void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) override {
         m_surfaceItems.removeAll(item);
-        if (m_surfaceItems.count() == 0) {
+        if (m_surfaceItems.isEmpty()) {
             Q_EMIT isBeingDisplayedChanged();
         }
         updateVisibility();
