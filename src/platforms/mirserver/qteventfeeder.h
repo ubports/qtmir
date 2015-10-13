@@ -23,6 +23,7 @@
 #include <qpa/qwindowsysteminterface.h>
 
 class QTouchDevice;
+class ScreenController;
 
 /*
   Fills Qt's event loop with input events from Mir
@@ -33,26 +34,29 @@ public:
     // Interface between QtEventFeeder and the actual QWindowSystemInterface functions
     // and other related Qt methods and objects to enable replacing them with mocks in
     // pure unit tests.
-    // TODO - Make it work with multimonitor scenarios
     class QtWindowSystemInterface {
         public:
         virtual ~QtWindowSystemInterface() {}
-        virtual bool hasTargetWindow() = 0;
-        virtual QRect targetWindowGeometry() = 0;
+        virtual void setScreenController(const QSharedPointer<ScreenController> &sc) = 0;
+        virtual QWindow* getWindowForTouchPoint(const QPoint &point) = 0;
+        virtual QWindow* focusedWindow() = 0;
         virtual void registerTouchDevice(QTouchDevice *device) = 0;
-        virtual void handleExtendedKeyEvent(ulong timestamp, QEvent::Type type, int key,
+        virtual void handleExtendedKeyEvent(QWindow *window, ulong timestamp, QEvent::Type type, int key,
                 Qt::KeyboardModifiers modifiers,
                 quint32 nativeScanCode, quint32 nativeVirtualKey,
                 quint32 nativeModifiers,
                 const QString& text = QString(), bool autorep = false,
                 ushort count = 1) = 0;
-        virtual void handleTouchEvent(ulong timestamp, QTouchDevice *device,
+        virtual void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
-        virtual void handleMouseEvent(ulong timestamp, QPointF point, Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) = 0;
+        virtual void handleMouseEvent(ulong timestamp, QPointF movement,
+                Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) = 0;
     };
 
-    QtEventFeeder(QtWindowSystemInterface *windowSystem = nullptr);
+    QtEventFeeder(const QSharedPointer<ScreenController> &screenController);
+    QtEventFeeder(const QSharedPointer<ScreenController> &screenController,
+                  QtWindowSystemInterface *windowSystem);
     virtual ~QtEventFeeder();
 
     static const int MirEventActionMask;
@@ -67,9 +71,9 @@ private:
     void dispatchKey(MirInputEvent const* event);
     void dispatchTouch(MirInputEvent const* event);
     void dispatchPointer(MirInputEvent const* event);
-    void validateTouches(ulong timestamp, QList<QWindowSystemInterface::TouchPoint> &touchPoints);
+    void validateTouches(QWindow *window, ulong timestamp, QList<QWindowSystemInterface::TouchPoint> &touchPoints);
     bool validateTouch(QWindowSystemInterface::TouchPoint &touchPoint);
-    void sendActiveTouchRelease(ulong timestamp, int id);
+    void sendActiveTouchRelease(QWindow *window, ulong timestamp, int id);
 
     QString touchesToString(const QList<struct QWindowSystemInterface::TouchPoint> &points);
 

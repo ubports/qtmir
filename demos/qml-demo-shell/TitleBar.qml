@@ -1,4 +1,5 @@
-import QtQuick 2.0
+import QtQuick 2.4
+import Unity.Application 0.1
 
 Rectangle {
     id: root
@@ -21,8 +22,10 @@ Rectangle {
                 distanceX = pos.x;
                 distanceY = pos.y;
                 dragging = true;
+                Mir.cursorName = "grabbing";
             } else {
                 dragging = false;
+                Mir.cursorName = "";
             }
         }
         onMouseXChanged: {

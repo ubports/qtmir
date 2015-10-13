@@ -15,9 +15,12 @@
  */
 
 #include "qteventfeeder.h"
+#include "cursor.h"
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
+#include "screen.h" // NEEDED?
+#include "screencontroller.h"
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
@@ -367,20 +370,29 @@ static uint32_t translateKeysym(uint32_t sym, char *string, size_t size) {
 
 namespace {
 
-class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
-
-    bool hasTargetWindow() override
+class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface
+{
+public:
+    QtWindowSystem()
     {
-        if (mTopLevelWindow.isNull() && !QGuiApplication::topLevelWindows().isEmpty()) {
-            mTopLevelWindow = QGuiApplication::topLevelWindows().first();
-        }
-        return !mTopLevelWindow.isNull();
+        // because we're using QMetaObject::invoke with arguments of those types
+        qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+        qRegisterMetaType<Qt::MouseButton>("Qt::MouseButton");
     }
 
-    QRect targetWindowGeometry() override
+    void setScreenController(const QSharedPointer<ScreenController> &sc) override
     {
-        Q_ASSERT(!mTopLevelWindow.isNull());
-        return mTopLevelWindow->geometry();
+        m_screenController = sc;
+    }
+
+    virtual QWindow* focusedWindow() override
+    {
+        return QGuiApplication::focusWindow();
+    }
+
+    QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
+    {
+        return m_screenController->getWindowForPoint(point);
     }
 
     void registerTouchDevice(QTouchDevice *device) override
@@ -388,47 +400,56 @@ class QtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
         QWindowSystemInterface::registerTouchDevice(device);
     }
 
-    void handleExtendedKeyEvent(ulong timestamp, QEvent::Type type, int key,
+    void handleExtendedKeyEvent(QWindow *window, ulong timestamp, QEvent::Type type, int key,
                 Qt::KeyboardModifiers modifiers,
                 quint32 nativeScanCode, quint32 nativeVirtualKey,
                 quint32 nativeModifiers,
                 const QString& text, bool autorep, ushort count) override
     {
-        Q_ASSERT(!mTopLevelWindow.isNull());
-        QWindowSystemInterface::handleExtendedKeyEvent(mTopLevelWindow.data(), timestamp, type, key, modifiers,
+        QWindowSystemInterface::handleExtendedKeyEvent(window, timestamp, type, key, modifiers,
                 nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
     }
 
-    void handleTouchEvent(ulong timestamp, QTouchDevice *device,
+    void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points, Qt::KeyboardModifiers mods) override
     {
-        Q_ASSERT(!mTopLevelWindow.isNull());
-        QWindowSystemInterface::handleTouchEvent(mTopLevelWindow.data(), timestamp, device, points, mods);
+        QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
     }
 
-    void handleMouseEvent(ulong timestamp, QPointF point, Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) override
+    void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons,
+                          Qt::KeyboardModifiers modifiers) override
     {
-        Q_ASSERT(!mTopLevelWindow.isNull());
-        QWindowSystemInterface::handleMouseEvent(mTopLevelWindow.data(), timestamp, point, point, // local and global point are the same
-            buttons, modifiers);
-    }
+        // Send to the first screen that handles the mouse event
+        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
+        //       (because they all might have their own separate graphical mouse pointer item)
+        //       This will probably come once we implement the feature of having the mouse pointer
+        //       crossing adjacent screens.
 
+        QList<Screen*> screens = m_screenController->screens();
+        bool eventHandled = false;
+        int i = 0;
+        while (i < screens.count() && !eventHandled) {
+            auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
+            eventHandled = platformCursor->handleMouseEvent(timestamp, movement, buttons, modifiers);
+            ++i;
+        }
+    }
 
 private:
-    QPointer<QWindow> mTopLevelWindow;
+    QSharedPointer<ScreenController> m_screenController;
 };
 
 } // anonymous namespace
 
-
-QtEventFeeder::QtEventFeeder(QtEventFeeder::QtWindowSystemInterface *windowSystem)
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController)
+    : QtEventFeeder(screenController, new QtWindowSystem)
 {
-    if (windowSystem) {
-        mQtWindowSystem = windowSystem;
-    } else {
-        mQtWindowSystem = new QtWindowSystem;
-    }
+}
 
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController,
+                             QtEventFeeder::QtWindowSystemInterface *windowSystem)
+    : mQtWindowSystem(windowSystem)
+{
     // Initialize touch device. Hardcoded just like in qtubuntu
     // TODO: Create them from info gathered from Mir and store things like device id and source
     //       in a QTouchDevice-derived class created by us. So that we can properly assemble back
@@ -438,6 +459,7 @@ QtEventFeeder::QtEventFeeder(QtEventFeeder::QtWindowSystemInterface *windowSyste
     mTouchDevice->setCapabilities(
             QTouchDevice::Position | QTouchDevice::Area | QTouchDevice::Pressure |
             QTouchDevice::NormalizedPosition);
+    mQtWindowSystem->setScreenController(screenController);
     mQtWindowSystem->registerTouchDevice(mTouchDevice);
 }
 
@@ -451,6 +473,7 @@ bool QtEventFeeder::dispatch(MirEvent const& event)
     auto type = mir_event_get_type(&event);
     if (type != mir_event_type_input)
         return false;
+
     auto iev = mir_event_get_input_event(&event);
 
     switch (mir_input_event_get_type(iev)) {
@@ -510,9 +533,6 @@ Qt::MouseButton getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
 
 void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 {
-    if (!mQtWindowSystem->hasTargetWindow())
-        return;
-
     auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
 
     auto pev = mir_input_event_get_pointer_event(ev);
@@ -521,18 +541,14 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
     auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
 
-    auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
+    auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+                            mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
 
-    mQtWindowSystem->handleMouseEvent(timestamp, local_point,
-                                      buttons, modifiers);
+    mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
 }
 
 void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 {
-    if (!mQtWindowSystem->hasTargetWindow())
-        return;
-
     auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
     auto kev = mir_input_event_get_keyboard_event(event);
@@ -574,12 +590,17 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
                             text, is_auto_rep);
         qKeyEvent.setTimestamp(timestamp);
         if (context->filterEvent(&qKeyEvent)) {
-            // key event filtered out by input context
+            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
+                << "but not dispatching as it was filtered out by input context";
             return;
         }
     }
 
-    mQtWindowSystem->handleExtendedKeyEvent(timestamp, keyType, keyCode, modifiers,
+    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received" << qPrintable(mirKeyboardEventToString(kev))
+        << ". Dispatching to " << mQtWindowSystem->focusedWindow();
+
+    mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
+        timestamp, keyType, keyCode, modifiers,
         mir_keyboard_event_scan_code(kev),
         mir_keyboard_event_key_code(kev),
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
@@ -587,9 +608,6 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 
 void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
 {
-    if (!mQtWindowSystem->hasTargetWindow())
-        return;
-
     auto timestamp = std::chrono::nanoseconds(mir_input_event_get_event_time(event));
 
     tracepoint(qtmirserver, touchEventDispatch_start, timestamp.count());
@@ -600,52 +618,65 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     // FIXME(loicm) Max pressure is device specific. That one is for the Samsung Galaxy Nexus. That
     //     needs to be fixed as soon as the compat input lib adds query support.
     const float kMaxPressure = 1.28;
-    const QRect kWindowGeometry = mQtWindowSystem->targetWindowGeometry();
-    QList<QWindowSystemInterface::TouchPoint> touchPoints;
-
-    // TODO: Is it worth setting the Qt::TouchPointStationary ones? Currently they are left
-    //       as Qt::TouchPointMoved
     const int kPointerCount = mir_touch_event_point_count(tev);
-    for (int i = 0; i < kPointerCount; ++i) {
-        QWindowSystemInterface::TouchPoint touchPoint;
+    QList<QWindowSystemInterface::TouchPoint> touchPoints;
+    QWindow *window = nullptr;
 
-        const float kX = mir_touch_event_axis_value(tev, i, mir_touch_axis_x);
-        const float kY = mir_touch_event_axis_value(tev, i, mir_touch_axis_y);
-        const float kW = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major);
-        const float kH = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor);
-        const float kP = mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure);
-        touchPoint.id = mir_touch_event_id(tev, i);
+    if (kPointerCount > 0) {
+        window = mQtWindowSystem->getWindowForTouchPoint(
+                    QPoint(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
+                           mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
 
-        touchPoint.normalPosition = QPointF(kX / kWindowGeometry.width(), kY / kWindowGeometry.height());
-        touchPoint.area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);
-        touchPoint.pressure = kP / kMaxPressure;
-        switch (mir_touch_event_action(tev, i))
-        {
-        case mir_touch_action_up:
-            touchPoint.state = Qt::TouchPointReleased;
-            break;
-        case mir_touch_action_down:
-            touchPoint.state = Qt::TouchPointPressed;
-            break;
-        case mir_touch_action_change:
-            touchPoint.state = Qt::TouchPointMoved;
-            break;
-        default:
-            break;
+        if (!window) {
+            qCDebug(QTMIR_MIR_INPUT) << "REJECTING INPUT EVENT, no matching window";
+            return;
         }
 
-        touchPoints.append(touchPoint);
+        const QRect kWindowGeometry = window->geometry();
+
+        // TODO: Is it worth setting the Qt::TouchPointStationary ones? Currently they are left
+        //       as Qt::TouchPointMoved
+        for (int i = 0; i < kPointerCount; ++i) {
+            QWindowSystemInterface::TouchPoint touchPoint;
+
+            const float kX = mir_touch_event_axis_value(tev, i, mir_touch_axis_x);
+            const float kY = mir_touch_event_axis_value(tev, i, mir_touch_axis_y);
+            const float kW = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_major);
+            const float kH = mir_touch_event_axis_value(tev, i, mir_touch_axis_touch_minor);
+            const float kP = mir_touch_event_axis_value(tev, i, mir_touch_axis_pressure);
+            touchPoint.id = mir_touch_event_id(tev, i);
+
+            touchPoint.normalPosition = QPointF(kX / kWindowGeometry.width(), kY / kWindowGeometry.height());
+            touchPoint.area = QRectF(kX - (kW / 2.0), kY - (kH / 2.0), kW, kH);
+            touchPoint.pressure = kP / kMaxPressure;
+            switch (mir_touch_event_action(tev, i))
+            {
+            case mir_touch_action_up:
+                touchPoint.state = Qt::TouchPointReleased;
+                break;
+            case mir_touch_action_down:
+                touchPoint.state = Qt::TouchPointPressed;
+                break;
+            case mir_touch_action_change:
+                touchPoint.state = Qt::TouchPointMoved;
+                break;
+            default:
+                break;
+            }
+
+            touchPoints.append(touchPoint);
+        }
     }
 
     auto compressedTimestamp = qtmir::compressTimestamp<ulong>(timestamp);
 
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
-    validateTouches(compressedTimestamp, touchPoints);
+    validateTouches(window, compressedTimestamp, touchPoints);
 
     // Touch event propagation.
     qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
-    mQtWindowSystem->handleTouchEvent(
+    mQtWindowSystem->handleTouchEvent(window,
         //scales down the nsec_t (int64) to fit a ulong, precision lost but time difference suitable
         compressedTimestamp,
         mTouchDevice,
@@ -664,7 +695,7 @@ void QtEventFeeder::stop()
     // not used
 }
 
-void QtEventFeeder::validateTouches(ulong timestamp,
+void QtEventFeeder::validateTouches(QWindow *window, ulong timestamp,
         QList<QWindowSystemInterface::TouchPoint> &touchPoints)
 {
     QSet<int> updatedTouches;
@@ -688,7 +719,7 @@ void QtEventFeeder::validateTouches(ulong timestamp,
         if (!updatedTouches.contains(it.key())) {
             qCWarning(QTMIR_MIR_INPUT)
                 << "There's a touch (id =" << it.key() << ") missing. Releasing it.";
-            sendActiveTouchRelease(timestamp, it.key());
+            sendActiveTouchRelease(window, timestamp, it.key());
             it = mActiveTouches.erase(it);
         } else {
             ++it;
@@ -706,7 +737,7 @@ void QtEventFeeder::validateTouches(ulong timestamp,
     }
 }
 
-void QtEventFeeder::sendActiveTouchRelease(ulong timestamp, int id)
+void QtEventFeeder::sendActiveTouchRelease(QWindow *window, ulong timestamp, int id)
 {
     QList<QWindowSystemInterface::TouchPoint> touchPoints = mActiveTouches.values();
 
@@ -720,7 +751,7 @@ void QtEventFeeder::sendActiveTouchRelease(ulong timestamp, int id)
     }
 
     qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
-    mQtWindowSystem->handleTouchEvent(timestamp, mTouchDevice, touchPoints);
+    mQtWindowSystem->handleTouchEvent(window, timestamp, mTouchDevice, touchPoints);
 }
 
 bool QtEventFeeder::validateTouch(QWindowSystemInterface::TouchPoint &touchPoint)

@@ -310,21 +310,23 @@ QSharedPointer<QSGTexture> MirSurface::texture()
     }
 }
 
-void MirSurface::updateTexture()
+bool MirSurface::updateTexture()
 {
     QMutexLocker locker(&m_mutex);
+    Q_ASSERT(!m_texture.isNull());
+
+    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     if (m_textureUpdated) {
-        return;
+        return texture->hasBuffer();
     }
-
-    Q_ASSERT(!m_texture.isNull());
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
-    if (m_surface->buffers_ready_for_compositor(userId) > 0 && renderables.size() > 0) {
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor(userId) > 0 || !texture->hasBuffer())
+        ) {
         // Avoid holding two buffers for the compositor at the same time. Thus free the current
         // before acquiring the next
         texture->freeBuffer();
@@ -344,6 +346,8 @@ void MirSurface::updateTexture()
     }
 
     m_textureUpdated = true;
+
+    return texture->hasBuffer();
 }
 
 void MirSurface::onCompositorSwappedBuffers()
