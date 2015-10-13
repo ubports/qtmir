@@ -15,6 +15,7 @@
  */
 
 #include "mirsurface.h"
+#include "timestamp.h"
 
 // mirserver
 #include <surfaceobserver.h>
@@ -69,7 +70,7 @@ getMirButtonsFromQt(Qt::MouseButtons buttons)
 
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<ulong>(qtEvent->timestamp());
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
@@ -79,7 +80,7 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<ulong>(qtEvent->timestamp());
 
     MirPointerButtons buttons = 0;
 
@@ -116,7 +117,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
+    return mir::events::make_event(0 /* DeviceID */, uncompressTimestamp<ulong>(qtEvent->timestamp()),
                            0 /* mac */, action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -128,7 +129,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
+    auto ev = mir::events::make_event(0, uncompressTimestamp<ulong>(qtTimestamp),
                                       0 /* mac */, modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
@@ -332,21 +333,23 @@ QSharedPointer<QSGTexture> MirSurface::texture()
     }
 }
 
-void MirSurface::updateTexture()
+bool MirSurface::updateTexture()
 {
     QMutexLocker locker(&m_mutex);
+    Q_ASSERT(!m_texture.isNull());
+
+    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     if (m_textureUpdated) {
-        return;
+        return texture->hasBuffer();
     }
-
-    Q_ASSERT(!m_texture.isNull());
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
-    if (m_surface->buffers_ready_for_compositor(userId) > 0 && renderables.size() > 0) {
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor(userId) > 0 || !texture->hasBuffer())
+        ) {
         // Avoid holding two buffers for the compositor at the same time. Thus free the current
         // before acquiring the next
         texture->freeBuffer();
@@ -366,6 +369,8 @@ void MirSurface::updateTexture()
     }
 
     m_textureUpdated = true;
+
+    return texture->hasBuffer();
 }
 
 void MirSurface::onCompositorSwappedBuffers()

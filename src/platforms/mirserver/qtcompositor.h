@@ -17,18 +17,38 @@
 #ifndef QTCOMPOSITOR_H
 #define QTCOMPOSITOR_H
 
-#include "mir/compositor/compositor.h"
+#include <mir/compositor/compositor.h>
 
-class QtCompositor : public mir::compositor::Compositor
+// std lib
+#include <memory>
+
+// Qt
+#include <QObject>
+
+namespace mir {
+    namespace graphics {
+        class Cursor;
+    }
+}
+
+class QtCompositor : public QObject, public mir::compositor::Compositor
 {
+    Q_OBJECT
 public:
-    QtCompositor();
+    QtCompositor() = default;
+    virtual ~QtCompositor() noexcept = default;
 
     void start();
     void stop();
 
+    void setCursor(std::shared_ptr<mir::graphics::Cursor>);
+
+Q_SIGNALS:
+    void starting();
+    void stopping();
+
 private:
-    void setAllWindowsExposed(const bool exposed);
+    std::shared_ptr<mir::graphics::Cursor> m_cursor;
 };
 
 #endif // QTCOMPOSITOR_H

@@ -27,6 +27,9 @@
 #include "sessionmanager.h"
 #include "ubuntukeyboardinfo.h"
 
+// platforms/mirserver
+#include <mirsingleton.h>
+
 // qtmir
 #include "logging.h"
 
@@ -63,6 +66,10 @@ QObject* ubuntuKeyboardInfoSingleton(QQmlEngine* /*engine*/, QJSEngine* /*script
         new UbuntuKeyboardInfo;
     }
     return UbuntuKeyboardInfo::instance();
+}
+
+QObject* mirSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
+    return qtmir::Mir::instance();
 }
 } // anonymous namespace
 
@@ -102,7 +109,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "Session", "Session can't be instantiated from QML");
         qmlRegisterSingletonType<qtmir::UbuntuKeyboardInfo>(
                 uri, 0, 1, "UbuntuKeyboardInfo", ubuntuKeyboardInfoSingleton);
-        qmlRegisterUncreatableType<Mir>(uri, 0, 1, "Mir", "Mir provides enum values, it can't be instantiated");
+        qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
     }
 
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)
