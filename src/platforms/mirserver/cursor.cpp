@@ -99,7 +99,7 @@ bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton
     bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleMouseEvent", Qt::AutoConnection,
         Q_ARG(ulong, timestamp),
         Q_ARG(QPointF, movement),
-        Q_ARG(Qt::MouseButtons, buttons),
+        Q_ARG(Qt::MouseButton, static_cast<Qt::MouseButton>((int)buttons)), // FIXME in MirMousePointerInterface!!!
         Q_ARG(Qt::KeyboardModifiers, modifiers));
 
     if (!ok) {
