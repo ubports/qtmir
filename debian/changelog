@@ -1,3 +1,57 @@
+qtmir (0.4.6+15.10.20150930.1-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Daniel d'Andrada ]
+  * MirSurfaceItem: texture must be manipulated only from the scene
+    graph thread (LP: #1499388, #1495871)
+
+  [ Gerry Boland ]
+  * Add "Closing" state to Application, use it to distinguish user-
+    induced close from app-induced close. Don't clear QML cache if user-
+    induced. (LP: #1500372)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Sep 2015 10:08:37 +0000
+
+qtmir (0.4.6+15.10.20150925-0ubuntu1) wily; urgency=medium
+
+  * Bump application API version
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 25 Sep 2015 12:11:11 +0000
+
+qtmir (0.4.6+15.10.20150923-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Cemil Azizoglu ]
+  * Port gl_bind_to_texture to the new TextureSource interface. Update
+    for Mir 0.16 release.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 23 Sep 2015 15:17:13 +0000
+
+qtmir (0.4.6+15.10.20150918-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Update surface focus when a surface enters or leaves a
+    MirSurfaceItem (LP: #1491034, #1495437)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 18 Sep 2015 20:11:52 +0000
+
+qtmir (0.4.6+15.10.20150914-0ubuntu1) wily; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * MirSurfaceItem gets dirty when it's set to draw a different (or no)
+    surface (LP: #1492185)
+  * QtEventFeeder: log the pointer events it gets from Mir
+
+  [ Daniel van Vugt ]
+  * Stop waking up every 200ms if there's nothing to wake up for. It's
+    just wasting battery. (LP: #1479250)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Mon, 14 Sep 2015 13:11:56 +0000
+
 qtmir (0.4.6+15.10.20150904-0ubuntu1) wily; urgency=medium
 
   [ Michal Sawicz ]

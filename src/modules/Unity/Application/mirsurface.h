@@ -77,8 +77,6 @@ public:
 
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
-    SessionInterface *session() const override;
-
     void stopFrameDropper() override;
     void startFrameDropper() override;
 
@@ -88,7 +86,8 @@ public:
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
-    void updateTexture() override;
+    QSGTexture *weakTexture() const override { return m_texture.data(); }
+    bool updateTexture() override;
     unsigned int currentFrameNumber() const override;
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
@@ -109,6 +108,8 @@ public:
             const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
             Qt::TouchPointStates qtTouchPointStates,
             ulong qtTimestamp) override;
+
+    QString appId() const override;
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;

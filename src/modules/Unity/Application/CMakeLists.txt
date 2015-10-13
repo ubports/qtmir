@@ -3,6 +3,7 @@ include_directories(
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
+    ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${PROCESS_CPP_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_API_INCLUDE_DIRS}
     ${UBUNTU_APP_LAUNCH_INCLUDE_DIRS}
@@ -91,4 +92,3 @@ add_lttng_gen_tp(NAME tracepoints)
 # install
 add_qml_plugin(Unity.Application 0.1 Unity/Application TARGETS unityapplicationplugin)
 install(FILES com.canonical.qtmir.gschema.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/glib-2.0/schemas)
-

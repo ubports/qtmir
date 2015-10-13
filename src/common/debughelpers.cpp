@@ -208,11 +208,22 @@ const char *applicationStateToStr(int state)
     }
 }
 
+QString mirPointerEventToString(MirPointerEvent const* event)
+{
+    QString string = QString("MirPointerEvent(x=%1,y=%2,relative_x=%3,relative_y=%4)")
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_x))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_y))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x))
+        .arg(mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
+
+    return string;
+}
+
 QString mirTouchEventToString(MirTouchEvent const* event)
 {
     const int pointerCount = mir_touch_event_point_count(event);
 
-    QString string("MirTouchInputEvent(");
+    QString string("MirTouchEvent(");
 
     for (int i = 0; i < pointerCount; ++i) {
 
@@ -253,4 +264,33 @@ const char *mirTouchActionToString(MirTouchAction touchAction)
         return "???";
         break;
     }
+}
+
+namespace {
+const char *mirKeyboardActionToString(MirKeyboardAction keyboardAction)
+{
+    switch (keyboardAction)
+    {
+    case mir_keyboard_action_up:
+        return "up";
+    case mir_keyboard_action_down:
+        return "down";
+    case mir_keyboard_action_repeat:
+        return "repeat";
+    default:
+        return "???";
+        break;
+    }
+}
+}
+
+QString mirKeyboardEventToString(MirKeyboardEvent const* event)
+{
+    MirKeyboardAction keyboardAction = mir_keyboard_event_action(event);
+
+    xkb_keysym_t keyCode = mir_keyboard_event_key_code(event);
+
+    return QString("MirKeyboardEvent(action=%1,key_code=0x%2)")
+        .arg(mirKeyboardActionToString(keyboardAction))
+        .arg(keyCode, 4, 16, QLatin1Char('0'));
 }
