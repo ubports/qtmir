@@ -85,11 +85,10 @@ void MirWindowManagerImpl::remove_session(std::shared_ptr<ms::Session> const& /*
 {
 }
 
-auto MirWindowManagerImpl::add_surface(
+mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& requestParameters,
     std::function<mir::frontend::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
--> mir::frontend::SurfaceId
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
