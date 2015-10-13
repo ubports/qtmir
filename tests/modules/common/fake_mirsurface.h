@@ -22,6 +22,7 @@
 #include <QSharedPointer>
 #include <QSGTexture>
 #include <QPointer>
+#include <QDebug>
 
 namespace qtmir {
 
@@ -119,30 +120,29 @@ public:
         }
     }
 
-    void updateVisibility() override {
-        bool newVisible = false;
-        Q_FOREACH(const MirSurfaceItemPtr& surface, m_surfaceItems) {
-            if (surface.isNull()) continue;
-            newVisible |= surface->isVisible();
-        }
+    void setViewVisibility(int viewId, bool visible) override {
+        if (!m_views.contains(viewId)) return;
 
-        if (m_visible != newVisible) {
-            m_visible = newVisible;
-            Q_EMIT visibleChanged(newVisible);
-        }
-    }
-
-    bool isBeingDisplayed() const override { return !m_surfaceItems.isEmpty(); }
-    void registerView(unity::shell::application::MirSurfaceItemInterface* item) override {
-        m_surfaceItems.append(item);
-        if (m_surfaceItems.count() == 1) {
-            Q_EMIT isBeingDisplayedChanged();
-        }
+        m_views[viewId] = visible;
         updateVisibility();
     }
-    void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) override {
-        m_surfaceItems.removeAll(item);
-        if (m_surfaceItems.isEmpty()) {
+
+    bool isBeingDisplayed() const override { return !m_views.isEmpty(); }
+
+    int registerView() override {
+        static int nextViewId = 0;
+
+        int viewId = nextViewId++;
+        m_views.insert(viewId, false);
+        if (m_views.count() == 1) {
+            Q_EMIT isBeingDisplayedChanged();
+        }
+        return viewId;
+    }
+
+    void unregisterView(int viewId) override {
+        m_views.remove(viewId);
+        if (m_views.count() == 0) {
             Q_EMIT isBeingDisplayedChanged();
         }
         updateVisibility();
@@ -199,6 +199,20 @@ public:
     QList<TouchEvent> &touchesReceived() { return m_touchesReceived; }
 
 private:
+    void updateVisibility() {
+        bool newVisible = false;
+        QHashIterator<int, bool> i(m_views);
+        while (i.hasNext()) {
+            i.next();
+            newVisible |= i.value();
+        }
+
+        if (m_visible != newVisible) {
+            m_visible = newVisible;
+            Q_EMIT visibleChanged(newVisible);
+        }
+    }
+
 
     bool m_isFirstFrameDrawn;
     SessionInterface *m_session;
@@ -208,8 +222,7 @@ private:
     Mir::OrientationAngle m_orientationAngle;
     bool m_visible;
     QSize m_size;
-    typedef QPointer<unity::shell::application::MirSurfaceItemInterface> MirSurfaceItemPtr;
-    QList<MirSurfaceItemPtr> m_surfaceItems;
+    QHash<int, bool> m_views;
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;

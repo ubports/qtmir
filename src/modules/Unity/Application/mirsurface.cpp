@@ -182,9 +182,9 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_surfaceItems.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_views.count();
 
-    Q_ASSERT(m_surfaceItems.isEmpty());
+    Q_ASSERT(m_views.isEmpty());
 
     if (m_session) {
         m_session->setSurface(nullptr);
@@ -524,23 +524,6 @@ void MirSurface::setLive(bool value)
     }
 }
 
-void MirSurface::updateVisibility()
-{
-    bool newVisible = false;
-    Q_FOREACH(const MirSurfaceItemPtr& surface, m_surfaceItems) {
-        if (!surface.isNull()) {
-            newVisible |= surface->isVisible();
-        }
-    }
-
-    if (newVisible != visible()) {
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
-
-        m_surface->configure(mir_surface_attrib_visibility,
-                             newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
-    }
-}
-
 bool MirSurface::live() const
 {
     return m_live;
@@ -627,32 +610,55 @@ bool MirSurface::clientIsRunning() const
 
 bool MirSurface::isBeingDisplayed() const
 {
-    return !m_surfaceItems.isEmpty();
+    return !m_views.isEmpty();
 }
 
-void MirSurface::registerView(unity::shell::application::MirSurfaceItemInterface *item)
+int MirSurface::registerView()
 {
-    m_surfaceItems.append(item);
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::registerView view=" << item << " after=" << m_surfaceItems.count();
-    if (m_surfaceItems.count() == 1) {
+    static int nextViewId = 0;
+
+    int viewId = nextViewId++;
+    m_views.insert(viewId, MirSurface::View{false});
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::registerView surface=" << this << " after=" << m_views.count();
+    if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
+    return viewId;
+}
 
+void MirSurface::unregisterView(int viewId)
+{
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::unregisterView surface=" << this << " after=" << m_views.count();
+    m_views.remove(viewId);
+    if (m_views.count() == 0) {
+        Q_EMIT isBeingDisplayedChanged();
+    }
     updateVisibility();
 }
 
-void MirSurface::unregisterView(unity::shell::application::MirSurfaceItemInterface *item)
+void MirSurface::setViewVisibility(int viewId, bool visible)
 {
-    m_surfaceItems.removeAll(item);
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::unregisterView view=" << item << " after=" << m_surfaceItems.count();
-    if (m_surfaceItems.isEmpty()) {
-        Q_EMIT isBeingDisplayedChanged();
-        if (m_session.isNull() || !m_live) {
-            deleteLater();
-        }
+    if (!m_views.contains(viewId)) return;
+
+    m_views[viewId].visible = visible;
+    updateVisibility();
+}
+
+void MirSurface::updateVisibility()
+{
+    bool newVisible = false;
+    QHashIterator<int, View> i(m_views);
+    while (i.hasNext()) {
+        i.next();
+        newVisible |= i.value().visible;
     }
 
-    updateVisibility();
+    if (newVisible != visible()) {
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
+
+        m_surface->configure(mir_surface_attrib_visibility,
+                             newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
+    }
 }
 
 unsigned int MirSurface::currentFrameNumber() const
@@ -662,7 +668,7 @@ unsigned int MirSurface::currentFrameNumber() const
 
 void MirSurface::onSessionDestroyed()
 {
-    if (m_surfaceItems.isEmpty()) {
+    if (m_views.isEmpty()) {
         deleteLater();
     }
 }

@@ -77,16 +77,16 @@ public:
 
     void setLive(bool value) override;
 
-    void updateVisibility() override;
-
     bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
 
     void stopFrameDropper() override;
     void startFrameDropper() override;
 
     bool isBeingDisplayed() const override;
-    void registerView(unity::shell::application::MirSurfaceItemInterface* item) override;
-    void unregisterView(unity::shell::application::MirSurfaceItemInterface* item) override;
+
+    int registerView() override;
+    void unregisterView(int viewId) override;
+    void setViewVisibility(int viewId, bool visible) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
@@ -128,6 +128,7 @@ private Q_SLOTS:
 private:
     void syncSurfaceSizeWithItemSize();
     bool clientIsRunning() const;
+    void updateVisibility();
 
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
@@ -147,8 +148,10 @@ private:
     unsigned int m_currentFrameNumber;
 
     bool m_live;
-    typedef QPointer<unity::shell::application::MirSurfaceItemInterface> MirSurfaceItemPtr;
-    QList<MirSurfaceItemPtr> m_surfaceItems;
+    struct View {
+        bool visible;
+    };
+    QHash<int, View> m_views;
 
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 

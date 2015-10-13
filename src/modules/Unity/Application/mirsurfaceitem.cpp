@@ -89,6 +89,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     , m_surfaceHeight(0)
     , m_orientationAngle(nullptr)
     , m_consumesInput(false)
+    , m_surfaceRegistration(-1)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::MirSurfaceItem";
 
@@ -523,7 +524,7 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
         return;
     }
 
-    m_surface->updateVisibility();
+    m_surface->setViewVisibility(m_surfaceRegistration, isVisible());
 }
 
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
@@ -605,7 +606,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             m_surface->setFocus(false);
         }
 
-        m_surface->unregisterView(this);
+        m_surface->unregisterView(m_surfaceRegistration);
 
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
@@ -615,7 +616,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     m_surface = surface;
 
     if (m_surface) {
-        m_surface->registerView(this);
+        m_surfaceRegistration = m_surface->registerView();
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
@@ -636,6 +637,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
+        updateMirSurfaceVisibility();
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);
