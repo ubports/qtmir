@@ -373,7 +373,7 @@ public:
     {
         // because we're using QMetaObject::invoke with arguments of those types
         qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
-        qRegisterMetaType<Qt::MouseButton>("Qt::MouseButton");
+        qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
     bool hasTargetWindow() override
@@ -413,7 +413,7 @@ public:
         QWindowSystemInterface::handleTouchEvent(mTopLevelWindow.data(), timestamp, device, points, mods);
     }
 
-    void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons, Qt::KeyboardModifiers modifiers) override
+    void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers) override
     {
         Q_ASSERT(!mTopLevelWindow.isNull());
         auto platformCursor = static_cast<qtmir::Cursor*>(mTopLevelWindow->screen()->handle()->cursor());
@@ -497,9 +497,9 @@ Qt::KeyboardModifiers getQtModifiersFromMir(MirInputEventModifiers modifiers)
     return static_cast<Qt::KeyboardModifiers>(qtModifiers);
 }
 
-Qt::MouseButton getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
+Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
 {
-    int buttons = Qt::NoButton;
+    Qt::MouseButtons buttons = Qt::NoButton;
     if (mir_pointer_event_button_state(pev, mir_pointer_button_primary))
         buttons |= Qt::LeftButton;
     if (mir_pointer_event_button_state(pev, mir_pointer_button_secondary))
@@ -511,7 +511,7 @@ Qt::MouseButton getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev)
     if (mir_pointer_event_button_state(pev, mir_pointer_button_forward))
         buttons |= Qt::ForwardButton;
 
-    return static_cast<Qt::MouseButton>(buttons);
+    return buttons;
 }
 }
 
