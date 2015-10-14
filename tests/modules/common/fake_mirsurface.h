@@ -22,7 +22,6 @@
 #include <QSharedPointer>
 #include <QSGTexture>
 #include <QPointer>
-#include <QDebug>
 
 namespace qtmir {
 
