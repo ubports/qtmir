@@ -14,30 +14,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_DISPLAY_BUFFER_H
-#define MOCK_DISPLAY_BUFFER_H
+#ifndef MOCK_GL_DISPLAY_BUFFER_H
+#define MOCK_GL_DISPLAY_BUFFER_H
 
 #include <mir/graphics/display_buffer.h>
+#include <mir/renderer/gl/render_target.h>
 
 #include <gmock/gmock.h>
 
-class MockDisplayBuffer : public mir::graphics::DisplayBuffer
+class MockGLDisplayBuffer : public mir::graphics::DisplayBuffer,
+                            public mir::renderer::gl::RenderTarget
 {
 public:
-    MockDisplayBuffer()
+    MockGLDisplayBuffer()
     {
         using namespace testing;
         ON_CALL(*this, view_area())
             .WillByDefault(Return(mir::geometry::Rectangle{{0,0},{0,0}}));
+        ON_CALL(*this, native_display_buffer())
+            .WillByDefault(Return(dynamic_cast<mir::graphics::NativeDisplayBuffer*>(this)));
     }
     MOCK_CONST_METHOD0(view_area, mir::geometry::Rectangle());
-    MOCK_METHOD0(make_current, void());
-    MOCK_METHOD0(release_current, void());
-    MOCK_METHOD0(gl_swap_buffers, void());
     MOCK_METHOD1(post_renderables_if_optimizable, bool(mir::graphics::RenderableList const&));
     MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(uses_alpha, bool());
+    MOCK_METHOD0(native_display_buffer, mir::graphics::NativeDisplayBuffer*());
+
+    MOCK_METHOD0(make_current, void());
+    MOCK_METHOD0(release_current, void());
+    MOCK_METHOD0(swap_buffers, void());
 };
 
 
-#endif // MOCK_DISPLAY_BUFFER_H
+#endif // MOCK_GL_DISPLAY_BUFFER_H

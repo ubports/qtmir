@@ -1,3 +1,29 @@
+qtmir (0.4.6+15.10.20151008.2-0ubuntu1) wily; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * Update for Mir 0.17 changes
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 08 Oct 2015 17:56:00 +0000
+
+qtmir (0.4.6+15.10.20150930.1-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Daniel d'Andrada ]
+  * MirSurfaceItem: texture must be manipulated only from the scene
+    graph thread (LP: #1499388, #1495871)
+
+  [ Gerry Boland ]
+  * Add "Closing" state to Application, use it to distinguish user-
+    induced close from app-induced close. Don't clear QML cache if user-
+    induced. (LP: #1500372)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Sep 2015 10:08:37 +0000
+
 qtmir (0.4.6+15.10.20150925-0ubuntu1) wily; urgency=medium
 
   * Bump application API version

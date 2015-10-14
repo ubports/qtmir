@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QSharedPointer>
 #include <QTouchEvent>
 
 class QHoverEvent;
@@ -52,6 +53,7 @@ public:
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
+    virtual QSGTexture *weakTexture() const = 0;
     virtual void updateTexture() = 0;
     virtual unsigned int currentFrameNumber() const = 0;
     virtual bool numBuffersReadyForCompositor() = 0;
