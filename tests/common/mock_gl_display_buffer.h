@@ -23,7 +23,8 @@
 #include <gmock/gmock.h>
 
 class MockGLDisplayBuffer : public mir::graphics::DisplayBuffer,
-                            public mir::renderer::gl::RenderTarget
+                            public mir::renderer::gl::RenderTarget,
+                            public mir::graphics::NativeDisplayBuffer
 {
 public:
     MockGLDisplayBuffer()
