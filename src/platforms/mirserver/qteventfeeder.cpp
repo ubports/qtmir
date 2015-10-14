@@ -377,7 +377,6 @@ public:
     {
         // because we're using QMetaObject::invoke with arguments of those types
         qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
-        qRegisterMetaType<Qt::MouseButton>("Qt::MouseButton");
         qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
