@@ -32,7 +32,7 @@ public:
     Cursor();
 
     // Called form Mir input thread
-    bool handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons,
+    bool handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
             Qt::KeyboardModifiers modifiers);
 
     ////
