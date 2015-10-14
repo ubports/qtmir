@@ -86,7 +86,7 @@ void Cursor::setMousePointer(MirMousePointerInterface *mousePointer)
     updateMousePointerCursorName();
 }
 
-bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton buttons,
+bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
         Qt::KeyboardModifiers modifiers)
 {
     QMutexLocker locker(&m_mutex);
@@ -99,7 +99,7 @@ bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton
     bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleMouseEvent", Qt::AutoConnection,
         Q_ARG(ulong, timestamp),
         Q_ARG(QPointF, movement),
-        Q_ARG(Qt::MouseButton, buttons),
+        Q_ARG(Qt::MouseButtons, buttons),
         Q_ARG(Qt::KeyboardModifiers, modifiers));
 
     if (!ok) {
