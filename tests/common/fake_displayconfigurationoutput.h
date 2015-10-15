@@ -43,7 +43,9 @@ const mg::DisplayConfigurationOutput fakeOutput1
     2,
     mir_pixel_format_abgr_8888,
     mir_power_mode_on,
-    mir_orientation_normal
+    mir_orientation_normal,
+    1.0f,
+    mir_form_factor_unknown
 };
 
 const mg::DisplayConfigurationOutput fakeOutput2
@@ -67,7 +69,9 @@ const mg::DisplayConfigurationOutput fakeOutput2
     2,
     mir_pixel_format_xbgr_8888,
     mir_power_mode_on,
-    mir_orientation_left
+    mir_orientation_left,
+    1.0f,
+    mir_form_factor_unknown
 };
 
 #endif // FAKE_DISPLAYCONFIGURATIONOUTPUT_H

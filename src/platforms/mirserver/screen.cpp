@@ -23,6 +23,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
+#include <mir/renderer/gl/render_target.h>
 
 // Qt
 #include <QCoreApplication>
@@ -42,6 +43,17 @@ bool isLittleEndian() {
     unsigned int i = 1;
     char *c = (char*)&i;
     return *c == 1;
+}
+static mir::renderer::gl::RenderTarget *as_render_target(
+    mir::graphics::DisplayBuffer *displayBuffer)
+{
+    auto const render_target =
+        dynamic_cast<mir::renderer::gl::RenderTarget*>(
+            displayBuffer->native_display_buffer());
+    if (!render_target)
+        throw std::logic_error("DisplayBuffer does not support GL rendering");
+
+    return render_target;
 }
 
 enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat) {
@@ -105,7 +117,7 @@ bool Screen::skipDBusRegistration = false;
 
 Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     : QObject(nullptr)
-    , m_displayBuffer(nullptr)
+    , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
     , m_screenWindow(nullptr)
@@ -291,13 +303,13 @@ void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::grap
 {
     qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << buffer << group;
     // This operation should only be performed while rendering is stopped
-    m_displayBuffer = buffer;
+    m_renderTarget = as_render_target(buffer);
     m_displayGroup = group;
 }
 
 void Screen::swapBuffers()
 {
-    m_displayBuffer->gl_swap_buffers();
+    m_renderTarget->swap_buffers();
 
     /* FIXME this exposes a QtMir architecture problem, as Screen is supposed to wrap a mg::DisplayBuffer.
      * We use Qt's multithreaded renderer, where each Screen is rendered to relatively independently, and
@@ -315,10 +327,10 @@ void Screen::swapBuffers()
 
 void Screen::makeCurrent()
 {
-    m_displayBuffer->make_current();
+    m_renderTarget->make_current();
 }
 
 void Screen::doneCurrent()
 {
-    m_displayBuffer->release_current();
+    m_renderTarget->release_current();
 }

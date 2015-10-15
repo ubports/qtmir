@@ -31,7 +31,10 @@
 #include "screenwindow.h"
 
 class QOrientationSensor;
-namespace mir { namespace graphics { class DisplayBuffer; class DisplaySyncGroup; }}
+namespace mir {
+    namespace graphics { class DisplayBuffer; class DisplaySyncGroup; }
+    namespace renderer { namespace gl { class RenderTarget; }}
+}
 
 class Screen : public QObject, public QPlatformScreen
 {
@@ -82,7 +85,7 @@ private:
     QSizeF m_physicalSize;
     qreal m_refreshRate;
 
-    mir::graphics::DisplayBuffer *m_displayBuffer;
+    mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
     mir::graphics::DisplayConfigurationOutputId m_outputId;
     mir::graphics::DisplayConfigurationCardId m_cardId;

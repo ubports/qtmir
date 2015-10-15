@@ -13,6 +13,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/common
   ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
+  ${MIRRENDERERGLDEV_INCLUDE_DIRS}
 )
 
 add_executable(ScreenControllerTest ${SCREENCONTROLLER_TEST_SOURCES})
