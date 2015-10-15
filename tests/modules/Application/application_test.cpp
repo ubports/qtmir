@@ -298,8 +298,8 @@ TEST_F(ApplicationTests, passesIsTouchAppThrough)
             mockDesktopFileReader, QStringList(), nullptr));
 
     ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
-    ASSERT_EQ(true, application->isTouchApp());
+    ASSERT_TRUE(application->isTouchApp());
 
     ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(false));
-    ASSERT_EQ(false, application->isTouchApp());
+    ASSERT_FALSE(application->isTouchApp());
 }
