@@ -18,7 +18,7 @@
 #define STUB_DISPLAY_H
 
 #include "mock_display.h"
-#include "mock_display_buffer.h"
+#include "mock_gl_display_buffer.h"
 #include "mock_display_configuration.h"
 
 namespace mg = mir::graphics;
@@ -46,7 +46,7 @@ private:
 class StubDisplaySyncGroup : public MockDisplaySyncGroup
 {
 public:
-    StubDisplaySyncGroup(MockDisplayBuffer *buffer) : buffer(buffer) {}
+    StubDisplaySyncGroup(MockGLDisplayBuffer *buffer) : buffer(buffer) {}
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
@@ -58,7 +58,7 @@ public:
         return one;
     }
 private:
-    MockDisplayBuffer *buffer;
+    MockGLDisplayBuffer *buffer;
 };
 
 
@@ -82,7 +82,7 @@ public:
     }
 
     void setFakeConfiguration(std::vector<mg::DisplayConfigurationOutput> &config,
-                              std::vector<MockDisplayBuffer*> &displayBuffers)
+                              std::vector<MockGLDisplayBuffer*> &displayBuffers)
     {
         m_config = config;
         m_displayBuffers = displayBuffers;
@@ -90,7 +90,7 @@ public:
 
 private:
     std::vector<mg::DisplayConfigurationOutput> m_config;
-    std::vector<MockDisplayBuffer*> m_displayBuffers;
+    std::vector<MockGLDisplayBuffer*> m_displayBuffers;
 };
 
 #endif // STUB_DISPLAY_H
