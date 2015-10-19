@@ -107,7 +107,12 @@ MirServer::MirServer(int &argc, char **argv, QObject* parent)
             QCoreApplication::quit();
         });
 
-    apply_settings();
+    try {
+        apply_settings();
+    } catch (const std::exception &ex) {
+        qCritical() << ex.what();
+        exit(1);
+    }
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
 }
