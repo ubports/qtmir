@@ -84,9 +84,9 @@ public:
 
     bool isBeingDisplayed() const override;
 
-    int registerView() override;
-    void unregisterView(int viewId) override;
-    void setViewVisibility(int viewId, bool visible) override;
+    void registerView(qintptr viewId) override;
+    void unregisterView(qintptr viewId) override;
+    void setViewVisibility(qintptr viewId, bool visible) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
@@ -151,7 +151,7 @@ private:
     struct View {
         bool visible;
     };
-    QHash<int, View> m_views;
+    QHash<qintptr, View> m_views;
 
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 

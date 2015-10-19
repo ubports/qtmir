@@ -613,22 +613,18 @@ bool MirSurface::isBeingDisplayed() const
     return !m_views.isEmpty();
 }
 
-int MirSurface::registerView()
+void MirSurface::registerView(qintptr viewId)
 {
-    static int nextViewId = 0;
-
-    int viewId = nextViewId++;
     m_views.insert(viewId, MirSurface::View{false});
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::registerView surface=" << this << " after=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::registerView(" << viewId << ")" << " after=" << m_views.count();
     if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
-    return viewId;
 }
 
-void MirSurface::unregisterView(int viewId)
+void MirSurface::unregisterView(qintptr viewId)
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::unregisterView surface=" << this << " after=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::unregisterView(" << viewId << ")" << " after=" << m_views.count();
     m_views.remove(viewId);
     if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
@@ -636,7 +632,7 @@ void MirSurface::unregisterView(int viewId)
     updateVisibility();
 }
 
-void MirSurface::setViewVisibility(int viewId, bool visible)
+void MirSurface::setViewVisibility(qintptr viewId, bool visible)
 {
     if (!m_views.contains(viewId)) return;
 
@@ -647,7 +643,7 @@ void MirSurface::setViewVisibility(int viewId, bool visible)
 void MirSurface::updateVisibility()
 {
     bool newVisible = false;
-    QHashIterator<int, View> i(m_views);
+    QHashIterator<qintptr, View> i(m_views);
     while (i.hasNext()) {
         i.next();
         newVisible |= i.value().visible;

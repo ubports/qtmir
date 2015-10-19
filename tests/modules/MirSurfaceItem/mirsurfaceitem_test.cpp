@@ -38,7 +38,7 @@ using namespace qtmir;
 TEST(MirSurfaceItemTest, MissingTouchEnd)
 {
     // We don't want the logging spam cluttering the test results
-    QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
 
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
 
@@ -97,7 +97,7 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
 TEST(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
 {
     // We don't want the logging spam cluttering the test results
-    QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
 
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
     surfaceItem->setVisible(false);
@@ -114,7 +114,7 @@ TEST(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
 TEST(MirSurfaceItemTest, AggregateSurfaceVisibility)
 {
     // We don't want the logging spam cluttering the test results
-    QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
 
     MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
     surfaceItem1->setVisible(true);

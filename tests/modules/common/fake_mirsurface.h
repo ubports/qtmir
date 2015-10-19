@@ -119,7 +119,7 @@ public:
         }
     }
 
-    void setViewVisibility(int viewId, bool visible) override {
+    void setViewVisibility(qintptr viewId, bool visible) override {
         if (!m_views.contains(viewId)) return;
 
         m_views[viewId] = visible;
@@ -128,18 +128,14 @@ public:
 
     bool isBeingDisplayed() const override { return !m_views.isEmpty(); }
 
-    int registerView() override {
-        static int nextViewId = 0;
-
-        int viewId = nextViewId++;
+    void registerView(qintptr viewId) override {
         m_views.insert(viewId, false);
         if (m_views.count() == 1) {
             Q_EMIT isBeingDisplayedChanged();
         }
-        return viewId;
     }
 
-    void unregisterView(int viewId) override {
+    void unregisterView(qintptr viewId) override {
         m_views.remove(viewId);
         if (m_views.count() == 0) {
             Q_EMIT isBeingDisplayedChanged();
