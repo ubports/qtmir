@@ -35,7 +35,7 @@ namespace qtmir {
 class MirServerIntegration : public QPlatformIntegration
 {
 public:
-    MirServerIntegration();
+    MirServerIntegration(int &argc, char **argv);
     ~MirServerIntegration();
 
     bool hasCapability(QPlatformIntegration::Capability cap) const override;

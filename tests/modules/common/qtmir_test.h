@@ -72,13 +72,13 @@ private:
 };
 
 
-namespace {  char const* argv[] = { nullptr }; }
+namespace { int argc = 0; char* argv[] = { nullptr }; }
 
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(0, argv)
+    : MirServer(argc, argv)
     {
     }
 

@@ -17,14 +17,10 @@
 #include "plugin.h"
 #include "mirserverintegration.h"
 
-QStringList MirServerIntegrationPlugin::keys() const {
-    QStringList list;
-    list << "mirserver";
-    return list;
-}
-
-QPlatformIntegration* MirServerIntegrationPlugin::create(const QString &system, const QStringList &) {
+QPlatformIntegration *MirServerIntegrationPlugin::create(const QString &system, const QStringList &/*paramList*/,
+                                                         int &argc, char **argv)
+{
     if (system.toLower() == "mirserver")
-        return new MirServerIntegration;
+        return new MirServerIntegration(argc, argv);
     return 0;
 }

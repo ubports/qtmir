@@ -36,20 +36,29 @@ namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-namespace
-{
-void ignore_unparsed_arguments(int /*argc*/, char const* const/*argv*/[])
-{
-}
-}
-
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
-MirServer::MirServer(int argc, char const* argv[], QObject* parent)
+MirServer::MirServer(int &argc, char **argv, QObject* parent)
     : QObject(parent)
 {
-    set_command_line_handler(&ignore_unparsed_arguments);
-    set_command_line(argc, argv);
+    set_command_line_handler([&argc, &argv](int argc2, char const* const argv2[]) {
+        // argv2 - Mir parses out arguments that it understands. It also removes argv[0], but we will put it back.
+        argc = argc2+1;
+        for (int i=1; i<argc; i++) {
+            argv[i] = const_cast<char*>(argv2[i-1]);
+        }
+        argv[argc] = nullptr;
+
+        if (QTMIR_MIR_MESSAGES().isDebugEnabled()) {
+            qDebug() << "Command line arguments passed to Qt:";
+            for (int i=0; i<argc; i++) {
+                qDebug() << i << argv[i];
+            }
+        }
+    });
+
+    // Casting char** to be a const char** only safe as Mir
+    set_command_line(argc, const_cast<const char **>(argv));
 
     override_the_session_listener([]
         {

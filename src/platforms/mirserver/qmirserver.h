@@ -29,7 +29,7 @@ class QMirServer: public QObject
     Q_OBJECT
 
 public:
-    QMirServer(const QStringList &arguments, QObject* parent=0);
+    QMirServer(int &argc, char **argv, QObject* parent=0);
     virtual ~QMirServer();
 
     bool start();

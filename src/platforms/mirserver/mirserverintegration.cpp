@@ -47,11 +47,11 @@
 namespace mg = mir::graphics;
 using qtmir::Clipboard;
 
-MirServerIntegration::MirServerIntegration()
+MirServerIntegration::MirServerIntegration(int &argc, char **argv)
     : m_accessibility(new QPlatformAccessibility())
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
-    , m_mirServer(new QMirServer(QCoreApplication::arguments()))
+    , m_mirServer(new QMirServer(argc, argv))
     , m_display(nullptr)
     , m_nativeInterface(nullptr)
     , m_clipboard(new Clipboard)
