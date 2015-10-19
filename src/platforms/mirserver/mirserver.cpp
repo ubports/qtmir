@@ -41,7 +41,9 @@ Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 MirServer::MirServer(int &argc, char **argv, QObject* parent)
     : QObject(parent)
 {
-    set_command_line_handler([&argc, &argv](int argc2, char const* const argv2[]) {
+    bool unknownArgsFound = false;
+    set_command_line_handler([&argc, &argv, &unknownArgsFound](int argc2, char const* const argv2[]) {
+        unknownArgsFound = true;
         // argv2 - Mir parses out arguments that it understands. It also removes argv[0], but we will put it back.
         argc = argc2+1;
         for (int i=1; i<argc; i++) {
@@ -112,6 +114,10 @@ MirServer::MirServer(int &argc, char **argv, QObject* parent)
     } catch (const std::exception &ex) {
         qCritical() << ex.what();
         exit(1);
+    }
+
+    if (!unknownArgsFound) { // mir parsed all the arguments, so manually construct argv ourselves
+        argc = 1;
     }
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
