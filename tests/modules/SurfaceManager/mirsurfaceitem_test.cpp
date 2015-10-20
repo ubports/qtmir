@@ -29,19 +29,25 @@
 
 using namespace qtmir;
 
+class MirSurfaceItemTest : public ::testing::Test
+{
+public:
+    MirSurfaceItemTest()
+    {
+        // We don't want the logging spam cluttering the test results
+        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));        
+    }
+};
+
 /*
   Tests that even if Qt fails to finish a touch sequence, MirSurfaceItem will
   properly finish it when forwarding it to its mir::input::surface. So
   mir::input::surface will still consume a proper sequence of touch events
   (comprised of a begin, zero or more updates and an end).
  */
-TEST(MirSurfaceItemTest, MissingTouchEnd)
+TEST_F(MirSurfaceItemTest, MissingTouchEnd)
 {
-    // We don't want the logging spam cluttering the test results
-    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
-
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
-
     FakeMirSurface *fakeSurface = new FakeMirSurface;
 
 
@@ -94,11 +100,8 @@ TEST(MirSurfaceItemTest, MissingTouchEnd)
     delete fakeSurface;
 }
 
-TEST(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
+TEST_F(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
 {
-    // We don't want the logging spam cluttering the test results
-    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
-
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
     surfaceItem->setVisible(false);
     
@@ -111,11 +114,8 @@ TEST(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
     delete fakeSurface;
 }
 
-TEST(MirSurfaceItemTest, AggregateSurfaceVisibility)
+TEST_F(MirSurfaceItemTest, AggregateSurfaceVisibility)
 {
-    // We don't want the logging spam cluttering the test results
-    // QLoggingCategory::setFilterRules(QStringLiteral("qtmir*=false"));
-
     MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
     surfaceItem1->setVisible(true);
     MirSurfaceItem *surfaceItem2 = new MirSurfaceItem;
