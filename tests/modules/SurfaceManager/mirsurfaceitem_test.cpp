@@ -48,8 +48,8 @@ public:
 TEST_F(MirSurfaceItemTest, MissingTouchEnd)
 {
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
-    FakeMirSurface *fakeSurface = new FakeMirSurface;
 
+    FakeMirSurface *fakeSurface = new FakeMirSurface;
 
     surfaceItem->setSurface(fakeSurface);
     surfaceItem->setConsumesInput(true);
