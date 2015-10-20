@@ -616,7 +616,8 @@ bool MirSurface::isBeingDisplayed() const
 void MirSurface::registerView(qintptr viewId)
 {
     m_views.insert(viewId, MirSurface::View{false});
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::registerView(" << viewId << ")" << " after=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::registerView(" << viewId << ")"
+                                      << " after=" << m_views.count();
     if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
@@ -624,10 +625,14 @@ void MirSurface::registerView(qintptr viewId)
 
 void MirSurface::unregisterView(qintptr viewId)
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::unregisterView(" << viewId << ")" << " after=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::unregisterView(" << viewId << ")"
+                                      << " after=" << m_views.count() << " live=" << m_live;
     m_views.remove(viewId);
     if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
+        if (m_session.isNull() || !m_live) {
+            deleteLater();
+        }
     }
     updateVisibility();
 }
