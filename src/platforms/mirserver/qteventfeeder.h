@@ -52,6 +52,12 @@ public:
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
         virtual void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
                                       Qt::KeyboardModifiers modifiers) = 0;
+        virtual void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint,
+                                      QPoint pixelDelta, QPoint angleDelta,
+                                      Qt::KeyboardModifiers mods = Qt::NoModifier,
+                                      Qt::ScrollPhase phase = Qt::ScrollUpdate) = 0;
+        virtual void handleEnterEvent(const QPointF &localPoint = QPointF(), const QPointF &globalPoint = QPointF()) = 0;
+        virtual void handleLeaveEvent(const QPointF &localPoint = QPointF()) = 0;
     };
 
     QtEventFeeder(const QSharedPointer<ScreenController> &screenController);
