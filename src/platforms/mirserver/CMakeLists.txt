@@ -31,6 +31,7 @@ include_directories(
     ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${QT5_PLATFORMSUPPORT_INCLUDE_DIRS}
+    ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
 )
@@ -55,16 +56,18 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     promptsessionlistener.cpp
     mirserver.cpp
     mirserverstatuslistener.cpp
-    display.cpp
     screen.cpp
-    displaywindow.cpp
+    screencontroller.cpp
+    screenwindow.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     nativeinterface.cpp
+    offscreensurface.cpp
     qtcompositor.cpp
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
+    tileddisplayconfigurationpolicy.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h

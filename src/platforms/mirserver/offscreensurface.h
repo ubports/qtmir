@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,29 +14,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTCOMPOSITOR_H
-#define QTCOMPOSITOR_H
+#ifndef OFFSCREENSURFACE_H
+#define OFFSCREENSURFACE_H
 
-#include <mir/compositor/compositor.h>
+#include <qpa/qplatformoffscreensurface.h>
+#include <QSurfaceFormat>
+#include <QSharedPointer>
 
-// Qt
-#include <QObject>
+class MirServer;
+class QOpenGLFramebufferObject;
 
-class QtCompositor : public QObject, public mir::compositor::Compositor
+class OffscreenSurface : public QPlatformOffscreenSurface
 {
-    Q_OBJECT
 public:
-    QtCompositor() = default;
-    virtual ~QtCompositor() noexcept = default;
+    OffscreenSurface(QOffscreenSurface *offscreenSurface);
 
-    void start();
-    void stop();
+    QSurfaceFormat format() const override;
+    bool isValid() const override;
 
-Q_SIGNALS:
-    void starting();
-    void stopping();
+    QOpenGLFramebufferObject* buffer() const;
+    void setBuffer(QOpenGLFramebufferObject *buffer);
 
 private:
+    QOpenGLFramebufferObject *m_buffer;
+    QSurfaceFormat m_format;
 };
 
-#endif // QTCOMPOSITOR_H
+#endif // OFFSCREENSURFACE_H

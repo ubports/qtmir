@@ -19,19 +19,26 @@
 #define MOCK_QTWINDOWSYSTEM_H
 
 #include <qteventfeeder.h>
+#include <QWindow>
 
 class MockQtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
 public:
-    MOCK_METHOD0(hasTargetWindow, bool());
-    MOCK_METHOD0(targetWindowGeometry, QRect());
+    MOCK_CONST_METHOD0(ready, bool());
+    MOCK_METHOD1(setScreenController, void(const QSharedPointer<ScreenController> &));
+    MOCK_METHOD1(getWindowForTouchPoint, QWindow*(const QPoint &point));
+    MOCK_METHOD0(lastWindow, QWindow*());
+    MOCK_METHOD0(focusedWindow, QWindow*());
     MOCK_METHOD1(registerTouchDevice, void(QTouchDevice* device));
-    MOCK_METHOD10(handleExtendedKeyEvent, void(ulong timestamp, QEvent::Type type, int key,
-            Qt::KeyboardModifiers modifiers,
-            quint32 nativeScanCode, quint32 nativeVirtualKey,
-            quint32 nativeModifiers,
-            const QString& text, bool autorep,
-            ushort count));
-    MOCK_METHOD4(handleTouchEvent, void(ulong timestamp, QTouchDevice *device,
+
+    // Wanted to use GMock, but MOCK_METHOD11 not implemented
+    void handleExtendedKeyEvent(QWindow */*window*/, ulong /*timestamp*/, QEvent::Type /*type*/, int /*key*/,
+            Qt::KeyboardModifiers /*modifiers*/,
+            quint32 /*nativeScanCode*/, quint32 /*nativeVirtualKey*/,
+            quint32 /*nativeModifiers*/,
+            const QString& /*text*/ = QString(), bool /*autorep*/ = false,
+            ushort /*count*/ = 1) {}
+
+    MOCK_METHOD5(handleTouchEvent, void(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points,
             Qt::KeyboardModifiers mods));
     MOCK_METHOD4(handleMouseEvent, void(ulong, QPointF, Qt::MouseButtons, Qt::KeyboardModifiers));

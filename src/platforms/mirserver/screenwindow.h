@@ -14,31 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display.h"
+#ifndef SCREENWINDOW_H
+#define SCREENWINDOW_H
 
-#include "screen.h"
-#include "mirserver.h"
+#include <qpa/qplatformwindow.h>
 
-#include <mir/graphics/display.h>
-#include <mir/graphics/display_configuration.h>
+// ScreenWindow implements the basics of a QPlatformWindow.
+// QtMir enforces one Window per Screen, so Window and Screen are tightly coupled.
+// All Mir specifics live in the associated Screen object.
 
-namespace mg = mir::graphics;
-
-// TODO: Listen for display changes and update the list accordingly
-
-Display::Display(const std::shared_ptr<mir::graphics::DisplayConfiguration> &displayConfig)
+class ScreenWindow : public QPlatformWindow
 {
-    displayConfig->for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        if (output.used) {
-            auto screen = new Screen(output);
-            m_screens.push_back(screen);
-        }
-    });
-}
+public:
+    explicit ScreenWindow(QWindow *window);
+    virtual ~ScreenWindow();
 
-Display::~Display()
-{
-    for (auto screen : m_screens)
-        delete screen;
-    m_screens.clear();
-}
+    bool isExposed() const override;
+    void setExposed(const bool exposed);
+
+    WId winId() const override { return m_winId; }
+
+    void swapBuffers();
+    void makeCurrent();
+    void doneCurrent();
+
+private:
+    bool m_exposed;
+    WId m_winId;
+};
+
+#endif // SCREENWINDOW_H

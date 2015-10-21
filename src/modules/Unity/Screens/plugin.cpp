@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,29 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTCOMPOSITOR_H
-#define QTCOMPOSITOR_H
-
-#include <mir/compositor/compositor.h>
-
 // Qt
-#include <QObject>
+#include <QQmlExtensionPlugin>
+#include <QtQml/qqml.h>
+#include <QScreen>
 
-class QtCompositor : public QObject, public mir::compositor::Compositor
-{
+// local
+#include "screens.h"
+
+using namespace qtmir;
+
+class UnityScreensPlugin : public QQmlExtensionPlugin {
     Q_OBJECT
-public:
-    QtCompositor() = default;
-    virtual ~QtCompositor() noexcept = default;
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
 
-    void start();
-    void stop();
+    virtual void registerTypes(const char* uri)
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("Unity.Screens"));
 
-Q_SIGNALS:
-    void starting();
-    void stopping();
+        qRegisterMetaType<QScreen*>("QScreen*");
 
-private:
+        qmlRegisterType<qtmir::Screens>(uri, 0, 1, "Screens");
+    }
 };
 
-#endif // QTCOMPOSITOR_H
+#include "plugin.moc"
