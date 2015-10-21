@@ -226,3 +226,9 @@ void Screen::onOrientationReadingChanged()
                                               OrientationReadingEvent::m_type,
                                               m_orientationSensor->reading()->orientation()));
 }
+
+QPlatformCursor *Screen::cursor() const
+{
+    const QPlatformCursor *platformCursor = &m_cursor;
+    return const_cast<QPlatformCursor *>(platformCursor);
+}
