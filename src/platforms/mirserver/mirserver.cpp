@@ -124,7 +124,13 @@ MirServer::MirServer(int argc, char const* argv[],
     apply_settings();
 
     // We will draw our own cursor.
-    add_init_callback([this](){ the_cursor()->hide(); });
+    // FIXME: Call override_the_cusor() instead once this method becomes available in a
+    //        future version of Mir.
+    add_init_callback([this]() {
+        the_cursor()->hide();
+        // Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
+        static_cast<QtCompositor*>(the_compositor().get())->setCursor(the_cursor());
+    });
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
 }

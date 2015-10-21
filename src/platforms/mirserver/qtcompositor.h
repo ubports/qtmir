@@ -19,8 +19,17 @@
 
 #include <mir/compositor/compositor.h>
 
+// std lib
+#include <memory>
+
 // Qt
 #include <QObject>
+
+namespace mir {
+    namespace graphics {
+        class Cursor;
+    }
+}
 
 class QtCompositor : public QObject, public mir::compositor::Compositor
 {
@@ -32,11 +41,14 @@ public:
     void start();
     void stop();
 
+    void setCursor(std::shared_ptr<mir::graphics::Cursor>);
+
 Q_SIGNALS:
     void starting();
     void stopping();
 
 private:
+    std::shared_ptr<mir::graphics::Cursor> m_cursor;
 };
 
 #endif // QTCOMPOSITOR_H
