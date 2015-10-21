@@ -216,15 +216,13 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     ensureTextureProvider();
 
-    m_surface->updateTexture();
+    if (!m_textureProvider->texture() || !m_surface->updateTexture()) {
+        delete oldNode;
+        return 0;
+    }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
-    }
-
-    if (!m_textureProvider->texture()) {
-        delete oldNode;
-        return 0;
     }
 
     m_textureProvider->smooth = smooth();
