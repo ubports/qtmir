@@ -98,10 +98,10 @@ MirServer::MirServer(int argc, char const* argv[],
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_window_manager_builder([this](mir::shell::FocusController* /*focus_controller*/)
+    override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return std::make_shared<MirWindowManager>(the_shell_display_layout());
+            return {MirWindowManager::create(focus_controller, the_shell_display_layout())};
         });
 
     wrap_display_configuration_policy(
