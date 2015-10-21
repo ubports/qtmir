@@ -202,6 +202,12 @@ Screen* ScreenController::findScreenWithId(const QList<Screen *> &list, const mg
 
 QWindow* ScreenController::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
 {
+    // This is a part optimization, and a part work-around for AP generated input events occasionally
+    // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
+    if (m_screenList.length() == 1 && m_screenList.first()->window()) {
+        return m_screenList.first()->window()->window();
+    }
+
     for (Screen *screen : m_screenList) {
         if (screen->window() && screen->geometry().contains(point)) {
             return screen->window()->window();
