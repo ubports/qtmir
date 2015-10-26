@@ -20,6 +20,8 @@
 #include "mirsurfaceitem.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
+#include "tracepoints.h" // generated from tracepoints.tp
+#include "timestamp.h"
 
 // common
 #include <debughelpers.h>
@@ -217,15 +219,13 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     ensureTextureProvider();
 
-    m_surface->updateTexture();
+    if (!m_textureProvider->texture() || !m_surface->updateTexture()) {
+        delete oldNode;
+        return 0;
+    }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
-    }
-
-    if (!m_textureProvider->texture()) {
-        delete oldNode;
-        return 0;
     }
 
     m_textureProvider->smooth = smooth();
@@ -299,7 +299,11 @@ void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 
 void MirSurfaceItem::wheelEvent(QWheelEvent *event)
 {
-    Q_UNUSED(event);
+    if (m_consumesInput && m_surface && m_surface->live()) {
+        m_surface->wheelEvent(event);
+    } else {
+        event->ignore();
+    }
 }
 
 void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
@@ -412,10 +416,14 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
     m_lastTouchEvent->timestamp = timestamp;
     m_lastTouchEvent->touchPoints = touchPoints;
     m_lastTouchEvent->touchPointStates = touchPointStates;
+
+    tracepoint(qtmir, touchEventConsume_end, uncompressTimestamp<ulong>(timestamp).count());
 }
 
 void MirSurfaceItem::touchEvent(QTouchEvent *event)
 {
+    tracepoint(qtmir, touchEventConsume_start, uncompressTimestamp<ulong>(event->timestamp()).count());
+
     bool accepted = processTouchEvent(event->type(),
             event->timestamp(),
             event->modifiers(),

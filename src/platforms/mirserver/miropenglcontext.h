@@ -23,6 +23,7 @@
 #include <QOpenGLDebugLogger>
 #endif
 
+
 class MirServer;
 
 class MirOpenGLContext : public QObject, public QPlatformOpenGLContext
