@@ -133,7 +133,7 @@ public:
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override { return QSharedPointer<QSGTexture>(); }
     QSGTexture *weakTexture() const override { return nullptr; }
-    void updateTexture() override {}
+    bool updateTexture() override { return true; }
     unsigned int currentFrameNumber() const override { return 0; }
     bool numBuffersReadyForCompositor() override { return 0; }
     // end of methods called from the rendering (scene graph) thread
@@ -146,6 +146,7 @@ public:
     void hoverEnterEvent(QHoverEvent *) override {}
     void hoverLeaveEvent(QHoverEvent *) override {}
     void hoverMoveEvent(QHoverEvent *) override {}
+    void wheelEvent(QWheelEvent *) override {}
 
     void keyPressEvent(QKeyEvent *) override {}
     void keyReleaseEvent(QKeyEvent *) override {}

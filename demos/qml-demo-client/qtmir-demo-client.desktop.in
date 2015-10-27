@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=QtMir Demo Client
+Comment=QtMir demo client
+Exec=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_BINDIR@/qtmir-demo-client
+Terminal=false
+Icon=
+NoDisplay=false
+X-Ubuntu-Touch=true

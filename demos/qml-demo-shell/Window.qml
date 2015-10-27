@@ -58,87 +58,10 @@ Rectangle {
         }
     ]
 
-
-    MouseArea {
-        anchors.fill: parent
-
-        property real startX
-        property real startY
-        property real startWidth
-        property real startHeight
-        property bool leftBorder
-        property bool rightBorder
-        property bool topBorder
-        property bool bottomBorder
-        property bool dragging
-        onPressedChanged: {
-            if (pressed) {
-                var pos = mapToItem(root.parent, mouseX, mouseY);
-                startX = pos.x;
-                startY = pos.y;
-                startWidth = width;
-                startHeight = height;
-                leftBorder = mouseX > 0 && mouseX < root.borderThickness;
-                rightBorder = mouseX > (root.width - root.borderThickness) && mouseX < root.width;
-                topBorder = mouseY > 0 && mouseY < root.borderThickness;
-                bottomBorder = mouseY > (root.height - root.borderThickness) && mouseY < root.height;
-                dragging = true;
-            } else {
-                dragging = false;
-            }
-        }
-
-        onMouseXChanged: {
-            if (!pressed || !dragging) {
-                return;
-            }
-
-            var pos = mapToItem(root.parent, mouseX, mouseY);
-
-            if (leftBorder) {
-
-                if (startX + startWidth - pos.x > root.minWidth) {
-                    root.x = pos.x;
-                    root.width = startX + startWidth - root.x;
-                    startX = root.x;
-                    startWidth = root.width;
-                }
-
-            } else if (rightBorder) {
-                var deltaX = pos.x - startX;
-                if (startWidth + deltaX >= root.minWidth) {
-                    root.width = startWidth + deltaX;
-                } else {
-                    root.width = root.minWidth;
-                }
-            }
-        }
-
-        onMouseYChanged: {
-            if (!pressed || !dragging) {
-                return;
-            }
-
-            var pos = mapToItem(root.parent, mouseX, mouseY);
-
-            if (topBorder) {
-
-                if (startY + startHeight - pos.y > root.minHeight) {
-                    root.y = pos.y;
-                    root.height = startY + startHeight - root.y;
-                    startY = root.y;
-                    startHeight = root.height;
-                }
-
-            } else if (bottomBorder) {
-                var deltaY = pos.y - startY;
-                if (startHeight + deltaY >= root.minHeight) {
-                    root.height = startHeight + deltaY;
-                } else {
-                    root.height = root.minHeight;
-                }
-            }
-        }
+    ResizeArea {
+        anchors.fill: root
+        borderThickness: root.borderThickness
+        target: root
     }
 
     TitleBar {
