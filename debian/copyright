@@ -2,16 +2,16 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: qtmir
 
 Files: *
-Copyright: 2013-2014 Canonical Ltd.
+Copyright: 2013-2015 Canonical Ltd.
 License: LGPL-3
 
 Files: debian/*
-Copyright: 2013-2014 Canonical Ltd.
+Copyright: 2013-2015 Canonical Ltd.
 License: GPL-3
 
 Files: tests/*
-Copyright: 2013-2014 Canonical Ltd.
-License: LGPL-3
+Copyright: 2013-2015 Canonical Ltd.
+License: GPL-3
 
 License: LGPL-3
  This package is free software; you can redistribute it and/or
