@@ -26,7 +26,7 @@
 
 namespace ms = mir::scene;
 
-namespace 
+namespace
 {
 class MirWindowManagerImpl : public MirWindowManager
 {
@@ -63,7 +63,10 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
-    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
+    void modify_surface(
+        const std::shared_ptr<mir::scene::Session>&,
+        const std::shared_ptr<mir::scene::Surface>& surface,
+        const mir::shell::SurfaceSpecification& modifications) override;
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
@@ -150,13 +153,17 @@ int MirWindowManagerImpl::set_surface_attribute(
     return surface->configure(attrib, value);
 }
 
-void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&)
+void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Session>&,
+                                          const std::shared_ptr<mir::scene::Surface>& surface,
+                                          const mir::shell::SurfaceSpecification& modifications)
 {
-    // TODO support surface modifications
+    if (modifications.name.is_set()) {
+        surface->rename(modifications.name.value());
+    }
 }
 
 std::unique_ptr<MirWindowManager> MirWindowManager::create(
-    mir::shell::FocusController* /*focus_controller*/, 
+    mir::shell::FocusController* /*focus_controller*/,
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
 {
     return std::make_unique<MirWindowManagerImpl>(displayLayout);

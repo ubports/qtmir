@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 TRACEPOINT_EVENT(qtmirserver, starting, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmirserver, stopping, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmirserver, surfaceCreated, TP_ARGS(0), TP_FIELDS())
@@ -8,3 +10,6 @@ TRACEPOINT_EVENT(qtmirserver, sessionAuthorizeEnd, TP_ARGS(0), TP_FIELDS())
 
 TRACEPOINT_EVENT(qtmirserver, surfacePlacementStart, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmirserver, surfacePlacementEnd, TP_ARGS(0), TP_FIELDS())
+
+TRACEPOINT_EVENT(qtmirserver, touchEventDispatch_start, TP_ARGS(int64_t, event_time), TP_FIELDS(ctf_integer(int64_t, event_time, event_time)))
+TRACEPOINT_EVENT(qtmirserver, touchEventDispatch_end, TP_ARGS(int64_t, event_time), TP_FIELDS(ctf_integer(int64_t, event_time, event_time)))
