@@ -23,6 +23,7 @@
 
 class QMirServerPrivate;
 class MirServer;
+class ScreenController;
 
 class QMirServer: public QObject
 {
@@ -37,6 +38,8 @@ public:
     bool isRunning() const;
 
     QWeakPointer<MirServer> mirServer() const;
+
+    QWeakPointer<ScreenController> screenController() const;
 
 Q_SIGNALS:
     void started();

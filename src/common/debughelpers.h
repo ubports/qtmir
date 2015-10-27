@@ -38,6 +38,7 @@ const char *applicationStateToStr(int state);
 
 QString mirPointerEventToString(MirPointerEvent const* event);
 QString mirTouchEventToString(MirTouchEvent const* event);
+QString mirKeyboardEventToString(MirKeyboardEvent const* event);
 const char *mirTouchActionToString(MirTouchAction touchAction);
 
 #endif // UBUNTUGESTURES_DEBUG_HELPER_H
