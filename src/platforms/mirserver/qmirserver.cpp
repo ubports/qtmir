@@ -39,7 +39,7 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
         argv[i] = new char[strlen(arguments.at(i).toStdString().c_str())+1];
         memcpy(argv[i], arguments.at(i).toStdString().c_str(), strlen(arguments.at(i).toStdString().c_str())+1);
     }
-//     argv[argc] = '\0';
+    argv[argc] = '\0';
 
     d->screenController = QSharedPointer<ScreenController>(new ScreenController());
 
