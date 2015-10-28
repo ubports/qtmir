@@ -42,7 +42,7 @@ struct StubSession : mir::scene::Session
 
     mir::frontend::SurfaceId create_surface(
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override;
 
     void destroy_surface(mir::frontend::SurfaceId surface) override;
 
