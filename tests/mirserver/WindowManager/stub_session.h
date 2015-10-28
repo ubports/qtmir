@@ -40,7 +40,10 @@ struct StubSession : mir::scene::Session
     void suspend_prompt_session() override;
     void resume_prompt_session() override;
 
-    mir::frontend::SurfaceId create_surface(mir::scene::SurfaceCreationParameters const& params) override;
+    mir::frontend::SurfaceId create_surface(
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& sink) override;
+
     void destroy_surface(mir::frontend::SurfaceId surface) override;
 
     std::shared_ptr<mir::scene::Surface> surface(mir::frontend::SurfaceId surface) const override;

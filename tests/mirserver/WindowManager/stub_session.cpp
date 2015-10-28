@@ -80,7 +80,8 @@ void StubSession::resume_prompt_session()
 }
 
 mir::frontend::SurfaceId StubSession::create_surface(
-    mir::scene::SurfaceCreationParameters const& /*params*/)
+    mir::scene::SurfaceCreationParameters const& /*params*/,
+    std::shared_ptr<frontend::EventSink> const& /*sink*/)
 {
     return mir::frontend::SurfaceId{0};
 }
