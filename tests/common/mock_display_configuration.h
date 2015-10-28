@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,31 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display.h"
+#ifndef MOCK_DISPLAY_CONFIGURATION_H
+#define MOCK_DISPLAY_CONFIGURATION_H
 
-#include "screen.h"
-#include "mirserver.h"
-
-#include <mir/graphics/display.h>
 #include <mir/graphics/display_configuration.h>
 
-namespace mg = mir::graphics;
+#include <gmock/gmock.h>
+#include "gmock_fixes.h"
 
-// TODO: Listen for display changes and update the list accordingly
-
-Display::Display(const std::shared_ptr<mir::graphics::DisplayConfiguration> &displayConfig)
+class MockDisplayConfiguration : public mir::graphics::DisplayConfiguration
 {
-    displayConfig->for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        if (output.used) {
-            auto screen = new Screen(output);
-            m_screens.push_back(screen);
-        }
-    });
-}
+public:
+    MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mir::graphics::DisplayConfigurationCard const&)>));
 
-Display::~Display()
-{
-    for (auto screen : m_screens)
-        delete screen;
-    m_screens.clear();
-}
+    MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mir::graphics::DisplayConfigurationOutput const&)>));
+    MOCK_METHOD1(for_each_output, void(std::function<void(mir::graphics::UserDisplayConfigurationOutput&)>));
+
+    MOCK_CONST_METHOD0(valid, bool());
+};
+#endif // MOCK_DISPLAY_CONFIGURATION_H

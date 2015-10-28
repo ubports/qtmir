@@ -74,10 +74,27 @@ Application::~Application()
     qCDebug(QTMIR_APPLICATIONS) << "Application::~Application";
 
     // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
-    if (m_processState == Application::ProcessUnknown
-            || state() == Application::Starting
-            || state() == Application::Running) {
+    if (m_processState == Application::ProcessUnknown) {
         wipeQMLCache();
+    }
+
+    switch (m_state) {
+    case InternalState::Starting:
+    case InternalState::Running:
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+        wipeQMLCache();
+        break;
+    case InternalState::Closing:
+    case InternalState::Suspended:
+    case InternalState::StoppedResumable:
+        break;
+    case InternalState::Stopped:
+        if (m_processState == Application::ProcessFailed) { // process crashed
+            wipeQMLCache();
+        }
+        break;
     }
 
     if (m_session) {
@@ -158,7 +175,7 @@ QUrl Application::splashImage() const
         } else {
             qCWarning(QTMIR_APPLICATIONS)
                 << QStringLiteral("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
-                    .arg(appId()).arg(imageFileInfo.absoluteFilePath());
+                    .arg(appId(), imageFileInfo.absoluteFilePath());
 
             return QUrl();
         }
@@ -182,7 +199,7 @@ QColor Application::colorFromString(const QString &colorString, const char *colo
         } else {
             color.setRgba(qRgba(0, 0, 0, 0));
             qCWarning(QTMIR_APPLICATIONS) << QStringLiteral("Invalid %1: \"%2\"")
-                .arg(colorName).arg(colorString);
+                .arg(colorName, colorString);
         }
     }
 
@@ -204,6 +221,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "SuspendingWaitProcess";
     case InternalState::Suspended:
         return "Suspended";
+    case InternalState::Closing:
+        return "Closing";
     case InternalState::StoppedResumable:
         return "StoppedResumable";
     case InternalState::Stopped:
@@ -267,6 +286,7 @@ Application::State Application::state() const
     case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
+    case InternalState::Closing:
         return Running;
     case InternalState::Suspended:
         return Suspended;
@@ -322,6 +342,8 @@ void Application::applyRequestedRunning()
     case InternalState::SuspendingWaitProcess:
         // should leave the app alone until it reaches Suspended state
         break;
+    case InternalState::Closing:
+        break;
     case InternalState::StoppedResumable:
         respawn();
         break;
@@ -350,6 +372,9 @@ void Application::applyRequestedSuspended()
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         // it's already going where we it's wanted
+        break;
+    case InternalState::Closing:
+        // don't suspend while it is closing
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:
@@ -383,6 +408,32 @@ void Application::setPid(pid_t pid)
     m_pid = pid;
 }
 
+void Application::close()
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
+
+    switch (m_state) {
+    case InternalState::Starting:
+    case InternalState::Running:
+        setInternalState(InternalState::Closing);
+        break;
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+    case InternalState::Suspended:
+        setRequestedState(RequestedRunning);
+        setInternalState(InternalState::Closing);
+        break;
+    case InternalState::Closing:
+        // already on the way
+        break;
+    case InternalState::StoppedResumable:
+    case InternalState::Stopped:
+        // too late
+        break;
+    }
+}
+
 void Application::setArguments(const QStringList arguments)
 {
     m_arguments = arguments;
@@ -412,6 +463,7 @@ void Application::setSession(SessionInterface *newSession)
         case InternalState::Starting:
         case InternalState::Running:
         case InternalState::RunningInBackground:
+        case InternalState::Closing:
             m_session->resume();
             break;
         case InternalState::SuspendingWaitSession:
@@ -474,6 +526,9 @@ void Application::setInternalState(Application::InternalState state)
             break;
         case InternalState::Suspended:
             releaseWakelock();
+            break;
+        case InternalState::Closing:
+            acquireWakelock();
             break;
         case InternalState::StoppedResumable:
             releaseWakelock();
@@ -547,7 +602,8 @@ void Application::setProcessState(ProcessState newProcessState)
         if (m_state == InternalState::Starting) {
             // that was way too soon. let it go away
             setInternalState(InternalState::Stopped);
-        } else if (m_state == InternalState::StoppedResumable) {
+        } else if (m_state == InternalState::StoppedResumable ||
+                   m_state == InternalState::Closing) {
             // The application stopped nicely, likely closed itself. Thus not meant to be resumed later.
             setInternalState(InternalState::Stopped);
         } else {
@@ -658,7 +714,8 @@ void Application::onSessionStateChanged(Session::State sessionState)
     case Session::Stopped:
         if (!canBeResumed()
                 || m_state == InternalState::Starting
-                || m_state == InternalState::Running) {
+                || m_state == InternalState::Running
+                || m_state == InternalState::Closing) {
             /*  1. application is not managed by upstart
              *  2. application is managed by upstart, but has stopped before it managed
              *     to create a surface, we can assume it crashed on startup, and thus
@@ -666,6 +723,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
              *  3. application is managed by upstart and is in foreground (i.e. has
              *     Running state), if Mir reports the application disconnects, it
              *     either crashed or stopped itself.
+             * 4. We're expecting the application to stop after a close request
              */
             setInternalState(InternalState::Stopped);
         } else {

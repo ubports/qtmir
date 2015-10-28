@@ -42,6 +42,11 @@ void SurfaceObserver::frame_posted(int /*frames_available*/)
     }
 }
 
+void SurfaceObserver::renamed(char const * name)
+{
+    Q_EMIT nameChanged(QString::fromUtf8(name));
+}
+
 void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
 {
     if (m_listener) {

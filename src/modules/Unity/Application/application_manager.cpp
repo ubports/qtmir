@@ -69,7 +69,7 @@ QString toShortAppIdIfPossible(const QString &appId) {
         qWarning() << "WARNING: long App ID encountered:" << appId;
         // input string a long AppId, chop the version string off the end
         QStringList parts = appId.split(QStringLiteral("_"));
-        return QStringLiteral("%1_%2").arg(parts.first()).arg(parts.at(1));
+        return QStringLiteral("%1_%2").arg(parts.first(), parts.at(1));
     }
     return appId;
 }
@@ -438,6 +438,7 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
         return false;
     }
 
+    application->close();
     remove(application);
 
     bool result = m_taskController->stop(application->longAppId());
@@ -551,7 +552,7 @@ void ApplicationManager::authorizeSession(const quint64 pid, bool &authorized)
 
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::authorizeSession - pid=" << pid;
 
-    for (Application *app : m_applications) {
+    Q_FOREACH (Application *app, m_applications) {
         if (app->state() == Application::Starting) {
             tracepoint(qtmir, appIdHasProcessId_start);
             if (m_taskController->appIdHasProcessId(app->appId(), pid)) {

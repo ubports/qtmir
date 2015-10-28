@@ -69,7 +69,7 @@ Session::~Session()
     qCDebug(QTMIR_SESSIONS) << "Session::~Session() " << name();
     stopPromptSessions();
 
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         delete child;
     }
@@ -364,7 +364,7 @@ void Session::removeChildSession(SessionInterface* session)
 
 void Session::foreachChildSession(const std::function<void(SessionInterface* session)>& f) const
 {
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         f(child);
     }
@@ -393,7 +393,7 @@ void Session::removePromptSession(const std::shared_ptr<ms::PromptSession>& prom
 
 void Session::stopPromptSessions()
 {
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         static_cast<Session*>(child)->stopPromptSessions();
     }

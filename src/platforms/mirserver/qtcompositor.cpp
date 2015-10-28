@@ -15,44 +15,32 @@
  */
 
 #include "qtcompositor.h"
-#include "displaywindow.h"
+#include "logging.h"
 
-#include <QGuiApplication>
-#include <QWindow>
+#include <mir/graphics/cursor.h>
 
-#include <QDebug>
-
-QtCompositor::QtCompositor()
-{
-
-}
-
+// Lives in a Mir thread
 void QtCompositor::start()
 {
-    // (Re)Start Qt's render thread by setting all its windows to exposed
-    setAllWindowsExposed(true);
+    qCDebug(QTMIR_SCREENS) << "QtCompositor::start";
+
+    // FIXME: Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
+    //        See the FIXME in mirserver.cpp
+    if (m_cursor) {
+        m_cursor->hide();
+    }
+
+    Q_EMIT starting(); // blocks
 }
 
 void QtCompositor::stop()
 {
-    // Stop Qt's render threads by setting all its windows it obscured
-    setAllWindowsExposed(false);
+    qCDebug(QTMIR_SCREENS) << "QtCompositor::stop";
+
+    Q_EMIT stopping(); // blocks
 }
 
-void QtCompositor::setAllWindowsExposed(const bool exposed)
+void QtCompositor::setCursor(const std::shared_ptr<mir::graphics::Cursor> &cursor)
 {
-    qDebug() << "QtCompositor::setAllWindowsExposed" << exposed;
-    QList<QWindow *> windowList = QGuiApplication::allWindows();
-
-    // manipulate Qt object's indirectly via posted events as we're not in Qt's GUI thread
-    auto iterator = windowList.constBegin();
-    while (iterator != windowList.constEnd()) {
-        QWindow *window = *iterator;
-        DisplayWindow *displayWindow = static_cast<DisplayWindow*>(window->handle());
-        if (displayWindow) {
-            QCoreApplication::postEvent(displayWindow,
-                                        new QEvent( (exposed) ? QEvent::Show : QEvent::Hide));
-        }
-        iterator++;
-    }
+    m_cursor = cursor;
 }

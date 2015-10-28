@@ -223,7 +223,7 @@ QString mirTouchEventToString(MirTouchEvent const* event)
 {
     const int pointerCount = mir_touch_event_point_count(event);
 
-    QString string(QStringLiteral("MirTouchInputEvent("));
+    QString string(QStringLiteral("MirTouchEvent("));
 
     for (int i = 0; i < pointerCount; ++i) {
 
@@ -264,4 +264,33 @@ const char *mirTouchActionToString(MirTouchAction touchAction)
         return "???";
         break;
     }
+}
+
+namespace {
+const char *mirKeyboardActionToString(MirKeyboardAction keyboardAction)
+{
+    switch (keyboardAction)
+    {
+    case mir_keyboard_action_up:
+        return "up";
+    case mir_keyboard_action_down:
+        return "down";
+    case mir_keyboard_action_repeat:
+        return "repeat";
+    default:
+        return "???";
+        break;
+    }
+}
+}
+
+QString mirKeyboardEventToString(MirKeyboardEvent const* event)
+{
+    MirKeyboardAction keyboardAction = mir_keyboard_event_action(event);
+
+    xkb_keysym_t keyCode = mir_keyboard_event_key_code(event);
+
+    return QStringLiteral("MirKeyboardEvent(action=%1,key_code=0x%2)")
+        .arg(mirKeyboardActionToString(keyboardAction))
+        .arg(keyCode, 4, 16, QLatin1Char('0'));
 }
