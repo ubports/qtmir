@@ -1,0 +1,6 @@
+args <- commandArgs(trailingOnly = TRUE)
+data <- scan(args[1], numeric(), sep=",")
+colors = c("red", "yellow", "green", "violet", "orange", "pink", "blue")
+png(filename=args[2])
+hist(data, breaks=max(data), col=colors)
+dev.off()

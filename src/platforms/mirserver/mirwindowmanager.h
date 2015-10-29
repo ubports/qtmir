@@ -24,6 +24,7 @@
 namespace mir {
     namespace shell {
         class DisplayLayout;
+        class FocusController;
     }
 }
 
@@ -33,41 +34,9 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
 
 public:
 
-    MirWindowManager(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
-
-    void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
-
-    void remove_session(std::shared_ptr<mir::scene::Session> const& session) override;
-
-    mir::frontend::SurfaceId add_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params,
-        std::function<mir::frontend::SurfaceId(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params)> const& build) override;
-
-    void remove_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::weak_ptr<mir::scene::Surface> const& surface) override;
-
-    void add_display(mir::geometry::Rectangle const& area) override;
-
-    void remove_display(mir::geometry::Rectangle const& area) override;
-
-    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
-
-    bool handle_touch_event(MirTouchEvent const* event) override;
-
-    bool handle_pointer_event(MirPointerEvent const* event) override;
-
-    int set_surface_attribute(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        MirSurfaceAttrib attrib,
-        int value) override;
-
-    void modify_surface(const std::shared_ptr<mir::scene::Session>&, const std::shared_ptr<mir::scene::Surface>&, const mir::shell::SurfaceSpecification&);
-
-private:
-    std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
+    static std::unique_ptr<MirWindowManager> create(
+        mir::shell::FocusController* focus_controller,
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

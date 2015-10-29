@@ -78,7 +78,7 @@ class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer()
-    : MirServer(argc, argv)
+    : MirServer(argc, argv, QSharedPointer<ScreenController>())
     {
     }
 
