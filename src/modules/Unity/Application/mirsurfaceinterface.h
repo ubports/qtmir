@@ -67,6 +67,7 @@ public:
     virtual void hoverEnterEvent(QHoverEvent *event) = 0;
     virtual void hoverLeaveEvent(QHoverEvent *event) = 0;
     virtual void hoverMoveEvent(QHoverEvent *event) = 0;
+    virtual void wheelEvent(QWheelEvent *event) = 0;
 
     virtual void keyPressEvent(QKeyEvent *event) = 0;
     virtual void keyReleaseEvent(QKeyEvent *event) = 0;

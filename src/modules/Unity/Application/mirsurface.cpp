@@ -50,18 +50,29 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
     return m_mods;
 }
 
+MirPointerButtons
+getMirButtonsFromQt(Qt::MouseButtons buttons)
+{
+    MirPointerButtons result = 0;
+    if (buttons & Qt::LeftButton)
+        result |= mir_pointer_button_primary;
+    if (buttons & Qt::RightButton)
+        result |= mir_pointer_button_secondary;
+    if (buttons & Qt::MiddleButton)
+        result |= mir_pointer_button_tertiary;
+    if (buttons & Qt::BackButton)
+        result |= mir_pointer_button_back;
+    if (buttons & Qt::ForwardButton)
+        result |= mir_pointer_button_forward;
+
+    return result;
+}
+
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
     auto timestamp = uncompressTimestamp<ulong>(qtEvent->timestamp());
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
-
-    MirPointerButtons buttons = 0;
-    if (qtEvent->buttons() & Qt::LeftButton)
-        buttons |= mir_pointer_button_primary;
-    if (qtEvent->buttons() & Qt::RightButton)
-        buttons |= mir_pointer_button_secondary;
-    if (qtEvent->buttons() & Qt::MidButton)
-        buttons |= mir_pointer_button_tertiary;
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
@@ -75,6 +86,18 @@ mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0, 0, 0);
+}
+
+mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
+{
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp()));
+    auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
+
+    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, mir_pointer_action_motion,
+                                   buttons, qtEvent->x(), qtEvent->y(),
+                                   qtEvent->angleDelta().x(), qtEvent->angleDelta().y(),
+                                   0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
@@ -159,6 +182,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         observer->setListener(this);
     }
 
@@ -473,7 +497,6 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
-    //FIXME - how to listen to change in this property?
     return QString::fromStdString(m_surface->name());
 }
 
@@ -570,6 +593,13 @@ void MirSurface::hoverLeaveEvent(QHoverEvent *event)
 void MirSurface::hoverMoveEvent(QHoverEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_motion);
+    m_surface->consume(*ev);
+    event->accept();
+}
+
+void MirSurface::wheelEvent(QWheelEvent *event)
+{
+    auto ev = makeMirEvent(event);
     m_surface->consume(*ev);
     event->accept();
 }

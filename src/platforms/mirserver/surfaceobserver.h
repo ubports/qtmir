@@ -45,12 +45,13 @@ public:
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
     void keymap_changed(xkb_rule_names const &) override {}
-    void renamed(char const *) override {}
+    void renamed(char const * name) override;
 
 Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
-    void resized(QSize size);
+    void resized(const QSize &size);
+    void nameChanged(const QString &name);
 
 private:
     QObject *m_listener;
