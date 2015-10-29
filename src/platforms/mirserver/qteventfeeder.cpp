@@ -439,14 +439,13 @@ public:
                           QPoint pixelDelta, QPoint angleDelta,
                           Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
     {
-        QWindowSystemInterface::handleWheelEvent(m_screenController->getWindowForPoint(localPoint.toPoint()),
-                                                 timestamp, localPoint, globalPoint,
+        QWindowSystemInterface::handleWheelEvent(nullptr, timestamp, localPoint, globalPoint,
                                                  pixelDelta, angleDelta, mods, phase);
     }
 
-    void handleEnterEvent(const QPointF &localPoint, const QPointF &globalPoint) override
+    void handleEnterEvent(const QPointF &localPoint) override
     {
-        QWindowSystemInterface::handleEnterEvent(m_screenController->getWindowForPoint(localPoint.toPoint()), localPoint, globalPoint);
+        QWindowSystemInterface::handleEnterEvent(m_screenController->getWindowForPoint(localPoint.toPoint()), localPoint, QCursor::pos());
     }
 
     void handleLeaveEvent(const QPointF &localPoint) override
@@ -574,16 +573,15 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp, local_point, local_point,
+            mQtWindowSystem->handleWheelEvent(timestamp, local_point, QCursor::pos(),
                                               QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
-        } else {
-            auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
-            mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
         }
+        auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
+        mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
         break;
     }
     case mir_pointer_action_enter:
-        mQtWindowSystem->handleEnterEvent(local_point, local_point);
+        mQtWindowSystem->handleEnterEvent(local_point);
         break;
     case mir_pointer_action_leave:
         mQtWindowSystem->handleLeaveEvent(local_point);
