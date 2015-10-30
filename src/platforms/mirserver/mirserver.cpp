@@ -19,7 +19,7 @@
 #include "mirserver.h"
 
 // local
-#include "argvHelper_p.h"
+#include "argvHelper.h"
 #include "mirwindowmanager.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"

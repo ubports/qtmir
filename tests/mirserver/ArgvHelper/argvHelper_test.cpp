@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include <argvHelper_p.h>
+#include <argvHelper.h>
 
 using namespace qtmir;
 
