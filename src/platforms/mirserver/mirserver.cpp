@@ -19,6 +19,7 @@
 #include "mirserver.h"
 
 // local
+#include "argvHelper_p.h"
 #include "mirwindowmanager.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
@@ -48,33 +49,6 @@ namespace ms = mir::scene;
 
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
-namespace {
-
-// Function to edit argv to strip out unmatched entries of targetArray, so both arrays have identical contents
-void editArgvToMatch(int &argcToEdit, char** argvToEdit, int targetCount, const char* const targetArray[])
-{
-    // Make copy of the argv array of pointers, as we will be editing the original
-    const size_t arraySize = (argcToEdit + 1) * sizeof(char*);
-    char** argvCopy = static_cast<char**>(malloc(arraySize));
-    memcpy(argvCopy, argvToEdit, arraySize);
-
-    int k=1; // index of argv we want to edit - note we'll leave argv[0] alone
-    for (int i=0; i<targetCount; i++) { // taking each argument Mir did not parse out
-        for (int j=1; j<argcToEdit; j++) { // find pointer to same argument in argvCopy (leave arg[0] out)
-            if (strcmp(targetArray[i], argvCopy[j]) == 0) {
-                argvToEdit[k] = const_cast<char*>(argvCopy[j]); // edit argv to position that argument to match argv2.
-                k++;
-                break;
-            }
-        }
-    }
-    Q_ASSERT(k == targetCount);
-    argvToEdit[k] = nullptr;
-    free(argvCopy);
-    argcToEdit = targetCount+1; // now argv and targetArray should have list the same strings.
-}
-
-} // anonymous namespace
 
 MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreenController> &screenController, QObject* parent)
@@ -84,10 +58,9 @@ MirServer::MirServer(int &argc, char **argv,
     bool unknownArgsFound = false;
     set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
         unknownArgsFound = true;
-        // editArgvToMatch - Mir parses out arguments that it understands. It also removes argv[0] (bug pad.lv/1511509).
-        // Want to edit argv to match that which Mir returns, as those are glafs to Qt alone to process. Edit existing
+        // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
         // argc as filteredArgv only defined in this scope.
-        editArgvToMatch(argc, argv, filteredCount, filteredArgv);
+        qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
     });
 
     // Casting char** to be a const char** safe as Mir won't change it, nor will we
