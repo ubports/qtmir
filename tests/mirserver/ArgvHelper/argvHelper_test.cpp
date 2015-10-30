@@ -24,10 +24,10 @@ TEST(ArgvHelperTest, StripsCorrectly)
 {
     int argc = 5;
     const char *argv[6] = { "/usr/bin/unity8", "-fullscreen", "--debug",
-                            "--platform-input-lib=/path/to/lib.so", "-testability" };
+                            "--platform-input-lib=/path/to/lib.so", "-testability", nullptr };
 
     const int filteredArgc = 2;
-    const char *filteredArgv[3] = { "-fullscreen", "-testability" };
+    const char *filteredArgv[3] = { "-fullscreen", "-testability", nullptr };
 
     editArgvToMatch(argc, const_cast<char**>(argv), filteredArgc, filteredArgv);
 
@@ -41,10 +41,10 @@ TEST(ArgvHelperTest, StripsCorrectly)
 TEST(ArgvHelperTest, NothingToStrip)
 {
     int argc = 4;
-    const char *argv[5] = { "/usr/bin/unity8", "-fullscreen", "--multisample", "-testability" };
+    const char *argv[5] = { "/usr/bin/unity8", "-fullscreen", "--multisample", "-testability", nullptr };
 
     const int filteredArgc = 3;
-    const char *filteredArgv[4] = { "-fullscreen", "-testability", "--multisample" };
+    const char *filteredArgv[4] = { "-fullscreen", "-testability", "--multisample", nullptr };
 
     editArgvToMatch(argc, const_cast<char**>(argv), filteredArgc, filteredArgv);
 
@@ -59,10 +59,10 @@ TEST(ArgvHelperTest, NothingToStrip)
 TEST(ArgvHelperTest, NothingToDo)
 {
     int argc = 1;
-    const char *argv[2] = { "/usr/bin/unity8" };
+    const char *argv[2] = { "/usr/bin/unity8", nullptr };
 
     const int filteredArgc = 0;
-    const char *filteredArgv[1] = { };
+    const char *filteredArgv[1] = { nullptr };
 
     editArgvToMatch(argc, const_cast<char**>(argv), filteredArgc, filteredArgv);
 
