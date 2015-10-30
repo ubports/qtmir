@@ -48,20 +48,46 @@ namespace ms = mir::scene;
 
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
+namespace {
+
+// Function to edit argv to strip out unmatched entries of targetArray, so both arrays have identical contents
+void editArgvToMatch(int &argcToEdit, char** argvToEdit, int targetCount, const char* const targetArray[])
+{
+    // Make copy of the argv array of pointers, as we will be editing the original
+    const size_t arraySize = (argcToEdit + 1) * sizeof(char*);
+    char** argvCopy = static_cast<char**>(malloc(arraySize));
+    memcpy(argvCopy, argvToEdit, arraySize);
+
+    int k=1; // index of argv we want to edit - note we'll leave argv[0] alone
+    for (int i=0; i<targetCount; i++) { // taking each argument Mir did not parse out
+        for (int j=1; j<argcToEdit; j++) { // find pointer to same argument in argvCopy (leave arg[0] out)
+            if (strcmp(targetArray[i], argvCopy[j]) == 0) {
+                argvToEdit[k] = const_cast<char*>(argvCopy[j]); // edit argv to position that argument to match argv2.
+                k++;
+                break;
+            }
+        }
+    }
+    Q_ASSERT(k == targetCount);
+    argvToEdit[k] = nullptr;
+    free(argvCopy);
+    argcToEdit = targetCount+1; // now argv and targetArray should have list the same strings.
+}
+
+} // anonymous namespace
+
 MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreenController> &screenController, QObject* parent)
     : QObject(parent)
     , m_screenController(screenController)
 {
     bool unknownArgsFound = false;
-    set_command_line_handler([&argc, &argv, &unknownArgsFound](int argc2, char const* const argv2[]) {
+    set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
         unknownArgsFound = true;
-        // argv2 - Mir parses out arguments that it understands. It also removes argv[0], but we will put it back.
-        argc = argc2+1;
-        for (int i=1; i<argc; i++) {
-            argv[i] = const_cast<char*>(argv2[i-1]);
-        }
-        argv[argc] = nullptr;
+        // editArgvToMatch - Mir parses out arguments that it understands. It also removes argv[0] (bug pad.lv/1511509).
+        // Want to edit argv to match that which Mir returns, as those are glafs to Qt alone to process. Edit existing
+        // argc as filteredArgv only defined in this scope.
+        editArgvToMatch(argc, argv, filteredCount, filteredArgv);
 
         if (QTMIR_MIR_MESSAGES().isDebugEnabled()) {
             qDebug() << "Command line arguments passed to Qt:";
@@ -69,9 +95,10 @@ MirServer::MirServer(int &argc, char **argv,
                 qDebug() << i << argv[i];
             }
         }
+        qDebug() << QCoreApplication::arguments();
     });
 
-    // Casting char** to be a const char** only safe as Mir
+    // Casting char** to be a const char** safe as Mir won't change it, nor will we
     set_command_line(argc, const_cast<const char **>(argv));
 
     override_the_session_listener([]
