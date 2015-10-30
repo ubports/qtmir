@@ -88,14 +88,6 @@ MirServer::MirServer(int &argc, char **argv,
         // Want to edit argv to match that which Mir returns, as those are glafs to Qt alone to process. Edit existing
         // argc as filteredArgv only defined in this scope.
         editArgvToMatch(argc, argv, filteredCount, filteredArgv);
-
-        if (QTMIR_MIR_MESSAGES().isDebugEnabled()) {
-            qDebug() << "Command line arguments passed to Qt:";
-            for (int i=0; i<argc; i++) {
-                qDebug() << i << argv[i];
-            }
-        }
-        qDebug() << QCoreApplication::arguments();
     });
 
     // Casting char** to be a const char** safe as Mir won't change it, nor will we
@@ -166,7 +158,7 @@ MirServer::MirServer(int &argc, char **argv,
         exit(1);
     }
 
-    if (!unknownArgsFound) { // mir parsed all the arguments, so manually construct argv ourselves
+    if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
         argc = 1;
     }
 
@@ -180,6 +172,7 @@ MirServer::MirServer(int &argc, char **argv,
     });
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
+    qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
 }
 
 // Override default implementation to ensure we terminate the ScreenController first.
