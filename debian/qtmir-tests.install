@@ -1,6 +1,6 @@
-usr/bin/qtmir-demo-shell
 usr/bin/qtmir-demo-client
+usr/bin/qtmir-demo-shell
 usr/share/applications/qtmir-demo-client.desktop
-usr/share/qtmir/qtmir-demo-shell/
-usr/share/qtmir/qtmir-demo-client/*
 usr/share/qtmir/benchmarks/*
+usr/share/qtmir/qtmir-demo-client/*
+usr/share/qtmir/qtmir-demo-shell/
