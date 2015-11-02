@@ -24,49 +24,55 @@
 
 using namespace qtmir;
 
-TEST(TimestampTest, TestCompressAndUncompress)
+class TimestampTest: public ::testing::Test
+{
+protected:
+    virtual void SetUp() {
+        resetStartTime(std::chrono::nanoseconds(0));
+    }
+};
+
+TEST_F(TimestampTest, TestCompressAndUncompress)
 {
     using namespace testing;
-
-    int argc = 0;
-    QCoreApplication app(argc, NULL);
 
     std::chrono::time_point<std::chrono::system_clock> now;
     now = std::chrono::system_clock::now();
     auto original_timestamp = now.time_since_epoch();
 
-    std::chrono::nanoseconds addToTimestamp(0);
+    qtmir::Timestamp addToTimestamp(0);
+
     for (int i = 0; i < 100; i++) {
         auto timestamp = original_timestamp + addToTimestamp;
 
-        ulong compressedTimestamp = qtmir::compressTimestamp<ulong>(timestamp);
+        qtmir::Timestamp compressedTimestamp = qtmir::compressTimestamp<qtmir::Timestamp>(timestamp);
 
-        EXPECT_EQ(addToTimestamp.count(), compressedTimestamp);
-        EXPECT_EQ(qtmir::uncompressTimestamp<ulong>(compressedTimestamp), timestamp);
+        EXPECT_EQ(addToTimestamp, compressedTimestamp);
+        EXPECT_EQ(qtmir::uncompressTimestamp<qtmir::Timestamp>(compressedTimestamp), timestamp);
 
-        addToTimestamp += std::chrono::milliseconds(1);
+        addToTimestamp += std::chrono::seconds(1);
     }
 }
 
-TEST(TimestampTest, TestOverflowWhenExceeding32bitCompression)
+TEST_F(TimestampTest, TestOverflowWhenExceeding32bitCompression)
 {
     using namespace testing;
-
-    int argc = 0;
-    QCoreApplication app(argc, NULL);
 
     std::chrono::time_point<std::chrono::system_clock> now;
     now = std::chrono::system_clock::now();
     auto timestamp = now.time_since_epoch();
 
+    typedef std::chrono::duration<quint32, std::milli> Timestamp32bit;
+
     // Do first compression. This will result in qield of 0 as seen in TestCompressUncompress
-    quint32 compressedTimestamp = qtmir::compressTimestamp<quint32>(timestamp);
+    auto compressedTimestamp = qtmir::compressTimestamp<Timestamp32bit>(timestamp);
 
     // Add the quint32 limit +1 to get an overflow when we compress the timestamp
-    timestamp += std::chrono::nanoseconds(std::numeric_limits<quint32>::max()) + std::chrono::nanoseconds(1);
-    compressedTimestamp = qtmir::compressTimestamp<quint32>(timestamp);
+    timestamp += Timestamp32bit::max() + std::chrono::nanoseconds(1);
+    
+    compressedTimestamp = qtmir::compressTimestamp<Timestamp32bit>(timestamp);
 
-    EXPECT_EQ(0, compressedTimestamp);
+    EXPECT_EQ(0, compressedTimestamp.count());
     // ensure the uncompression will yields the original timestamp
-    EXPECT_EQ(qtmir::uncompressTimestamp<quint32>(compressedTimestamp), timestamp);
+    EXPECT_EQ(qtmir::uncompressTimestamp<Timestamp32bit>(compressedTimestamp), timestamp);
 }

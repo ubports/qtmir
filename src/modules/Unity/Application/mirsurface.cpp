@@ -70,7 +70,7 @@ getMirButtonsFromQt(Qt::MouseButtons buttons)
 
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = uncompressTimestamp<ulong>(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp()));
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
@@ -80,7 +80,7 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = uncompressTimestamp<ulong>(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp()));
 
     MirPointerButtons buttons = 0;
 
@@ -117,7 +117,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, uncompressTimestamp<ulong>(qtEvent->timestamp()),
+    return mir::events::make_event(0 /* DeviceID */, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp())),
                            0 /* mac */, action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -129,7 +129,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, uncompressTimestamp<ulong>(qtTimestamp),
+    auto ev = mir::events::make_event(0, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtTimestamp)),
                                       0 /* mac */, modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
