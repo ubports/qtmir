@@ -5,6 +5,72 @@ qtmir (0.4.7) UNRELEASED; urgency=medium
 
  -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 25 Sep 2015 09:33:39 +0100
 
+qtmir (0.4.6+15.10.20151021-0ubuntu1) wily; urgency=medium
+
+  [ Alan Griffiths ]
+  * Opaquify MirWindowManager to control visibility of upcoming Window
+    Management work
+
+  [ Albert Astals Cid ]
+  * Don't search for the element again
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Daniel d'Andrada ]
+  * Improve multimonitor support
+  * MirSurfaceItem: Survive holding a surface with an empty texture
+  * Shell draws its own cursor using the new Cursor QML element
+
+  [ Gerry Boland ]
+  * Initial multimonitor support - react correctly to Mir
+    DisplayConfiguration changes. (LP: #1488831, #1488863, #1436735)
+  * Workaround for AutoPilot input coordinate positioning being outside
+    screen geometry
+
+  [ Lukáš Tinkl ]
+  * Implement support for mouse wheel events; correctly pass around
+    buttons (LP: #1497091)
+  * React to surface modifications (window caption)
+
+  [ Michał Sawicz ]
+  * Improve multimonitor support
+  * MirSurfaceItem: Survive holding a surface with an empty texture
+  * React to surface modifications (window caption)
+
+  [ Nick Dedekind ]
+  * Added touch performance tracing and test.
+  * Removed the manipulation of the CMAKE_INSTALL_PREFIX from
+    debian/rules
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 21 Oct 2015 11:47:16 +0000
+
+qtmir (0.4.6+15.10.20151008.2-0ubuntu1) wily; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * Update for Mir 0.17 changes
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 08 Oct 2015 17:56:00 +0000
+
+qtmir (0.4.6+15.10.20150930.1-0ubuntu1) wily; urgency=medium
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Daniel d'Andrada ]
+  * MirSurfaceItem: texture must be manipulated only from the scene
+    graph thread (LP: #1499388, #1495871)
+
+  [ Gerry Boland ]
+  * Add "Closing" state to Application, use it to distinguish user-
+    induced close from app-induced close. Don't clear QML cache if user-
+    induced. (LP: #1500372)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Sep 2015 10:08:37 +0000
+
 qtmir (0.4.6+15.10.20150925-0ubuntu1) wily; urgency=medium
 
   * Bump application API version

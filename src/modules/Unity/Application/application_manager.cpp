@@ -455,6 +455,7 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
         return false;
     }
 
+    application->close();
     remove(application);
 
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {

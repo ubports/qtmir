@@ -23,15 +23,25 @@
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
+#include "screencontroller.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
+#include "tileddisplayconfigurationpolicy.h"
 #include "logging.h"
 
+// std
+#include <memory>
+
 // egl
+#define MESA_EGL_NO_X11_HEADERS
 #include <EGL/egl.h>
 
+// mir
+#include <mir/graphics/cursor.h>
+
+namespace mg = mir::graphics;
 namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -45,8 +55,10 @@ void ignore_unparsed_arguments(int /*argc*/, char const* const/*argv*/[])
 
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
-MirServer::MirServer(int argc, char const* argv[], QObject* parent)
+MirServer::MirServer(int argc, char const* argv[],
+                     const QSharedPointer<ScreenController> &screenController, QObject* parent)
     : QObject(parent)
+    , m_screenController(screenController)
 {
     set_command_line_handler(&ignore_unparsed_arguments);
     set_command_line(argc, argv);
@@ -71,9 +83,9 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<QtCompositor>();
         });
 
-    override_the_input_dispatcher([]
+    override_the_input_dispatcher([&screenController]
         {
-            return std::make_shared<QtEventFeeder>();
+            return std::make_shared<QtEventFeeder>(screenController);
         });
 
     override_the_gl_config([]
@@ -86,21 +98,49 @@ MirServer::MirServer(int argc, char const* argv[], QObject* parent)
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_window_manager_builder([this](mir::shell::FocusController* /*focus_controller*/)
+    override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return std::make_shared<MirWindowManager>(the_shell_display_layout());
+            return {MirWindowManager::create(focus_controller, the_shell_display_layout())};
         });
 
-    set_terminator([&](int)
+    wrap_display_configuration_policy(
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
+            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            return std::make_shared<TiledDisplayConfigurationPolicy>(wrapped);
+        });
+
+    set_terminator([](int)
         {
             qDebug() << "Signal caught by Mir, stopping Mir server..";
             QCoreApplication::quit();
         });
 
+    add_init_callback([this, &screenController] {
+        screenController->init(the_display(), the_compositor());
+    });
+
     apply_settings();
 
+    // We will draw our own cursor.
+    // FIXME: Call override_the_cusor() instead once this method becomes available in a
+    //        future version of Mir.
+    add_init_callback([this]() {
+        the_cursor()->hide();
+        // Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
+        static_cast<QtCompositor*>(the_compositor().get())->setCursor(the_cursor());
+    });
+
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
+}
+
+// Override default implementation to ensure we terminate the ScreenController first.
+// Code path followed when Qt tries to shutdown the server.
+void MirServer::stop()
+{
+    m_screenController->terminate();
+    mir::Server::stop();
 }
 
 

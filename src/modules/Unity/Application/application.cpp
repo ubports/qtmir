@@ -74,10 +74,27 @@ Application::~Application()
     qCDebug(QTMIR_APPLICATIONS) << "Application::~Application";
 
     // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
-    if (m_processState == Application::ProcessUnknown
-            || state() == Application::Starting
-            || state() == Application::Running) {
+    if (m_processState == Application::ProcessUnknown) {
         wipeQMLCache();
+    }
+
+    switch (m_state) {
+    case InternalState::Starting:
+    case InternalState::Running:
+    case InternalState::RunningInBackground:
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+        wipeQMLCache();
+        break;
+    case InternalState::Closing:
+    case InternalState::Suspended:
+    case InternalState::StoppedResumable:
+        break;
+    case InternalState::Stopped:
+        if (m_processState == Application::ProcessFailed) { // process crashed
+            wipeQMLCache();
+        }
+        break;
     }
 
     if (m_session) {
@@ -357,7 +374,7 @@ void Application::applyRequestedSuspended()
         // it's already going where we it's wanted
         break;
     case InternalState::Closing:
-        // can't suspend while it's getting closed
+        // don't suspend while it is closing
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:
