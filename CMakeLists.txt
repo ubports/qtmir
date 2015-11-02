@@ -81,8 +81,6 @@ include_directories(${APPLICATION_API_INCLUDE_DIRS})
 
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
-include_directories( ${APPLICATION_API_INCLUDE_DIRS} )
-
 # We expect this to be set via debian/rules for GLES builds
 if ("${USE_OPENGLES}" STREQUAL 1)
     message(STATUS "Qt5 determined to be compiled with GLES support")
