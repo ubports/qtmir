@@ -48,8 +48,10 @@ public:
     virtual void startFrameDropper() = 0;
 
     virtual bool isBeingDisplayed() const = 0;
-    virtual void incrementViewCount() = 0;
-    virtual void decrementViewCount() = 0;
+
+    virtual void registerView(qintptr viewId) = 0;
+    virtual void unregisterView(qintptr viewId) = 0;
+    virtual void setViewVisibility(qintptr viewId, bool visible) = 0;
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;

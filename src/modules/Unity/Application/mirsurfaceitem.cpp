@@ -106,6 +106,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
+    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -524,6 +525,15 @@ void MirSurfaceItem::updateMirSurfaceSize()
     m_surface->resize(width, height);
 }
 
+void MirSurfaceItem::updateMirSurfaceVisibility()
+{
+    if (!m_surface || !m_surface->live()) {
+        return;
+    }
+
+    m_surface->setViewVisibility((qintptr)this, isVisible());
+}
+
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
 {
     if (m_surface && m_consumesInput && m_surface->live()) {
@@ -603,7 +613,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             m_surface->setFocus(false);
         }
 
-        m_surface->decrementViewCount();
+        m_surface->unregisterView((qintptr)this);
 
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
@@ -613,7 +623,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     m_surface = surface;
 
     if (m_surface) {
-        m_surface->incrementViewCount();
+        m_surface->registerView((qintptr)this);
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
@@ -623,8 +633,10 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
 
-        connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
-            (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
+        if (window()) {
+            connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
+                (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
+        }
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
@@ -632,6 +644,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
+        updateMirSurfaceVisibility();
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);
