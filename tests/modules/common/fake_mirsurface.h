@@ -21,6 +21,7 @@
 
 #include <QSharedPointer>
 #include <QSGTexture>
+#include <QPointer>
 
 namespace qtmir {
 
@@ -56,7 +57,7 @@ public:
         , m_live(true)
         , m_state(Mir::RestoredState)
         , m_orientationAngle(Mir::Angle0)
-        , m_viewCount(0)
+        , m_visible(true)
         , m_focused(false)
     {}
 
@@ -87,6 +88,8 @@ public:
 
     bool live() const override { return m_live; }
 
+    bool visible() const override { return m_visible; }
+
     Mir::OrientationAngle orientationAngle() const override { return m_orientationAngle; }
     void setOrientationAngle(Mir::OrientationAngle angle) override {
         if (m_orientationAngle != angle) {
@@ -116,18 +119,28 @@ public:
         }
     }
 
-    bool isBeingDisplayed() const override { return m_viewCount > 0; }
-    void incrementViewCount() override {
-        ++m_viewCount;
-        if (m_viewCount == 1) {
+    void setViewVisibility(qintptr viewId, bool visible) override {
+        if (!m_views.contains(viewId)) return;
+
+        m_views[viewId] = visible;
+        updateVisibility();
+    }
+
+    bool isBeingDisplayed() const override { return !m_views.isEmpty(); }
+
+    void registerView(qintptr viewId) override {
+        m_views.insert(viewId, false);
+        if (m_views.count() == 1) {
             Q_EMIT isBeingDisplayedChanged();
         }
     }
-    void decrementViewCount() override {
-        --m_viewCount;
-        if (m_viewCount == 0) {
+
+    void unregisterView(qintptr viewId) override {
+        m_views.remove(viewId);
+        if (m_views.count() == 0) {
             Q_EMIT isBeingDisplayedChanged();
         }
+        updateVisibility();
     }
 
     // methods called from the rendering (scene graph) thread:
@@ -182,6 +195,20 @@ public:
     QList<TouchEvent> &touchesReceived() { return m_touchesReceived; }
 
 private:
+    void updateVisibility() {
+        bool newVisible = false;
+        QHashIterator<int, bool> i(m_views);
+        while (i.hasNext()) {
+            i.next();
+            newVisible |= i.value();
+        }
+
+        if (m_visible != newVisible) {
+            m_visible = newVisible;
+            Q_EMIT visibleChanged(newVisible);
+        }
+    }
+
 
     bool m_isFirstFrameDrawn;
     SessionInterface *m_session;
@@ -189,8 +216,9 @@ private:
     bool m_live;
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
+    bool m_visible;
     QSize m_size;
-    int m_viewCount;
+    QHash<int, bool> m_views;
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;

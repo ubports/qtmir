@@ -287,3 +287,19 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
     ASSERT_EQ(0, spyAppStopped.count());
 
 }
+
+TEST_F(ApplicationTests, passesIsTouchAppThrough)
+{
+    using namespace ::testing;
+
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(QString(), QFileInfo());
+    QScopedPointer<Application> application(new Application(
+            QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
+            mockDesktopFileReader, QStringList(), nullptr));
+
+    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
+    ASSERT_TRUE(application->isTouchApp());
+
+    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(false));
+    ASSERT_FALSE(application->isTouchApp());
+}

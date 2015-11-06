@@ -8,20 +8,21 @@ extern "C" {
 
 namespace qtmir {
 
+typedef std::chrono::duration<ulong, std::milli> Timestamp;
+
 template<typename T>
 T compressTimestamp(std::chrono::nanoseconds timestamp)
 {
     std::chrono::nanoseconds startTime = getStartTime(timestamp);
-    std::chrono::nanoseconds result = timestamp - startTime;
 
-    if (std::numeric_limits<std::chrono::nanoseconds::rep>::max() > std::numeric_limits<T>::max() &&
-        result > std::chrono::nanoseconds(std::numeric_limits<T>::max())) {
+    if (std::chrono::nanoseconds::max() > T::max() &&
+        timestamp - startTime > std::chrono::nanoseconds(T::max())) {
         // we've overflowed the boundaries of the millisecond type.
         resetStartTime(timestamp);
-        return 0;
+        return T(0);
     }
 
-    return result.count();
+    return std::chrono::duration_cast<T>(timestamp - startTime);
 }
 
 template<typename T>
