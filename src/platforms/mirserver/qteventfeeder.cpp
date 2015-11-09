@@ -443,16 +443,6 @@ public:
                                                  pixelDelta, angleDelta, mods, phase);
     }
 
-    void handleEnterEvent(const QPointF &localPoint) override
-    {
-        QWindowSystemInterface::handleEnterEvent(m_screenController->getWindowForPoint(localPoint.toPoint()), localPoint, QCursor::pos());
-    }
-
-    void handleLeaveEvent(const QPointF &localPoint) override
-    {
-        QWindowSystemInterface::handleLeaveEvent(m_screenController->getWindowForPoint(localPoint.toPoint()));
-    }
-
 private:
     QSharedPointer<ScreenController> m_screenController;
 };
@@ -580,12 +570,6 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         mQtWindowSystem->handleMouseEvent(timestamp.count(), movement, buttons, modifiers);
         break;
     }
-    case mir_pointer_action_enter:
-        mQtWindowSystem->handleEnterEvent(local_point);
-        break;
-    case mir_pointer_action_leave:
-        mQtWindowSystem->handleLeaveEvent(local_point);
-        break;
     default:
         qCDebug(QTMIR_MIR_INPUT) << "Unrecognized pointer event";
     }
