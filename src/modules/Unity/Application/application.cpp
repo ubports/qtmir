@@ -37,8 +37,6 @@ namespace ms = mir::scene;
 namespace qtmir
 {
 
-QStringList Application::lifecycleExceptions;
-
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                          DesktopFileReader *desktopFileReader,
                          const QStringList &arguments,
@@ -81,7 +79,6 @@ Application::~Application()
     switch (m_state) {
     case InternalState::Starting:
     case InternalState::Running:
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
         wipeQMLCache();
@@ -213,8 +210,6 @@ const char* Application::internalStateToStr(InternalState state)
         return "Starting";
     case InternalState::Running:
         return "Running";
-    case InternalState::RunningInBackground:
-        return "RunningInBackground";
     case InternalState::SuspendingWaitSession:
         return "SuspendingWaitSession";
     case InternalState::SuspendingWaitProcess:
@@ -283,7 +278,6 @@ Application::State Application::state() const
     case InternalState::Starting:
         return Starting;
     case InternalState::Running:
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Closing:
@@ -334,7 +328,6 @@ void Application::applyRequestedRunning()
     case InternalState::Running:
         // already where it's wanted to be
         break;
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::Suspended:
         resume();
@@ -367,7 +360,6 @@ void Application::applyRequestedSuspended()
             Q_ASSERT(m_processState == ProcessUnknown);
         }
         break;
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
@@ -414,7 +406,6 @@ void Application::close()
     case InternalState::Running:
         doClose();
         break;
-    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
@@ -475,7 +466,6 @@ void Application::setSession(SessionInterface *newSession)
         switch (m_state) {
         case InternalState::Starting:
         case InternalState::Running:
-        case InternalState::RunningInBackground:
         case InternalState::Closing:
             m_session->resume();
             break;
@@ -533,9 +523,6 @@ void Application::setInternalState(Application::InternalState state)
         case InternalState::Starting:
         case InternalState::Running:
             acquireWakelock();
-            break;
-        case InternalState::RunningInBackground:
-            releaseWakelock();
             break;
         case InternalState::Suspended:
             releaseWakelock();
@@ -635,16 +622,8 @@ void Application::suspend()
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
-    if (!lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
-        // Present in exceptions list.
-        // There's no need to keep the wakelock as the process is never suspended
-        // and thus has no cleanup to perform when (for example) the display is
-        // blanked.
-        setInternalState(InternalState::RunningInBackground);
-    } else {
-        setInternalState(InternalState::SuspendingWaitSession);
-        m_session->suspend();
-    }
+    setInternalState(InternalState::SuspendingWaitSession);
+    m_session->suspend();
 }
 
 void Application::resume()
@@ -661,8 +640,6 @@ void Application::resume()
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setInternalState(InternalState::Running);
         m_session->resume();
-    } else if (m_state == InternalState::RunningInBackground) {
-        setInternalState(InternalState::Running);
     }
 }
 
@@ -688,6 +665,11 @@ void Application::timerEvent(QTimerEvent *event)
         m_closeTimer = 0;
         stop();
     }
+}
+
+bool Application::isTouchApp() const
+{
+    return m_desktopData->isTouchApp();
 }
 
 QString Application::longAppId() const

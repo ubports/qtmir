@@ -57,6 +57,7 @@ public:
     virtual QString splashColorFooter() const;
     virtual Qt::ScreenOrientations supportedOrientations() const;
     virtual bool rotatesWindowContents() const;
+    virtual bool isTouchApp() const;
     virtual bool loaded() const;
 
     static bool parseOrientations(const QString &rawString, Qt::ScreenOrientations &result);
