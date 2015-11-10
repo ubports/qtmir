@@ -41,4 +41,6 @@ QString mirTouchEventToString(MirTouchEvent const* event);
 QString mirKeyboardEventToString(MirKeyboardEvent const* event);
 const char *mirTouchActionToString(MirTouchAction touchAction);
 
+const char *qtCursorShapeToStr(Qt::CursorShape shape);
+
 #endif // UBUNTUGESTURES_DEBUG_HELPER_H

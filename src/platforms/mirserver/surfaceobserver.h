@@ -17,7 +17,10 @@
 #ifndef SESSIONOBSERVER_H
 #define SESSIONOBSERVER_H
 
+#include <QByteArray>
+#include <QCursor>
 #include <QObject>
+#include <QMap>
 #include <QSize>
 #include <mir/scene/surface_observer.h>
 
@@ -41,7 +44,7 @@ public:
     void alpha_set_to(float) override {}
     void transformation_set_to(glm::mat4 const&) override {}
     void reception_mode_set_to(mir::input::InputReceptionMode) override {}
-    void cursor_image_set_to(mir::graphics::CursorImage const&) override {}
+    void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
     void keymap_changed(xkb_rule_names const &) override {}
@@ -52,10 +55,13 @@ Q_SIGNALS:
     void framesPosted();
     void resized(const QSize &size);
     void nameChanged(const QString &name);
+    void cursorChanged(const QCursor &cursor);
 
 private:
+    QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
     QObject *m_listener;
     bool m_framesPosted;
+    QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
 };
 
 #endif

@@ -60,6 +60,7 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
     }
 
     if (windowCursor) {
+        // TODO: Implement pixmap cursor support
         m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QString("left_ptr"));
     } else {
         m_qtCursorName.clear();

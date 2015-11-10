@@ -618,6 +618,8 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
         }
+
+        unsetCursor();
     }
 
     m_surface = surface;
@@ -632,6 +634,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
+        connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::onSurfaceCursorChanged);
 
         if (window()) {
             connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
@@ -645,6 +648,11 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
+
+        // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
+        if (m_surface->cursor().shape() != Qt::ArrowCursor) {
+            setCursor(m_surface->cursor());
+        }
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);
@@ -695,6 +703,13 @@ void MirSurfaceItem::setSurfaceWidth(int value)
 void MirSurfaceItem::onActualSurfaceSizeChanged(const QSize &size)
 {
     setImplicitSize(size.width(), size.height());
+}
+
+void MirSurfaceItem::onSurfaceCursorChanged(const QCursor &cursor)
+{
+    // Since setCursor is a regular method we have to wrap it with a slot in order to connect
+    // it to a signal.
+    setCursor(cursor);
 }
 
 int MirSurfaceItem::surfaceHeight() const
