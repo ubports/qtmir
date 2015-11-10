@@ -39,15 +39,15 @@ SurfaceObserver::SurfaceObserver()
     m_cursorNameToShape["blank"] = Qt::BlankCursor;
     m_cursorNameToShape["split_v"] = Qt::SplitVCursor;
     m_cursorNameToShape["split_h"] = Qt::SplitHCursor;
-    m_cursorNameToShape["pointing_hand"] = Qt::PointingHandCursor;
+    m_cursorNameToShape["hand"] = Qt::PointingHandCursor;
     m_cursorNameToShape["forbidden"] = Qt::ForbiddenCursor;
     m_cursorNameToShape["whats_this"] = Qt::WhatsThisCursor;
     m_cursorNameToShape["left_ptr_watch"] = Qt::BusyCursor;
     m_cursorNameToShape["openhand"] = Qt::OpenHandCursor;
     m_cursorNameToShape["closedhand"] = Qt::ClosedHandCursor;
-    m_cursorNameToShape["copy"] = Qt::DragCopyCursor;
-    m_cursorNameToShape["move"] = Qt::DragMoveCursor;
-    m_cursorNameToShape["link"] = Qt::DragLinkCursor;
+    m_cursorNameToShape["dnd-copy"] = Qt::DragCopyCursor;
+    m_cursorNameToShape["dnd-move"] = Qt::DragMoveCursor;
+    m_cursorNameToShape["dnd-link"] = Qt::DragLinkCursor;
 }
 
 void SurfaceObserver::setListener(QObject *listener)

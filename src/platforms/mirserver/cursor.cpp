@@ -40,15 +40,15 @@ Cursor::Cursor()
     m_shapeToCursorName[Qt::BlankCursor] = "blank";
     m_shapeToCursorName[Qt::SplitVCursor] = "split_v";
     m_shapeToCursorName[Qt::SplitHCursor] = "split_h";
-    m_shapeToCursorName[Qt::PointingHandCursor] = "pointing_hand";
+    m_shapeToCursorName[Qt::PointingHandCursor] = "hand";
     m_shapeToCursorName[Qt::ForbiddenCursor] = "forbidden";
     m_shapeToCursorName[Qt::WhatsThisCursor] = "whats_this";
     m_shapeToCursorName[Qt::BusyCursor] = "left_ptr_watch";
     m_shapeToCursorName[Qt::OpenHandCursor] = "openhand";
     m_shapeToCursorName[Qt::ClosedHandCursor] = "closedhand";
-    m_shapeToCursorName[Qt::DragCopyCursor] = "copy";
-    m_shapeToCursorName[Qt::DragMoveCursor] = "move";
-    m_shapeToCursorName[Qt::DragLinkCursor] = "link";
+    m_shapeToCursorName[Qt::DragCopyCursor] = "dnd-copy";
+    m_shapeToCursorName[Qt::DragMoveCursor] = "dnd-move";
+    m_shapeToCursorName[Qt::DragLinkCursor] = "dnd-link";
 
     connect(Mir::instance(), &Mir::cursorNameChanged, this, &Cursor::setMirCursorName);
 }
