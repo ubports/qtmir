@@ -435,11 +435,13 @@ public:
         }
     }
 
-    void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint,
+    void handleWheelEvent(ulong timestamp, const QPointF &globalPoint,
                           QPoint pixelDelta, QPoint angleDelta,
                           Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
     {
-        QWindowSystemInterface::handleWheelEvent(nullptr, timestamp, localPoint, globalPoint,
+        // NB: The target QWindow is deduced by Qt from globalPoint when null is passed.
+        //     localPoint is irrelevant as Qt will calculate it from the QWindow it sends it to.
+        QWindowSystemInterface::handleWheelEvent(nullptr /* window */, timestamp, QPointF() /* localPoint */, globalPoint,
                                                  pixelDelta, angleDelta, mods, phase);
     }
 
@@ -550,8 +552,6 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
     auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
-    auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
     switch (action) {
     case mir_pointer_action_button_up:
@@ -563,7 +563,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp.count(), local_point, QCursor::pos(),
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), QCursor::pos(),
                                               QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
