@@ -1,3 +1,10 @@
+qtmir (0.4.6+16.04.20151110-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Reverted occlusion detection (lp#1514556) (LP: #1514556)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 10 Nov 2015 09:19:59 +0000
+
 qtmir (0.4.6+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]
