@@ -100,7 +100,7 @@ TEST_F(MirSurfaceItemTest, MissingTouchEnd)
     delete fakeSurface;
 }
 
-TEST_F(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
+TEST_F(MirSurfaceItemTest, DISABLED_SetSurfaceInitializesVisiblity)
 {
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
     surfaceItem->setVisible(false);
@@ -114,7 +114,7 @@ TEST_F(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
     delete fakeSurface;
 }
 
-TEST_F(MirSurfaceItemTest, AggregateSurfaceVisibility)
+TEST_F(MirSurfaceItemTest, DISABLED_ggregateSurfaceVisibility)
 {
     MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
     surfaceItem1->setVisible(true);
