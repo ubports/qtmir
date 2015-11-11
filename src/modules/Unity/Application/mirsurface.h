@@ -67,6 +67,8 @@ public:
 
     bool live() const override;
 
+    bool visible() const override;
+
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
 
@@ -81,13 +83,15 @@ public:
     void startFrameDropper() override;
 
     bool isBeingDisplayed() const override;
-    void incrementViewCount() override;
-    void decrementViewCount() override;
+
+    void registerView(qintptr viewId) override;
+    void unregisterView(qintptr viewId) override;
+    void setViewVisibility(qintptr viewId, bool visible) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
     QSGTexture *weakTexture() const override { return m_texture.data(); }
-    void updateTexture() override;
+    bool updateTexture() override;
     unsigned int currentFrameNumber() const override;
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
@@ -100,6 +104,7 @@ public:
     void hoverEnterEvent(QHoverEvent *event) override;
     void hoverLeaveEvent(QHoverEvent *event) override;
     void hoverMoveEvent(QHoverEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
@@ -124,6 +129,7 @@ private Q_SLOTS:
 private:
     void syncSurfaceSizeWithItemSize();
     bool clientIsRunning() const;
+    void updateVisibility();
 
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
@@ -143,7 +149,10 @@ private:
     unsigned int m_currentFrameNumber;
 
     bool m_live;
-    int m_viewCount;
+    struct View {
+        bool visible;
+    };
+    QHash<qintptr, View> m_views;
 
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 

@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/mod
 set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -Wall -fno-strict-aliasing -Werror -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wall -fno-strict-aliasing -Werror -Wextra")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 
@@ -60,9 +60,9 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-pkg_check_modules(MIRSERVER mirserver>=0.16 REQUIRED)
-pkg_check_modules(MIRCLIENT mirclient>=0.16 REQUIRED)
-pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.16 REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.17 REQUIRED)
+pkg_check_modules(MIRCLIENT mirclient>=0.17 REQUIRED)
+pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.17 REQUIRED)
 
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
@@ -75,7 +75,7 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=8)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=10)
 
 include_directories(${APPLICATION_API_INCLUDE_DIRS})
 
@@ -120,6 +120,7 @@ get_target_property(Qt5Gui_QPA_Plugin_Path Qt5::Gui IMPORTED_LOCATION_PLATFORMS)
 
 # Set QML module install path
 set(QML_MODULE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/qt5/qml")
+set(QTMIR_DATA_DIR ${CMAKE_INSTALL_DATADIR}/qtmir)
 
 
 # Customisations for the build type
@@ -156,6 +157,7 @@ else()
     message(STATUS "Tests disabled")
 endif()
 
-
 # add subdirectories to build
 add_subdirectory(src)
+add_subdirectory(demos)
+add_subdirectory(benchmarks)

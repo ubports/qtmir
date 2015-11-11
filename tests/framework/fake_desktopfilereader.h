@@ -43,6 +43,7 @@ public:
     QString splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
+    bool isTouchApp() const override;
     bool loaded() const override;
 
     QString m_appId;

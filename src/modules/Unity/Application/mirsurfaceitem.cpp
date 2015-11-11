@@ -20,6 +20,8 @@
 #include "mirsurfaceitem.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
+#include "tracepoints.h" // generated from tracepoints.tp
+#include "timestamp.h"
 
 // common
 #include <debughelpers.h>
@@ -104,6 +106,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
+    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -216,15 +219,13 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     ensureTextureProvider();
 
-    m_surface->updateTexture();
+    if (!m_textureProvider->texture() || !m_surface->updateTexture()) {
+        delete oldNode;
+        return 0;
+    }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
-    }
-
-    if (!m_textureProvider->texture()) {
-        delete oldNode;
-        return 0;
     }
 
     m_textureProvider->smooth = smooth();
@@ -298,7 +299,11 @@ void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 
 void MirSurfaceItem::wheelEvent(QWheelEvent *event)
 {
-    Q_UNUSED(event);
+    if (m_consumesInput && m_surface && m_surface->live()) {
+        m_surface->wheelEvent(event);
+    } else {
+        event->ignore();
+    }
 }
 
 void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
@@ -411,10 +416,14 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
     m_lastTouchEvent->timestamp = timestamp;
     m_lastTouchEvent->touchPoints = touchPoints;
     m_lastTouchEvent->touchPointStates = touchPointStates;
+
+    tracepoint(qtmir, touchEventConsume_end, uncompressTimestamp<ulong>(timestamp).count());
 }
 
 void MirSurfaceItem::touchEvent(QTouchEvent *event)
 {
+    tracepoint(qtmir, touchEventConsume_start, uncompressTimestamp<ulong>(event->timestamp()).count());
+
     bool accepted = processTouchEvent(event->type(),
             event->timestamp(),
             event->modifiers(),
@@ -516,6 +525,15 @@ void MirSurfaceItem::updateMirSurfaceSize()
     m_surface->resize(width, height);
 }
 
+void MirSurfaceItem::updateMirSurfaceVisibility()
+{
+    if (!m_surface || !m_surface->live()) {
+        return;
+    }
+
+    m_surface->setViewVisibility((qintptr)this, isVisible());
+}
+
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
 {
     if (m_surface && m_consumesInput && m_surface->live()) {
@@ -595,7 +613,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             m_surface->setFocus(false);
         }
 
-        m_surface->decrementViewCount();
+        m_surface->unregisterView((qintptr)this);
 
         if (!m_surface->isBeingDisplayed() && window()) {
             disconnect(window(), nullptr, m_surface, nullptr);
@@ -605,7 +623,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     m_surface = surface;
 
     if (m_surface) {
-        m_surface->incrementViewCount();
+        m_surface->registerView((qintptr)this);
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
@@ -615,8 +633,10 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
 
-        connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
-            (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
+        if (window()) {
+            connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
+                (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
+        }
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
@@ -624,6 +644,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
+        updateMirSurfaceVisibility();
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);

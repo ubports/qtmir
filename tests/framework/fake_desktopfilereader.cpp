@@ -61,6 +61,8 @@ Qt::ScreenOrientations FakeDesktopFileReader::supportedOrientations() const { re
 
 bool FakeDesktopFileReader::rotatesWindowContents() const { return false; }
 
+bool FakeDesktopFileReader::isTouchApp() const { return true; }
+
 bool FakeDesktopFileReader::loaded() const { return true; }
 
 } // namespace qtmir

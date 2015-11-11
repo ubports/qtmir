@@ -1,0 +1,12 @@
+To run performance tests on device:
+
+Firstly, you will need to install the qtmir-tests package. So either install the package using apt or build
+and install from source
+$ sudo apt-get install qtmir-tests
+
+Then you need to stop unity8 & unity-system compositor so that we can start out test in a controlled environment.
+$ sudo stop lightdm
+
+Next, start the test!
+$ cd benchmarks
+$ sudo python3 touch_event_latency.py

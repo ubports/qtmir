@@ -21,6 +21,7 @@
 
 #include <QSharedPointer>
 #include <QSGTexture>
+#include <QPointer>
 
 namespace qtmir {
 
@@ -44,26 +45,20 @@ public:
         ulong timestamp;
     };
 
-
     FakeMirSurface(QObject *parent = nullptr);
     virtual ~FakeMirSurface();
 
     ////
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override;
-
     QString name() const;
-
     QSize size() const override;
-
     void resize(int width, int height) override;
     void resize(const QSize &size) override;
-
     Mir::State state() const override;
     void setState(Mir::State qmlState) override;
-
     bool live() const override;
-
+    bool visible() const override;
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
 
@@ -71,20 +66,18 @@ public:
     // qtmir.MirSurfaceInterface
 
     bool isFirstFrameDrawn() const override;
-
     void stopFrameDropper() override;
     void startFrameDropper() override;
-
     void setLive(bool value) override;
-
+    void setViewVisibility(qintptr viewId, bool visible) override;
     bool isBeingDisplayed() const override;
-    void incrementViewCount() override;
-    void decrementViewCount() override;
+    void registerView(qintptr viewId) override;
+    void unregisterView(qintptr viewId) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
     QSGTexture *weakTexture() const override;
-    void updateTexture() override;
+    bool updateTexture() override;
     unsigned int currentFrameNumber() const override;
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
@@ -97,7 +90,7 @@ public:
     void hoverEnterEvent(QHoverEvent *) override;
     void hoverLeaveEvent(QHoverEvent *) override;
     void hoverMoveEvent(QHoverEvent *) override;
-
+    void wheelEvent(QWheelEvent *) override;
     void keyPressEvent(QKeyEvent *) override;
     void keyReleaseEvent(QKeyEvent *) override;
 
@@ -115,6 +108,7 @@ public Q_SLOTS:
     // Test API from now on
 
 public:
+
     void drawFirstFrame();
 
     bool isFrameDropperRunning() const;
@@ -122,14 +116,18 @@ public:
     QList<TouchEvent> &touchesReceived();
 
 private:
+    void updateVisibility();
+
+
     bool m_isFirstFrameDrawn;
     SessionInterface *m_session;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
+    bool m_visible;
     QSize m_size;
-    int m_viewCount;
+    QHash<int, bool> m_views;
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;

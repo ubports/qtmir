@@ -45,7 +45,9 @@ struct MockSession : public Session
 
     MOCK_METHOD1(take_snapshot, void(SnapshotCallback const&));
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState));
-    MOCK_METHOD1(create_surface, frontend::SurfaceId(SurfaceCreationParameters const&));
+    MOCK_METHOD2(create_surface,
+                 frontend::SurfaceId(SurfaceCreationParameters const&,
+                                     std::shared_ptr<frontend::EventSink> const&));
     MOCK_METHOD1(destroy_surface, void (frontend::SurfaceId));
 
     MOCK_METHOD0(hide, void());

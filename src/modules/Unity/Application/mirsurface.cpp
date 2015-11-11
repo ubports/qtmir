@@ -15,6 +15,7 @@
  */
 
 #include "mirsurface.h"
+#include "timestamp.h"
 
 // mirserver
 #include <surfaceobserver.h>
@@ -49,18 +50,29 @@ getMirModifiersFromQt(Qt::KeyboardModifiers mods)
     return m_mods;
 }
 
+MirPointerButtons
+getMirButtonsFromQt(Qt::MouseButtons buttons)
+{
+    MirPointerButtons result = 0;
+    if (buttons & Qt::LeftButton)
+        result |= mir_pointer_button_primary;
+    if (buttons & Qt::RightButton)
+        result |= mir_pointer_button_secondary;
+    if (buttons & Qt::MiddleButton)
+        result |= mir_pointer_button_tertiary;
+    if (buttons & Qt::BackButton)
+        result |= mir_pointer_button_back;
+    if (buttons & Qt::ForwardButton)
+        result |= mir_pointer_button_forward;
+
+    return result;
+}
+
 mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp()));
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
-
-    MirPointerButtons buttons = 0;
-    if (qtEvent->buttons() & Qt::LeftButton)
-        buttons |= mir_pointer_button_primary;
-    if (qtEvent->buttons() & Qt::RightButton)
-        buttons |= mir_pointer_button_secondary;
-    if (qtEvent->buttons() & Qt::MidButton)
-        buttons |= mir_pointer_button_tertiary;
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
@@ -68,12 +80,24 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
 
 mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 {
-    auto timestamp = std::chrono::milliseconds(qtEvent->timestamp());
+    auto timestamp = uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp()));
 
     MirPointerButtons buttons = 0;
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0, 0, 0);
+}
+
+mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
+{
+    auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(qtEvent->timestamp()));
+    auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
+    auto buttons = getMirButtonsFromQt(qtEvent->buttons());
+
+    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, mir_pointer_action_motion,
+                                   buttons, qtEvent->x(), qtEvent->y(),
+                                   qtEvent->angleDelta().x(), qtEvent->angleDelta().y(),
+                                   0, 0);
 }
 
 mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
@@ -93,7 +117,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
     if (qtEvent->isAutoRepeat())
         action = mir_keyboard_action_repeat;
 
-    return mir::events::make_event(0 /* DeviceID */, std::chrono::milliseconds(qtEvent->timestamp()),
+    return mir::events::make_event(0 /* DeviceID */, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp())),
                            0 /* mac */, action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
@@ -105,7 +129,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
                             ulong qtTimestamp)
 {
     auto modifiers = getMirModifiersFromQt(qmods);
-    auto ev = mir::events::make_event(0, std::chrono::milliseconds(qtTimestamp),
+    auto ev = mir::events::make_event(0, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtTimestamp)),
                                       0 /* mac */, modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
@@ -152,12 +176,12 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_textureUpdated(false)
     , m_currentFrameNumber(0)
     , m_live(true)
-    , m_viewCount(0)
 {
     m_surfaceObserver = observer;
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         observer->setListener(this);
     }
 
@@ -183,9 +207,9 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_viewCount;
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_views.count();
 
-    Q_ASSERT(m_viewCount == 0);
+    Q_ASSERT(m_views.isEmpty());
 
     if (m_session) {
         m_session->setSurface(nullptr);
@@ -216,6 +240,9 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
         break;
     case mir_surface_attrib_state:
         Q_EMIT stateChanged(state());
+        break;
+    case mir_surface_attrib_visibility:
+        Q_EMIT visibleChanged(visible());
         break;
     default:
         break;
@@ -309,21 +336,23 @@ QSharedPointer<QSGTexture> MirSurface::texture()
     }
 }
 
-void MirSurface::updateTexture()
+bool MirSurface::updateTexture()
 {
     QMutexLocker locker(&m_mutex);
+    Q_ASSERT(!m_texture.isNull());
+
+    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     if (m_textureUpdated) {
-        return;
+        return texture->hasBuffer();
     }
-
-    Q_ASSERT(!m_texture.isNull());
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
-    if (m_surface->buffers_ready_for_compositor(userId) > 0 && renderables.size() > 0) {
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor(userId) > 0 || !texture->hasBuffer())
+        ) {
         // Avoid holding two buffers for the compositor at the same time. Thus free the current
         // before acquiring the next
         texture->freeBuffer();
@@ -343,6 +372,8 @@ void MirSurface::updateTexture()
     }
 
     m_textureUpdated = true;
+
+    return texture->hasBuffer();
 }
 
 void MirSurface::onCompositorSwappedBuffers()
@@ -468,7 +499,6 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 
 QString MirSurface::name() const
 {
-    //FIXME - how to listen to change in this property?
     return QString::fromStdString(m_surface->name());
 }
 
@@ -527,6 +557,11 @@ bool MirSurface::live() const
     return m_live;
 }
 
+bool MirSurface::visible() const
+{
+    return m_surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed;
+}
+
 void MirSurface::mousePressEvent(QMouseEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_button_down);
@@ -569,6 +604,13 @@ void MirSurface::hoverMoveEvent(QHoverEvent *event)
     event->accept();
 }
 
+void MirSurface::wheelEvent(QWheelEvent *event)
+{
+    auto ev = makeMirEvent(event);
+    m_surface->consume(*ev);
+    event->accept();
+}
+
 void MirSurface::keyPressEvent(QKeyEvent *qtEvent)
 {
     auto ev = makeMirEvent(qtEvent);
@@ -603,28 +645,55 @@ bool MirSurface::clientIsRunning() const
 
 bool MirSurface::isBeingDisplayed() const
 {
-    return m_viewCount > 0;
+    return !m_views.isEmpty();
 }
 
-void MirSurface::incrementViewCount()
+void MirSurface::registerView(qintptr viewId)
 {
-    ++m_viewCount;
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::incrementViewCount after=" << m_viewCount;
-    if (m_viewCount == 1) {
+    m_views.insert(viewId, MirSurface::View{false});
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::registerView(" << viewId << ")"
+                                      << " after=" << m_views.count();
+    if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
 }
 
-void MirSurface::decrementViewCount()
+void MirSurface::unregisterView(qintptr viewId)
 {
-    Q_ASSERT(m_viewCount > 0);
-    --m_viewCount;
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::decrementViewCount after=" << m_viewCount;
-    if (m_viewCount == 0) {
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::unregisterView(" << viewId << ")"
+                                      << " after=" << m_views.count() << " live=" << m_live;
+    m_views.remove(viewId);
+    if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
         if (m_session.isNull() || !m_live) {
             deleteLater();
         }
+    }
+    updateVisibility();
+}
+
+void MirSurface::setViewVisibility(qintptr viewId, bool visible)
+{
+    if (!m_views.contains(viewId)) return;
+
+    m_views[viewId].visible = visible;
+    updateVisibility();
+}
+
+void MirSurface::updateVisibility()
+{
+    bool newVisible = false;
+    QHashIterator<qintptr, View> i(m_views);
+    while (i.hasNext()) {
+        i.next();
+        newVisible |= i.value().visible;
+    }
+
+    if (newVisible != visible()) {
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
+
+        m_surface->configure(mir_surface_attrib_visibility,
+                             newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
     }
 }
 
@@ -635,7 +704,7 @@ unsigned int MirSurface::currentFrameNumber() const
 
 void MirSurface::onSessionDestroyed()
 {
-    if (m_viewCount == 0) {
+    if (m_views.isEmpty()) {
         deleteLater();
     }
 }

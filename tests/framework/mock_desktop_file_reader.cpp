@@ -32,6 +32,7 @@ MockDesktopFileReader::MockDesktopFileReader(const QString &appId, const QFileIn
     ON_CALL(*this, exec()).WillByDefault(Invoke(this, &MockDesktopFileReader::doExec));
     ON_CALL(*this, path()).WillByDefault(Invoke(this, &MockDesktopFileReader::doPath));
     ON_CALL(*this, stageHint()).WillByDefault(Invoke(this, &MockDesktopFileReader::doStageHint));
+    ON_CALL(*this, isTouchApp()).WillByDefault(Invoke(this, &MockDesktopFileReader::doIsTouchApp));
     ON_CALL(*this, loaded()).WillByDefault(Invoke(this, &MockDesktopFileReader::doLoaded));
 }
 
@@ -77,6 +78,11 @@ QString MockDesktopFileReader::doPath() const
 QString MockDesktopFileReader::doStageHint() const
 {
     return DesktopFileReader::stageHint();
+}
+
+bool MockDesktopFileReader::doIsTouchApp() const
+{
+    return DesktopFileReader::isTouchApp();
 }
 
 bool MockDesktopFileReader::doLoaded() const

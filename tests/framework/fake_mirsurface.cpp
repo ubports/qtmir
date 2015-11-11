@@ -42,7 +42,7 @@ FakeMirSurface::FakeMirSurface(QObject *parent)
     , m_live(true)
     , m_state(Mir::RestoredState)
     , m_orientationAngle(Mir::Angle0)
-    , m_viewCount(0)
+    , m_visible(true)
     , m_focused(false)
 {
 }
@@ -80,6 +80,8 @@ void FakeMirSurface::setState(Mir::State qmlState)
 
 bool FakeMirSurface::live() const { return m_live; }
 
+bool FakeMirSurface::visible() const { return m_visible; }
+
 Mir::OrientationAngle FakeMirSurface::orientationAngle() const { return m_orientationAngle; }
 
 void FakeMirSurface::setOrientationAngle(Mir::OrientationAngle angle)
@@ -113,29 +115,37 @@ void FakeMirSurface::setLive(bool value)
     }
 }
 
-bool FakeMirSurface::isBeingDisplayed() const { return m_viewCount > 0; }
+void FakeMirSurface::setViewVisibility(qintptr viewId, bool visible) {
+    if (!m_views.contains(viewId)) return;
 
-void FakeMirSurface::incrementViewCount()
+    m_views[viewId] = visible;
+    updateVisibility();
+}
+
+bool FakeMirSurface::isBeingDisplayed() const { return !m_views.isEmpty(); }
+
+void FakeMirSurface::registerView(qintptr viewId)
 {
-    ++m_viewCount;
-    if (m_viewCount == 1) {
+    m_views.insert(viewId, false);
+    if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
 }
 
-void FakeMirSurface::decrementViewCount()
+void FakeMirSurface::unregisterView(qintptr viewId)
 {
-    --m_viewCount;
-    if (m_viewCount == 0) {
+    m_views.remove(viewId);
+    if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
     }
+    updateVisibility();
 }
 
 QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
 
 QSGTexture *FakeMirSurface::weakTexture() const { return nullptr; }
 
-void FakeMirSurface::updateTexture() {}
+bool FakeMirSurface::updateTexture() { return true; }
 
 unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
 
@@ -154,6 +164,8 @@ void FakeMirSurface::hoverEnterEvent(QHoverEvent *) {}
 void FakeMirSurface::hoverLeaveEvent(QHoverEvent *) {}
 
 void FakeMirSurface::hoverMoveEvent(QHoverEvent *) {}
+
+void FakeMirSurface::wheelEvent(QWheelEvent *) {}
 
 void FakeMirSurface::keyPressEvent(QKeyEvent *) {}
 
@@ -182,5 +194,20 @@ void FakeMirSurface::drawFirstFrame()
 bool FakeMirSurface::isFrameDropperRunning() const { return m_isFrameDropperRunning; }
 
 QList<FakeMirSurface::TouchEvent> &FakeMirSurface::touchesReceived() { return m_touchesReceived; }
+
+void FakeMirSurface::updateVisibility()
+{
+    bool newVisible = false;
+    QHashIterator<int, bool> i(m_views);
+    while (i.hasNext()) {
+        i.next();
+        newVisible |= i.value();
+    }
+
+    if (m_visible != newVisible) {
+        m_visible = newVisible;
+        Q_EMIT visibleChanged(newVisible);
+    }
+}
 
 } // namespace qtmir

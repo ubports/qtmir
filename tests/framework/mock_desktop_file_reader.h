@@ -37,6 +37,7 @@ struct MockDesktopFileReader : public qtmir::DesktopFileReader
     MOCK_CONST_METHOD0(exec, QString());
     MOCK_CONST_METHOD0(path, QString());
     MOCK_CONST_METHOD0(stageHint, QString());
+    MOCK_CONST_METHOD0(isTouchApp, bool());
     MOCK_CONST_METHOD0(loaded, bool());
 
     QString doFile() const;
@@ -47,6 +48,7 @@ struct MockDesktopFileReader : public qtmir::DesktopFileReader
     QString doExec() const;
     QString doPath() const;
     QString doStageHint() const;
+    bool doIsTouchApp() const;
     bool doLoaded() const;
 };
 

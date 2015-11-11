@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,31 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display.h"
-
-#include "screen.h"
-#include "mirserver.h"
-
-#include <mir/graphics/display.h>
+#include "mock_display.h"
+#include <mir/graphics/event_handler_register.h>
 #include <mir/graphics/display_configuration.h>
 
-namespace mg = mir::graphics;
-
-// TODO: Listen for display changes and update the list accordingly
-
-Display::Display(const std::shared_ptr<mir::graphics::DisplayConfiguration> &displayConfig)
+MockDisplaySyncGroup::MockDisplaySyncGroup()
 {
-    displayConfig->for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        if (output.used) {
-            auto screen = new Screen(output);
-            m_screens.push_back(screen);
-        }
-    });
 }
 
-Display::~Display()
+MockDisplaySyncGroup::~MockDisplaySyncGroup()
 {
-    for (auto screen : m_screens)
-        delete screen;
-    m_screens.clear();
+}
+
+MockDisplay::MockDisplay()
+{
+}
+
+MockDisplay::~MockDisplay()
+{
 }

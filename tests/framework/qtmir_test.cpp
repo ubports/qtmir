@@ -27,9 +27,6 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os)
     case Application::InternalState::Running:
         *os << "Running";
         break;
-    case Application::InternalState::RunningInBackground:
-        *os << "RunningInBackground";
-        break;
     case Application::InternalState::SuspendingWaitSession:
         *os << "SuspendingWaitSession";
         break;
@@ -102,7 +99,7 @@ class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
-    : TestMirServerInit(promptSessionManager), MirServer(0, argv)
+    : TestMirServerInit(promptSessionManager), MirServer(0, argv, QSharedPointer<ScreenController>())
     {
     }
 
