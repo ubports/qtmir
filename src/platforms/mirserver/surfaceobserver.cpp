@@ -19,6 +19,8 @@
 #include "namedcursor.h"
 
 #include <QMetaObject>
+#include <QImage>
+#include <QPixmap>
 
 #include <mir/geometry/size.h>
 
@@ -104,7 +106,9 @@ QCursor SurfaceObserver::createQCursorFromMirCursorImage(const mir::graphics::Cu
             return QCursor();
         }
     } else {
-        // TODO: Implement pixmap cursor support
-        return QCursor();
+        QImage image((const uchar*)cursorImage.as_argb_8888(),
+                cursorImage.size().width.as_int(), cursorImage.size().height.as_int(), QImage::Format_ARGB32);
+
+        return QCursor(QPixmap::fromImage(image), cursorImage.hotspot().dx.as_int(), cursorImage.hotspot().dy.as_int());
     }
 }

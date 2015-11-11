@@ -60,10 +60,16 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
     }
 
     if (windowCursor) {
-        // TODO: Implement pixmap cursor support
-        m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QString("left_ptr"));
+        if (windowCursor->pixmap().isNull()) {
+            m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QString("left_ptr"));
+            m_mousePointer->setCustomCursor(QCursor());
+        } else {
+            m_qtCursorName = QLatin1String("custom");
+            m_mousePointer->setCustomCursor(*windowCursor);
+        }
     } else {
         m_qtCursorName.clear();
+        m_mousePointer->setCustomCursor(QCursor());
     }
 
     updateMousePointerCursorName();
