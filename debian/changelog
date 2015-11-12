@@ -1,3 +1,9 @@
+qtmir (0.4.6+16.04.20151112-0ubuntu1) xenial; urgency=medium
+
+  * Fix armhf builds on Xenial by using -std=gnu99 instead of c99
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 12 Nov 2015 16:26:27 +0000
+
 qtmir (0.4.6+16.04.20151110-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
