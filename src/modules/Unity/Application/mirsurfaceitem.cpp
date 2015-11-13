@@ -531,8 +531,7 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
         return;
     }
 
-    // FIXME: https://bugs.launchpad.net/ubuntu/+source/unity8/+bug/1514556
-    // m_surface->setViewVisibility((qintptr)this, isVisible());
+    m_surface->setViewVisibility((qintptr)this, isVisible());
 }
 
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
