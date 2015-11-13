@@ -125,6 +125,7 @@ private Q_SLOTS:
     void onFramesPostedObserved();
     void onSessionDestroyed();
     void emitSizeChanged();
+    void updateTextureLocked();
 
 private:
     void syncSurfaceSizeWithItemSize();

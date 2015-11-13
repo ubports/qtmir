@@ -292,16 +292,24 @@ void MirSurface::dropPendingBuffer()
 
     int framesPending = m_surface->buffers_ready_for_compositor(userId);
     if (framesPending > 0) {
-        // The line below looks like an innocent, effect-less, getter. But as this
-        // method returns a unique_pointer, not holding its reference causes the
-        // buffer to be destroyed/released straight away.
-        for (auto const & item : m_surface->generate_renderables(userId))
-            item->buffer();
         qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffer()"
             << "surface =" << this
             << "buffer dropped."
             << framesPending-1
             << "left.";
+
+        if (framesPending > 1) {
+            const void* const userId = (void*)123;
+            auto renderables = m_surface->generate_renderables(userId);
+            for (uint i = 0; i < renderables.size()-2; i++) {
+                // The line below looks like an innocent, effect-less, getter. But as this
+                // method returns a unique_pointer, not holding its reference causes the
+                // buffer to be destroyed/released straight away.
+                renderables[i]->buffer();
+            }
+        }
+
+        updateTextureLocked();
     } else {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
@@ -347,6 +355,24 @@ bool MirSurface::updateTexture()
         return texture->hasBuffer();
     }
 
+    updateTextureLocked();
+
+    const void* const userId = (void*)123;
+
+    if (m_surface->buffers_ready_for_compositor(userId) > 0) {
+        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+        // queued since the timer lives in a different thread
+        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+    }
+
+    return texture->hasBuffer();
+}
+
+void MirSurface::updateTextureLocked()
+{
+    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
+    Q_ASSERT(texture);
+
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
@@ -363,17 +389,9 @@ bool MirSurface::updateTexture()
             m_size = texture->textureSize();
             QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
         }
+
+        m_textureUpdated = true;
     }
-
-    if (m_surface->buffers_ready_for_compositor(userId) > 0) {
-        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
-        // queued since the timer lives in a different thread
-        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
-    }
-
-    m_textureUpdated = true;
-
-    return texture->hasBuffer();
 }
 
 void MirSurface::onCompositorSwappedBuffers()
@@ -682,6 +700,9 @@ void MirSurface::setViewVisibility(qintptr viewId, bool visible)
 
 void MirSurface::updateVisibility()
 {
+    // FIXME: https://bugs.launchpad.net/ubuntu/+source/unity8/+bug/1514556
+    return;
+
     bool newVisible = false;
     QHashIterator<qintptr, View> i(m_views);
     while (i.hasNext()) {
