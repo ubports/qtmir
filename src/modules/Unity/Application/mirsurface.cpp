@@ -292,24 +292,11 @@ void MirSurface::dropPendingBuffer()
 
     int framesPending = m_surface->buffers_ready_for_compositor(userId);
     if (framesPending > 0) {
-        qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::dropPendingBuffer()"
-            << "surface =" << this
-            << "buffer dropped."
-            << framesPending-1
-            << "left.";
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() left=" << framesPending-1;
 
-        if (framesPending > 1) {
-            const void* const userId = (void*)123;
-            auto renderables = m_surface->generate_renderables(userId);
-            for (uint i = 0; i < renderables.size()-2; i++) {
-                // The line below looks like an innocent, effect-less, getter. But as this
-                // method returns a unique_pointer, not holding its reference causes the
-                // buffer to be destroyed/released straight away.
-                renderables[i]->buffer();
-            }
-        }
-
-        updateTextureLocked();
+        m_textureUpdated = false;
+        locker.unlock();
+        updateTexture();
     } else {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
@@ -321,13 +308,13 @@ void MirSurface::dropPendingBuffer()
 
 void MirSurface::stopFrameDropper()
 {
-    qCDebug(QTMIR_SURFACES) << "MirSurface::stopFrameDropper surface = " << this;
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::stopFrameDropper()";
     m_frameDropperTimer.stop();
 }
 
 void MirSurface::startFrameDropper()
 {
-    qCDebug(QTMIR_SURFACES) << "MirSurface::startFrameDropper surface = " << this;
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::startFrameDropper()";
     if (!m_frameDropperTimer.isActive()) {
         m_frameDropperTimer.start();
     }
@@ -355,24 +342,6 @@ bool MirSurface::updateTexture()
         return texture->hasBuffer();
     }
 
-    updateTextureLocked();
-
-    const void* const userId = (void*)123;
-
-    if (m_surface->buffers_ready_for_compositor(userId) > 0) {
-        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
-        // queued since the timer lives in a different thread
-        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
-    }
-
-    return texture->hasBuffer();
-}
-
-void MirSurface::updateTextureLocked()
-{
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
-    Q_ASSERT(texture);
-
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
@@ -392,10 +361,19 @@ void MirSurface::updateTextureLocked()
 
         m_textureUpdated = true;
     }
+
+    if (m_surface->buffers_ready_for_compositor(userId) > 0) {
+        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+        // queued since the timer lives in a different thread
+        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+    }
+
+    return texture->hasBuffer();
 }
 
 void MirSurface::onCompositorSwappedBuffers()
 {
+    QMutexLocker locker(&m_mutex);
     m_textureUpdated = false;
 }
 
@@ -439,9 +417,8 @@ void MirSurface::resize(int width, int height)
     if (clientIsRunning() && mirSizeIsDifferent) {
         mir::geometry::Size newMirSize(width, height);
         m_surface->resize(newMirSize);
-        qCDebug(QTMIR_SURFACES) << "MirSurface::resize"
-                << "surface =" << this
-                << ", old (" << mirWidth << "," << mirHeight << ")"
+        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::resize"
+                << " old (" << mirWidth << "," << mirHeight << ")"
                 << ", new (" << width << "," << height << ")";
     }
 }
