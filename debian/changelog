@@ -1,3 +1,10 @@
+qtmir (0.4.6+16.04.20151113-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Update surface textures when dropping frames. (LP: #1515356)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Fri, 13 Nov 2015 16:42:38 +0000
+
 qtmir (0.4.6+16.04.20151112-0ubuntu1) xenial; urgency=medium
 
   * Fix armhf builds on Xenial by using -std=gnu99 instead of c99
