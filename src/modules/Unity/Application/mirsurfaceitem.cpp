@@ -635,7 +635,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
-        connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::onSurfaceCursorChanged);
+        connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::setCursor);
 
         if (window()) {
             connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
@@ -704,13 +704,6 @@ void MirSurfaceItem::setSurfaceWidth(int value)
 void MirSurfaceItem::onActualSurfaceSizeChanged(const QSize &size)
 {
     setImplicitSize(size.width(), size.height());
-}
-
-void MirSurfaceItem::onSurfaceCursorChanged(const QCursor &cursor)
-{
-    // Since setCursor is a regular method we have to wrap it with a slot in order to connect
-    // it to a signal.
-    setCursor(cursor);
 }
 
 int MirSurfaceItem::surfaceHeight() const

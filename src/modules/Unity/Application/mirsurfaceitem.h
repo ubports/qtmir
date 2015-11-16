@@ -116,8 +116,6 @@ private Q_SLOTS:
 
     void onActualSurfaceSizeChanged(const QSize &size);
 
-    void onSurfaceCursorChanged(const QCursor &cursor);
-
 private:
     void ensureTextureProvider();
 
