@@ -28,6 +28,7 @@ class FakeSession : public SessionInterface
 public:
     FakeSession()
         : SessionInterface(0)
+        , m_application(nullptr)
         , m_state(Starting)
     {
     }

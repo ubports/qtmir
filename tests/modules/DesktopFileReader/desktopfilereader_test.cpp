@@ -58,6 +58,7 @@ TEST(DesktopFileReader, testReadsDesktopFile)
     EXPECT_EQ(reader->splashImage(), "/usr/share/click/preinstalled/.click/users/@all/com.ubuntu.calculator/calculator-app@30.png");
     EXPECT_EQ(reader->splashShowHeader(), "True");
     EXPECT_EQ(reader->splashTitle(), "Calculator 2.0");
+    EXPECT_EQ(reader->isTouchApp(), true);
 }
 
 TEST(DesktopFileReader, testReadsLocalizedDesktopFile)
@@ -83,6 +84,7 @@ TEST(DesktopFileReader, testReadsLocalizedDesktopFile)
     EXPECT_EQ(reader->splashImage(), "/usr/share/click/preinstalled/.click/users/@all/com.ubuntu.calculator/calculator-app@30.png");
     EXPECT_EQ(reader->splashShowHeader(), "True");
     EXPECT_EQ(reader->splashTitle(), "Taschenrechner 2.0");
+    EXPECT_EQ(reader->isTouchApp(), true);
 }
 
 TEST(DesktopFileReader, testMissingDesktopFile)
@@ -108,6 +110,7 @@ TEST(DesktopFileReader, testMissingDesktopFile)
     EXPECT_EQ(reader->splashImage(), "");
     EXPECT_EQ(reader->splashShowHeader(), "");
     EXPECT_EQ(reader->splashTitle(), "");
+    EXPECT_EQ(reader->isTouchApp(), false);
 }
 
 TEST(DesktopFileReader, testUTF8Characters)

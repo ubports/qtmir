@@ -1,3 +1,40 @@
+qtmir (0.4.6+16.04.20151112-0ubuntu1) xenial; urgency=medium
+
+  * Fix armhf builds on Xenial by using -std=gnu99 instead of c99
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 12 Nov 2015 16:26:27 +0000
+
+qtmir (0.4.6+16.04.20151110-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Reverted occlusion detection (lp#1514556) (LP: #1514556)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 10 Nov 2015 09:19:59 +0000
+
+qtmir (0.4.6+16.04.20151102-0ubuntu1) xenial; urgency=medium
+
+  [ Alan Griffiths ]
+  * Test harness for MirWindowManager (in preparation for more
+    intelligent window management)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+  [ Michael Terry ]
+  * Support new isTouchApp property to ApplicationInfoInterface and move
+    lifecycle policy logic out of qtmir.
+
+  [ Michał Sawicz ]
+  * Clean up packaging and fix autopkgtest on armhf
+
+  [ Nick Dedekind ]
+  * Hand Qt millisecond timestamps rather than nanosecond. (LP:
+    #1510571, #1511076, #1511711)
+  * Support server->client visibility change to stop rendering
+    (lp:#1475678) (LP: #1475678)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 02 Nov 2015 11:22:29 +0000
+
 qtmir (0.4.6+15.10.20151021-0ubuntu1) wily; urgency=medium
 
   [ Alan Griffiths ]
