@@ -295,8 +295,12 @@ void MirSurface::dropPendingBuffer()
         qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() left=" << framesPending-1;
 
         m_textureUpdated = false;
-        locker.unlock();
-        updateTexture();
+        
+        if (!m_texture.isNull()) {
+            locker.unlock();
+            updateTexture();
+        }
+        Q_EMIT frameDropped();
     } else {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
@@ -322,6 +326,8 @@ void MirSurface::startFrameDropper()
 
 QSharedPointer<QSGTexture> MirSurface::texture()
 {
+    QMutexLocker locker(&m_mutex);
+
     if (!m_texture) {
         QSharedPointer<QSGTexture> texture(new MirBufferSGTexture);
         m_texture = texture.toWeakRef();
@@ -697,6 +703,7 @@ void MirSurface::updateVisibility()
 
 unsigned int MirSurface::currentFrameNumber() const
 {
+    QMutexLocker locker(&m_mutex);
     return m_currentFrameNumber;
 }
 
