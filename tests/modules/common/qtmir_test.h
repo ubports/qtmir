@@ -51,7 +51,7 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os);
 void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
 
 // Initialization of mir::Server needed for by tests
-class TestMirServerInit : virtual mir::Server
+class TestMirServerInit : public virtual mir::Server
 {
 public:
     TestMirServerInit()

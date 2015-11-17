@@ -52,7 +52,6 @@ public:
     FakeMirSurface(QObject *parent = nullptr)
         : MirSurfaceInterface(parent)
         , m_isFirstFrameDrawn(false)
-        , m_session(nullptr)
         , m_isFrameDropperRunning(true)
         , m_live(true)
         , m_state(Mir::RestoredState)
@@ -65,7 +64,7 @@ public:
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override { return Mir::NormalType; }
 
-    QString name() const { return QString("Fake MirSurface"); }
+    QString name() const override { return QString("Fake MirSurface"); }
 
     QSize size() const override { return m_size; }
 
@@ -211,7 +210,6 @@ private:
 
 
     bool m_isFirstFrameDrawn;
-    SessionInterface *m_session;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;
