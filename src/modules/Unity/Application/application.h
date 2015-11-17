@@ -68,10 +68,10 @@ public:
     enum class InternalState {
         Starting,
         Running,
-        RunningInBackground,
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
+        Closing, // The user has requested the app be closed
         StoppedResumable, // The process stopped but we want to keep the Application object around
                           // so it can be respawned as if it never stopped running in the first place.
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
@@ -103,6 +103,7 @@ public:
     QColor splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
+    bool isTouchApp() const override;
 
     void setStage(Stage stage);
 
@@ -125,10 +126,10 @@ public:
 
     pid_t pid() const;
 
+    void close();
+
     // for tests
     InternalState internalState() const { return m_state; }
-
-    static QStringList lifecycleExceptions;
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
