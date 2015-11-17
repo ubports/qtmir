@@ -265,3 +265,18 @@ TEST_F(QtEventFeederTest, PressSameTouchTwice)
 
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
 }
+
+TEST_F(QtEventFeederTest, TimestampInMilliseconds)
+{
+    setIrrelevantMockWindowSystemExpectations();
+    EXPECT_CALL(*mockWindowSystem, handleTouchEvent(_,0,_,_,_)).Times(1);
+    auto ev1 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(123), 0 /* mac */, 0);
+    qtEventFeeder->dispatch(*ev1);
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+
+    setIrrelevantMockWindowSystemExpectations();
+    EXPECT_CALL(*mockWindowSystem, handleTouchEvent(_,2,_,_,_)).Times(1);
+    auto ev2 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(125), 0 /* mac */, 0);
+    qtEventFeeder->dispatch(*ev2);
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+}

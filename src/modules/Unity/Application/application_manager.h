@@ -68,7 +68,7 @@ public:
 
     // FIXME: these roles should be added to unity-api and removed from here
     enum MoreRoles {
-        RoleSession = RoleFocused+1,
+        RoleSession = RoleIsTouchApp+1,
         RoleFullscreen,
     };
 
@@ -137,7 +137,6 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
-    void onSettingsChanged(const QString &key);
 
 private:
     void setFocused(Application *application);

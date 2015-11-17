@@ -552,7 +552,7 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
 void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 {
-    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
     auto pev = mir_input_event_get_pointer_event(ev);
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
@@ -574,11 +574,11 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp, local_point, local_point,
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), local_point, local_point,
                                               QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         } else {
             auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
-            mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
+            mQtWindowSystem->handleMouseEvent(timestamp.count(), movement, buttons, modifiers);
         }
         break;
     }
@@ -595,7 +595,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
 void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 {
-    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
     auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
@@ -634,7 +634,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
                             mir_keyboard_event_key_code(kev),
                             mir_keyboard_event_modifiers(kev),
                             text, is_auto_rep);
-        qKeyEvent.setTimestamp(timestamp);
+        qKeyEvent.setTimestamp(timestamp.count());
         if (context->filterEvent(&qKeyEvent)) {
             qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
                 << "but not dispatching as it was filtered out by input context";
@@ -646,7 +646,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
-        timestamp, keyType, keyCode, modifiers,
+        timestamp.count(), keyType, keyCode, modifiers,
         mir_keyboard_event_scan_code(kev),
         mir_keyboard_event_key_code(kev),
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
@@ -654,9 +654,9 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 
 void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
 {
-    auto timestamp = std::chrono::nanoseconds(mir_input_event_get_event_time(event));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
-    tracepoint(qtmirserver, touchEventDispatch_start, timestamp.count());
+    tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 
     auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
@@ -714,21 +714,19 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         }
     }
 
-    auto compressedTimestamp = qtmir::compressTimestamp<ulong>(timestamp);
-
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
-    validateTouches(window, compressedTimestamp, touchPoints);
+    validateTouches(window, timestamp.count(), touchPoints);
 
     // Touch event propagation.
     qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
     mQtWindowSystem->handleTouchEvent(window,
         //scales down the nsec_t (int64) to fit a ulong, precision lost but time difference suitable
-        compressedTimestamp,
+        timestamp.count(),
         mTouchDevice,
         touchPoints);
 
-    tracepoint(qtmirserver, touchEventDispatch_end, timestamp.count());
+    tracepoint(qtmirserver, touchEventDispatch_end, std::chrono::nanoseconds(timestamp).count());
 }
 
 void QtEventFeeder::start()
