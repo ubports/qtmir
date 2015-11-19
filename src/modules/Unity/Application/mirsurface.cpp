@@ -292,11 +292,18 @@ void MirSurface::dropPendingBuffer()
 
     int framesPending = m_surface->buffers_ready_for_compositor(userId);
     if (framesPending > 0) {
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() left=" << framesPending-1;
-
         m_textureUpdated = false;
+        
         locker.unlock();
-        updateTexture();
+        if (updateTexture()) {
+            qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() dropped=1 left=" << framesPending-1;
+        } else {
+            // If we haven't managed to update the texture, don't keep banging away.
+            m_frameDropperTimer.stop();
+            qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() dropped=0"
+                                              << " left=" << framesPending << " - failed to upate texture";
+        }
+        Q_EMIT frameDropped();
     } else {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
@@ -322,6 +329,8 @@ void MirSurface::startFrameDropper()
 
 QSharedPointer<QSGTexture> MirSurface::texture()
 {
+    QMutexLocker locker(&m_mutex);
+
     if (!m_texture) {
         QSharedPointer<QSGTexture> texture(new MirBufferSGTexture);
         m_texture = texture.toWeakRef();
@@ -334,9 +343,9 @@ QSharedPointer<QSGTexture> MirSurface::texture()
 bool MirSurface::updateTexture()
 {
     QMutexLocker locker(&m_mutex);
-    Q_ASSERT(!m_texture.isNull());
 
     MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
+    if (!texture) return false;
 
     if (m_textureUpdated) {
         return texture->hasBuffer();
@@ -697,6 +706,7 @@ void MirSurface::updateVisibility()
 
 unsigned int MirSurface::currentFrameNumber() const
 {
+    QMutexLocker locker(&m_mutex);
     return m_currentFrameNumber;
 }
 

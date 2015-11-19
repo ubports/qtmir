@@ -9,6 +9,7 @@ set(
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/modules
+  ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/tests/modules/common
   ${MIRSERVER_INCLUDE_DIRS}
 )
