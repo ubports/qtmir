@@ -42,8 +42,7 @@ public:
             const QList<struct QWindowSystemInterface::TouchPoint> &points,
             Qt::KeyboardModifiers mods));
     MOCK_METHOD4(handleMouseEvent, void(ulong timestamp, QPointF point, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers));
-    MOCK_METHOD6(handleWheelEvent, void(ulong timestamp, const QPointF & global, QPoint pixelDelta, QPoint angleDelta,
-                                        Qt::KeyboardModifiers mods, Qt::ScrollPhase phase));
+    MOCK_METHOD3(handleWheelEvent, void(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods));
 };
 
 namespace testing

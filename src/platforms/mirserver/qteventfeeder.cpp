@@ -435,14 +435,22 @@ public:
         }
     }
 
-    void handleWheelEvent(ulong timestamp, const QPointF &globalPoint,
-                          QPoint pixelDelta, QPoint angleDelta,
-                          Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
+    void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) override
     {
-        // NB: The target QWindow is deduced by Qt from globalPoint when null is passed.
-        //     localPoint is irrelevant as Qt will calculate it from the QWindow it sends it to.
-        QWindowSystemInterface::handleWheelEvent(nullptr /* window */, timestamp, QPointF() /* localPoint */, globalPoint,
-                                                 pixelDelta, angleDelta, mods, phase);
+        // Send to the first screen that handles the mouse event
+        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
+        //       (because they all might have their own separate graphical mouse pointer item)
+        //       This will probably come once we implement the feature of having the mouse pointer
+        //       crossing adjacent screens.
+
+        QList<Screen*> screens = m_screenController->screens();
+        bool eventHandled = false;
+        int i = 0;
+        while (i < screens.count() && !eventHandled) {
+            auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
+            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, mods);
+            ++i;
+        }
     }
 
 private:
@@ -563,8 +571,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp.count(), QCursor::pos(),
-                                              QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), angleDelta, modifiers);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         mQtWindowSystem->handleMouseEvent(timestamp.count(), movement, buttons, modifiers);

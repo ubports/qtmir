@@ -109,6 +109,27 @@ bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton
     return ok;
 }
 
+bool Cursor::handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers modifiers)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (!m_mousePointer || !m_mousePointer->isVisible()) {
+        return false;
+    }
+
+    // Must not be called directly as we're most likely not in Qt's GUI (main) thread.
+    bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleWheelEvent", Qt::AutoConnection,
+        Q_ARG(ulong, timestamp),
+        Q_ARG(QPoint, angleDelta),
+        Q_ARG(Qt::KeyboardModifiers, modifiers));
+
+    if (!ok) {
+        qCWarning(QTMIR_MIR_INPUT) << "Failed to invoke MousePointer::handleMouseEvent";
+    }
+
+    return ok;
+}
+
 void Cursor::setPos(const QPoint &pos)
 {
     if (!m_mousePointer) {
