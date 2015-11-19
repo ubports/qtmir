@@ -1,3 +1,28 @@
+qtmir (0.4.6+16.04.20151119-0ubuntu1) xenial; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Build with clang (tests/gmock fails and is unfixable on our side i'd
+    say)
+  * Enable Efficient String Construction by default
+
+  [ Gerry Boland ]
+  * Fix use of uninitialized variable
+  * Use pid_t for PIDs.
+
+  [ Loïc Molinari ]
+  * Ensured Mir surface items with size less than or equal to zero are
+    not rendered, as it's usually done for standard QtQuick items.
+
+  [ Michał Sawicz ]
+  * Build with clang (tests/gmock fails and is unfixable on our side i'd
+    say)
+
+  [ Nick Dedekind ]
+  * Fix a crash when dropping a surface frame before Qt draws a surface
+    item. (LP: #1517139)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 19 Nov 2015 12:56:17 +0000
+
 qtmir (0.4.6+16.04.20151113-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
