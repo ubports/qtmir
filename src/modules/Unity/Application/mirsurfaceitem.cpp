@@ -67,7 +67,7 @@ public:
         return t.data();
     }
 
-    bool smooth;
+    bool smooth{false};
 
     void releaseTexture() {
         t.reset();
