@@ -25,8 +25,8 @@ namespace testing
 {
 struct MockProcInfo : public qtmir::ProcInfo
 {
-    MOCK_METHOD1(command_line, QByteArray(quint64));
-    std::unique_ptr<CommandLine> commandLine(quint64 pid)
+    MOCK_METHOD1(command_line, QByteArray(pid_t));
+    std::unique_ptr<CommandLine> commandLine(pid_t pid)
     {
       return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
     }

@@ -128,7 +128,7 @@ public:
     {
     }
 
-    Application* startApplication(quint64 procId, QString const& appId)
+    Application* startApplication(pid_t procId, QString const& appId)
     {
         using namespace testing;
 
