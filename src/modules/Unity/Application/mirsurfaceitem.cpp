@@ -209,7 +209,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 {
     QMutexLocker mutexLocker(&m_mutex);
 
-    if (!m_surface) {
+    if (!m_surface || width() <= 0 || height() <= 0) {
         if (m_textureProvider) {
             m_textureProvider->releaseTexture();
         }
