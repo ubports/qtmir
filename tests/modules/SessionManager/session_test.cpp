@@ -48,7 +48,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -72,7 +72,7 @@ TEST_F(SessionTests, AddChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -100,7 +100,7 @@ TEST_F(SessionTests, InsertChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -128,7 +128,7 @@ TEST_F(SessionTests, RemoveChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -161,7 +161,7 @@ TEST_F(SessionTests, DeleteChildSessionRemovesFromApplication)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -193,7 +193,7 @@ TEST_F(SessionTests, DeleteSessionDeletesChildSessions)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -221,7 +221,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -252,7 +252,7 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 

@@ -103,7 +103,7 @@ protected:
 
     void touchEvent(QTouchEvent *event) override;
 
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
     void releaseResources() override;
 

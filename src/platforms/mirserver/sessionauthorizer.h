@@ -41,7 +41,7 @@ public:
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
-    void requestAuthorizationForSession(const quint64 &pid, bool &authorized);
+    void requestAuthorizationForSession(const pid_t &pid, bool &authorized);
 
 private:
     bool m_connectionChecked;

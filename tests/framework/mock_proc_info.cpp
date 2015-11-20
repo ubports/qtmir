@@ -27,7 +27,7 @@ MockProcInfo::~MockProcInfo()
 {
 }
 
-std::unique_ptr<qtmir::ProcInfo::CommandLine> MockProcInfo::commandLine(quint64 pid)
+std::unique_ptr<qtmir::ProcInfo::CommandLine> MockProcInfo::commandLine(pid_t pid)
 {
     return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
 }

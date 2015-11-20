@@ -73,7 +73,7 @@ void PrintTo(const Session::State& state, ::std::ostream* os)
 }
 
 // Initialization of mir::Server needed for by tests
-class TestMirServerInit : virtual mir::Server
+class TestMirServerInit : public virtual mir::Server
 {
 public:
     TestMirServerInit(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
@@ -134,7 +134,7 @@ QtMirTest::~QtMirTest()
 
 }
 
-Application *QtMirTest::startApplication(quint64 procId, const QString &appId)
+Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
 {
     using namespace testing;
 

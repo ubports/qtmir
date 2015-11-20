@@ -62,7 +62,7 @@ public:
     QtMirTest();
     virtual ~QtMirTest();
 
-    Application* startApplication(quint64 procId, QString const& appId);
+    Application* startApplication(pid_t procId, QString const& appId);
 
     testing::NiceMock<MockApplicationController> appController;
     testing::NiceMock<MockProcInfo> procInfo;

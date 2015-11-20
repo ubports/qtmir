@@ -88,6 +88,7 @@ Q_SIGNALS:
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
+    void frameDropped();
 };
 
 } // namespace qtmir

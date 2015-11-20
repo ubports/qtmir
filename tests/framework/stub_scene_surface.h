@@ -64,7 +64,7 @@ public:
     void resize(geometry::Size const&) override;
     void set_transformation(glm::mat4 const&) override;
     void set_alpha(float) override;
-    void set_orientation(MirOrientation);
+    void set_orientation(MirOrientation) override;
 
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override;
@@ -72,8 +72,8 @@ public:
     void set_reception_mode(input::InputReceptionMode mode) override;
     void consume(MirEvent const&) override;
 
-    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */);
-    std::shared_ptr<graphics::CursorImage> cursor_image() const;
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) override;
+    std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
     bool supports_input() const override;
     int client_input_fd() const override;

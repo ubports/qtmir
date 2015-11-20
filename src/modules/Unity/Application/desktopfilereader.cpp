@@ -37,8 +37,9 @@ DesktopFileReader* DesktopFileReader::Factory::createInstance(const QString &app
 
 typedef GObjectScopedPointer<GAppInfo> GAppInfoPointer;
 
-struct DesktopFileReaderPrivate
+class DesktopFileReaderPrivate
 {
+public:
     DesktopFileReaderPrivate(DesktopFileReader *parent):
             q_ptr( parent )
     {}

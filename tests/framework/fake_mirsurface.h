@@ -51,7 +51,7 @@ public:
     ////
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override;
-    QString name() const;
+    QString name() const override;
     QSize size() const override;
     void resize(int width, int height) override;
     void resize(const QSize &size) override;
@@ -120,7 +120,6 @@ private:
 
 
     bool m_isFirstFrameDrawn;
-    SessionInterface *m_session;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;

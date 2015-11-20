@@ -28,8 +28,8 @@ struct MockProcInfo : public qtmir::ProcInfo
     MockProcInfo();
     virtual ~MockProcInfo();
 
-    MOCK_METHOD1(command_line, QByteArray(quint64));
-    std::unique_ptr<CommandLine> commandLine(quint64 pid);
+    MOCK_METHOD1(command_line, QByteArray(pid_t));
+    std::unique_ptr<CommandLine> commandLine(pid_t pid);
 };
 
 } // namespace qtmir
