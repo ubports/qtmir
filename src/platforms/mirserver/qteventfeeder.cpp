@@ -447,7 +447,7 @@ public:
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
-            auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
+            auto platformCursor = static_cast<qtmir::Cursor*>(screens.at(i)->cursor());
             eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, mods);
             ++i;
         }
