@@ -141,7 +141,7 @@ private:
 
     QTimer m_frameDropperTimer;
 
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
 
     // Lives in the rendering (scene graph) thread
     QWeakPointer<QSGTexture> m_texture;

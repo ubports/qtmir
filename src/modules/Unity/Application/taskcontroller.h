@@ -40,7 +40,7 @@ public:
     bool suspend(const QString &appId);
     bool resume(const QString &appId);
 
-    bool appIdHasProcessId(const QString &appId, const quint64 pid) const;
+    bool appIdHasProcessId(const QString &appId, const pid_t pid) const;
     QFileInfo findDesktopFileForAppId(const QString &appId) const;
 
 Q_SIGNALS:
