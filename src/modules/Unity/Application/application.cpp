@@ -46,6 +46,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_desktopData(desktopFileReader)
     , m_pid(0)
     , m_stage((m_desktopData->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
@@ -264,6 +265,20 @@ Application::Stage Application::stage() const
     return m_stage;
 }
 
+void Application::setStage(Application::Stage stage)
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::setStage - appId=" << appId() << "stage=" << stage;
+
+    if (m_stage != stage) {
+        if ((stage | m_supportedStages) == 0) {
+            return;
+        }
+
+        m_stage = stage;
+        Q_EMIT stageChanged(stage);
+    }
+}
+
 Application::Stages Application::supportedStages() const
 {
     return m_supportedStages;
@@ -477,20 +492,6 @@ void Application::setSession(SessionInterface *newSession)
     }
 
     Q_EMIT sessionChanged(m_session);
-}
-
-void Application::setStage(Application::Stage stage)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setStage - appId=" << appId() << "stage=" << stage;
-
-    if (m_stage != stage) {
-        if (stage | m_supportedStages) {
-            return;
-        }
-
-        m_stage = stage;
-        Q_EMIT stageChanged(stage);
-    }
 }
 
 void Application::setInternalState(Application::InternalState state)
