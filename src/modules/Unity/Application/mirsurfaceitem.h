@@ -115,6 +115,9 @@ private Q_SLOTS:
     void updateMirSurfaceVisibility();
 
     void onActualSurfaceSizeChanged(const QSize &size);
+    void onCompositorSwappedBuffers();
+
+    void onWindowChanged(QQuickWindow *window);
 
 private:
     void ensureTextureProvider();
@@ -131,6 +134,7 @@ private:
             Qt::TouchPointStates touchPointStates);
 
     MirSurfaceInterface* m_surface;
+    QQuickWindow* m_window;
 
     QMutex m_mutex;
     MirTextureProvider *m_textureProvider;
