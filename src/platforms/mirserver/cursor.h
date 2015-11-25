@@ -34,6 +34,7 @@ public:
     // Called form Mir input thread
     bool handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
             Qt::KeyboardModifiers modifiers);
+    bool handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods);
 
     ////
     // MirPlatformCursor
