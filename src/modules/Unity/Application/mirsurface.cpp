@@ -17,6 +17,9 @@
 #include "mirsurface.h"
 #include "timestamp.h"
 
+// from common dir
+#include <debughelpers.h>
+
 // mirserver
 #include <surfaceobserver.h>
 
@@ -182,6 +185,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
+        connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         observer->setListener(this);
     }
 
@@ -732,4 +736,18 @@ QString MirSurface::appId() const
         appId.append("-");
     }
     return appId;
+}
+
+QCursor MirSurface::cursor() const
+{
+    return m_cursor;
+}
+
+void MirSurface::setCursor(const QCursor &cursor)
+{
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setCursor("
+        << qtCursorShapeToStr(cursor.shape()) << ")";
+
+    m_cursor = cursor;
+    Q_EMIT cursorChanged(m_cursor);
 }
