@@ -1,0 +1,9 @@
+add_library(exampleserverconfig STATIC
+  server_example_basic_window_manager.cpp
+  server_example_basic_window_manager.h
+  server_example_canonical_window_manager.cpp
+  server_example_tiling_window_manager.cpp
+  server_example_window_management.cpp
+  server_example_window_management_info.cpp
+  server_example_window_management_info.h
+)
