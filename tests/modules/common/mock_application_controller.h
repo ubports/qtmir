@@ -81,7 +81,7 @@ struct MockApplicationController : public qtmir::ApplicationController
     {
         auto it = children.find(appId);
         if (it == children.end())
-            return -1;
+            return false;
 
         return it->pid() == pid;
     }

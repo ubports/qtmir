@@ -26,6 +26,7 @@ class MockSession : public SessionInterface {
 public:
     MockSession() : SessionInterface(0) {
         m_state = Starting;
+        ON_CALL(*this, name()).WillByDefault(::testing::Return(QString()));
         ON_CALL(*this, suspend()).WillByDefault(::testing::Invoke(this, &MockSession::doSuspend));
         ON_CALL(*this, resume()).WillByDefault(::testing::Invoke(this, &MockSession::doResume));
         ON_CALL(*this, stop()).WillByDefault(::testing::Invoke(this, &MockSession::doStop));
