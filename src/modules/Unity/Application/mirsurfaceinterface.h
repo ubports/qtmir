@@ -54,6 +54,8 @@ public:
     virtual void unregisterView(qintptr viewId) = 0;
     virtual void setViewVisibility(qintptr viewId, bool visible) = 0;
 
+    virtual void consumeBuffer() = 0;
+
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
     virtual QSGTexture *weakTexture() const = 0;
@@ -88,7 +90,9 @@ Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);
 
 public Q_SLOTS:
+    // methods called from the rendering (scene graph) thread:
     virtual void onCompositorSwappedBuffers() = 0;
+    // end of methods called from the rendering (scene graph) thread
 
 Q_SIGNALS:
     void firstFrameDrawn();

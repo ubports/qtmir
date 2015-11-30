@@ -21,6 +21,9 @@
 #include <mir/geometry/size.h>
 #include <mir/renderer/gl/texture_source.h>
 
+// mirserver
+#include <logging.h>
+
 namespace mg = mir::geometry;
 namespace mrg = mir::renderer::gl;
 
@@ -80,20 +83,25 @@ bool MirBufferSGTexture::hasAlphaChannel() const
         return m_mirBuffer->pixel_format() == mir_pixel_format_abgr_8888
             || m_mirBuffer->pixel_format() == mir_pixel_format_argb_8888;
     } else {
+        qCWarning(QTMIR_SURFACES) << "MirBufferSGTexture: hasAlphaChannel() called but there's no mir buffer to query";
         return false;
     }
 }
 
 void MirBufferSGTexture::bind()
 {
-    Q_ASSERT(hasBuffer());
-    glBindTexture(GL_TEXTURE_2D, m_textureId);
-    updateBindOptions(true/* force */);
+    if (hasBuffer()) {
+        glBindTexture(GL_TEXTURE_2D, m_textureId);
+        updateBindOptions(true/* force */);
 
-    auto const texture_source =
-        dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
-    if (!texture_source)
-        throw std::logic_error("Buffer does not support GL rendering");
+        auto const texture_source =
+            dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
+        if (!texture_source)
+            throw std::logic_error("Buffer does not support GL rendering");
 
-    texture_source->gl_bind_to_texture();
+        texture_source->gl_bind_to_texture();
+    } else {
+        qCWarning(QTMIR_SURFACES) << "MirBufferSGTexture: bind() called but there's no mir buffer to bind to";
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
