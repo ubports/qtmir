@@ -21,6 +21,7 @@
 
 #include <QSharedPointer>
 #include <QSGTexture>
+#include <QPointer>
 
 namespace qtmir {
 
@@ -51,12 +52,11 @@ public:
     FakeMirSurface(QObject *parent = nullptr)
         : MirSurfaceInterface(parent)
         , m_isFirstFrameDrawn(false)
-        , m_session(nullptr)
         , m_isFrameDropperRunning(true)
         , m_live(true)
         , m_state(Mir::RestoredState)
         , m_orientationAngle(Mir::Angle0)
-        , m_viewCount(0)
+        , m_visible(true)
         , m_focused(false)
     {}
 
@@ -64,7 +64,7 @@ public:
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override { return Mir::NormalType; }
 
-    QString name() const { return QString("Fake MirSurface"); }
+    QString name() const override { return QString("Fake MirSurface"); }
 
     QSize size() const override { return m_size; }
 
@@ -86,6 +86,8 @@ public:
     }
 
     bool live() const override { return m_live; }
+
+    bool visible() const override { return m_visible; }
 
     Mir::OrientationAngle orientationAngle() const override { return m_orientationAngle; }
     void setOrientationAngle(Mir::OrientationAngle angle) override {
@@ -116,24 +118,34 @@ public:
         }
     }
 
-    bool isBeingDisplayed() const override { return m_viewCount > 0; }
-    void incrementViewCount() override {
-        ++m_viewCount;
-        if (m_viewCount == 1) {
+    void setViewVisibility(qintptr viewId, bool visible) override {
+        if (!m_views.contains(viewId)) return;
+
+        m_views[viewId] = visible;
+        updateVisibility();
+    }
+
+    bool isBeingDisplayed() const override { return !m_views.isEmpty(); }
+
+    void registerView(qintptr viewId) override {
+        m_views.insert(viewId, false);
+        if (m_views.count() == 1) {
             Q_EMIT isBeingDisplayedChanged();
         }
     }
-    void decrementViewCount() override {
-        --m_viewCount;
-        if (m_viewCount == 0) {
+
+    void unregisterView(qintptr viewId) override {
+        m_views.remove(viewId);
+        if (m_views.count() == 0) {
             Q_EMIT isBeingDisplayedChanged();
         }
+        updateVisibility();
     }
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override { return QSharedPointer<QSGTexture>(); }
     QSGTexture *weakTexture() const override { return nullptr; }
-    void updateTexture() override {}
+    bool updateTexture() override { return true; }
     unsigned int currentFrameNumber() const override { return 0; }
     bool numBuffersReadyForCompositor() override { return 0; }
     // end of methods called from the rendering (scene graph) thread
@@ -146,6 +158,7 @@ public:
     void hoverEnterEvent(QHoverEvent *) override {}
     void hoverLeaveEvent(QHoverEvent *) override {}
     void hoverMoveEvent(QHoverEvent *) override {}
+    void wheelEvent(QWheelEvent *) override {}
 
     void keyPressEvent(QKeyEvent *) override {}
     void keyReleaseEvent(QKeyEvent *) override {}
@@ -158,6 +171,8 @@ public:
     }
 
     QString appId() const override { return "foo-app"; }
+
+    QCursor cursor() const override { return QCursor(); }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override {}
@@ -181,15 +196,29 @@ public:
     QList<TouchEvent> &touchesReceived() { return m_touchesReceived; }
 
 private:
+    void updateVisibility() {
+        bool newVisible = false;
+        QHashIterator<int, bool> i(m_views);
+        while (i.hasNext()) {
+            i.next();
+            newVisible |= i.value();
+        }
+
+        if (m_visible != newVisible) {
+            m_visible = newVisible;
+            Q_EMIT visibleChanged(newVisible);
+        }
+    }
+
 
     bool m_isFirstFrameDrawn;
-    SessionInterface *m_session;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
+    bool m_visible;
     QSize m_size;
-    int m_viewCount;
+    QHash<int, bool> m_views;
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;

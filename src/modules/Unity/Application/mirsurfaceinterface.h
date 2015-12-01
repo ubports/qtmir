@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QCursor>
 #include <QSharedPointer>
 #include <QTouchEvent>
 
@@ -48,13 +49,15 @@ public:
     virtual void startFrameDropper() = 0;
 
     virtual bool isBeingDisplayed() const = 0;
-    virtual void incrementViewCount() = 0;
-    virtual void decrementViewCount() = 0;
+
+    virtual void registerView(qintptr viewId) = 0;
+    virtual void unregisterView(qintptr viewId) = 0;
+    virtual void setViewVisibility(qintptr viewId, bool visible) = 0;
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
     virtual QSGTexture *weakTexture() const = 0;
-    virtual void updateTexture() = 0;
+    virtual bool updateTexture() = 0;
     virtual unsigned int currentFrameNumber() const = 0;
     virtual bool numBuffersReadyForCompositor() = 0;
     // end of methods called from the rendering (scene graph) thread
@@ -67,6 +70,7 @@ public:
     virtual void hoverEnterEvent(QHoverEvent *event) = 0;
     virtual void hoverLeaveEvent(QHoverEvent *event) = 0;
     virtual void hoverMoveEvent(QHoverEvent *event) = 0;
+    virtual void wheelEvent(QWheelEvent *event) = 0;
 
     virtual void keyPressEvent(QKeyEvent *event) = 0;
     virtual void keyReleaseEvent(QKeyEvent *event) = 0;
@@ -78,6 +82,11 @@ public:
 
     virtual QString appId() const = 0;
 
+    virtual QCursor cursor() const = 0;
+
+Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
@@ -85,6 +94,7 @@ Q_SIGNALS:
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
+    void frameDropped();
 };
 
 } // namespace qtmir

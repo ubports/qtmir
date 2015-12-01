@@ -72,8 +72,8 @@ public:
 TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_authorize_and_gets_mixed_up_with_first_one)
 {
     using namespace ::testing;
-    quint64 firstProcId = 5921;
-    quint64 secondProcId = 5922;
+    const pid_t firstProcId = 5921;
+    const pid_t secondProcId = 5922;
     const char dialer_app_id[] = "dialer-app";
     QByteArray cmdLine( "/usr/bin/dialer-app --desktop_file_hint=dialer-app");
     QByteArray secondcmdLine( "/usr/bin/dialer-app");
@@ -110,7 +110,7 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
 TEST_F(ApplicationManagerTests,application_dies_while_starting)
 {
     using namespace ::testing;
-    quint64 procId = 5921;
+    const pid_t procId = 5921;
     const char app_id[] = "my-app";
     QByteArray cmdLine( "/usr/bin/my-app --desktop_file_hint=my-app");
 
@@ -176,7 +176,7 @@ TEST_F(ApplicationManagerTests,startApplicationSupportsLongAppId)
 TEST_F(ApplicationManagerTests,testAppIdGuessFromDesktopFileName)
 {
     using namespace ::testing;
-    quint64 procId = 5921;
+    const pid_t procId = 5921;
     QString appId("sudoku-app");
     QString cmdLine = QString("/usr/bin/my-app --desktop_file_hint=/usr/share/click/preinstalled/com.ubuntu.sudoku/1.0.180/%1.desktop").arg(appId);
 
@@ -196,7 +196,7 @@ TEST_F(ApplicationManagerTests,testAppIdGuessFromDesktopFileName)
 TEST_F(ApplicationManagerTests,testAppIdGuessFromDesktopFileNameWithLongAppId)
 {
     using namespace ::testing;
-    quint64 procId = 5921;
+    const pid_t procId = 5921;
     QString shortAppId("com.ubuntu.desktop_desktop");
     QString cmdLine = QString("/usr/bin/my-app --desktop_file_hint=/usr/share/applications/%1_1.0.180.desktop").arg(shortAppId);
 
@@ -216,9 +216,9 @@ TEST_F(ApplicationManagerTests,testAppIdGuessFromDesktopFileNameWithLongAppId)
 TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_to_last_started_app)
 {
     using namespace ::testing;
-    quint64 first_procId = 5921;
-    quint64 second_procId = 5922;
-    quint64 third_procId = 5923;
+    const pid_t first_procId = 5921;
+    const pid_t second_procId = 5922;
+    const pid_t third_procId = 5923;
     std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
     const char first_app_id[] = "app1";
     QByteArray first_cmdLine( "/usr/bin/app1 --desktop_file_hint=app1");
@@ -265,7 +265,7 @@ TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_
 TEST_F(ApplicationManagerTests,two_session_on_one_application)
 {
     using namespace ::testing;
-    quint64 a_procId = 5921;
+    const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
 
@@ -313,7 +313,7 @@ TEST_F(ApplicationManagerTests,DISABLED_upstart_launching_sidestage_app_on_phone
 TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 {
     using namespace ::testing;
-    quint64 a_procId = 5921;
+    const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
     FakeMirSurface *aSurface = new FakeMirSurface;
@@ -343,7 +343,7 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
 {
     using namespace ::testing;
-    quint64 a_procId = 5921;
+    const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd("/usr/bin/app1 --desktop_file_hint=some_app");
     FakeMirSurface *aSurface = new FakeMirSurface;
@@ -373,7 +373,7 @@ TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
 TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_requested)
 {
     using namespace ::testing;
-    quint64 procId = 5921;
+    const pid_t procId = 5921;
     FakeMirSurface *aSurface = new FakeMirSurface;
     QByteArray cmdLine( "/usr/bin/app --desktop_file_hint=app");
 
@@ -407,9 +407,9 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 TEST_F(ApplicationManagerTests,requestFocusApplication)
 {
     using namespace ::testing;
-    quint64 first_procId = 5921;
-    quint64 second_procId = 5922;
-    quint64 third_procId = 5923;
+    const pid_t first_procId = 5921;
+    const pid_t second_procId = 5922;
+    const pid_t third_procId = 5923;
     std::shared_ptr<mir::scene::Surface> aSurface(nullptr);
     QByteArray first_cmdLine( "/usr/bin/app1 --desktop_file_hint=app1");
     QByteArray second_cmdLine( "/usr/bin/app2--desktop_file_hint=app2");
@@ -547,7 +547,7 @@ TEST_F(ApplicationManagerTests,appStartedUsingCorrectDesktopFileHintSwitch)
     using namespace ::testing;
     const QString appId("testAppId");
     const QString name("Test App");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
     QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
     cmdLine = cmdLine.append(appId);
 
@@ -594,7 +594,7 @@ TEST_F(ApplicationManagerTests,appDoesNotStartWhenUsingBadDesktopFileHintSwitch)
     using namespace ::testing;
     const QString appId("testAppId");
     const QString name("Test App");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
     QByteArray cmdLine("/usr/bin/testApp");
 
     // Set up Mocks & signal watcher
@@ -629,7 +629,7 @@ TEST_F(ApplicationManagerTests,appDoesNotStartWhenUsingBadDesktopFileHintFile)
     using namespace ::testing;
     const QString appId("testAppId");
     const QString badDesktopFile = QString("%1.desktop").arg(appId);
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
     QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
     cmdLine = cmdLine.append(badDesktopFile);
 
@@ -698,7 +698,7 @@ TEST_F(ApplicationManagerTests,synchronousProcessStartedCallDoesNotDuplicateEntr
 TEST_F(ApplicationManagerTests,webAppSecondarySessionsAccepted)
 {
     using namespace ::testing;
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
     QByteArray cmdLine("/usr/bin/qt5/libexec/QtWebProcess");
 
     // Set up Mocks & signal watcher
@@ -717,7 +717,7 @@ TEST_F(ApplicationManagerTests,webAppSecondarySessionsAccepted)
 TEST_F(ApplicationManagerTests,maliitSessionsAccepted)
 {
     using namespace ::testing;
-    quint64 procId = 151;
+    const pid_t procId = 151;
     QByteArray cmdLine("maliit-server --blah");
 
     // Set up Mocks & signal watcher
@@ -775,7 +775,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -819,7 +819,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -858,7 +858,7 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -897,7 +897,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -940,7 +940,7 @@ TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -986,7 +986,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1031,7 +1031,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1082,7 +1082,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1140,7 +1140,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1193,7 +1193,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesStartingAppIsNowStopping)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1232,7 +1232,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1278,7 +1278,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     using namespace ::testing;
     const QString appId("testAppId");
     const QString name("Test App");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
     QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
     cmdLine = cmdLine.append(appId);
 
@@ -1328,7 +1328,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1387,7 +1387,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1426,7 +1426,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_mirSessionStoppingEventIgnored)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1466,8 +1466,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 {
     using namespace ::testing;
     const QString appId("webapp");
-    quint64 procId1 = 5551;
-    quint64 procId2 = 5564;
+    const pid_t procId1 = 5551;
+    const pid_t procId2 = 5564;
     QByteArray cmdLine("/usr/bin/qt5/libexec/QtWebProcess");
 
     // Set up Mocks & signal watcher
@@ -1526,8 +1526,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
 {
     using namespace ::testing;
     const QString appId("webapp");
-    quint64 procId1 = 5551;
-    quint64 procId2 = 5564;
+    const pid_t procId1 = 5551;
+    const pid_t procId2 = 5564;
     QByteArray cmdLine("/usr/bin/qt5/libexec/QtWebProcess");
 
     // Set up Mocks & signal watcher
@@ -1594,7 +1594,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
 {
     using namespace ::testing;
     const QString appId("testAppId");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1642,7 +1642,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
 TEST_F(ApplicationManagerTests, threadedScreenshot)
 {
     using namespace testing;
-    quint64 procId1 = 5551;
+    const pid_t procId1 = 5551;
 
     std::mutex mutex;
     std::condition_variable cv;
@@ -1694,7 +1694,7 @@ TEST_F(ApplicationManagerTests, threadedScreenshot)
 TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
 {
     using namespace testing;
-    quint64 procId1 = 5551;
+    const pid_t procId1 = 5551;
 
     std::mutex mutex;
     std::condition_variable cv;
@@ -1737,123 +1737,6 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
     }
 }
 
-TEST_F(ApplicationManagerTests,lifecycle_exempt_appId_is_not_suspended)
-{
-    using namespace ::testing;
-    quint64 a_procId = 5921;
-    const QString appId("some_app");
-    QByteArray a_cmd("/usr/bin/app1");
-
-    ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
-
-    ON_CALL(appController,appIdHasProcessId(a_procId, appId)).WillByDefault(Return(true));
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-
-    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-
-    std::shared_ptr<mir::scene::Session> first_session = std::make_shared<MockSession>("Oo", a_procId);
-    std::shared_ptr<mir::scene::Session> second_session = std::make_shared<MockSession>("oO", a_procId);
-    {
-        bool authed = false;
-        applicationManager.authorizeSession(a_procId, authed);
-        ASSERT_EQ(authed, true);
-    }
-
-    onSessionStarting(first_session);
-    FakeMirSurface *aSurface = new FakeMirSurface;
-    onSessionCreatedSurface(first_session.get(), aSurface);
-    aSurface->drawFirstFrame();
-    onSessionStarting(second_session);
-
-    // Add to other apps to the list (Not "some_app")
-    QVariantList lifecycleExemptAppIds;
-    lifecycleExemptAppIds << "one_app" << "another_app";
-    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
-    settings.changed("lifecycleExemptAppids");
-
-    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_will_suspend));
-    the_app->setRequestedState(Application::RequestedSuspended);
-    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, the_app->internalState());
-
-    static_cast<qtmir::Session*>(the_app->session())->doSuspend();
-    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, the_app->internalState());
-    applicationManager.onProcessSuspended(the_app->appId());
-    ASSERT_EQ(Application::InternalState::Suspended, the_app->internalState());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(mir_lifecycle_state_resumed));
-    the_app->setRequestedState(Application::RequestedRunning);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-
-    // Now add "some_app" to the exception list
-    lifecycleExemptAppIds << "some_app";
-    ON_CALL(settings,get(_)).WillByDefault(Return(lifecycleExemptAppIds));
-    settings.changed("lifecycleExemptAppids");
-
-    EXPECT_EQ(Application::Running, the_app->state());
-
-    EXPECT_CALL(*(mir::scene::MockSession*)first_session.get(), set_lifecycle_state(_)).Times(0);
-    the_app->setRequestedState(Application::RequestedSuspended);
-
-    // And expect it to be running still
-    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
-
-    the_app->setRequestedState(Application::RequestedRunning);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
-}
-
-/*
- * Test lifecycle exempt applications have their wakelocks released when shell tries to suspend them
- */
-TEST_F(ApplicationManagerTests,lifecycleExemptAppsHaveWakelockReleasedOnAttemptedSuspend)
-{
-    using namespace ::testing;
-
-    const QString appId("com.ubuntu.music"); // member of lifecycle exemption list
-    const quint64 procId = 12345;
-
-    // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
-
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-            .Times(1)
-            .WillOnce(Return(true));
-
-    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    // App creates surface, focuses it so state is running
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
-
-    application->setRequestedState(Application::RequestedSuspended);
-
-    EXPECT_FALSE(sharedWakelock.enabled());
-    ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
-    EXPECT_EQ(Application::Running, application->state());
-}
-
 /*
  * Test that when user stops an application, application does not delete QML cache
  */
@@ -1861,7 +1744,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
 {
     using namespace ::testing;
     const QString appId("testAppId1234");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1900,7 +1783,7 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
 {
     using namespace ::testing;
     const QString appId("testAppId12345");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -1948,7 +1831,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
 {
     using namespace ::testing;
     const QString appId("testAppId123456");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());

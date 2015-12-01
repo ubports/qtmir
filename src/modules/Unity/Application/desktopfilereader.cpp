@@ -37,8 +37,9 @@ DesktopFileReader* DesktopFileReader::Factory::createInstance(const QString &app
 
 typedef GObjectScopedPointer<GAppInfo> GAppInfoPointer;
 
-struct DesktopFileReaderPrivate
+class DesktopFileReaderPrivate
 {
+public:
     DesktopFileReaderPrivate(DesktopFileReader *parent):
             q_ptr( parent )
     {}
@@ -223,6 +224,18 @@ bool DesktopFileReader::rotatesWindowContents() const
 
     if (!parseBoolean(d->getKey("X-Ubuntu-Rotates-Window-Contents"), result)) {
         qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Rotates-Window-Contents entry.";
+    }
+
+    return result;
+}
+
+bool DesktopFileReader::isTouchApp() const
+{
+    Q_D(const DesktopFileReader);
+    bool result;
+
+    if (!parseBoolean(d->getKey("X-Ubuntu-Touch"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Touch entry.";
     }
 
     return result;

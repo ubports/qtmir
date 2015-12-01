@@ -27,13 +27,16 @@
 
 // local
 #include "mirserver.h"
+#include "screencontroller.h"
 
 class QMirServer;
 class MirServerThread;
 
-struct QMirServerPrivate
+class QMirServerPrivate
 {
+public:
     QSharedPointer<MirServer> server;
+    QSharedPointer<ScreenController> screenController;
     MirServerThread *serverThread;
 };
 

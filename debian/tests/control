@@ -1,3 +1,5 @@
 Tests: run-tests
 Restrictions: build-needed
-Depends: @,
+Depends: qtdeclarative5-qtmir-plugin,
+         qtmir-desktop,
+         qtmir-tests,

@@ -68,7 +68,6 @@ public:
     enum class InternalState {
         Starting,
         Running,
-        RunningInBackground,
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
@@ -104,6 +103,7 @@ public:
     QColor splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
+    bool isTouchApp() const override;
 
     void setStage(Stage stage);
 
@@ -130,8 +130,6 @@ public:
 
     // for tests
     InternalState internalState() const { return m_state; }
-
-    static QStringList lifecycleExceptions;
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
@@ -169,7 +167,7 @@ private:
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
     QString m_longAppId;
-    qint64 m_pid;
+    pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;

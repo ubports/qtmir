@@ -103,7 +103,7 @@ protected:
 
     void touchEvent(QTouchEvent *event) override;
 
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
     void releaseResources() override;
 
@@ -112,8 +112,12 @@ private Q_SLOTS:
     void updateMirSurfaceSize();
 
     void updateMirSurfaceFocus(bool focused);
+    void updateMirSurfaceVisibility();
 
     void onActualSurfaceSizeChanged(const QSize &size);
+    void onCompositorSwappedBuffers();
+
+    void onWindowChanged(QQuickWindow *window);
 
 private:
     void ensureTextureProvider();
@@ -130,6 +134,7 @@ private:
             Qt::TouchPointStates touchPointStates);
 
     MirSurfaceInterface* m_surface;
+    QQuickWindow* m_window;
 
     QMutex m_mutex;
     MirTextureProvider *m_textureProvider;
