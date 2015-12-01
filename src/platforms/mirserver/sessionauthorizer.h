@@ -36,6 +36,7 @@ public:
 
     bool connection_is_allowed(mir::frontend::SessionCredentials const& creds) override;
     bool configure_display_is_allowed(mir::frontend::SessionCredentials const& creds) override;
+    bool set_base_display_configuration_is_allowed(mir::frontend::SessionCredentials const& creds) override;
     bool screencast_is_allowed(mir::frontend::SessionCredentials const& creds) override;
     bool prompt_session_is_allowed(mir::frontend::SessionCredentials const& creds) override;
 
