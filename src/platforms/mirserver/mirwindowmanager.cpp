@@ -63,6 +63,11 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
+    void handle_raise_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     void modify_surface(
         const std::shared_ptr<mir::scene::Session>&,
         const std::shared_ptr<mir::scene::Surface>& surface,
@@ -142,6 +147,13 @@ bool MirWindowManagerImpl::handle_touch_event(MirTouchEvent const* /*event*/)
 bool MirWindowManagerImpl::handle_pointer_event(MirPointerEvent const* /*event*/)
 {
     return false;
+}
+
+void handle_raise_surface(
+    std::shared_ptr<mir::scene::Session> const& /*session*/,
+    std::shared_ptr<mir::scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
 }
 
 int MirWindowManagerImpl::set_surface_attribute(
