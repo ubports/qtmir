@@ -19,6 +19,7 @@
 #include "mirserver.h"
 
 // local
+#include "mircursorimages.h"
 #include "mirwindowmanager.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
@@ -81,6 +82,11 @@ MirServer::MirServer(int argc, char const* argv[],
     override_the_compositor([]
         {
             return std::make_shared<QtCompositor>();
+        });
+
+    override_the_cursor_images([]
+        {
+            return std::make_shared<qtmir::MirCursorImages>();
         });
 
     override_the_input_dispatcher([&screenController]

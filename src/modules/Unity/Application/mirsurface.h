@@ -20,6 +20,7 @@
 #include "mirsurfaceinterface.h"
 
 // Qt
+#include <QCursor>
 #include <QMutex>
 #include <QPointer>
 #include <QSharedPointer>
@@ -116,6 +117,8 @@ public:
 
     QString appId() const override;
 
+    QCursor cursor() const override;
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
@@ -125,6 +128,7 @@ private Q_SLOTS:
     void onFramesPostedObserved();
     void onSessionDestroyed();
     void emitSizeChanged();
+    void setCursor(const QCursor &cursor);
 
 private:
     void syncSurfaceSizeWithItemSize();
@@ -157,6 +161,8 @@ private:
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 
     QSize m_size;
+
+    QCursor m_cursor;
 };
 
 } // namespace qtmir
