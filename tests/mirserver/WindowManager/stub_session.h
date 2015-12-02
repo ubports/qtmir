@@ -43,7 +43,6 @@ struct StubSession : mir::scene::Session
     mir::frontend::SurfaceId create_surface(
         mir::scene::SurfaceCreationParameters const& params,
         std::shared_ptr<mir::frontend::EventSink> const& sink) override;
-
     void destroy_surface(mir::frontend::SurfaceId surface) override;
     void destroy_surface(std::weak_ptr<mir::scene::Surface> const& surface) override;
 
@@ -55,6 +54,7 @@ struct StubSession : mir::scene::Session
     mir::frontend::BufferStreamId create_buffer_stream(mir::graphics::BufferProperties const& props) override;
     void destroy_buffer_stream(mir::frontend::BufferStreamId stream) override;
     void configure_streams(mir::scene::Surface& surface, std::vector<mir::shell::StreamSpecification> const& config) override;
+    void destroy_surface(std::weak_ptr<mir::scene::Surface> const& surface) override;
 };
 
 #endif //QPAMIRSERVER_STUBSESSION_H

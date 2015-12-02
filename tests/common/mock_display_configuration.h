@@ -29,6 +29,7 @@ public:
 
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mir::graphics::DisplayConfigurationOutput const&)>));
     MOCK_METHOD1(for_each_output, void(std::function<void(mir::graphics::UserDisplayConfigurationOutput&)>));
+    MOCK_CONST_METHOD0(clone, std::unique_ptr<mir::graphics::DisplayConfiguration>());
 
     MOCK_CONST_METHOD0(valid, bool());
     MOCK_CONST_METHOD0(clone, std::unique_ptr<mir::graphics::DisplayConfiguration>());
