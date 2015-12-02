@@ -86,6 +86,10 @@ mir::frontend::SurfaceId StubSession::create_surface(
     return mir::frontend::SurfaceId{0};
 }
 
+void StubSession::destroy_surface(mir::frontend::SurfaceId /*surface*/)
+{
+}
+
 void StubSession::destroy_surface(std::weak_ptr<mir::scene::Surface> const& /*surface*/)
 {
 }
