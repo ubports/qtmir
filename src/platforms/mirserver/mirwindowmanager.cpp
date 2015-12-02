@@ -149,9 +149,9 @@ bool MirWindowManagerImpl::handle_pointer_event(MirPointerEvent const* /*event*/
     return false;
 }
 
-void handle_raise_surface(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    std::shared_ptr<mir::scene::Surface> const& /*surface*/,
+void MirWindowManagerImpl::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& /*surface*/,
     uint64_t /*timestamp*/)
 {
 }
