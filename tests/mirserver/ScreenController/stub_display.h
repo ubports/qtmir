@@ -38,6 +38,12 @@ public:
         }
     }
 
+    
+    std::unique_ptr<mg::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<MockDisplayConfiguration>();
+    }
+
 private:
     const std::vector<mg::DisplayConfigurationOutput> m_config;
 };
