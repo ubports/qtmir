@@ -42,7 +42,7 @@ struct MockDisplayLayout : msh::DisplayLayout
 {
     MOCK_METHOD1(clip_to_output, void (Rectangle& rect));
     MOCK_METHOD1(size_to_output, void (Rectangle& rect));
-    MOCK_METHOD2(place_in_output, void (mir::graphics::DisplayConfigurationOutputId id, Rectangle& rect));
+    MOCK_METHOD2(place_in_output, bool (mir::graphics::DisplayConfigurationOutputId id, Rectangle& rect));
 };
 
 struct MockSurface : StubSurface
