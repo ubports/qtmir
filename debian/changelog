@@ -1,3 +1,10 @@
+qtmir (0.4.7-0ubuntu3) UNRELEASED; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added Application::setStage
+
+ -- Nick Dedekind <nick.dedekind@canonical.com>  Thu, 03 Dec 2015 09:05:41 +0000
+
 qtmir (0.4.6+16.04.20151125-0ubuntu2) xenial; urgency=medium
 
   * Rebuild against Qt 5.5.1.
