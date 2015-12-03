@@ -73,6 +73,11 @@ void SurfaceObserver::renamed(char const * name)
     Q_EMIT nameChanged(QString::fromUtf8(name));
 }
 
+void SurfaceObserver::cursor_image_removed()
+{
+    Q_EMIT cursorChanged(QCursor());
+}
+
 void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
 {
     if (m_listener) {
