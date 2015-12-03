@@ -52,6 +52,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
+    , m_exemptFromLifecycle(false)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
 
@@ -78,6 +79,7 @@ Application::~Application()
     switch (m_state) {
     case InternalState::Starting:
     case InternalState::Running:
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
         wipeQMLCache();
@@ -209,6 +211,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "Starting";
     case InternalState::Running:
         return "Running";
+    case InternalState::RunningInBackground:
+        return "RunningInBackground";
     case InternalState::SuspendingWaitSession:
         return "SuspendingWaitSession";
     case InternalState::SuspendingWaitProcess:
@@ -277,6 +281,7 @@ Application::State Application::state() const
     case InternalState::Starting:
         return Starting;
     case InternalState::Running:
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Closing:
@@ -327,6 +332,7 @@ void Application::applyRequestedRunning()
     case InternalState::Running:
         // already where it's wanted to be
         break;
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::Suspended:
         resume();
@@ -359,6 +365,7 @@ void Application::applyRequestedSuspended()
             Q_ASSERT(m_processState == ProcessUnknown);
         }
         break;
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
@@ -408,6 +415,7 @@ void Application::close()
     case InternalState::Running:
         setInternalState(InternalState::Closing);
         break;
+    case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
@@ -452,6 +460,7 @@ void Application::setSession(SessionInterface *newSession)
         switch (m_state) {
         case InternalState::Starting:
         case InternalState::Running:
+        case InternalState::RunningInBackground:
         case InternalState::Closing:
             m_session->resume();
             break;
@@ -509,6 +518,9 @@ void Application::setInternalState(Application::InternalState state)
         case InternalState::Starting:
         case InternalState::Running:
             acquireWakelock();
+            break;
+        case InternalState::RunningInBackground:
+            releaseWakelock();
             break;
         case InternalState::Suspended:
             releaseWakelock();
@@ -606,8 +618,15 @@ void Application::suspend()
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
-    setInternalState(InternalState::SuspendingWaitSession);
-    m_session->suspend();
+    if (exemptFromLifecycle()) {
+        // There's no need to keep the wakelock as the process is never suspended
+        // and thus has no cleanup to perform when (for example) the display is
+        // blanked.
+        setInternalState(InternalState::RunningInBackground);
+    } else {
+        setInternalState(InternalState::SuspendingWaitSession);
+        m_session->suspend();
+    }
 }
 
 void Application::resume()
@@ -622,6 +641,8 @@ void Application::resume()
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setInternalState(InternalState::Running);
         m_session->resume();
+    } else if (m_state == InternalState::RunningInBackground) {
+        setInternalState(InternalState::Running);
     }
 }
 
@@ -637,6 +658,22 @@ void Application::respawn()
 bool Application::isTouchApp() const
 {
     return m_desktopData->isTouchApp();
+}
+
+bool Application::exemptFromLifecycle() const
+{
+    return m_exemptFromLifecycle;
+}
+
+void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
+{
+    if (m_exemptFromLifecycle != exemptFromLifecycle)
+    {
+        // We don't adjust current suspension state, we only care about exempt
+        // status going into a suspend.
+        m_exemptFromLifecycle = exemptFromLifecycle;
+        Q_EMIT exemptFromLifecycleChanged(m_exemptFromLifecycle);
+    }
 }
 
 QString Application::longAppId() const

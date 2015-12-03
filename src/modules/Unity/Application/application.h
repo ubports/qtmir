@@ -68,6 +68,7 @@ public:
     enum class InternalState {
         Starting,
         Running,
+        RunningInBackground,
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
@@ -104,6 +105,8 @@ public:
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
     bool isTouchApp() const override;
+    bool exemptFromLifecycle() const override;
+    void setExemptFromLifecycle(bool) override;
 
     void setStage(Stage stage);
 
@@ -178,6 +181,7 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    bool m_exemptFromLifecycle;
 
     friend class ApplicationManager;
     friend class SessionManager;

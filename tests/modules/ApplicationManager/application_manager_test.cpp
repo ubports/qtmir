@@ -1737,6 +1737,114 @@ TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
     }
 }
 
+TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    const quint64 procId = 12345;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    auto the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // App creates surface, focuses it so state is running
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    // Test normal lifecycle management as a control group
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
+    ASSERT_EQ(Application::ProcessState::ProcessRunning, the_app->processState());
+
+    EXPECT_CALL(*(mir::scene::MockSession*)session.get(), set_lifecycle_state(mir_lifecycle_state_will_suspend));
+    the_app->setRequestedState(Application::RequestedSuspended);
+    ASSERT_EQ(Application::InternalState::SuspendingWaitSession, the_app->internalState());
+
+    static_cast<qtmir::Session*>(the_app->session())->doSuspend();
+    ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, the_app->internalState());
+    applicationManager.onProcessSuspended(the_app->appId());
+    ASSERT_EQ(Application::InternalState::Suspended, the_app->internalState());
+
+    EXPECT_CALL(*(mir::scene::MockSession*)session.get(), set_lifecycle_state(mir_lifecycle_state_resumed));
+    the_app->setRequestedState(Application::RequestedRunning);
+
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    // Now mark the app as exempt from lifecycle management and retest
+    the_app->setExemptFromLifecycle(true);
+
+    EXPECT_EQ(Application::Running, the_app->state());
+
+    EXPECT_CALL(*(mir::scene::MockSession*)session.get(), set_lifecycle_state(_)).Times(0);
+    the_app->setRequestedState(Application::RequestedSuspended);
+
+    // And expect it to be running still
+    ASSERT_EQ(Application::InternalState::RunningInBackground, the_app->internalState());
+
+    the_app->setRequestedState(Application::RequestedRunning);
+
+    EXPECT_EQ(Application::Running, the_app->state());
+    ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
+}
+
+/*
+ * Test lifecycle exempt applications have their wakelocks released when shell tries to suspend them
+ */
+TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttemptedSuspend)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    const quint64 procId = 12345;
+
+    // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+            .Times(1)
+            .WillOnce(Return(true));
+
+    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    // App creates surface, focuses it so state is running
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    // Mark app as exempt
+    application->setExemptFromLifecycle(true);
+
+    application->setRequestedState(Application::RequestedSuspended);
+
+    EXPECT_FALSE(sharedWakelock.enabled());
+    ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
+    EXPECT_EQ(Application::Running, application->state());
+}
+
 /*
  * Test that when user stops an application, application does not delete QML cache
  */
