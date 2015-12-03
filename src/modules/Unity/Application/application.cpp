@@ -520,8 +520,6 @@ void Application::setInternalState(Application::InternalState state)
             acquireWakelock();
             break;
         case InternalState::RunningInBackground:
-            releaseWakelock();
-            break;
         case InternalState::Suspended:
             releaseWakelock();
             break;
