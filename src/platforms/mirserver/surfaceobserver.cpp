@@ -60,7 +60,7 @@ void SurfaceObserver::setListener(QObject *listener)
     }
 }
 
-void SurfaceObserver::frame_posted(int /*frames_available*/)
+void SurfaceObserver::frame_posted(int /*frames_available*/, mir::geometry::Size const& /*size*/)
 {
     m_framesPosted = true;
     if (m_listener) {
