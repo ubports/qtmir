@@ -32,6 +32,5 @@ public:
     MOCK_CONST_METHOD0(clone, std::unique_ptr<mir::graphics::DisplayConfiguration>());
 
     MOCK_CONST_METHOD0(valid, bool());
-    MOCK_CONST_METHOD0(clone, std::unique_ptr<mir::graphics::DisplayConfiguration>());
 };
 #endif // MOCK_DISPLAY_CONFIGURATION_H
