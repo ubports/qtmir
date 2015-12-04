@@ -570,7 +570,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
         if (hDelta != 0 || vDelta != 0) {
-            const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
+            const QPoint angleDelta = QPoint(hDelta, vDelta);
             mQtWindowSystem->handleWheelEvent(timestamp.count(), angleDelta, modifiers);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
