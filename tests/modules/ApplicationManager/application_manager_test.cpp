@@ -50,7 +50,7 @@ public:
 
         SessionInterface* qmlSession = sessionManager.findSession(mirSession);
         if (qmlSession) {
-            qmlSession->setSurface(qmlSurface);
+            qmlSession->registerSurface(qmlSurface);
         }
 
         // I assume that applicationManager ignores the mirSurface parameter, so sending

@@ -52,14 +52,17 @@ public:
     //getters
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceInterface* surface() const override;
+    MirSurfaceInterface* lastSurface() const override;
+    const ObjectListModel<MirSurfaceInterface>* surfaces() const override;
     SessionInterface* parentSession() const override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
 
     void setApplication(unity::shell::application::ApplicationInfoInterface* item) override;
-    void setSurface(MirSurfaceInterface* surface) override;
+
+    void registerSurface(MirSurfaceInterface* surface) override;
+    void removeSurface(MirSurfaceInterface* surface) override;
 
     void suspend() override;
     void resume() override;
@@ -89,7 +92,6 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void updateFullscreenProperty();
-    void onFirstSurfaceFrameDrawn();
 
 private:
     void setParentSession(Session* session);
@@ -98,9 +100,11 @@ private:
 
     void stopPromptSessions();
 
+    void appendSurface(MirSurfaceInterface* surface);
+
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
-    MirSurfaceInterface* m_surface;
+    ObjectListModel<MirSurfaceInterface> m_surfaces;
     SessionInterface* m_parentSession;
     SessionModel* m_children;
     bool m_fullscreen;
