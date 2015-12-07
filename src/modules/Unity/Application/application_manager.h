@@ -112,10 +112,10 @@ public:
     bool isEmpty() const { return rowCount() == 0; }
 
     const QList<Application*> &list() const { return m_applications; }
-    qtmir::Application* findApplicationWithPid(const qint64 pid);
+    qtmir::Application* findApplicationWithPid(const pid_t pid);
 
 public Q_SLOTS:
-    void authorizeSession(const quint64 pid, bool &authorized);
+    void authorizeSession(const pid_t pid, bool &authorized);
 
     void onSessionStarting(std::shared_ptr<mir::scene::Session> const& session);
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);

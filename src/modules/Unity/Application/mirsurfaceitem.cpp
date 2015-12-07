@@ -67,7 +67,7 @@ public:
         return t.data();
     }
 
-    bool smooth;
+    bool smooth{false};
 
     void releaseTexture() {
         t.reset();
@@ -84,6 +84,7 @@ private:
 MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     : MirSurfaceItemInterface(parent)
     , m_surface(nullptr)
+    , m_window(nullptr)
     , m_textureProvider(nullptr)
     , m_lastTouchEvent(nullptr)
     , m_lastFrameNumberRendered(nullptr)
@@ -107,6 +108,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
+    connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -614,10 +616,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         }
 
         m_surface->unregisterView((qintptr)this);
-
-        if (!m_surface->isBeingDisplayed() && window()) {
-            disconnect(window(), nullptr, m_surface, nullptr);
-        }
+        unsetCursor();
     }
 
     m_surface = surface;
@@ -632,11 +631,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
-
-        if (window()) {
-            connect(window(), &QQuickWindow::frameSwapped, m_surface, &MirSurfaceInterface::onCompositorSwappedBuffers,
-                (Qt::ConnectionType) (Qt::DirectConnection | Qt::UniqueConnection));
-        }
+        connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::setCursor);
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
@@ -645,6 +640,11 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
+
+        // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
+        if (m_surface->cursor().shape() != Qt::ArrowCursor) {
+            setCursor(m_surface->cursor());
+        }
 
         if (m_orientationAngle) {
             m_surface->setOrientationAngle(*m_orientationAngle);
@@ -664,6 +664,25 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     update();
 
     Q_EMIT surfaceChanged(m_surface);
+}
+
+void MirSurfaceItem::onCompositorSwappedBuffers()
+{
+    if (Q_LIKELY(m_surface)) {
+        m_surface->onCompositorSwappedBuffers();
+    }
+}
+
+void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
+{
+    if (m_window) {
+        disconnect(m_window, nullptr, this, nullptr);
+    }
+    m_window = window;
+    if (m_window) {
+        connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
+            Qt::DirectConnection);
+    }
 }
 
 void MirSurfaceItem::releaseResources()

@@ -20,6 +20,7 @@
 
 #include <QLoggingCategory>
 #include <QTest>
+#include <QSignalSpy>
 
 // the test subject
 #include <Unity/Application/mirsurface.h>
@@ -27,6 +28,7 @@
 // tests/modules/common
 #include <fake_session.h>
 #include <mock_surface.h>
+#include <surfaceobserver.h>
 
 using namespace qtmir;
 
@@ -41,6 +43,33 @@ public:
         QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));        
     }
 };
+
+TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
+{
+    using namespace testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    auto fakeSession = new FakeSession();
+    auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
+    auto surfaceObserver = std::make_shared<SurfaceObserver>();
+
+    EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
+        .WillRepeatedly(Return(1));
+
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver);
+    surfaceObserver->frame_posted(1);
+
+    QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
+    QTest::qWait(300);
+    ASSERT_TRUE(spyFrameDropped.count() > 0);
+
+    delete fakeSession;
+    delete surface;
+}
+
 
 TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
 {

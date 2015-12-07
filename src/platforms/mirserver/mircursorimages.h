@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,23 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_PROC_INFO_H
-#define MOCK_PROC_INFO_H
+#ifndef QTMIR_MIRCURSORIMAGES_H_
+#define QTMIR_MIRCURSORIMAGES_H_
 
-#include <Unity/Application/proc_info.h>
+#include <mir/input/cursor_images.h>
 
-#include <gmock/gmock.h>
+namespace qtmir {
 
-namespace testing
+class MirCursorImages : public mir::input::CursorImages
 {
-struct MockProcInfo : public qtmir::ProcInfo
-{
-    MOCK_METHOD1(command_line, QByteArray(pid_t));
-    std::unique_ptr<CommandLine> commandLine(pid_t pid)
-    {
-      return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
-    }
+public:
+    std::shared_ptr<mir::graphics::CursorImage> image(const std::string &cursor_name,
+            const mir::geometry::Size &size) override;
 };
+
 }
 
-#endif // MOCK_PROC_INFO_H
+#endif // QTMIR_MIRCURSORIMAGES_H_

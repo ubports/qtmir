@@ -5,6 +5,70 @@ qtmir (0.4.7) UNRELEASED; urgency=medium
 
  -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 25 Sep 2015 09:33:39 +0100
 
+qtmir (0.4.6+16.04.20151125-0ubuntu2) xenial; urgency=medium
+
+  * Rebuild against Qt 5.5.1.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Mon, 30 Nov 2015 16:16:06 +0200
+
+qtmir (0.4.6+16.04.20151125-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Forward Mir mouse wheel events to the shell cursor (LP: #1497091)
+  * Implemented support for cursors set by client surfaces
+  * Revert revision 415
+
+  [ Gerry Boland ]
+  * Manage frameSwapped signal/slot connection with MirSurface more
+    strictly to avoid crash. (LP: #1517571)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 25 Nov 2015 15:38:57 +0000
+
+qtmir (0.4.6+16.04.20151119-0ubuntu1) xenial; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Build with clang (tests/gmock fails and is unfixable on our side i'd
+    say)
+  * Enable Efficient String Construction by default
+
+  [ Gerry Boland ]
+  * Fix use of uninitialized variable
+  * Use pid_t for PIDs.
+
+  [ Loïc Molinari ]
+  * Ensured Mir surface items with size less than or equal to zero are
+    not rendered, as it's usually done for standard QtQuick items.
+
+  [ Michał Sawicz ]
+  * Build with clang (tests/gmock fails and is unfixable on our side i'd
+    say)
+
+  [ Nick Dedekind ]
+  * Fix a crash when dropping a surface frame before Qt draws a surface
+    item. (LP: #1517139)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 19 Nov 2015 12:56:17 +0000
+
+qtmir (0.4.6+16.04.20151113-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Update surface textures when dropping frames. (LP: #1515356)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Fri, 13 Nov 2015 16:42:38 +0000
+
+qtmir (0.4.6+16.04.20151112-0ubuntu1) xenial; urgency=medium
+
+  * Fix armhf builds on Xenial by using -std=gnu99 instead of c99
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 12 Nov 2015 16:26:27 +0000
+
+qtmir (0.4.6+16.04.20151110-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Reverted occlusion detection (lp#1514556) (LP: #1514556)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Tue, 10 Nov 2015 09:19:59 +0000
+
 qtmir (0.4.6+16.04.20151102-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]

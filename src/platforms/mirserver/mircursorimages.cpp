@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,23 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_PROC_INFO_H
-#define MOCK_PROC_INFO_H
+#include "mircursorimages.h"
+#include "namedcursor.h"
 
-#include <Unity/Application/proc_info.h>
+using namespace qtmir;
 
-#include <gmock/gmock.h>
-
-namespace testing
+std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::string &cursor_name,
+        const mir::geometry::Size&)
 {
-struct MockProcInfo : public qtmir::ProcInfo
-{
-    MOCK_METHOD1(command_line, QByteArray(pid_t));
-    std::unique_ptr<CommandLine> commandLine(pid_t pid)
-    {
-      return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
-    }
-};
+    // We are not responsible for loading cursors. This is left for shell to do as it's drawing its own QML cursor.
+    // So here we work around Mir API by storing just the cursor name in the CursorImage.
+    return std::make_shared<NamedCursor>(cursor_name.c_str());
 }
-
-#endif // MOCK_PROC_INFO_H

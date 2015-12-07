@@ -173,7 +173,7 @@ private:
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
     QString m_longAppId;
-    qint64 m_pid;
+    pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;

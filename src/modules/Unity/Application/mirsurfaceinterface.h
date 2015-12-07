@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QCursor>
 #include <QSharedPointer>
 #include <QTouchEvent>
 
@@ -83,6 +84,11 @@ public:
 
     virtual QString appId() const = 0;
 
+    virtual QCursor cursor() const = 0;
+
+Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
@@ -90,6 +96,7 @@ Q_SIGNALS:
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
+    void frameDropped();
 };
 
 } // namespace qtmir
