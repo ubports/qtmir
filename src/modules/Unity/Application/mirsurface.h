@@ -35,7 +35,10 @@
 #include <mir/scene/surface.h>
 #include <mir_toolkit/common.h>
 
-namespace mir { namespace shell { class Shell; }}
+namespace mir {
+    namespace shell { class Shell; }
+    namespace graphics { class Buffer; }
+}
 
 class SurfaceObserver;
 
@@ -89,6 +92,8 @@ public:
     void unregisterView(qintptr viewId) override;
     void setViewVisibility(qintptr viewId, bool visible) override;
 
+    void consumeBuffer() override;
+
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override;
     QSGTexture *weakTexture() const override { return m_texture.data(); }
@@ -120,7 +125,9 @@ public:
     QCursor cursor() const override;
 
 public Q_SLOTS:
+    // methods called from the rendering (scene graph) thread:
     void onCompositorSwappedBuffers() override;
+    // end of methods called from the rendering (scene graph) thread
 
 private Q_SLOTS:
     void dropPendingBuffer();
@@ -163,6 +170,8 @@ private:
     QSize m_size;
 
     QCursor m_cursor;
+
+    std::shared_ptr<mir::graphics::Buffer> m_pendingBuffer;
 };
 
 } // namespace qtmir

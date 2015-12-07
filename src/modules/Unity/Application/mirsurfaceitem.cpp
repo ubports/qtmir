@@ -92,6 +92,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     , m_surfaceHeight(0)
     , m_orientationAngle(nullptr)
     , m_consumesInput(false)
+    , m_fillMode(Stretch)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::MirSurfaceItem";
 
@@ -227,7 +228,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
-        QTimer::singleShot(0, this, SLOT(update()));
+        QTimer::singleShot(0, this, SLOT(polishAndUpdate()));
     }
 
     m_textureProvider->smooth = smooth();
@@ -240,15 +241,31 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-        node->setSubSourceRect(QRectF(0, 0, 1, 1));
     } else {
         if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber())) {
             node->markDirty(QSGNode::DirtyMaterial);
         }
     }
 
-    node->setTargetRect(QRectF(0, 0, width(), height()));
-    node->setInnerTargetRect(QRectF(0, 0, width(), height()));
+    if (m_fillMode == PadOrCrop) {
+        const QSize &textureSize = m_textureProvider->texture()->textureSize();
+
+        QRectF targetRect;
+        targetRect.setWidth(qMin(width(), static_cast<qreal>(textureSize.width())));
+        targetRect.setHeight(qMin(height(), static_cast<qreal>(textureSize.height())));
+
+        qreal u = targetRect.width() / textureSize.width();
+        qreal v = targetRect.height() / textureSize.height();
+        node->setSubSourceRect(QRectF(0, 0, u, v));
+
+        node->setTargetRect(targetRect);
+        node->setInnerTargetRect(targetRect);
+    } else {
+        // Stretch
+        node->setSubSourceRect(QRectF(0, 0, 1, 1));
+        node->setTargetRect(QRectF(0, 0, width(), height()));
+        node->setInnerTargetRect(QRectF(0, 0, width(), height()));
+    }
 
     node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
     node->setAntialiasing(antialiasing());
@@ -626,7 +643,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
-        connect(m_surface, &MirSurfaceInterface::framesPosted, this, &QQuickItem::update);
+        connect(m_surface, &MirSurfaceInterface::framesPosted, this, &MirSurfaceItem::polishAndUpdate);
 
         connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
@@ -728,6 +745,33 @@ void MirSurfaceItem::setSurfaceHeight(int value)
         scheduleMirSurfaceSizeUpdate();
         Q_EMIT surfaceHeightChanged(value);
     }
+}
+
+MirSurfaceItem::FillMode MirSurfaceItem::fillMode() const
+{
+    return m_fillMode;
+}
+
+void MirSurfaceItem::setFillMode(FillMode value)
+{
+    if (m_fillMode != value) {
+        m_fillMode = value;
+        Q_EMIT fillModeChanged(m_fillMode);
+    }
+}
+
+void MirSurfaceItem::polishAndUpdate()
+{
+    polish();
+    update();
+}
+
+void MirSurfaceItem::updatePolish()
+{
+    if (!m_surface || !m_surface->live()) {
+        return;
+    }
+    m_surface->consumeBuffer();
 }
 
 } // namespace qtmir
