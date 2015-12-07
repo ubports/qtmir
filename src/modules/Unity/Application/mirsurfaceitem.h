@@ -68,6 +68,9 @@ public:
     int surfaceHeight() const override;
     void setSurfaceHeight(int value) override;
 
+    FillMode fillMode() const override;
+    void setFillMode(FillMode value) override;
+
     ////////
     // QQuickItem
 
@@ -107,6 +110,8 @@ protected:
 
     void releaseResources() override;
 
+    void updatePolish() override;
+
 private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
@@ -118,6 +123,8 @@ private Q_SLOTS:
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
+
+    void polishAndUpdate();
 
 private:
     void ensureTextureProvider();
@@ -168,6 +175,8 @@ private:
     Mir::OrientationAngle *m_orientationAngle;
 
     bool m_consumesInput;
+
+    FillMode m_fillMode;
 };
 
 } // namespace qtmir

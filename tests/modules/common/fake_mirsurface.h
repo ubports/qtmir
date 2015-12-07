@@ -142,6 +142,8 @@ public:
         updateVisibility();
     }
 
+    void consumeBuffer() override {}
+
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture() override { return QSharedPointer<QSGTexture>(); }
     QSGTexture *weakTexture() const override { return nullptr; }
