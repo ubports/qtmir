@@ -66,6 +66,8 @@ public:
 
     virtual void setFocus(bool focus) = 0;
 
+    virtual void close() = 0;
+
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QMouseEvent *event) = 0;

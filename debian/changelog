@@ -1,3 +1,10 @@
+qtmir (0.4.7) UNRELEASED; urgency=medium
+
+  * [ Nick Dedekind ]
+  * Request app closing rather than killing.
+
+ -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 25 Sep 2015 09:33:39 +0100
+
 qtmir (0.4.6+16.04.20151125-0ubuntu2) xenial; urgency=medium
 
   * Rebuild against Qt 5.5.1.

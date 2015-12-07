@@ -140,6 +140,7 @@ Q_SIGNALS:
     void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
+    void stopProcessRequested();
     void suspendProcessRequested();
     void resumeProcessRequested();
     void stopped();
@@ -148,6 +149,9 @@ private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
+
+protected:
+    void timerEvent(QTimerEvent *event);
 
 private:
 
@@ -161,11 +165,13 @@ private:
     void wipeQMLCache();
     void suspend();
     void resume();
+    void stop();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
     void applyRequestedRunning();
     void applyRequestedSuspended();
+    void doClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
@@ -181,6 +187,7 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    int m_closeTimer;
     bool m_exemptFromLifecycle;
 
     friend class ApplicationManager;

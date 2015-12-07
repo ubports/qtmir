@@ -24,7 +24,11 @@
 #include <unity/shell/application/ApplicationInfoInterface.h>
 
 // local
+#include "objectlistmodel.h"
 #include "sessionmodel.h"
+
+// Qt
+#include <QQmlListProperty>
 
 namespace mir {
     namespace scene {
@@ -39,7 +43,12 @@ class MirSurfaceInterface;
 
 class SessionInterface : public QObject {
     Q_OBJECT
-    Q_PROPERTY(MirSurfaceInterface* surface READ surface NOTIFY surfaceChanged)
+
+    // FIXME: Remove this once unity8 starts trully supporting multiple surfaces per applicaton.
+    //        Ie, remove this once untiy8 moves from using this property to using the surfaces one.
+    Q_PROPERTY(MirSurfaceInterface* lastSurface READ lastSurface NOTIFY lastSurfaceChanged);
+
+    Q_PROPERTY(const ObjectListModel<MirSurfaceInterface>* surfaces READ surfaces CONSTANT);
     Q_PROPERTY(unity::shell::application::ApplicationInfoInterface* application READ application NOTIFY applicationChanged DESIGNABLE false)
     Q_PROPERTY(SessionInterface* parentSession READ parentSession NOTIFY parentSessionChanged DESIGNABLE false)
     Q_PROPERTY(SessionModel* childSessions READ childSessions DESIGNABLE false CONSTANT)
@@ -62,7 +71,8 @@ public:
     //getters
     virtual QString name() const = 0;
     virtual unity::shell::application::ApplicationInfoInterface* application() const = 0;
-    virtual MirSurfaceInterface* surface() const = 0;
+    virtual MirSurfaceInterface* lastSurface() const = 0;
+    virtual const ObjectListModel<MirSurfaceInterface>* surfaces() const = 0;
     virtual SessionInterface* parentSession() const = 0;
     virtual SessionModel* childSessions() const = 0;
     virtual State state() const = 0;
@@ -73,13 +83,15 @@ public:
 
     // For MirSurface and MirSurfaceManager use
 
-    virtual void setSurface(MirSurfaceInterface* surface) = 0;
+    virtual void registerSurface(MirSurfaceInterface* surface) = 0;
+    virtual void removeSurface(MirSurfaceInterface* surface) = 0;
 
     // For Application use
 
     virtual void setApplication(unity::shell::application::ApplicationInfoInterface* item) = 0;
     virtual void suspend() = 0;
     virtual void resume() = 0;
+    virtual void close() = 0;
     virtual void stop() = 0;
 
     // For SessionManager use
@@ -98,16 +110,17 @@ public:
     virtual void removePromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) = 0;
 
 Q_SIGNALS:
-    void surfaceChanged(MirSurfaceInterface*);
     void parentSessionChanged(SessionInterface*);
     void applicationChanged(unity::shell::application::ApplicationInfoInterface* application);
     void stateChanged(State state);
     void fullscreenChanged(bool fullscreen);
     void liveChanged(bool live);
+    void lastSurfaceChanged(MirSurfaceInterface* surface);
 };
 
 } // namespace qtmir
 
 Q_DECLARE_METATYPE(qtmir::SessionInterface*)
+Q_DECLARE_METATYPE(qtmir::ObjectListModel<qtmir::MirSurfaceInterface>*)
 
 #endif // SESSION_INTERFACE_H

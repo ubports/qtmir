@@ -50,7 +50,7 @@ public:
 
         SessionInterface* qmlSession = sessionManager.findSession(mirSession);
         if (qmlSession) {
-            qmlSession->setSurface(qmlSurface);
+            qmlSession->registerSurface(qmlSurface);
         }
 
         // I assume that applicationManager ignores the mirSurface parameter, so sending
@@ -1977,4 +1977,159 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
 
     EXPECT_EQ(0, applicationManager.count());
     EXPECT_TRUE(dir.exists());
+}
+
+/*
+ * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
+ */
+TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    QSignalSpy spy(surface, SIGNAL(closeRequested()));
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+
+    EXPECT_EQ(1, spy.count());
+}
+
+
+//  * Test that if there is no surface available to the app when it is stopped, that it is forced to close.
+TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+
+    QSignalSpy spy(app, SIGNAL(destroyed(QObject*)));
+    QObject::connect(app, &QObject::destroyed, app, [&qtApp](){ qtApp.quit(); });
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    qtApp.exec();
+    EXPECT_EQ(1, spy.count());
+}
+
+/*
+ * Test that if an application is started while it is still attempting to close, it is queued to start again.
+ */
+TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
+
+    // // Set up Mocks & signal watcher
+    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
+    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
+    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+
+    EXPECT_EQ(nullptr, applicationManager.startApplication(appId, ApplicationManager::NoFlag));
+
+    QSignalSpy spy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
+    applicationManager.onProcessStopped(appId);
+
+    QObject::connect(&applicationManager, &ApplicationManager::applicationAdded,
+                     &applicationManager, [&qtApp, appId](const QString& startedApp) {
+        if (startedApp == appId) {
+            qtApp.quit();
+        }
+    });
+
+    qtApp.exec();
+    EXPECT_EQ(1, spy.count());
+}
+
+/*
+ * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
+ */
+TEST_F(ApplicationManagerTests,suspendedApplicationResumesClosesAndDeletes)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
+
+    // Suspend the application.
+    suspend(app);
+    EXPECT_EQ(Application::InternalState::Suspended, app->internalState());
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
+    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
+}
+
+/*
+ * Test that a application which fails to close will eventually be forceable closed.
+ */
+TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication)
+{
+    using namespace ::testing;
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+    Application* app = startApplication(procId, appId);
+    std::shared_ptr<mir::scene::Session> session = app->session()->session();
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+
+    QSignalSpy spy(app, SIGNAL(destroyed(QObject*)));
+    QObject::connect(app, &QObject::destroyed, app, [&qtApp](){ qtApp.quit(); });
+
+    // Stop app
+    applicationManager.stopApplication(appId);
+    qtApp.exec();
+    EXPECT_EQ(1, spy.count());
 }
