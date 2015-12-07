@@ -15,6 +15,7 @@
  */
 
 #include <Unity/Application/session_interface.h>
+#include <QDebug>
 
 #ifndef QTMIR_FAKE_SESSION_H
 #define QTMIR_FAKE_SESSION_H
@@ -71,6 +72,9 @@ public:
     }
     void stop() override {
         setState(Stopped);
+    }
+
+    void close() override {
     }
 
     // For SessionManager use
