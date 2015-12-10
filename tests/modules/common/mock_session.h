@@ -36,16 +36,22 @@ public:
 
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(application, unity::shell::application::ApplicationInfoInterface*());
-    MOCK_CONST_METHOD0(surface, MirSurfaceInterface*());
+    MOCK_CONST_METHOD0(lastSurface, MirSurfaceInterface*());
+    MOCK_CONST_METHOD0(surfaces, const ObjectListModel<MirSurfaceInterface>*());
     MOCK_CONST_METHOD0(parentSession, SessionInterface*());
+    MOCK_CONST_METHOD0(childSessions, SessionModel*());
 
     MOCK_CONST_METHOD0(state, State());
 
     MOCK_CONST_METHOD0(fullscreen, bool());
     MOCK_CONST_METHOD0(live, bool());
 
+    MOCK_CONST_METHOD0(session, std::shared_ptr<mir::scene::Session>());
+
+    MOCK_METHOD1(registerSurface, void(MirSurfaceInterface* surface));
+    MOCK_METHOD1(removeSurface, void(MirSurfaceInterface* surface));
+
     MOCK_METHOD1(setApplication, void(unity::shell::application::ApplicationInfoInterface* item));
-    MOCK_METHOD1(setSurface, void(MirSurfaceInterface* surface));
 
     MOCK_METHOD0(suspend, void());
     MOCK_METHOD0(resume, void());
@@ -57,12 +63,8 @@ public:
     MOCK_METHOD1(removeChildSession, void(SessionInterface* session));
     MOCK_CONST_METHOD1(foreachChildSession, void(std::function<void(SessionInterface* session)> f));
 
-    MOCK_CONST_METHOD0(session, std::shared_ptr<mir::scene::Session>());
-
     MOCK_CONST_METHOD0(activePromptSession, std::shared_ptr<mir::scene::PromptSession>());
     MOCK_CONST_METHOD1(foreachPromptSession, void(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> f));
-
-    MOCK_CONST_METHOD0(childSessions, SessionModel*());
 
     void setState(State state) {
         if (m_state != state) {

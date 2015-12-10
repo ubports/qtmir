@@ -236,8 +236,6 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
     if (!node) {
         node = new QSGDefaultImageNode;
-        node->setTexture(m_textureProvider->texture());
-
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
@@ -246,6 +244,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             node->markDirty(QSGNode::DirtyMaterial);
         }
     }
+    node->setTexture(m_textureProvider->texture());
 
     if (m_fillMode == PadOrCrop) {
         const QSize &textureSize = m_textureProvider->texture()->textureSize();
