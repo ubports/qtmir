@@ -92,6 +92,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     , m_surfaceHeight(0)
     , m_orientationAngle(nullptr)
     , m_consumesInput(false)
+    , m_fillMode(Stretch)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::MirSurfaceItem";
 
@@ -240,15 +241,31 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-        node->setSubSourceRect(QRectF(0, 0, 1, 1));
     } else {
         if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber())) {
             node->markDirty(QSGNode::DirtyMaterial);
         }
     }
 
-    node->setTargetRect(QRectF(0, 0, width(), height()));
-    node->setInnerTargetRect(QRectF(0, 0, width(), height()));
+    if (m_fillMode == PadOrCrop) {
+        const QSize &textureSize = m_textureProvider->texture()->textureSize();
+
+        QRectF targetRect;
+        targetRect.setWidth(qMin(width(), static_cast<qreal>(textureSize.width())));
+        targetRect.setHeight(qMin(height(), static_cast<qreal>(textureSize.height())));
+
+        qreal u = targetRect.width() / textureSize.width();
+        qreal v = targetRect.height() / textureSize.height();
+        node->setSubSourceRect(QRectF(0, 0, u, v));
+
+        node->setTargetRect(targetRect);
+        node->setInnerTargetRect(targetRect);
+    } else {
+        // Stretch
+        node->setSubSourceRect(QRectF(0, 0, 1, 1));
+        node->setTargetRect(QRectF(0, 0, width(), height()));
+        node->setInnerTargetRect(QRectF(0, 0, width(), height()));
+    }
 
     node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
     node->setAntialiasing(antialiasing());
@@ -727,6 +744,19 @@ void MirSurfaceItem::setSurfaceHeight(int value)
         m_surfaceHeight = value;
         scheduleMirSurfaceSizeUpdate();
         Q_EMIT surfaceHeightChanged(value);
+    }
+}
+
+MirSurfaceItem::FillMode MirSurfaceItem::fillMode() const
+{
+    return m_fillMode;
+}
+
+void MirSurfaceItem::setFillMode(FillMode value)
+{
+    if (m_fillMode != value) {
+        m_fillMode = value;
+        Q_EMIT fillModeChanged(m_fillMode);
     }
 }
 

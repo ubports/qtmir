@@ -297,7 +297,7 @@ void MirSurface::dropPendingBuffer()
     int framesPending = m_surface->buffers_ready_for_compositor(userId);
     if (framesPending > 0) {
         m_textureUpdated = false;
-        
+
         locker.unlock();
         if (updateTexture()) {
             qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() dropped=1 left=" << framesPending-1;
