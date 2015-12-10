@@ -40,6 +40,28 @@ using unity::shell::application::ApplicationInfoInterface;
 namespace qtmir
 {
 
+namespace {
+
+const char *sessionStateToString(SessionInterface::State state)
+{
+    switch (state) {
+    case SessionInterface::Starting:
+        return "starting";
+    case SessionInterface::Running:
+        return "running";
+    case SessionInterface::Suspending:
+        return "suspending";
+    case SessionInterface::Suspended:
+        return "suspended";
+    case SessionInterface::Stopped:
+        return "stopped";
+    default:
+        return "???";
+    }
+}
+
+}
+
 Session::Session(const std::shared_ptr<ms::Session>& session,
                  const std::shared_ptr<ms::PromptSessionManager>& promptSessionManager,
                  QObject *parent)
@@ -142,6 +164,9 @@ Session::State Session::state() const
 
 void Session::setState(State state) {
     if (state != m_state) {
+        qCDebug(QTMIR_SESSIONS) << "Session::setState - session=" << name()
+            << "state=" << sessionStateToString(state);
+
         m_state = state;
         Q_EMIT stateChanged(m_state);
     }
@@ -232,7 +257,7 @@ void Session::setFullscreen(bool fullscreen)
 
 void Session::suspend()
 {
-    qCDebug(QTMIR_SESSIONS) << "Session::suspend - session=" << this << "state=" << applicationStateToStr(m_state);
+    qCDebug(QTMIR_SESSIONS) << "Session::suspend - session=" << this << "state=" << sessionStateToString(m_state);
     if (m_state == Running) {
         session()->set_lifecycle_state(mir_lifecycle_state_will_suspend);
         m_suspendTimer->start(1500);
@@ -251,7 +276,7 @@ void Session::suspend()
 
 void Session::resume()
 {
-    qCDebug(QTMIR_SESSIONS) << "Session::resume - session=" << this << "state=" << applicationStateToStr(m_state);
+    qCDebug(QTMIR_SESSIONS) << "Session::resume - session=" << this << "state=" << sessionStateToString(m_state);
 
     if (m_state == Suspending || m_state == Suspended) {
         doResume();
@@ -281,9 +306,20 @@ void Session::doResume()
     setState(Running);
 }
 
+void Session::close()
+{
+    qCDebug(QTMIR_SESSIONS) << "Session::close - " << name() << m_surface;
+    if (m_surface) {
+        m_surface->close();
+    }
+}
+
 void Session::stop()
 {
+    qCDebug(QTMIR_SESSIONS) << "Session::stop - " << name();
+
     if (m_state != Stopped) {
+
         stopPromptSessions();
         if (m_suspendTimer->isActive())
             m_suspendTimer->stop();
@@ -304,6 +340,8 @@ void Session::stop()
 void Session::setLive(const bool live)
 {
     if (m_live != live) {
+        qCDebug(QTMIR_SESSIONS) << "Session::setLive - " << name() << "live=" << live;
+
         m_live = live;
         Q_EMIT liveChanged(m_live);
         if (!live) {

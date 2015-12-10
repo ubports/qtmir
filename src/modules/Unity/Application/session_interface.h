@@ -80,6 +80,7 @@ public:
     virtual void setApplication(unity::shell::application::ApplicationInfoInterface* item) = 0;
     virtual void suspend() = 0;
     virtual void resume() = 0;
+    virtual void close() = 0;
     virtual void stop() = 0;
 
     // For SessionManager use

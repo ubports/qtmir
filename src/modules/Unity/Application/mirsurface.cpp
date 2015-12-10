@@ -420,6 +420,13 @@ void MirSurface::setFocus(bool focus)
     }
 }
 
+void MirSurface::close()
+{
+    if (m_surface) {
+        m_surface->request_client_surface_close();
+    }
+}
+
 void MirSurface::resize(int width, int height)
 {
     int mirWidth = m_surface->size().width.as_int();

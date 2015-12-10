@@ -49,6 +49,7 @@ public:
 
     MOCK_METHOD0(suspend, void());
     MOCK_METHOD0(resume, void());
+    MOCK_METHOD0(close, void());
     MOCK_METHOD0(stop, void());
 
     MOCK_METHOD1(addChildSession, void(SessionInterface* session));
