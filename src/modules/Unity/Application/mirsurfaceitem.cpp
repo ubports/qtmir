@@ -228,7 +228,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
-        QTimer::singleShot(0, this, SLOT(polishAndUpdate()));
+        QTimer::singleShot(0, this, SLOT(update()));
     }
 
     m_textureProvider->smooth = smooth();
@@ -643,7 +643,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         // When a new mir frame gets posted we notify the QML engine that this item needs redrawing,
         // schedules call to updatePaintNode() from the rendering thread
-        connect(m_surface, &MirSurfaceInterface::framesPosted, this, &MirSurfaceItem::polishAndUpdate);
+        connect(m_surface, &MirSurfaceInterface::framesPosted, this, &QQuickItem::update);
 
         connect(m_surface, &MirSurfaceInterface::stateChanged, this, &MirSurfaceItem::surfaceStateChanged);
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
@@ -758,20 +758,6 @@ void MirSurfaceItem::setFillMode(FillMode value)
         m_fillMode = value;
         Q_EMIT fillModeChanged(m_fillMode);
     }
-}
-
-void MirSurfaceItem::polishAndUpdate()
-{
-    polish();
-    update();
-}
-
-void MirSurfaceItem::updatePolish()
-{
-    if (!m_surface || !m_surface->live()) {
-        return;
-    }
-    m_surface->consumeBuffer();
 }
 
 } // namespace qtmir

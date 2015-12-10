@@ -110,8 +110,6 @@ protected:
 
     void releaseResources() override;
 
-    void updatePolish() override;
-
 private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
@@ -123,8 +121,6 @@ private Q_SLOTS:
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
-
-    void polishAndUpdate();
 
 private:
     void ensureTextureProvider();
