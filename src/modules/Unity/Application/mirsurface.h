@@ -99,6 +99,8 @@ public:
 
     void setFocus(bool focus) override;
 
+    void close() override;
+
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
