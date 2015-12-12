@@ -34,9 +34,19 @@ class MirSurfaceItemTest : public ::testing::Test
 public:
     MirSurfaceItemTest()
     {
+        setenv("QT_QPA_PLATFORM", "minimal", 1);
+        int argc = 0;
+        char **argv = nullptr;
+        m_app = new QGuiApplication(argc, argv);
+
         // We don't want the logging spam cluttering the test results
-        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));        
+        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));
     }
+    virtual ~MirSurfaceItemTest()
+    {
+        delete m_app;
+    }
+    QGuiApplication *m_app;
 };
 
 /*
@@ -104,7 +114,7 @@ TEST_F(MirSurfaceItemTest, SetSurfaceInitializesVisiblity)
 {
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
     surfaceItem->setVisible(false);
-    
+
     FakeMirSurface *fakeSurface = new FakeMirSurface;
     surfaceItem->setSurface(fakeSurface);
 
@@ -120,7 +130,7 @@ TEST_F(MirSurfaceItemTest, AggregateSurfaceVisibility)
     surfaceItem1->setVisible(true);
     MirSurfaceItem *surfaceItem2 = new MirSurfaceItem;
     surfaceItem1->setVisible(true);
-    
+
     FakeMirSurface *fakeSurface = new FakeMirSurface;
     surfaceItem1->setSurface(fakeSurface);
     surfaceItem2->setSurface(fakeSurface);

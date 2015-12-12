@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QCursor>
 #include <QSharedPointer>
 #include <QTouchEvent>
 
@@ -63,6 +64,8 @@ public:
 
     virtual void setFocus(bool focus) = 0;
 
+    virtual void close() = 0;
+
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
@@ -80,6 +83,11 @@ public:
             ulong qtTimestamp) = 0;
 
     virtual QString appId() const = 0;
+
+    virtual QCursor cursor() const = 0;
+
+Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
