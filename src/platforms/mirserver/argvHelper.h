@@ -41,7 +41,7 @@ void editArgvToMatch(int &argcToEdit, char** argvToEdit, int targetCount, const 
             }
         }
     }
-    assert(k == targetCount);
+    assert(k == targetCount+1);
     argvToEdit[k] = nullptr;
     free(argvCopy);
     argcToEdit = targetCount+1; // now argv and targetArray should have list the same strings.
