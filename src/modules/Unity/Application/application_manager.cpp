@@ -711,7 +711,7 @@ Application* ApplicationManager::findApplicationWithSession(const ms::Session *s
     return findApplicationWithPid(session->process_id());
 }
 
-Application* ApplicationManager::findApplicationWithPid(const pid_t pid)
+Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
 {
     if (pid <= 0)
         return nullptr;

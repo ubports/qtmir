@@ -45,7 +45,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_desktopData(desktopFileReader)
     , m_pid(0)
-    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage((desktopFileReader->stageHint() == QLatin1String("SideStage")) ? Application::SideStage : Application::MainStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
@@ -447,7 +447,7 @@ void Application::setPid(pid_t pid)
     m_pid = pid;
 }
 
-void Application::setArguments(const QStringList arguments)
+void Application::setArguments(const QStringList &arguments)
 {
     m_arguments = arguments;
 }

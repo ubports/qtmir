@@ -159,7 +159,7 @@ QString DesktopFileReader::splashTitle() const
      */
     GDesktopAppInfo *info = (GDesktopAppInfo*)d->appInfo.data();
     QLocale defaultLocale;
-    QStringList locales = defaultLocale.uiLanguages();
+    const QStringList locales = defaultLocale.uiLanguages();
 
     QString keyTemplate(QStringLiteral("X-Ubuntu-Splash-Title[%1]"));
     for (QString locale: locales) {

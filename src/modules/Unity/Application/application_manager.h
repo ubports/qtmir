@@ -112,7 +112,7 @@ public:
     bool isEmpty() const { return rowCount() == 0; }
 
     const QList<Application*> &list() const { return m_applications; }
-    qtmir::Application* findApplicationWithPid(const pid_t pid);
+    qtmir::Application* findApplicationWithPid(const pid_t pid) const;
 
 public Q_SLOTS:
     void authorizeSession(const pid_t pid, bool &authorized);
