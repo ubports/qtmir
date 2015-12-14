@@ -357,10 +357,10 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
         if (application) {
             m_queuedStartApplications.append(inputAppId);
             qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " is closing. Queuing start";
-            connect(application, &QObject::destroyed, this, [this, application, inputAppId, flags, arguments]() {
+            connect(application, &QObject::destroyed, this, [this, application, inputAppId, arguments]() {
                 m_queuedStartApplications.removeAll(inputAppId);
                 // start the app.
-                startApplication(inputAppId, flags, arguments);
+                startApplication(inputAppId, arguments);
             }, Qt::QueuedConnection); // Queued so that we finish the app removal before starting again.
             return nullptr;
         }

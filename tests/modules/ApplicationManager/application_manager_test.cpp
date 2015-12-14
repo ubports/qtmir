@@ -1753,7 +1753,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
             .Times(1)
             .WillOnce(Return(true));
 
-    auto the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto the_app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1821,7 +1821,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
             .Times(1)
             .WillOnce(Return(true));
 
-    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto application = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -2057,7 +2057,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
-    EXPECT_EQ(nullptr, applicationManager.startApplication(appId, ApplicationManager::NoFlag));
+    EXPECT_EQ(nullptr, applicationManager.startApplication(appId));
 
     QSignalSpy spy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
     applicationManager.onProcessStopped(appId);
