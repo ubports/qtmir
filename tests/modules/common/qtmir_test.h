@@ -51,7 +51,7 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os);
 void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
 
 // Initialization of mir::Server needed for by tests
-class TestMirServerInit : virtual mir::Server
+class TestMirServerInit : public virtual mir::Server
 {
 public:
     TestMirServerInit()
@@ -128,7 +128,7 @@ public:
     {
     }
 
-    Application* startApplication(quint64 procId, QString const& appId)
+    Application* startApplication(pid_t procId, QString const& appId)
     {
         using namespace testing;
 
@@ -139,7 +139,9 @@ public:
         ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
         ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
 
-        ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+        EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
+                .Times(1)
+                .WillOnce(Return(mockDesktopFileReader));
 
         EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
                 .Times(1)
@@ -153,7 +155,11 @@ public:
         EXPECT_EQ(authed, true);
 
         auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
+        applicationManager.onSessionStarting(appSession);
         sessionManager.onSessionStarting(appSession);
+        
+        Mock::VerifyAndClearExpectations(&appController);
+        Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
         return application;
     }
 

@@ -88,7 +88,7 @@ bool TaskController::stop(const QString& appId)
     return result;
 }
 
-bool TaskController::appIdHasProcessId(const QString& appId, const quint64 pid) const
+bool TaskController::appIdHasProcessId(const QString& appId, const pid_t pid) const
 {
     qCDebug(QTMIR_APPLICATIONS) << "TaskController::isApplicationPid - appId=" << appId << "pid=" << pid;
     return m_appController->appIdHasProcessId(pid, appId);

@@ -37,8 +37,6 @@ namespace ms = mir::scene;
 namespace qtmir
 {
 
-QStringList Application::lifecycleExceptions;
-
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
                          DesktopFileReader *desktopFileReader,
                          const QStringList &arguments,
@@ -47,13 +45,15 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_desktopData(desktopFileReader)
     , m_pid(0)
-    , m_stage((m_desktopData->stageHint() == QLatin1String("SideStage")) ? Application::SideStage : Application::MainStage)
+    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
+    , m_closeTimer(0)
+    , m_exemptFromLifecycle(false)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
 
@@ -403,26 +403,23 @@ pid_t Application::pid() const
     return m_pid;
 }
 
-void Application::setPid(pid_t pid)
-{
-    m_pid = pid;
-}
-
 void Application::close()
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
 
     switch (m_state) {
     case InternalState::Starting:
+        stop();
+        break;
     case InternalState::Running:
-        setInternalState(InternalState::Closing);
+        doClose();
         break;
     case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         setRequestedState(RequestedRunning);
-        setInternalState(InternalState::Closing);
+        doClose();
         break;
     case InternalState::Closing:
         // already on the way
@@ -432,6 +429,22 @@ void Application::close()
         // too late
         break;
     }
+
+}
+
+void Application::doClose()
+{
+    Q_ASSERT(m_closeTimer == 0);
+    Q_ASSERT(m_session != nullptr);
+
+    m_session->close();
+    m_closeTimer = startTimer(3000);
+    setInternalState(InternalState::Closing);
+}
+
+void Application::setPid(pid_t pid)
+{
+    m_pid = pid;
 }
 
 void Application::setArguments(const QStringList arguments)
@@ -522,8 +535,6 @@ void Application::setInternalState(Application::InternalState state)
             acquireWakelock();
             break;
         case InternalState::RunningInBackground:
-            releaseWakelock();
-            break;
         case InternalState::Suspended:
             releaseWakelock();
             break;
@@ -617,11 +628,12 @@ void Application::setProcessState(ProcessState newProcessState)
 
 void Application::suspend()
 {
+    qCDebug(QTMIR_APPLICATIONS) << "Application::suspend - appId=" << appId();
+
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
 
-    if (!lifecycleExceptions.filter(appId().section('_',0,0)).empty()) {
-        // Present in exceptions list.
+    if (exemptFromLifecycle()) {
         // There's no need to keep the wakelock as the process is never suspended
         // and thus has no cleanup to perform when (for example) the display is
         // blanked.
@@ -634,6 +646,8 @@ void Application::suspend()
 
 void Application::resume()
 {
+    qCDebug(QTMIR_APPLICATIONS) << "Application::resume - appId=" << appId();
+
     if (m_state == InternalState::Suspended) {
         setInternalState(InternalState::Running);
         Q_EMIT resumeProcessRequested();
@@ -656,6 +670,42 @@ void Application::respawn()
     setInternalState(InternalState::Starting);
 
     Q_EMIT startProcessRequested();
+}
+
+void Application::stop()
+{
+    qCDebug(QTMIR_APPLICATIONS) << "Application::stop - appId=" << appId();
+
+    Q_EMIT stopProcessRequested();
+}
+
+void Application::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_closeTimer) {
+        m_closeTimer = 0;
+        stop();
+    }
+}
+
+bool Application::isTouchApp() const
+{
+    return m_desktopData->isTouchApp();
+}
+
+bool Application::exemptFromLifecycle() const
+{
+    return m_exemptFromLifecycle;
+}
+
+void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
+{
+    if (m_exemptFromLifecycle != exemptFromLifecycle)
+    {
+        // We don't adjust current suspension state, we only care about exempt
+        // status going into a suspend.
+        m_exemptFromLifecycle = exemptFromLifecycle;
+        Q_EMIT exemptFromLifecycleChanged(m_exemptFromLifecycle);
+    }
 }
 
 QString Application::longAppId() const
@@ -723,7 +773,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
              *  3. application is managed by upstart and is in foreground (i.e. has
              *     Running state), if Mir reports the application disconnects, it
              *     either crashed or stopped itself.
-             * 4. We're expecting the application to stop after a close request
+             *  4. We're expecting the application to stop after a close request
              */
             setInternalState(InternalState::Stopped);
         } else {

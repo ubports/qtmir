@@ -435,23 +435,22 @@ public:
         }
     }
 
-    void handleWheelEvent(ulong timestamp, const QPointF &localPoint, const QPointF &globalPoint,
-                          QPoint pixelDelta, QPoint angleDelta,
-                          Qt::KeyboardModifiers mods, Qt::ScrollPhase phase) override
+    void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) override
     {
-        QWindowSystemInterface::handleWheelEvent(m_screenController->getWindowForPoint(localPoint.toPoint()),
-                                                 timestamp, localPoint, globalPoint,
-                                                 pixelDelta, angleDelta, mods, phase);
-    }
+        // Send to the first screen that handles the mouse event
+        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
+        //       (because they all might have their own separate graphical mouse pointer item)
+        //       This will probably come once we implement the feature of having the mouse pointer
+        //       crossing adjacent screens.
 
-    void handleEnterEvent(const QPointF &localPoint, const QPointF &globalPoint) override
-    {
-        QWindowSystemInterface::handleEnterEvent(m_screenController->getWindowForPoint(localPoint.toPoint()), localPoint, globalPoint);
-    }
-
-    void handleLeaveEvent(const QPointF &localPoint) override
-    {
-        QWindowSystemInterface::handleLeaveEvent(m_screenController->getWindowForPoint(localPoint.toPoint()));
+        QList<Screen*> screens = m_screenController->screens();
+        bool eventHandled = false;
+        int i = 0;
+        while (i < screens.count() && !eventHandled) {
+            auto platformCursor = static_cast<qtmir::Cursor*>(screens.at(i)->cursor());
+            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, mods);
+            ++i;
+        }
     }
 
 private:
@@ -552,7 +551,7 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
 void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 {
-    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
     auto pev = mir_input_event_get_pointer_event(ev);
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
@@ -561,8 +560,6 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
     auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
-    auto local_point = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                               mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
     switch (action) {
     case mir_pointer_action_button_up:
@@ -574,20 +571,12 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp, local_point, local_point,
-                                              QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
-        } else {
-            auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
-            mQtWindowSystem->handleMouseEvent(timestamp, movement, buttons, modifiers);
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), angleDelta, modifiers);
         }
+        auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
+        mQtWindowSystem->handleMouseEvent(timestamp.count(), movement, buttons, modifiers);
         break;
     }
-    case mir_pointer_action_enter:
-        mQtWindowSystem->handleEnterEvent(local_point, local_point);
-        break;
-    case mir_pointer_action_leave:
-        mQtWindowSystem->handleLeaveEvent(local_point);
-        break;
     default:
         qCDebug(QTMIR_MIR_INPUT) << "Unrecognized pointer event";
     }
@@ -595,7 +584,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
 void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 {
-    auto timestamp = qtmir::compressTimestamp<ulong>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
     auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
@@ -634,7 +623,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
                             mir_keyboard_event_key_code(kev),
                             mir_keyboard_event_modifiers(kev),
                             text, is_auto_rep);
-        qKeyEvent.setTimestamp(timestamp);
+        qKeyEvent.setTimestamp(timestamp.count());
         if (context->filterEvent(&qKeyEvent)) {
             qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
                 << "but not dispatching as it was filtered out by input context";
@@ -646,7 +635,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
-        timestamp, keyType, keyCode, modifiers,
+        timestamp.count(), keyType, keyCode, modifiers,
         mir_keyboard_event_scan_code(kev),
         mir_keyboard_event_key_code(kev),
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
@@ -654,9 +643,9 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 
 void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
 {
-    auto timestamp = std::chrono::nanoseconds(mir_input_event_get_event_time(event));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
 
-    tracepoint(qtmirserver, touchEventDispatch_start, timestamp.count());
+    tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 
     auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
@@ -714,21 +703,19 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         }
     }
 
-    auto compressedTimestamp = qtmir::compressTimestamp<ulong>(timestamp);
-
     // Qt needs a happy, sane stream of touch events. So let's make sure we're not forwarding
     // any insanity.
-    validateTouches(window, compressedTimestamp, touchPoints);
+    validateTouches(window, timestamp.count(), touchPoints);
 
     // Touch event propagation.
     qCDebug(QTMIR_MIR_INPUT) << "Sending to Qt" << qPrintable(touchesToString(touchPoints));
     mQtWindowSystem->handleTouchEvent(window,
         //scales down the nsec_t (int64) to fit a ulong, precision lost but time difference suitable
-        compressedTimestamp,
+        timestamp.count(),
         mTouchDevice,
         touchPoints);
 
-    tracepoint(qtmirserver, touchEventDispatch_end, timestamp.count());
+    tracepoint(qtmirserver, touchEventDispatch_end, std::chrono::nanoseconds(timestamp).count());
 }
 
 void QtEventFeeder::start()

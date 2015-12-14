@@ -40,15 +40,15 @@ Cursor::Cursor()
     m_shapeToCursorName[Qt::BlankCursor] = QStringLiteral("blank");
     m_shapeToCursorName[Qt::SplitVCursor] = QStringLiteral("split_v");
     m_shapeToCursorName[Qt::SplitHCursor] = QStringLiteral("split_h");
-    m_shapeToCursorName[Qt::PointingHandCursor] = QStringLiteral("pointing_hand");
+    m_shapeToCursorName[Qt::PointingHandCursor] = QStringLiteral("hand");
     m_shapeToCursorName[Qt::ForbiddenCursor] = QStringLiteral("forbidden");
     m_shapeToCursorName[Qt::WhatsThisCursor] = QStringLiteral("whats_this");
     m_shapeToCursorName[Qt::BusyCursor] = QStringLiteral("left_ptr_watch");
     m_shapeToCursorName[Qt::OpenHandCursor] = QStringLiteral("openhand");
     m_shapeToCursorName[Qt::ClosedHandCursor] = QStringLiteral("closedhand");
-    m_shapeToCursorName[Qt::DragCopyCursor] = QStringLiteral("copy");
-    m_shapeToCursorName[Qt::DragMoveCursor] = QStringLiteral("move");
-    m_shapeToCursorName[Qt::DragLinkCursor] = QStringLiteral("link");
+    m_shapeToCursorName[Qt::DragCopyCursor] = QStringLiteral("dnd-copy");
+    m_shapeToCursorName[Qt::DragMoveCursor] = QStringLiteral("dnd-move");
+    m_shapeToCursorName[Qt::DragLinkCursor] = QStringLiteral("dnd-link");
 
     connect(Mir::instance(), &Mir::cursorNameChanged, this, &Cursor::setMirCursorName);
 }
@@ -60,9 +60,16 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
     }
 
     if (windowCursor) {
-        m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QStringLiteral("left_ptr"));
+        if (windowCursor->pixmap().isNull()) {
+            m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QStringLiteral("left_ptr"));
+            m_mousePointer->setCustomCursor(QCursor());
+        } else {
+            m_qtCursorName = QStringLiteral("custom");
+            m_mousePointer->setCustomCursor(*windowCursor);
+        }
     } else {
         m_qtCursorName.clear();
+        m_mousePointer->setCustomCursor(QCursor());
     }
 
     updateMousePointerCursorName();
@@ -100,6 +107,27 @@ bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButton
         Q_ARG(ulong, timestamp),
         Q_ARG(QPointF, movement),
         Q_ARG(Qt::MouseButtons, buttons),
+        Q_ARG(Qt::KeyboardModifiers, modifiers));
+
+    if (!ok) {
+        qCWarning(QTMIR_MIR_INPUT) << "Failed to invoke MousePointer::handleMouseEvent";
+    }
+
+    return ok;
+}
+
+bool Cursor::handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers modifiers)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (!m_mousePointer || !m_mousePointer->isVisible()) {
+        return false;
+    }
+
+    // Must not be called directly as we're most likely not in Qt's GUI (main) thread.
+    bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleWheelEvent", Qt::AutoConnection,
+        Q_ARG(ulong, timestamp),
+        Q_ARG(QPoint, angleDelta),
         Q_ARG(Qt::KeyboardModifiers, modifiers));
 
     if (!ok) {

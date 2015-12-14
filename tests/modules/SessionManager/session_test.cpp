@@ -48,7 +48,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -58,7 +58,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
     EXPECT_EQ(Session::Starting, session->state());
 
     FakeMirSurface *surface = new FakeMirSurface;
-    session->setSurface(surface);
+    session->registerSurface(surface);
 
     // Still on Starting as the surface hasn't drawn its first frame yet
     EXPECT_EQ(Session::Starting, session->state());
@@ -72,7 +72,7 @@ TEST_F(SessionTests, AddChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -100,7 +100,7 @@ TEST_F(SessionTests, InsertChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -128,7 +128,7 @@ TEST_F(SessionTests, RemoveChildSession)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -161,7 +161,7 @@ TEST_F(SessionTests, DeleteChildSessionRemovesFromApplication)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -193,7 +193,7 @@ TEST_F(SessionTests, DeleteSessionDeletesChildSessions)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
@@ -221,14 +221,14 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
     {
         FakeMirSurface *surface = new FakeMirSurface;
-        session->setSurface(surface);
+        session->registerSurface(surface);
         surface->drawFirstFrame();
     }
     EXPECT_EQ(Session::Running, session->state());
@@ -252,14 +252,14 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     using namespace testing;
 
     const QString appId("test-app");
-    quint64 procId = 5551;
+    const pid_t procId = 5551;
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
     auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
     {
         FakeMirSurface *surface = new FakeMirSurface;
-        session->setSurface(surface);
+        session->registerSurface(surface);
         surface->drawFirstFrame();
     }
     EXPECT_EQ(Session::Running, session->state());

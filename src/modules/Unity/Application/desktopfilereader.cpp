@@ -229,6 +229,18 @@ bool DesktopFileReader::rotatesWindowContents() const
     return result;
 }
 
+bool DesktopFileReader::isTouchApp() const
+{
+    Q_D(const DesktopFileReader);
+    bool result;
+
+    if (!parseBoolean(d->getKey("X-Ubuntu-Touch"), result)) {
+        qCWarning(QTMIR_APPLICATIONS) << d->file << "has an invalid X-Ubuntu-Touch entry.";
+    }
+
+    return result;
+}
+
 bool DesktopFileReader::parseOrientations(const QString &rawString, Qt::ScreenOrientations &result)
 {
     // Default to all orientations

@@ -26,8 +26,8 @@ namespace qtmir
 ProcInfo::~ProcInfo() {
 }
 
-std::unique_ptr<ProcInfo::CommandLine> ProcInfo::commandLine(quint64 pid) {
-    QFile cmdline(QStringLiteral("/proc/%1/cmdline").arg(pid));
+std::unique_ptr<ProcInfo::CommandLine> ProcInfo::commandLine(pid_t pid) {
+    QFile cmdline(QString("/proc/%1/cmdline").arg(pid));
     if (!cmdline.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return nullptr;
     }

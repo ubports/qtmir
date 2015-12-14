@@ -23,6 +23,7 @@
 #include "session_interface.h"
 
 // Qt
+#include <QCursor>
 #include <QSharedPointer>
 #include <QTouchEvent>
 
@@ -48,8 +49,10 @@ public:
     virtual void startFrameDropper() = 0;
 
     virtual bool isBeingDisplayed() const = 0;
-    virtual void incrementViewCount() = 0;
-    virtual void decrementViewCount() = 0;
+
+    virtual void registerView(qintptr viewId) = 0;
+    virtual void unregisterView(qintptr viewId) = 0;
+    virtual void setViewVisibility(qintptr viewId, bool visible) = 0;
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
@@ -60,6 +63,8 @@ public:
     // end of methods called from the rendering (scene graph) thread
 
     virtual void setFocus(bool focus) = 0;
+
+    virtual void close() = 0;
 
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
@@ -79,6 +84,11 @@ public:
 
     virtual QString appId() const = 0;
 
+    virtual QCursor cursor() const = 0;
+
+Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
@@ -86,6 +96,7 @@ Q_SIGNALS:
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
+    void frameDropped();
 };
 
 } // namespace qtmir

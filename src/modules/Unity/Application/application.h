@@ -104,6 +104,9 @@ public:
     QColor splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
+    bool isTouchApp() const override;
+    bool exemptFromLifecycle() const override;
+    void setExemptFromLifecycle(bool) override;
 
     void setStage(Stage stage);
 
@@ -131,14 +134,13 @@ public:
     // for tests
     InternalState internalState() const { return m_state; }
 
-    static QStringList lifecycleExceptions;
-
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
     void stageChanged(Stage stage);
     void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
+    void stopProcessRequested();
     void suspendProcessRequested();
     void resumeProcessRequested();
     void stopped();
@@ -147,6 +149,9 @@ private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
+
+protected:
+    void timerEvent(QTimerEvent *event) override;
 
 private:
 
@@ -160,16 +165,18 @@ private:
     void wipeQMLCache();
     void suspend();
     void resume();
+    void stop();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
     void applyRequestedState();
     void applyRequestedRunning();
     void applyRequestedSuspended();
+    void doClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     DesktopFileReader* m_desktopData;
     QString m_longAppId;
-    qint64 m_pid;
+    pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;
@@ -180,6 +187,8 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
+    int m_closeTimer;
+    bool m_exemptFromLifecycle;
 
     friend class ApplicationManager;
     friend class SessionManager;
