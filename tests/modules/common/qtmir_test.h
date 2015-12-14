@@ -139,7 +139,9 @@ public:
         ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
         ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
 
-        ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+        EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
+                .Times(1)
+                .WillOnce(Return(mockDesktopFileReader));
 
         EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
                 .Times(1)
@@ -153,7 +155,11 @@ public:
         EXPECT_EQ(authed, true);
 
         auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
+        applicationManager.onSessionStarting(appSession);
         sessionManager.onSessionStarting(appSession);
+        
+        Mock::VerifyAndClearExpectations(&appController);
+        Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
         return application;
     }
 

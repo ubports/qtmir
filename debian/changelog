@@ -1,3 +1,24 @@
+qtmir (0.4.7+16.04.20151210-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * [ Nick Dedekind ]
+  * Request app closing rather than killing.
+
+  [ Daniel d'Andrada ]
+  * Add MirSurfaceItem.fillMode and ensure items and buffer are in sync
+  * Make Session hold multiple surfaces
+
+  [ Michael Terry ]
+  * Don't hold a wakelock on apps that are exempt from lifecycle
+    management. (LP: #1518764)
+
+  [ Michał Sawicz ]
+  * Add MirSurfaceItem.fillMode and ensure items and buffer are in sync
+  * Don't hold a wakelock on apps that are exempt from lifecycle
+    management. (LP: #1518764)
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Thu, 10 Dec 2015 13:08:47 +0000
+
 qtmir (0.4.7-0ubuntu3) UNRELEASED; urgency=medium
 
   [ Nick Dedekind ]
