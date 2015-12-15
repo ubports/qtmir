@@ -8,6 +8,8 @@ extern "C" {
 
 namespace qtmir {
 
+#define unlikely(x)    __builtin_expect((x), 0)
+
 typedef std::chrono::duration<ulong, std::milli> Timestamp;
 
 template<typename T>
@@ -15,9 +17,9 @@ T compressTimestamp(std::chrono::nanoseconds timestamp)
 {
     std::chrono::nanoseconds startTime = getStartTime(timestamp);
 
-    if ((std::chrono::nanoseconds::max() > T::max() &&
-         timestamp - startTime > std::chrono::nanoseconds(T::max()))
-        || timestamp < startTime) {
+    if (unlikely((std::chrono::nanoseconds::max() > T::max() &&
+                  timestamp - startTime > std::chrono::nanoseconds(T::max()))
+                 || timestamp < startTime)) {
         // we've overflowed the boundaries of the millisecond type.
         // or the timestamp has travelled to the past
         resetStartTime(timestamp);
