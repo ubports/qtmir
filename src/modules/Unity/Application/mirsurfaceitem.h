@@ -68,6 +68,9 @@ public:
     int surfaceHeight() const override;
     void setSurfaceHeight(int value) override;
 
+    FillMode fillMode() const override;
+    void setFillMode(FillMode value) override;
+
     ////////
     // QQuickItem
 
@@ -115,6 +118,9 @@ private Q_SLOTS:
     void updateMirSurfaceVisibility();
 
     void onActualSurfaceSizeChanged(const QSize &size);
+    void onCompositorSwappedBuffers();
+
+    void onWindowChanged(QQuickWindow *window);
 
 private:
     void ensureTextureProvider();
@@ -131,6 +137,7 @@ private:
             Qt::TouchPointStates touchPointStates);
 
     MirSurfaceInterface* m_surface;
+    QQuickWindow* m_window;
 
     QMutex m_mutex;
     MirTextureProvider *m_textureProvider;
@@ -164,6 +171,8 @@ private:
     Mir::OrientationAngle *m_orientationAngle;
 
     bool m_consumesInput;
+
+    FillMode m_fillMode;
 };
 
 } // namespace qtmir

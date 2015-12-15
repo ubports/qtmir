@@ -36,7 +36,9 @@ QString FakeSession::name() const { return QString("foo-session"); }
 
 unity::shell::application::ApplicationInfoInterface *FakeSession::application() const { return m_application; }
 
-MirSurfaceInterface *FakeSession::surface() const { return nullptr; }
+MirSurfaceInterface *FakeSession::lastSurface() const { return nullptr; }
+
+const ObjectListModel<MirSurfaceInterface> *FakeSession::surfaces() const { return nullptr; }
 
 SessionInterface *FakeSession::parentSession() const { return nullptr; }
 
@@ -50,7 +52,9 @@ bool FakeSession::live() const { return true; }
 
 std::shared_ptr<mir::scene::Session> FakeSession::session() const { return nullptr; }
 
-void FakeSession::setSurface(MirSurfaceInterface *) {}
+void FakeSession::registerSurface(MirSurfaceInterface *) {}
+
+void FakeSession::removeSurface(MirSurfaceInterface *) {}
 
 void FakeSession::setApplication(unity::shell::application::ApplicationInfoInterface *app)
 {
@@ -78,6 +82,8 @@ void FakeSession::stop()
 {
     setState(Stopped);
 }
+
+void FakeSession::close() {}
 
 void FakeSession::addChildSession(SessionInterface *) {}
 

@@ -8,6 +8,11 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${MIRSERVER_INCLUDE_DIRS}
+
+  ${Qt5Core_INCLUDE_DIRS}
+  ${Qt5GUI_INCLUDE_DIRS}
+  ${Qt5Quick_INCLUDE_DIRS}
+  ${Qt5DBus_INCLUDE_DIRS}
 )
 
 add_executable(application_test ${APPLICATION_TEST_SOURCES})

@@ -294,3 +294,57 @@ QString mirKeyboardEventToString(MirKeyboardEvent const* event)
         .arg(mirKeyboardActionToString(keyboardAction))
         .arg(keyCode, 4, 16, QLatin1Char('0'));
 }
+
+const char *qtCursorShapeToStr(Qt::CursorShape shape)
+{
+    switch(shape) {
+    case Qt::ArrowCursor:
+        return "Arrow";
+    case Qt::UpArrowCursor:
+        return "UpArrow";
+    case Qt::CrossCursor:
+        return "Cross";
+    case Qt::WaitCursor:
+        return "Wait";
+    case Qt::IBeamCursor:
+        return "IBeam";
+    case Qt::SizeVerCursor:
+        return "SizeVer";
+    case Qt::SizeHorCursor:
+        return "SizeHor";
+    case Qt::SizeBDiagCursor:
+        return "SizeBDiag";
+    case Qt::SizeFDiagCursor:
+        return "SizeFDiag";
+    case Qt::SizeAllCursor:
+        return "SizeAll";
+    case Qt::BlankCursor:
+        return "Blank";
+    case Qt::SplitVCursor:
+        return "SplitV";
+    case Qt::SplitHCursor:
+        return "SplitH";
+    case Qt::PointingHandCursor:
+        return "PointingHand";
+    case Qt::ForbiddenCursor:
+        return "Forbidden";
+    case Qt::WhatsThisCursor:
+        return "WhatsThis";
+    case Qt::BusyCursor:
+        return "Busy";
+    case Qt::OpenHandCursor:
+        return "OpenHand";
+    case Qt::ClosedHandCursor:
+        return "ClosedHand";
+    case Qt::DragCopyCursor:
+        return "DragCopy";
+    case Qt::DragMoveCursor:
+        return "DragMove";
+    case Qt::DragLinkCursor:
+        return "DragLink";
+    case Qt::BitmapCursor:
+        return "Bitmap";
+    default:
+        return "???";
+    }
+}

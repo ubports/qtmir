@@ -15,6 +15,7 @@
  */
 
 #include <Unity/Application/session_interface.h>
+#include <QDebug>
 
 #ifndef QTMIR_FAKE_SESSION_H
 #define QTMIR_FAKE_SESSION_H
@@ -34,7 +35,8 @@ public:
 
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceInterface* surface() const override;
+    MirSurfaceInterface* lastSurface() const override;
+    const ObjectListModel<MirSurfaceInterface>* surfaces() const override;
     SessionInterface* parentSession() const override;
     SessionModel* childSessions() const override;
     State state() const override;
@@ -45,7 +47,8 @@ public:
 
     // For MirSurfaceItem and MirSurfaceManager use
 
-    void setSurface(MirSurfaceInterface*) override;
+    void registerSurface(MirSurfaceInterface*) override;
+    void removeSurface(MirSurfaceInterface*) override;
 
     // For Application use
 
@@ -53,6 +56,8 @@ public:
     void suspend() override;
     void resume() override;
     void stop() override;
+
+    void close() override;
 
     // For SessionManager use
 

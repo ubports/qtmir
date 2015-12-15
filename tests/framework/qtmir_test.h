@@ -71,6 +71,7 @@ public:
     testing::NiceMock<MockSettings> settings;
     std::shared_ptr<StubPromptSessionManager> promptSessionManager;
     QSharedPointer<MirServer> mirServer;
+
     MirShell *mirShell{nullptr};
     QSharedPointer<TaskController> taskController;
     ApplicationManager applicationManager;

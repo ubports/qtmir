@@ -17,6 +17,9 @@
 #include "mirsurface.h"
 #include "timestamp.h"
 
+// from common dir
+#include <debughelpers.h>
+
 // mirserver
 #include <surfaceobserver.h>
 
@@ -30,6 +33,8 @@
 #include <logging.h>
 
 using namespace qtmir;
+
+#define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
 
 namespace {
 
@@ -182,6 +187,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
+        connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         observer->setListener(this);
     }
 
@@ -212,7 +218,7 @@ MirSurface::~MirSurface()
     Q_ASSERT(m_views.isEmpty());
 
     if (m_session) {
-        m_session->setSurface(nullptr);
+        m_session->removeSurface(this);
     }
 
     QMutexLocker locker(&m_mutex);
@@ -293,15 +299,14 @@ void MirSurface::dropPendingBuffer()
     int framesPending = m_surface->buffers_ready_for_compositor(userId);
     if (framesPending > 0) {
         m_textureUpdated = false;
-        
+
         locker.unlock();
         if (updateTexture()) {
-            qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() dropped=1 left=" << framesPending-1;
+            DEBUG_MSG << "() dropped=1 left=" << framesPending-1;
         } else {
             // If we haven't managed to update the texture, don't keep banging away.
             m_frameDropperTimer.stop();
-            qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::dropPendingBuffer() dropped=0"
-                                              << " left=" << framesPending << " - failed to upate texture";
+            DEBUG_MSG << "() dropped=0" << " left=" << framesPending << " - failed to upate texture";
         }
         Q_EMIT frameDropped();
     } else {
@@ -315,13 +320,13 @@ void MirSurface::dropPendingBuffer()
 
 void MirSurface::stopFrameDropper()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::stopFrameDropper()";
+    DEBUG_MSG << "()";
     m_frameDropperTimer.stop();
 }
 
 void MirSurface::startFrameDropper()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::startFrameDropper()";
+    DEBUG_MSG << "()";
     if (!m_frameDropperTimer.isActive()) {
         m_frameDropperTimer.start();
     }
@@ -402,17 +407,23 @@ void MirSurface::setFocus(bool focus)
     // Temporary hotfix for http://pad.lv/1483752
     if (m_session->childSessions()->rowCount() > 0) {
         // has child trusted session, ignore any focus change attempts
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus
-            << ") - has child trusted session, ignore any focus change attempts";
+        DEBUG_MSG << "(" << focus << ") - has child trusted session, ignore any focus change attempts";
         return;
     }
 
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::setFocus(" << focus << ")";
+    DEBUG_MSG << "(" << focus << ")";
 
     if (focus) {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
     } else {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_unfocused);
+    }
+}
+
+void MirSurface::close()
+{
+    if (m_surface) {
+        m_surface->request_client_surface_close();
     }
 }
 
@@ -426,9 +437,8 @@ void MirSurface::resize(int width, int height)
     if (clientIsRunning() && mirSizeIsDifferent) {
         mir::geometry::Size newMirSize(width, height);
         m_surface->resize(newMirSize);
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::resize"
-                << " old (" << mirWidth << "," << mirHeight << ")"
-                << ", new (" << width << "," << height << ")";
+        DEBUG_MSG << " old (" << mirWidth << "," << mirHeight << ")"
+                  << ", new (" << width << "," << height << ")";
     }
 }
 
@@ -655,8 +665,7 @@ bool MirSurface::isBeingDisplayed() const
 void MirSurface::registerView(qintptr viewId)
 {
     m_views.insert(viewId, MirSurface::View{false});
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::registerView(" << viewId << ")"
-                                      << " after=" << m_views.count();
+    DEBUG_MSG << "(" << viewId << ")" << " after=" << m_views.count();
     if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
@@ -664,9 +673,8 @@ void MirSurface::registerView(qintptr viewId)
 
 void MirSurface::unregisterView(qintptr viewId)
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::unregisterView(" << viewId << ")"
-                                      << " after=" << m_views.count() << " live=" << m_live;
     m_views.remove(viewId);
+    DEBUG_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
     if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
         if (m_session.isNull() || !m_live) {
@@ -697,7 +705,7 @@ void MirSurface::updateVisibility()
     }
 
     if (newVisible != visible()) {
-        qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << appId() << "]::updateVisibility(" << newVisible << ")";
+        DEBUG_MSG << "(" << newVisible << ")";
 
         m_surface->configure(mir_surface_attrib_visibility,
                              newVisible ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
@@ -732,4 +740,17 @@ QString MirSurface::appId() const
         appId.append("-");
     }
     return appId;
+}
+
+QCursor MirSurface::cursor() const
+{
+    return m_cursor;
+}
+
+void MirSurface::setCursor(const QCursor &cursor)
+{
+    DEBUG_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
+
+    m_cursor = cursor;
+    Q_EMIT cursorChanged(m_cursor);
 }

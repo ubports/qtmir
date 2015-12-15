@@ -27,6 +27,9 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os)
     case Application::InternalState::Running:
         *os << "Running";
         break;
+    case Application::InternalState::RunningInBackground:
+        *os << "RunningInBackground";
+        break;
     case Application::InternalState::SuspendingWaitSession:
         *os << "SuspendingWaitSession";
         break;
@@ -145,11 +148,13 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
     ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
 
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
+    EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
+            .Times(1)
+            .WillOnce(Return(mockDesktopFileReader));
 
     EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
+            .Times(1)
+            .WillOnce(Return(true));
 
     auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
     applicationManager.onProcessStarting(appId);
@@ -159,8 +164,12 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     EXPECT_EQ(authed, true);
 
     auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
+    applicationManager.onSessionStarting(appSession);
     sessionManager.onSessionStarting(appSession);
+    
+    Mock::VerifyAndClearExpectations(&appController);
+    Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
     return application;
-    }
+}
 
 } // namespace testing
