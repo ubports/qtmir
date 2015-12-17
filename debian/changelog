@@ -1,3 +1,16 @@
+qtmir (0.4.7+16.04.20151217-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * compatibility branch for Mir 0.18
+
+  [ Cemil Azizoglu ]
+  * compatibility branch for Mir 0.18
+
+  [ Kevin DuBois ]
+  * compatibility branch for Mir 0.18
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 17 Dec 2015 12:01:56 +0000
+
 qtmir (0.4.7+16.04.20151210-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
