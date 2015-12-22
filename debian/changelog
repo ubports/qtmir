@@ -1,3 +1,9 @@
+qtmir (0.4.7+16.04.20151222-0ubuntu1) xenial; urgency=medium
+
+  * No-change rebuild to get -gles in sync
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 22 Dec 2015 15:29:49 +0000
+
 qtmir (0.4.7+16.04.20151217-0ubuntu1) xenial; urgency=medium
 
   [ Andreas Pokorny ]
