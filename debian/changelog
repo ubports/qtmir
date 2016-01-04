@@ -1,3 +1,11 @@
+qtmir (0.4.7+16.04.20160104-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Update Session.fullscreen properties at the right time (LP:
+    #1525893)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 04 Jan 2016 09:38:12 +0000
+
 qtmir (0.4.7+16.04.20151222-0ubuntu1) xenial; urgency=medium
 
   * No-change rebuild to get -gles in sync
