@@ -201,8 +201,6 @@ void Session::registerSurface(MirSurfaceInterface *newSurface)
         connect(newSurface, &MirSurfaceInterface::firstFrameDrawn,
                 this, [this, newSurface]() { this->appendSurface(newSurface); });
     }
-
-    updateFullscreenProperty();
 }
 
 void Session::appendSurface(MirSurfaceInterface *newSurface)
@@ -219,6 +217,8 @@ void Session::appendSurface(MirSurfaceInterface *newSurface)
     if (m_state == Starting) {
         setState(Running);
     }
+
+    updateFullscreenProperty();
 }
 
 void Session::removeSurface(MirSurfaceInterface* surface)
