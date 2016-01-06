@@ -249,9 +249,9 @@ void ScreenController::applyConfigurationChanges()
 
     auto displayConfiguration = display->configuration();
 
-    Q_FOREACH(auto config, m_configurationQueue) {
+    Q_FOREACH (auto config, m_configurationQueue) {
         displayConfiguration->for_each_output(
-            [&config](mg::UserDisplayConfigurationOutput& outputConfig)
+            [&config](mg::UserDisplayConfigurationOutput &outputConfig)
             {
                 if (config.id == outputConfig.id) {
                     outputConfig.current_mode_index = config.modeIndex;
@@ -262,5 +262,6 @@ void ScreenController::applyConfigurationChanges()
             });
     }
 
-    controller->set_base_configuration(std::move(displayConfiguration)).get();
+    controller->set_base_configuration(std::move(displayConfiguration));
+    m_configurationQueue.clear();
 }
