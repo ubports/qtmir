@@ -54,6 +54,9 @@ public:
     QPlatformCursor *cursor() const override;
 
     void toggleSensors(const bool enable) const;
+
+    float scale() const { return m_scale; }
+    MirFormFactor formFactor() const { return m_formFactor; }
     mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
 
     ScreenWindow* window() const;
@@ -84,6 +87,8 @@ private:
     QImage::Format m_format;
     QSizeF m_physicalSize;
     qreal m_refreshRate;
+    float m_scale;
+    MirFormFactor m_formFactor;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;

@@ -27,13 +27,16 @@ class Screens : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(OutputTypes)
+    Q_ENUMS(FormFactor)
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum ItemRoles {
         ScreenRole = Qt::UserRole + 1,
-        OutputTypeRole
+        OutputTypeRole,
+        ScaleRole,
+        FormFactorRole,
     };
 
     enum OutputTypes {
@@ -52,6 +55,15 @@ public:
         HDMIB,
         TV,
         EDP
+    };
+
+    enum FormFactor {
+        FormFactorUnknown,
+        FormFactorPhone,
+        FormFactorTablet,
+        FormFactorMonitor,
+        FormFactorTV,
+        FormFactorProjector,
     };
 
     explicit Screens(QObject *parent = 0);

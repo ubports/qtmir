@@ -187,10 +187,8 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setWidth(screen.physical_size_mm.width.as_float());
     m_physicalSize.setHeight(screen.physical_size_mm.height.as_float());
 
-    // Pixel Format
+    // Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
-
-    // Pixel depth
     m_depth = 8 * MIR_BYTES_PER_PIXEL(screen.current_format);
 
     // Power mode
@@ -207,6 +205,10 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_geometry.setHeight(mode.size.height.as_int());
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
+
+    // Scale & Form Factor
+    m_scale = screen.scale;
+    m_formFactor = screen.form_factor;
 
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
