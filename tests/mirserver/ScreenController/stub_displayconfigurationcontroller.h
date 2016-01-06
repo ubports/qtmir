@@ -14,25 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screencontroller.h"
-#include "stub_screen.h"
+#ifndef STUBDISPLAYCONFIGURATIONCONTROLLER_H
+#define STUBDISPLAYCONFIGURATIONCONTROLLER_H
 
-struct TestableScreenController : public ScreenController
+#include <mir/shell/display_configuration_controller.h>
+
+class StubDisplayConfigurationController : public mir::shell::DisplayConfigurationController
 {
-    Q_OBJECT
-
-public:
-    Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const override
-    {
-        return new StubScreen(output);
+    std::future<void> set_base_configuration(
+        std::shared_ptr<mir::graphics::DisplayConfiguration> const&) override {
+        return std::future<void>();
     }
-
-    void do_init(const std::shared_ptr<mir::graphics::Display> &display,
-                 const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
-                 const std::shared_ptr<mir::compositor::Compositor> &compositor)
-    {
-        init(display, controller, compositor);
-    }
-
-    void do_terminate() { terminate(); }
 };
+
+#endif // STUBDISPLAYCONFIGURATIONCONTROLLER_H

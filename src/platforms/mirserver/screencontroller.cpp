@@ -49,9 +49,11 @@ ScreenController::ScreenController(QObject *parent)
 
 // init only after MirServer has initialized - runs on MirServerThread!!!
 void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &display,
+                            const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
                             const std::shared_ptr<mir::compositor::Compositor> &compositor)
 {
     m_display = display;
+    m_displayConfigurationController = controller;
     m_compositor = compositor;
 
     // Use a Blocking Queued Connection to enforce synchronization of Qt GUI thread with Mir thread(s)
@@ -108,6 +110,7 @@ void ScreenController::onCompositorStopping()
 void ScreenController::update()
 {
     qCDebug(QTMIR_SCREENS) << "ScreenController::update";
+    m_configurationQueue.clear();
     auto display = m_display.lock();
     if (!display)
         return;
@@ -214,4 +217,50 @@ QWindow* ScreenController::getWindowForPoint(const QPoint &point) //FIXME - not 
         }
     }
     return nullptr;
+}
+
+CustomScreenConfiguration ScreenController::getConfigurationFor(Screen *screen)
+{
+    CustomScreenConfiguration config {
+        screen->outputId(),
+        screen->geometry().topLeft(),
+        screen->currentModeIndex(),
+        screen->powerMode(),
+        mir_orientation_normal, //screen->orientation(),
+        screen->scale(),
+        screen->formFactor()
+    };
+    return config;
+}
+
+void ScreenController::queueConfigurationChange(CustomScreenConfiguration config)
+{
+    m_configurationQueue.append(config);
+}
+
+void ScreenController::applyConfigurationChanges()
+{
+    auto controller = m_displayConfigurationController.lock();
+    auto display = m_display.lock();
+
+    if (m_configurationQueue.isEmpty() || !controller || !display) {
+        return;
+    }
+
+    auto displayConfiguration = display->configuration();
+
+    Q_FOREACH(auto config, m_configurationQueue) {
+        displayConfiguration->for_each_output(
+            [&config](mg::UserDisplayConfigurationOutput& outputConfig)
+            {
+                if (config.id == outputConfig.id) {
+                    outputConfig.current_mode_index = config.modeIndex;
+                    outputConfig.power_mode = config.powerMode;
+                    outputConfig.scale = config.scale;
+                    outputConfig.form_factor = config.formFactor;
+                }
+            });
+    }
+
+    controller->set_base_configuration(std::move(displayConfiguration)).get();
 }

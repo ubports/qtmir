@@ -187,7 +187,13 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setWidth(screen.physical_size_mm.width.as_float());
     m_physicalSize.setHeight(screen.physical_size_mm.height.as_float());
 
-    // Pixel Format & depth
+    // Screen capabilities
+    m_modes = screen.modes;
+    m_currentModeIndex = screen.current_mode_index;
+    m_preferredModeIndex = screen.preferred_mode_index;
+    m_pixelFormats = screen.pixel_formats;
+
+    // Current Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
     m_depth = 8 * MIR_BYTES_PER_PIXEL(screen.current_format);
 
@@ -200,7 +206,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_geometry.setLeft(screen.top_left.x.as_int());
 
     // Mode = current resolution & refresh rate
-    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(screen.current_mode_index);
+    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
 

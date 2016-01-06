@@ -57,7 +57,13 @@ public:
 
     float scale() const { return m_scale; }
     MirFormFactor formFactor() const { return m_formFactor; }
+    MirPowerMode powerMode() const { return m_powerMode; }
+    mir::graphics::DisplayConfigurationOutputId outputId() const { return m_outputId; }
     mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
+    std::vector<MirPixelFormat> pixelFormats() const { return m_pixelFormats; }
+    std::vector<mir::graphics::DisplayConfigurationMode> modes() const { return m_modes; }
+    uint32_t currentModeIndex() const { return m_currentModeIndex; }
+    uint32_t preferrredModeIndex() const { return m_preferredModeIndex; }
 
     ScreenWindow* window() const;
 
@@ -89,6 +95,10 @@ private:
     qreal m_refreshRate;
     float m_scale;
     MirFormFactor m_formFactor;
+    std::vector<MirPixelFormat> m_pixelFormats;
+    std::vector<mir::graphics::DisplayConfigurationMode> m_modes;
+    uint32_t m_currentModeIndex;
+    uint32_t m_preferredModeIndex;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
