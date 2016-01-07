@@ -68,6 +68,9 @@ public:
     int surfaceHeight() const override;
     void setSurfaceHeight(int value) override;
 
+    FillMode fillMode() const override;
+    void setFillMode(FillMode value) override;
+
     ////////
     // QQuickItem
 
@@ -168,6 +171,8 @@ private:
     Mir::OrientationAngle *m_orientationAngle;
 
     bool m_consumesInput;
+
+    FillMode m_fillMode;
 };
 
 } // namespace qtmir

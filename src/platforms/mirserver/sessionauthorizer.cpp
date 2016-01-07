@@ -88,3 +88,13 @@ bool SessionAuthorizer::prompt_session_is_allowed(SessionCredentials const& cred
     Q_UNUSED(creds)
     return true;
 }
+
+bool SessionAuthorizer::set_base_display_configuration_is_allowed(SessionCredentials const& creds)
+{
+    qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::set_base_display_configuration_is_allowed - this="
+        << this << "pid=" << creds.pid();
+
+    //FIXME Actually mediate this access for clients
+    Q_UNUSED(creds)
+    return false;
+}

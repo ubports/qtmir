@@ -39,7 +39,7 @@ public:
     void hidden_set_to(bool) override {}
 
     // Get new frame notifications from Mir, called from a Mir thread.
-    void frame_posted(int frames_available) override;
+    void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
 
     void alpha_set_to(float) override {}
     void transformation_set_to(glm::mat4 const&) override {}
@@ -49,6 +49,7 @@ public:
     void client_surface_close_requested() override {}
     void keymap_changed(xkb_rule_names const &) override {}
     void renamed(char const * name) override;
+    void cursor_image_removed() override;
 
 Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
