@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "stub_screen.h"
 
-struct TestableScreenController : public ScreenController
+struct TestableScreensModel : public ScreensModel
 {
     Q_OBJECT
 

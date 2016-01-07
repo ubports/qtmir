@@ -24,7 +24,7 @@
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
@@ -57,9 +57,9 @@ void ignore_unparsed_arguments(int /*argc*/, char const* const/*argv*/[])
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
 MirServer::MirServer(int argc, char const* argv[],
-                     const QSharedPointer<ScreenController> &screenController, QObject* parent)
+                     const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
-    , m_screenController(screenController)
+    , m_screensModel(screensModel)
 {
     set_command_line_handler(&ignore_unparsed_arguments);
     set_command_line(argc, argv);
@@ -89,9 +89,9 @@ MirServer::MirServer(int argc, char const* argv[],
             return std::make_shared<qtmir::MirCursorImages>();
         });
 
-    override_the_input_dispatcher([&screenController]
+    override_the_input_dispatcher([&screensModel]
         {
-            return std::make_shared<QtEventFeeder>(screenController);
+            return std::make_shared<QtEventFeeder>(screensModel);
         });
 
     override_the_gl_config([]
@@ -123,8 +123,8 @@ MirServer::MirServer(int argc, char const* argv[],
             QCoreApplication::quit();
         });
 
-    add_init_callback([this, &screenController] {
-        screenController->init(the_display(), the_compositor());
+    add_init_callback([this, &screensModel] {
+        screensModel->init(the_display(), the_compositor());
     });
 
     apply_settings();
@@ -141,11 +141,11 @@ MirServer::MirServer(int argc, char const* argv[],
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
 }
 
-// Override default implementation to ensure we terminate the ScreenController first.
+// Override default implementation to ensure we terminate the ScreensModel first.
 // Code path followed when Qt tries to shutdown the server.
 void MirServer::stop()
 {
-    m_screenController->terminate();
+    m_screensModel->terminate();
     mir::Server::stop();
 }
 

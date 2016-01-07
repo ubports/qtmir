@@ -76,7 +76,7 @@ protected:
 void QtEventFeederTest::SetUp()
 {
     mockWindowSystem = new MockQtWindowSystem;
-    auto screens = QSharedPointer<ScreenController>();
+    auto screens = QSharedPointer<ScreensModel>();
 
     EXPECT_CALL(*mockWindowSystem, registerTouchDevice(_));
 

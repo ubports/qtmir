@@ -34,7 +34,7 @@ class Screen;
 class QWindow;
 
 /*
- * ScreenController monitors the Mir display configuration and compositor status, and updates
+ * ScreensModel monitors the Mir display configuration and compositor status, and updates
  * the relevant QScreen and QWindow states accordingly.
  *
  * Primary purposes are:
@@ -53,11 +53,11 @@ class QWindow;
  * All other methods must be called on the Qt GUI thread.
  */
 
-class ScreenController : public QObject
+class ScreensModel : public QObject
 {
     Q_OBJECT
 public:
-    explicit ScreenController(QObject *parent = 0);
+    explicit ScreensModel(QObject *parent = 0);
 
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }

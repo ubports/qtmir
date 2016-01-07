@@ -101,7 +101,7 @@ private:
 
     qtmir::Cursor m_cursor;
 
-    friend class ScreenController;
+    friend class ScreensModel;
     friend class ScreenWindow;
 };
 
