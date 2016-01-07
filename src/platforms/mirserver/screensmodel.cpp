@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screencontroller.h"
+#include "screensmodel.h"
 
 #include "screenwindow.h"
 #include "qtcompositor.h"
@@ -40,15 +40,15 @@ Q_LOGGING_CATEGORY(QTMIR_SCREENS, "qtmir.screens")
 namespace mg = mir::graphics;
 
 
-ScreenController::ScreenController(QObject *parent)
+ScreensModel::ScreensModel(QObject *parent)
     : QObject(parent)
     , m_compositing(false)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::ScreenController";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::ScreensModel";
 }
 
 // init only after MirServer has initialized - runs on MirServerThread!!!
-void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &display,
+void ScreensModel::init(const std::shared_ptr<mir::graphics::Display> &display,
                             const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
                             const std::shared_ptr<mir::compositor::Compositor> &compositor)
 {
@@ -61,22 +61,22 @@ void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &displ
     // Queued connections work because the thread affinity of this class is with the Qt GUI thread.
     auto qtCompositor = static_cast<QtCompositor *>(compositor.get());
     connect(qtCompositor, &QtCompositor::starting,
-            this, &ScreenController::onCompositorStarting);
+            this, &ScreensModel::onCompositorStarting);
     connect(qtCompositor, &QtCompositor::stopping,
-            this, &ScreenController::onCompositorStopping, Qt::BlockingQueuedConnection);
+            this, &ScreensModel::onCompositorStopping, Qt::BlockingQueuedConnection);
 }
 
 // terminate before shutting down the Mir server, or else liable to deadlock with the blocking connection above
 // Runs on MirServerThread!!!
-void ScreenController::terminate()
+void ScreensModel::terminate()
 {
     auto qtCompositor = static_cast<QtCompositor *>(m_compositor.get());
     qtCompositor->disconnect();
 }
 
-void ScreenController::onCompositorStarting()
+void ScreensModel::onCompositorStarting()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStarting";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStarting";
     m_compositing = true;
 
     update();
@@ -90,9 +90,9 @@ void ScreenController::onCompositorStarting()
     }
 }
 
-void ScreenController::onCompositorStopping()
+void ScreensModel::onCompositorStopping()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStopping";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStopping";
     m_compositing = false;
 
     // Stop Qt's render threads by setting all its windows it obscured. Must
@@ -107,10 +107,11 @@ void ScreenController::onCompositorStopping()
     update();
 }
 
-void ScreenController::update()
+void ScreensModel::update()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::update";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::update";
     m_configurationQueue.clear();
+
     auto display = m_display.lock();
     if (!display)
         return;
@@ -188,12 +189,12 @@ void ScreenController::update()
     }
 }
 
-Screen* ScreenController::createScreen(const mir::graphics::DisplayConfigurationOutput &output) const
+Screen* ScreensModel::createScreen(const mir::graphics::DisplayConfigurationOutput &output) const
 {
     return new Screen(output);
 }
 
-Screen* ScreenController::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)
+Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)
 {
     for (Screen *screen : list) {
         if (screen->m_outputId == id) {
@@ -203,7 +204,7 @@ Screen* ScreenController::findScreenWithId(const QList<Screen *> &list, const mg
     return nullptr;
 }
 
-QWindow* ScreenController::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
+QWindow* ScreensModel::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
 {
     // This is a part optimization, and a part work-around for AP generated input events occasionally
     // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
@@ -219,7 +220,7 @@ QWindow* ScreenController::getWindowForPoint(const QPoint &point) //FIXME - not 
     return nullptr;
 }
 
-CustomScreenConfiguration ScreenController::getConfigurationFor(Screen *screen)
+CustomScreenConfiguration ScreensModel::getConfigurationFor(Screen *screen)
 {
     CustomScreenConfiguration config {
         screen->outputId(),
@@ -233,12 +234,12 @@ CustomScreenConfiguration ScreenController::getConfigurationFor(Screen *screen)
     return config;
 }
 
-void ScreenController::queueConfigurationChange(CustomScreenConfiguration config)
+void ScreensModel::queueConfigurationChange(CustomScreenConfiguration config)
 {
     m_configurationQueue.append(config);
 }
 
-void ScreenController::applyConfigurationChanges()
+void ScreensModel::applyConfigurationChanges()
 {
     auto controller = m_displayConfigurationController.lock();
     auto display = m_display.lock();

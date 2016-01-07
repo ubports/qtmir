@@ -23,7 +23,7 @@
 #include <qpa/qwindowsysteminterface.h>
 
 class QTouchDevice;
-class ScreenController;
+class ScreensModel;
 
 /*
   Fills Qt's event loop with input events from Mir
@@ -37,7 +37,7 @@ public:
     class QtWindowSystemInterface {
         public:
         virtual ~QtWindowSystemInterface() {}
-        virtual void setScreenController(const QSharedPointer<ScreenController> &sc) = 0;
+        virtual void setScreensModel(const QSharedPointer<ScreensModel> &sc) = 0;
         virtual QWindow* getWindowForTouchPoint(const QPoint &point) = 0;
         virtual QWindow* focusedWindow() = 0;
         virtual void registerTouchDevice(QTouchDevice *device) = 0;
@@ -55,8 +55,8 @@ public:
         virtual void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) = 0;
     };
 
-    QtEventFeeder(const QSharedPointer<ScreenController> &screenController);
-    QtEventFeeder(const QSharedPointer<ScreenController> &screenController,
+    QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel);
+    QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
                   QtWindowSystemInterface *windowSystem);
     virtual ~QtEventFeeder();
 

@@ -42,7 +42,7 @@
 #include "offscreensurface.h"
 #include "qmirserver.h"
 #include "screen.h"
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "screenwindow.h"
 #include "services.h"
 #include "ubuntutheme.h"
@@ -103,7 +103,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 {
     QWindowSystemInterface::flushWindowSystemEvents();
 
-    auto screens = m_mirServer->screenController().lock();
+    auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
         qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
         return nullptr;
@@ -142,11 +142,11 @@ void MirServerIntegration::initialize()
         exit(2);
     }
 
-    auto screens = m_mirServer->screenController().lock();
+    auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
-        qFatal("ScreenController not initialized");
+        qFatal("ScreensModel not initialized");
     }
-    QObject::connect(screens.data(), &ScreenController::screenAdded,
+    QObject::connect(screens.data(), &ScreensModel::screenAdded,
             [this](Screen *screen) { this->screenAdded(screen); });
     Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);

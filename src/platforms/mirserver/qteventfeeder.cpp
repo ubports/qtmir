@@ -20,7 +20,7 @@
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 #include "screen.h" // NEEDED?
-#include "screencontroller.h"
+#include "screensmodel.h"
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
@@ -380,9 +380,9 @@ public:
         qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
-    void setScreenController(const QSharedPointer<ScreenController> &sc) override
+    void setScreensModel(const QSharedPointer<ScreensModel> &sc) override
     {
-        m_screenController = sc;
+        m_screensModel = sc;
     }
 
     virtual QWindow* focusedWindow() override
@@ -392,7 +392,7 @@ public:
 
     QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
-        return m_screenController->getWindowForPoint(point);
+        return m_screensModel->getWindowForPoint(point);
     }
 
     void registerTouchDevice(QTouchDevice *device) override
@@ -425,7 +425,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screenController->screens();
+        QList<Screen*> screens = m_screensModel->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
@@ -443,7 +443,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screenController->screens();
+        QList<Screen*> screens = m_screensModel->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
@@ -454,17 +454,17 @@ public:
     }
 
 private:
-    QSharedPointer<ScreenController> m_screenController;
+    QSharedPointer<ScreensModel> m_screensModel;
 };
 
 } // anonymous namespace
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController)
-    : QtEventFeeder(screenController, new QtWindowSystem)
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel)
+    : QtEventFeeder(screensModel, new QtWindowSystem)
 {
 }
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController,
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
                              QtEventFeeder::QtWindowSystemInterface *windowSystem)
     : mQtWindowSystem(windowSystem)
 {
@@ -477,7 +477,7 @@ QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenContr
     mTouchDevice->setCapabilities(
             QTouchDevice::Position | QTouchDevice::Area | QTouchDevice::Pressure |
             QTouchDevice::NormalizedPosition);
-    mQtWindowSystem->setScreenController(screenController);
+    mQtWindowSystem->setScreensModel(screensModel);
     mQtWindowSystem->registerTouchDevice(mTouchDevice);
 }
 
