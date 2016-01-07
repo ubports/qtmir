@@ -19,17 +19,12 @@
 
 #include <QObject>
 #include <QPoint>
-#include <QVector>
 
 // Mir
 #include <mir/graphics/display_configuration.h>
-#include <mir/shell/display_configuration_controller.h>
 
 // std
 #include <memory>
-
-// local
-#include "customscreenconfiguration.h"
 
 namespace mir {
     namespace graphics { class Display; }
@@ -69,10 +64,6 @@ public:
 
     QWindow* getWindowForPoint(const QPoint &point);
 
-    CustomScreenConfiguration getConfigurationFor(Screen *screen);
-    void queueConfigurationChange(CustomScreenConfiguration config);
-    void applyConfigurationChanges();
-
 Q_SIGNALS:
     void screenAdded(Screen *screen);
 
@@ -82,7 +73,6 @@ public Q_SLOTS:
 public:
     // called by MirServer
     void init(const std::shared_ptr<mir::graphics::Display> &display,
-              const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
               const std::shared_ptr<mir::compositor::Compositor> &compositor);
     void terminate();
 
@@ -97,10 +87,8 @@ private:
     Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
 
     std::weak_ptr<mir::graphics::Display> m_display;
-    std::weak_ptr<mir::shell::DisplayConfigurationController> m_displayConfigurationController;
     std::shared_ptr<mir::compositor::Compositor> m_compositor;
     QList<Screen*> m_screenList;
-    QVector<CustomScreenConfiguration> m_configurationQueue;
     bool m_compositing;
 };
 

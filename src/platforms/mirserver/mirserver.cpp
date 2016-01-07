@@ -124,9 +124,7 @@ MirServer::MirServer(int argc, char const* argv[],
         });
 
     add_init_callback([this, &screensModel] {
-        screensModel->init(the_display(),
-                           the_display_configuration_controller(),
-                           the_compositor());
+        screensModel->init(the_display(), the_compositor());
     });
 
     apply_settings();

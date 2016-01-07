@@ -28,10 +28,9 @@ public:
     }
 
     void do_init(const std::shared_ptr<mir::graphics::Display> &display,
-                 const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
                  const std::shared_ptr<mir::compositor::Compositor> &compositor)
     {
-        init(display, controller, compositor);
+        init(display, compositor);
     }
 
     void do_terminate() { terminate(); }

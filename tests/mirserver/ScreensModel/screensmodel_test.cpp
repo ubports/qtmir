@@ -18,7 +18,6 @@
 #include "gmock_fixes.h"
 
 #include "stub_display.h"
-#include "stub_displayconfigurationcontroller.h"
 #include "mock_main_loop.h"
 #include "qtcompositor.h"
 #include "fake_displayconfigurationoutput.h"
@@ -41,7 +40,6 @@ protected:
 
     ScreensModel *screensModel;
     std::shared_ptr<StubDisplay> display;
-    std::shared_ptr<StubDisplayConfigurationController> controller;
     std::shared_ptr<QtCompositor> compositor;
     QGuiApplication *app;
 };
@@ -53,10 +51,9 @@ void ScreensModelTest::SetUp()
 
     screensModel = new TestableScreensModel;
     display = std::make_shared<StubDisplay>();
-    controller = std::make_shared<StubDisplayConfigurationController>();
     compositor = std::make_shared<QtCompositor>();
 
-    static_cast<TestableScreensModel*>(screensModel)->do_init(display, controller, compositor);
+    static_cast<TestableScreensModel*>(screensModel)->do_init(display, compositor);
 
     int argc = 0;
     char **argv = nullptr;
