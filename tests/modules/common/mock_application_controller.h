@@ -79,11 +79,11 @@ struct MockApplicationController : public qtmir::ApplicationController
 
     bool doAppIdHasProcessId(pid_t pid, const QString& appId)
     {
-        auto it = children.find(appId);
-        if (it == children.end())
+        auto primaryPid = primaryPidForAppId(appId);
+        if (primaryPid == -1)
             return false;
 
-        return it->pid() == pid;
+        return primaryPid == pid;
     }
 
     QFileInfo doFindDesktopFileForAppId(const QString& appId) const

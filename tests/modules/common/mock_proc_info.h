@@ -25,6 +25,10 @@ namespace testing
 {
 struct MockProcInfo : public qtmir::ProcInfo
 {
+    MockProcInfo() : qtmir::ProcInfo() {
+        ON_CALL(*this, command_line(_)).WillByDefault(::testing::Return(QByteArray()));
+    }
+
     MOCK_METHOD1(command_line, QByteArray(pid_t));
     std::unique_ptr<CommandLine> commandLine(pid_t pid)
     {
