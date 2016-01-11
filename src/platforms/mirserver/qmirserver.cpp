@@ -23,8 +23,6 @@
 #include "mirserver.h"
 #include "qmirserver.h"
 #include "qmirserver_p.h"
-#include "screenscontroller.h"
-#include "screensmodel.h"
 #include "screen.h"
 
 QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
@@ -45,6 +43,10 @@ QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
     d->screensModel = QSharedPointer<ScreensModel>(new ScreensModel());
 
     d->server = QSharedPointer<MirServer>(new MirServer(argc, const_cast<const char**>(argv), d->screensModel));
+
+    d->screensController = QSharedPointer<ScreensController>(
+                               new ScreensController(d->screensModel, d->server->the_display(),
+                                                     d->server->the_display_configuration_controller()));
 
     d->serverThread = new MirServerThread(d->server);
 
@@ -105,8 +107,8 @@ QWeakPointer<ScreensModel> QMirServer::screensModel() const
     return d->screensModel;
 }
 
-ScreensController *QMirServer::screensController() const
+QWeakPointer<ScreensController> QMirServer::screensController() const
 {
     Q_D(const QMirServer);
-    return d->server->screenController();
+    return d->screensController;
 }

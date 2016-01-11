@@ -40,7 +40,7 @@ public:
 
     QWeakPointer<MirServer> mirServer() const;
 
-    ScreensController *screensController() const;
+    QWeakPointer<ScreensController> screensController() const;
     QWeakPointer<ScreensModel> screensModel() const;
 
 Q_SIGNALS:

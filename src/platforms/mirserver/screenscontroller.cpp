@@ -26,18 +26,16 @@ namespace mg = mir::graphics;
 
 ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
         const std::shared_ptr<mir::graphics::Display> &display,
-        const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &policy,
         const std::weak_ptr<mir::shell::DisplayConfigurationController> &controller,
         QObject *parent)
     : QObject(parent)
     , m_screensModel(model)
     , m_display(display)
-    , m_wrappedDisplayConfigurationPolicy(policy)
     , m_displayConfigurationController(controller)
 {
 }
 
-CustomScreenConfigurationList ScreensController::configuration() const
+CustomScreenConfigurationList ScreensController::configuration()
 {
     CustomScreenConfigurationList list;
 
@@ -87,34 +85,5 @@ bool ScreensController::setConfiguration(CustomScreenConfigurationList newConfig
     }
 
     controller->set_base_configuration(std::move(displayConfiguration));
-
-    //TODO: Save this configuration for future use
     return true;
-}
-
-void ScreensController::apply_to(mg::DisplayConfiguration& conf)
-{
-    int nextTopLeftPosition = 0;
-
-    m_wrappedDisplayConfigurationPolicy->apply_to(conf);
-
-    //TODO: scan through saved configurations and select matching one to apply
-
-    conf.for_each_output(
-        [&](mg::UserDisplayConfigurationOutput &output)
-        {
-            if (output.connected && output.used) {
-                output.top_left = mir::geometry::Point{nextTopLeftPosition, 0};
-                nextTopLeftPosition += output.modes[output.preferred_mode_index].size.width.as_int();
-            }
-
-            if (output.type == mg::DisplayConfigurationOutputType::hdmia
-                    || output.type == mg::DisplayConfigurationOutputType::hdmib) {
-                output.form_factor = mir_form_factor_monitor;
-                output.scale = 2;
-            } else {
-                output.form_factor = mir_form_factor_phone;
-                output.scale = 1;
-            }
-        });
 }

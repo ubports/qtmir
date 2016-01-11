@@ -22,11 +22,11 @@
 #include <mir/server.h>
 
 class QtEventFeeder;
+class MirDisplayConfigurationPolicy;
 class SessionListener;
 class SessionAuthorizer;
 using MirShell = mir::shell::Shell;
 class PromptSessionListener;
-class ScreensController;
 class ScreensModel;
 
 // We use virtual inheritance of mir::Server to facilitate derived classes (e.g. testing)
@@ -48,6 +48,7 @@ public:
     using mir::Server::run;
     using mir::Server::the_compositor;
     using mir::Server::the_display;
+    using mir::Server::the_display_configuration_controller;
     using mir::Server::the_gl_config;
     using mir::Server::the_main_loop;
     using mir::Server::the_prompt_session_listener;
@@ -63,12 +64,11 @@ public:
     SessionListener *sessionListener();
     PromptSessionListener *promptSessionListener();
     MirShell *shell();
-    ScreensController *screenController();
 
 private:
     std::weak_ptr<MirShell> m_shell;
     std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
-    std::shared_ptr<ScreensController> m_screenController;
+    std::weak_ptr<MirDisplayConfigurationPolicy> m_displayConfigurationPolicy;
     const QSharedPointer<ScreensModel> m_screensModel;
 };
 

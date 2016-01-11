@@ -20,11 +20,11 @@
 
 // local
 #include "mircursorimages.h"
+#include "mirdisplayconfigurationpolicy.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
 #include "mirwindowmanager.h"
 #include "promptsessionlistener.h"
-#include "screenscontroller.h"
 #include "screensmodel.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
@@ -111,13 +111,10 @@ MirServer::MirServer(int argc, char const* argv[],
         });
 
     wrap_display_configuration_policy(
-        [this](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            auto sc = std::make_shared<ScreensController>(m_screensModel, the_display(), wrapped,
-                                                      the_display_configuration_controller());
-            m_screenController = sc;
-            return sc;
+            return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
         });
 
     set_terminator([](int)
@@ -195,11 +192,4 @@ MirShell *MirServer::shell()
 {
     std::weak_ptr<MirShell> m_shell = the_shell();
     return m_shell.lock().get();
-}
-
-ScreensController *MirServer::screenController()
-{
-    if (!m_screenController) return 0;
-
-    return m_screenController.get();
 }
