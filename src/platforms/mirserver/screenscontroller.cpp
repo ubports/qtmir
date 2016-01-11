@@ -98,12 +98,23 @@ void ScreensController::apply_to(mg::DisplayConfiguration& conf)
 
     m_wrappedDisplayConfigurationPolicy->apply_to(conf);
 
+    //TODO: scan through saved configurations and select matching one to apply
+
     conf.for_each_output(
-        [&](mg::UserDisplayConfigurationOutput& output)
+        [&](mg::UserDisplayConfigurationOutput &output)
         {
             if (output.connected && output.used) {
                 output.top_left = mir::geometry::Point{nextTopLeftPosition, 0};
                 nextTopLeftPosition += output.modes[output.preferred_mode_index].size.width.as_int();
+            }
+
+            if (output.type == mg::DisplayConfigurationOutputType::hdmia
+                    || output.type == mg::DisplayConfigurationOutputType::hdmib) {
+                output.form_factor = mir_form_factor_monitor;
+                output.scale = 2;
+            } else {
+                output.form_factor = mir_form_factor_phone;
+                output.scale = 1;
             }
         });
 }
