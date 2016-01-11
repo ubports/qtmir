@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,62 +15,75 @@
  */
 
 #include "screenscontroller.h"
+#include "screen.h"
 
-using namespace qtmir;
+// Mir
+#include <mir/graphics/display.h>
+#include <mir/shell/display_configuration_controller.h>
+#include <mir/geometry/point.h>
 
-ScreensController::ScreensController(
+namespace mg = mir::graphics;
+
+ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
         const std::shared_ptr<mir::graphics::Display> &display,
-        const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
+        const std::weak_ptr<mir::shell::DisplayConfigurationController> &controller,
         QObject *parent)
-    : m_display(display)
+    : QObject(parent)
+    , m_screensModel(model)
+    , m_display(display)
     , m_displayConfigurationController(controller)
-    , QObject(parent)
 {
 }
 
-CustomScreenConfiguration ScreensController::getConfigurationFor(Screen *screen)
+CustomScreenConfigurationList ScreensController::configuration()
 {
-    CustomScreenConfiguration config {
-        screen->outputId(),
-        screen->geometry().topLeft(),
-        screen->currentModeIndex(),
-        screen->powerMode(),
-        mir_orientation_normal, //screen->orientation(),
-        screen->scale(),
-        screen->formFactor()
-    };
-    return config;
+    CustomScreenConfigurationList list;
+
+    Q_FOREACH(auto screen, m_screensModel->screens()) {
+        list.append(
+            CustomScreenConfiguration {
+                        screen->outputId(),
+                        screen->geometry().topLeft(),
+                        screen->currentModeIndex(),
+                        screen->powerMode(),
+                        mir_orientation_normal, //screen->orientation(), disable for now
+                        screen->scale(),
+                        screen->formFactor()
+            });
+    }
+    return list;
 }
 
-void ScreensController::queueConfigurationChange(CustomScreenConfiguration config)
+bool ScreensController::setConfiguration(CustomScreenConfigurationList newConfig)
 {
-    m_configurationQueue.append(config);
-}
-
-void ScreensController::applyConfigurationChanges()
-{
+    using namespace mir::geometry;
     auto controller = m_displayConfigurationController.lock();
-    auto display = m_display.lock();
 
-    if (m_configurationQueue.isEmpty() || !controller || !display) {
-        return;
+    if (!controller) {
+        return false;
     }
 
-    auto displayConfiguration = display->configuration();
+    auto displayConfiguration = m_display->configuration();
 
-    Q_FOREACH (auto config, m_configurationQueue) {
+    Q_FOREACH (auto config, newConfig) {
         displayConfiguration->for_each_output(
             [&config](mg::UserDisplayConfigurationOutput &outputConfig)
             {
                 if (config.id == outputConfig.id) {
-                    outputConfig.current_mode_index = config.modeIndex;
+                    outputConfig.current_mode_index = config.currentModeIndex;
+                    outputConfig.top_left = Point{ X{config.topLeft.x()}, Y{config.topLeft.y()}};
                     outputConfig.power_mode = config.powerMode;
+//                    outputConfig.orientation = config.orientation; // disabling for now
                     outputConfig.scale = config.scale;
                     outputConfig.form_factor = config.formFactor;
                 }
             });
     }
 
+    if (!displayConfiguration->valid()) {
+        return false;
+    }
+
     controller->set_base_configuration(std::move(displayConfiguration));
-    m_configurationQueue.clear();
+    return true;
 }

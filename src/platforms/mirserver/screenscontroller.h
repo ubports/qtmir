@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,40 +19,36 @@
 
 // Qt
 #include <QObject>
+#include <QSharedPointer>
 #include <QVector>
-
-// Mir
-#include <mir/shell/display_configuration_controller.h>
 
 // local
 #include "customscreenconfiguration.h"
+#include "screensmodel.h"
 
 namespace mir {
     namespace graphics { class Display; }
+    namespace shell { class DisplayConfigurationController; }
 }
 
-namespace qtmir {
-
-class Screen;
 
 class ScreensController : public QObject
 {
     Q_OBJECT
+
 public:
-    explicit ScreensController(const std::shared_ptr<mir::graphics::Display> &display,
-                               const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
+    explicit ScreensController(const QSharedPointer<ScreensModel> &model,
+                               const std::shared_ptr<mir::graphics::Display> &display,
+                               const std::weak_ptr<mir::shell::DisplayConfigurationController> &controller,
                                QObject *parent = 0);
 
-    CustomScreenConfiguration getConfigurationFor(Screen *screen);
-    void queueConfigurationChange(CustomScreenConfiguration config);
-    void applyConfigurationChanges();
+    CustomScreenConfigurationList configuration();
+    bool setConfiguration(CustomScreenConfigurationList newConfig);
 
 private:
+    const QSharedPointer<ScreensModel> m_screensModel;
     const std::shared_ptr<mir::graphics::Display> m_display;
     const std::weak_ptr<mir::shell::DisplayConfigurationController> m_displayConfigurationController;
-    QVector<CustomScreenConfiguration> m_configurationQueue;
 };
-
-} //namespace qtmir
 
 #endif // SCREENSCONTROLLER_H

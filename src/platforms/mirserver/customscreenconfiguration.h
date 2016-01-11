@@ -18,18 +18,24 @@
 #define CUSTOMSCREENCONFIGURATION_H
 
 #include <QPoint>
+#include <QVector>
 
 #include <mir/graphics/display_configuration.h>
 
 struct CustomScreenConfiguration
 {
     mir::graphics::DisplayConfigurationOutputId id;
+
     QPoint topLeft;
-    uint32_t modeIndex;
+    uint32_t currentModeIndex;
     MirPowerMode powerMode;
     MirOrientation orientation;
     float scale;
     MirFormFactor formFactor;
+
+    // To read additional readonly state, consult the Screen
 };
+
+typedef QVector<CustomScreenConfiguration> CustomScreenConfigurationList;
 
 #endif // CUSTOMSCREENCONFIGURATION_H

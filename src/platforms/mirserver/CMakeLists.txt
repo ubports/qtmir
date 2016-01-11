@@ -60,6 +60,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     mirserverstatuslistener.cpp
     screen.cpp
     screenwindow.cpp
+    screenscontroller.cpp
     screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp

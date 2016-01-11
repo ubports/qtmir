@@ -26,7 +26,7 @@ class TiledDisplayConfigurationPolicy : public mir::graphics::DisplayConfigurati
 public:
     TiledDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped);
 
-    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+    void apply_to(mir::graphics::DisplayConfiguration &conf) override;
 
 private:
     const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
