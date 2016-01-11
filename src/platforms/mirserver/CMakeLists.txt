@@ -46,7 +46,6 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     cursor.cpp
     mircursorimages.cpp
-    mirdisplayconfigurationpolicy.cpp
     mirwindowmanager.cpp
     mirsingleton.cpp
     qteventfeeder.cpp

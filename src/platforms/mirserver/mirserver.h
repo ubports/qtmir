@@ -26,6 +26,7 @@ class SessionListener;
 class SessionAuthorizer;
 using MirShell = mir::shell::Shell;
 class PromptSessionListener;
+class ScreensController;
 class ScreensModel;
 
 // We use virtual inheritance of mir::Server to facilitate derived classes (e.g. testing)
@@ -62,10 +63,12 @@ public:
     SessionListener *sessionListener();
     PromptSessionListener *promptSessionListener();
     MirShell *shell();
+    ScreensController *screenController();
 
 private:
     std::weak_ptr<MirShell> m_shell;
     std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
+    std::shared_ptr<ScreensController> m_screenController;
     const QSharedPointer<ScreensModel> m_screensModel;
 };
 

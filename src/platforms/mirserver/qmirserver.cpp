@@ -104,3 +104,9 @@ QWeakPointer<ScreensModel> QMirServer::screensModel() const
     Q_D(const QMirServer);
     return d->screensModel;
 }
+
+ScreensController *QMirServer::screensController() const
+{
+    Q_D(const QMirServer);
+    return d->server->screenController();
+}

@@ -114,7 +114,10 @@ MirServer::MirServer(int argc, char const* argv[],
         [this](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<ScreensController>(m_screensModel, the_display(), wrapped, the_display_configuration_controller());
+            auto sc = std::make_shared<ScreensController>(m_screensModel, the_display(), wrapped,
+                                                      the_display_configuration_controller());
+            m_screenController = sc;
+            return sc;
         });
 
     set_terminator([](int)
@@ -192,4 +195,11 @@ MirShell *MirServer::shell()
 {
     std::weak_ptr<MirShell> m_shell = the_shell();
     return m_shell.lock().get();
+}
+
+ScreensController *MirServer::screenController()
+{
+    if (!m_screenController) return 0;
+
+    return m_screenController.get();
 }
