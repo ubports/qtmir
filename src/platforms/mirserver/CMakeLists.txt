@@ -46,6 +46,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     cursor.cpp
     mircursorimages.cpp
+    mirdisplayconfigurationpolicy.cpp
     mirwindowmanager.cpp
     mirsingleton.cpp
     qteventfeeder.cpp
@@ -70,7 +71,6 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    tileddisplayconfigurationpolicy.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h

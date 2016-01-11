@@ -20,16 +20,16 @@
 
 // local
 #include "mircursorimages.h"
-#include "mirwindowmanager.h"
+#include "mirdisplayconfigurationpolicy.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
+#include "mirwindowmanager.h"
 #include "promptsessionlistener.h"
 #include "screensmodel.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
-#include "tileddisplayconfigurationpolicy.h"
 #include "logging.h"
 
 // std
@@ -114,7 +114,7 @@ MirServer::MirServer(int argc, char const* argv[],
         [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<TiledDisplayConfigurationPolicy>(wrapped);
+            return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
         });
 
     set_terminator([](int)

@@ -14,20 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tileddisplayconfigurationpolicy.h"
+#include "mirdisplayconfigurationpolicy.h"
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/geometry/point.h>
 
 namespace mg = mir::graphics;
 
-TiledDisplayConfigurationPolicy::TiledDisplayConfigurationPolicy(
+MirDisplayConfigurationPolicy::MirDisplayConfigurationPolicy(
         const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
     : m_wrapped(wrapped)
 {
 }
 
-void TiledDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
+void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
 {
     int nextTopLeftPosition = 0;
 
