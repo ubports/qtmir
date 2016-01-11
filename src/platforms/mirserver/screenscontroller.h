@@ -17,10 +17,12 @@
 #ifndef SCREENSCONTROLLER_H
 #define SCREENSCONTROLLER_H
 
+// Mir
+#include <mir/graphics/display_configuration_policy.h>
+
 // Qt
 #include <QObject>
 #include <QSharedPointer>
-#include <QVector>
 
 // local
 #include "customscreenconfiguration.h"
@@ -32,22 +34,28 @@ namespace mir {
 }
 
 
-class ScreensController : public QObject
+class ScreensController : public QObject, public mir::graphics::DisplayConfigurationPolicy
 {
     Q_OBJECT
 
 public:
     explicit ScreensController(const QSharedPointer<ScreensModel> &model,
                                const std::shared_ptr<mir::graphics::Display> &display,
+                               const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &policy,
                                const std::weak_ptr<mir::shell::DisplayConfigurationController> &controller,
                                QObject *parent = 0);
 
-    CustomScreenConfigurationList configuration();
+    // for public use
+    CustomScreenConfigurationList configuration() const;
     bool setConfiguration(CustomScreenConfigurationList newConfig);
+
+    // from DisplayConfigurationPolicy
+    void apply_to(mir::graphics::DisplayConfiguration &conf) override;
 
 private:
     const QSharedPointer<ScreensModel> m_screensModel;
     const std::shared_ptr<mir::graphics::Display> m_display;
+    const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrappedDisplayConfigurationPolicy;
     const std::weak_ptr<mir::shell::DisplayConfigurationController> m_displayConfigurationController;
 };
 

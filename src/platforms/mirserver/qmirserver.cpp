@@ -23,6 +23,7 @@
 #include "mirserver.h"
 #include "qmirserver.h"
 #include "qmirserver_p.h"
+#include "screenscontroller.h"
 #include "screensmodel.h"
 #include "screen.h"
 
