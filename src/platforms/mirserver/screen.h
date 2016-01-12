@@ -47,6 +47,7 @@ public:
     QRect geometry() const override { return m_geometry; }
     int depth() const override { return m_depth; }
     QImage::Format format() const override { return m_format; }
+    qreal devicePixelRatio() const override { return m_devicePixelRatio; }
     QSizeF physicalSize() const override { return m_physicalSize; }
     qreal refreshRate() const override { return m_refreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return m_nativeOrientation; }
@@ -91,6 +92,7 @@ private:
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;
+    qreal m_devicePixelRatio;
     QSizeF m_physicalSize;
     qreal m_refreshRate;
     float m_scale;

@@ -13,7 +13,7 @@ Instantiator {
         visible: true
         Shell{ anchors.fill: parent }
         Component.onCompleted: {
-            print("HEY", screen, screen.geometry, outputType, Screens.HDMIA)
+            print("HEY", screen, screen.geometry, outputType, Screens.HDMIA, screen.devicePixelRatio)
         }
     }
 }

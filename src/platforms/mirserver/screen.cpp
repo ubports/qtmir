@@ -29,6 +29,7 @@
 #include <QCoreApplication>
 #include <qpa/qwindowsysteminterface.h>
 #include <QThread>
+#include <QtMath>
 
 // Qt sensors
 #include <QtSensors/QOrientationReading>
@@ -212,8 +213,9 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
-    // Scale & Form Factor
+    // Scale, DPR & Form Factor
     m_scale = screen.scale;
+    m_devicePixelRatio = qCeil(m_scale);
     m_formFactor = screen.form_factor;
 
     // Check for Screen geometry change
