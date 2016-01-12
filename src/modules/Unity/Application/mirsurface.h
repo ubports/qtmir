@@ -121,6 +121,8 @@ public:
 
     QCursor cursor() const override;
 
+    void setScreen(QScreen *screen) override;
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 

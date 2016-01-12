@@ -86,6 +86,8 @@ public:
 
     virtual QCursor cursor() const = 0;
 
+    virtual void setScreen(QScreen *screen) = 0;
+
 Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);
 

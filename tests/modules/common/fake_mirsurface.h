@@ -178,6 +178,8 @@ public:
         Q_EMIT closeRequested();
     }
 
+    void setScreen(QScreen *) override {}
+
 Q_SIGNALS:
     void closeRequested();
 

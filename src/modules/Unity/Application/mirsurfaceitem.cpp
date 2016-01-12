@@ -697,7 +697,16 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     m_window = window;
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
-            Qt::DirectConnection);
+                Qt::DirectConnection);
+
+        connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::onScreenChanged);
+    }
+}
+
+void MirSurfaceItem::onScreenChanged(QScreen *screen)
+{
+    if (screen && m_surface) {
+        m_surface->setScreen(screen);
     }
 }
 
