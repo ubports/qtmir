@@ -67,6 +67,14 @@ public:
         applicationManager.onProcessSuspended(application->appId());
         ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
     }
+
+protected:
+    virtual void SetUp() override {
+        if (m_tempDir.isValid()) qputenv("XDG_CACHE_HOME", m_tempDir.path().toUtf8());
+    }
+
+private:
+    const QTemporaryDir m_tempDir;
 };
 
 TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_authorize_and_gets_mixed_up_with_first_one)
@@ -1873,7 +1881,8 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
     onSessionStarting(session);
 
     // Create fake QML cache for this app
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+                 + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
 
@@ -1918,7 +1927,8 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
     // Create fake QML cache for this app
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+                 + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
 
@@ -1966,7 +1976,8 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
     // Create fake QML cache for this app
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/") + appId);
+    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+                 + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
 

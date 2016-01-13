@@ -106,7 +106,7 @@ Application::~Application()
 
 void Application::wipeQMLCache()
 {
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/"));
+    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QStringLiteral("/QML/Apps/"));
     QDir dir(path);
     QStringList apps = dir.entryList();
     for (int i = 0; i < apps.size(); i++) {
