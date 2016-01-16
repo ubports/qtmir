@@ -172,6 +172,15 @@ public:
 
     QString appId() const override { return "foo-app"; }
 
+    QCursor cursor() const override { return QCursor(); }
+
+    void close() override {
+        Q_EMIT closeRequested();
+    }
+
+Q_SIGNALS:
+    void closeRequested();
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override {}
 
