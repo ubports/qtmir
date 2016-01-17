@@ -26,7 +26,7 @@ namespace me = mir::examples;
 
 me::BasicWindowManager::BasicWindowManager(
     shell::FocusController* focus_controller,
-    std::unique_ptr<WindowManagementPolicy>&& policy) :
+    std::unique_ptr<WindowManagementPolicy> policy) :
     focus_controller(focus_controller),
     policy(std::move(policy))
 {
@@ -126,7 +126,6 @@ bool me::BasicWindowManager::handle_pointer_event(MirPointerEvent const* event)
     return policy->handle_pointer_event(event);
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 18, 0)
 void me::BasicWindowManager::handle_raise_surface(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
@@ -136,7 +135,6 @@ void me::BasicWindowManager::handle_raise_surface(
     if (timestamp >= last_input_event_timestamp)
         policy->handle_raise_surface(session, surface);
 }
-#endif
 
 int me::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,

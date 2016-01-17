@@ -24,7 +24,6 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/window_manager.h"
-#include "mir/version.h"
 
 #include <map>
 #include <mutex>
@@ -127,13 +126,13 @@ public:
 
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and surfaces.
-class BasicWindowManager : public shell::WindowManager,
-                             protected WindowManagerTools
+class BasicWindowManager : public virtual shell::WindowManager,
+    protected WindowManagerTools
 {
 protected:
     BasicWindowManager(
         shell::FocusController* focus_controller,
-        std::unique_ptr<WindowManagementPolicy>&& policy);
+        std::unique_ptr<WindowManagementPolicy> policy);
 
 public:
     using typename WindowManagerTools::SurfaceInfoMap;
@@ -170,12 +169,10 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event) override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 18, 0)
     void handle_raise_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
-#endif
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& /*session*/,
