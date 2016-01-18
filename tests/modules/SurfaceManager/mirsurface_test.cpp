@@ -60,7 +60,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
         .WillRepeatedly(Return(1));
 
     MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver);
-    surfaceObserver->frame_posted(1);
+    surfaceObserver->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
     QTest::qWait(300);

@@ -56,6 +56,7 @@ struct MockSession : public Session
                  frontend::SurfaceId(SurfaceCreationParameters const&,
                                      std::shared_ptr<frontend::EventSink> const&));
     MOCK_METHOD1(destroy_surface, void (frontend::SurfaceId));
+    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<Surface> const& surface));
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
