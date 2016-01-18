@@ -122,12 +122,20 @@ void ScreensModel::update()
         [this, &oldScreenList, &newScreenList](const mg::DisplayConfigurationOutput &output) {
             if (output.used && output.connected) {
                 Screen *screen = findScreenWithId(oldScreenList, output.id);
-                if (screen) { // we've already set up this display before, refresh its internals
-                    screen->setMirDisplayConfiguration(output);
-                    oldScreenList.removeAll(screen);
+                if (screen) { // we've already set up this display before
+                    // Can we re-use the existing Screen?
+                    if (canUpdateExistingScreen(screen, output)) {
+                        screen->setMirDisplayConfiguration(output);
+                        oldScreenList.removeAll(screen);
+                    } else {
+                        auto newScreen = createScreen(output);
+                        newScreenList.append(newScreen);
+                        qCDebug(QTMIR_SCREENS) << "Need to delete & re-create Screen with id" << output.id.as_value()
+                                               << "and geometry" << screen->geometry();
+                    }
                 } else {
                     // new display, so create Screen for it
-                    screen = this->createScreen(output);
+                    screen = createScreen(output);
                     newScreenList.append(screen);
                     qCDebug(QTMIR_SCREENS) << "Added Screen with id" << output.id.as_value()
                                            << "and geometry" << screen->geometry();
@@ -185,7 +193,25 @@ void ScreensModel::update()
     }
 }
 
-Screen* ScreensModel::createScreen(const mir::graphics::DisplayConfigurationOutput &output) const
+bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::DisplayConfigurationOutput &output)
+{
+    // Compare the properties of the existing Screen with its new configuration. Properties
+    // like geometry, refresh rate and dpi can be updated on existing screens. Other property
+    // changes cannot be applied to existing screen, so need to delete existing Screen and
+    // create new Screen with new properties.
+    auto mirOutput = output.modes[output.current_mode_index];
+    auto mirSize = mirOutput.size;
+
+    if (screen->geometry().height() == mirSize.width.as_int()
+            && screen->geometry().width() == mirSize.height.as_int()
+            && qFuzzyCompare(screen->refreshRate(), mirOutput.vrefresh_hz)) {
+        return true;
+    }
+
+    return false;
+}
+
+Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
 {
     return new Screen(output);
 }

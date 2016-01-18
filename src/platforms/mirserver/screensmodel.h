@@ -85,6 +85,7 @@ protected Q_SLOTS:
 
 private:
     Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
+    bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<mir::compositor::Compositor> m_compositor;
