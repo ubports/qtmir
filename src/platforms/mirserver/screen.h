@@ -64,7 +64,7 @@ public:
     std::vector<MirPixelFormat> pixelFormats() const { return m_pixelFormats; }
     std::vector<mir::graphics::DisplayConfigurationMode> modes() const { return m_modes; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
-    uint32_t preferrredModeIndex() const { return m_preferredModeIndex; }
+    uint32_t preferredModeIndex() const { return m_preferredModeIndex; }
 
     ScreenWindow* window() const;
 
