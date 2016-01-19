@@ -219,7 +219,7 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
     // like geometry, refresh rate and dpi can be updated on existing screens. Other property
     // changes cannot be applied to existing screen, so will need to delete existing Screen and
     // create new Screen with new properties.
-    bool canUpdateExisting = false;//true;
+    bool canUpdateExisting = true;
 
     if (!qFuzzyCompare(screen->scale(), output.scale)) {
         canUpdateExisting = false;
