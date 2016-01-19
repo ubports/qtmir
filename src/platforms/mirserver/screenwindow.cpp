@@ -97,6 +97,23 @@ void ScreenWindow::setExposed(const bool exposed)
     }
 }
 
+void ScreenWindow::setScreen(QPlatformScreen *newScreen)
+{
+    // Dis-associate the old screen
+    if (screen()) {
+        static_cast<Screen *>(screen())->setWindow(nullptr);
+    }
+
+    // Associate new screen and announce to Qt
+    auto myScreen = static_cast<Screen *>(newScreen);
+    Q_ASSERT(myScreen);
+    myScreen->setWindow(this);
+
+    QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
+
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "NEWLY backed by" << myScreen;
+}
+
 void ScreenWindow::swapBuffers()
 {
     static_cast<Screen *>(screen())->swapBuffers();

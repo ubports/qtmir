@@ -34,6 +34,8 @@ public:
 
     WId winId() const override { return m_winId; }
 
+    void setScreen(QPlatformScreen *screen);
+
     void swapBuffers();
     void makeCurrent();
     void doneCurrent();

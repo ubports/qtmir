@@ -116,22 +116,32 @@ void ScreensModel::update()
     // Mir only tells us something changed, it is up to us to figure out what.
     QList<Screen*> newScreenList;
     QList<Screen*> oldScreenList = m_screenList;
+    QHash<ScreenWindow*, Screen*> windowMoveList;
     m_screenList.clear();
 
     displayConfig->for_each_output(
-        [this, &oldScreenList, &newScreenList](const mg::DisplayConfigurationOutput &output) {
+        [this, &oldScreenList, &newScreenList, &windowMoveList](const mg::DisplayConfigurationOutput &output) {
             if (output.used && output.connected) {
                 Screen *screen = findScreenWithId(oldScreenList, output.id);
                 if (screen) { // we've already set up this display before
+
                     // Can we re-use the existing Screen?
                     if (canUpdateExistingScreen(screen, output)) {
                         screen->setMirDisplayConfiguration(output);
                         oldScreenList.removeAll(screen);
+                        m_screenList.append(screen);
                     } else {
+                        // no, need to delete it and re-create with new config
                         auto newScreen = createScreen(output);
                         newScreenList.append(newScreen);
                         qCDebug(QTMIR_SCREENS) << "Need to delete & re-create Screen with id" << output.id.as_value()
                                                << "and geometry" << screen->geometry();
+
+                        // if Window on this Screen, arrange to move it to the new Screen
+                        if (screen->window()) {
+                            windowMoveList.insert(screen->window(), newScreen);
+                        }
+                        m_screenList.append(newScreen);
                     }
                 } else {
                     // new display, so create Screen for it
@@ -139,27 +149,11 @@ void ScreensModel::update()
                     newScreenList.append(screen);
                     qCDebug(QTMIR_SCREENS) << "Added Screen with id" << output.id.as_value()
                                            << "and geometry" << screen->geometry();
+                    m_screenList.append(screen);
                 }
-                m_screenList.append(screen);
             }
         }
     );
-
-    // Delete any old & unused Screens
-    for (auto screen: oldScreenList) {
-        qCDebug(QTMIR_SCREENS) << "Removed Screen with id" << screen->m_outputId.as_value()
-                               << "and geometry" << screen->geometry();
-        // The screen is automatically removed from Qt's internal list by the QPlatformScreen destructor.
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window() && window->isExposed()) {
-            window->window()->hide();
-        }
-        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
-        if (!ok) {
-            qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
-        }
-        delete screen;
-    }
 
     // Match up the new Mir DisplayBuffers with each Screen
     display->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
@@ -179,36 +173,59 @@ void ScreensModel::update()
         });
     });
 
+    // Announce new Screens to Qt
+    for (auto screen : newScreenList) {
+        Q_EMIT screenAdded(screen);
+    }
+
+    // Move Windows from about-to-be-deleted Screens to new Screen
+    auto i = windowMoveList.constBegin();
+    while (i != windowMoveList.constEnd()) {
+        qCDebug(QTMIR_SCREENS) << "Moving ScreenWindow" << i.key() << "from Screen" << static_cast<Screen*>(i.key()->screen()) << "to" << i.value();
+        i.key()->setScreen(i.value());
+        i++;
+    }
+
+    // Delete any old & unused Screens
+    for (auto screen: oldScreenList) {
+        qCDebug(QTMIR_SCREENS) << "Removed Screen with id" << screen->m_outputId.as_value()
+                               << "and geometry" << screen->geometry();
+        // The screen is automatically removed from Qt's internal list by the QPlatformScreen destructor.
+        auto window = static_cast<ScreenWindow *>(screen->window());
+        if (window && window->window() && window->isExposed()) {
+            window->window()->hide();
+        }
+        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
+        if (!ok) {
+            qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
+        }
+        delete screen;
+    }
+
     qCDebug(QTMIR_SCREENS) << "=======================================";
     for (auto screen: m_screenList) {
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->window()
-                               << "type" << static_cast<int>(screen->outputType());
+                               << "type:" << static_cast<int>(screen->outputType())
+                               << "scale:" << screen->scale();
     }
     qCDebug(QTMIR_SCREENS) << "=======================================";
-
-    for (auto screen : newScreenList) {
-        Q_EMIT screenAdded(screen);
-    }
 }
 
 bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::DisplayConfigurationOutput &output)
 {
     // Compare the properties of the existing Screen with its new configuration. Properties
     // like geometry, refresh rate and dpi can be updated on existing screens. Other property
-    // changes cannot be applied to existing screen, so need to delete existing Screen and
+    // changes cannot be applied to existing screen, so will need to delete existing Screen and
     // create new Screen with new properties.
-    auto mirOutput = output.modes[output.current_mode_index];
-    auto mirSize = mirOutput.size;
+    bool canUpdateExisting = false;//true;
 
-    if (screen->geometry().height() == mirSize.width.as_int()
-            && screen->geometry().width() == mirSize.height.as_int()
-            && qFuzzyCompare(screen->refreshRate(), mirOutput.vrefresh_hz)) {
-        return true;
+    if (!qFuzzyCompare(screen->scale(), output.scale)) {
+        canUpdateExisting = false;
     }
 
-    return false;
+    return canUpdateExisting;
 }
 
 Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
