@@ -579,63 +579,63 @@ bool MirSurface::visible() const
 void MirSurface::mousePressEvent(QMouseEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_button_down);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::mouseMoveEvent(QMouseEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_motion);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::mouseReleaseEvent(QMouseEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_button_up);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::hoverEnterEvent(QHoverEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_enter);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::hoverLeaveEvent(QHoverEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_leave);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::hoverMoveEvent(QHoverEvent *event)
 {
     auto ev = makeMirEvent(event, mir_pointer_action_motion);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::wheelEvent(QWheelEvent *event)
 {
     auto ev = makeMirEvent(event);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     event->accept();
 }
 
 void MirSurface::keyPressEvent(QKeyEvent *qtEvent)
 {
     auto ev = makeMirEvent(qtEvent);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     qtEvent->accept();
 }
 
 void MirSurface::keyReleaseEvent(QKeyEvent *qtEvent)
 {
     auto ev = makeMirEvent(qtEvent);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
     qtEvent->accept();
 }
 
@@ -645,7 +645,7 @@ void MirSurface::touchEvent(Qt::KeyboardModifiers mods,
                             ulong timestamp)
 {
     auto ev = makeMirEvent(mods, touchPoints, touchPointStates, timestamp);
-    m_surface->consume(*ev);
+    m_surface->consume(ev.get());
 }
 
 bool MirSurface::clientIsRunning() const

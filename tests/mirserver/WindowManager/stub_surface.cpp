@@ -98,7 +98,7 @@ bool StubSurface::input_area_contains(mir::geometry::Point const& /*point*/) con
     return false;
 }
 
-void StubSurface::consume(MirEvent const& /*event*/)
+void StubSurface::consume(MirEvent const* /*event*/)
 {
 }
 
