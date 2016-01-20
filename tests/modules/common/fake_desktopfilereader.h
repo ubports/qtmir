@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FAKE_DESKTOPFILEREADER_H
-#define FAKE_DESKTOPFILEREADER_H
+#ifndef FAKE_UAL_APPLICATION_H
+#define FAKE_UAL_APPLICATION_H
 
 namespace qtmir {
 
-class FakeDesktopFileReader : public qtmir::DesktopFileReader
+class FakeUalApplication : public Ubuntu::AppLaunch::Application
 {
 public:
-    FakeDesktopFileReader() : DesktopFileReader()
+    FakeUalApplication() : Ubuntu::AppLaunch::Application()
         , m_appId("foo-app")
     {}
 

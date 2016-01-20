@@ -27,7 +27,6 @@ set(QMLMIRPLUGIN_SRC
     application.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
-    desktopfilereader.cpp
     plugin.cpp
     applicationscreenshotprovider.cpp
     dbuswindowstack.cpp

@@ -29,13 +29,18 @@
 
 // local
 #include "application.h"
-#include "desktopfilereader.h"
 
 namespace mir {
     namespace scene {
         class Session;
         class Surface;
         class PromptSession;
+    }
+}
+
+namespace Ubuntu {
+    namespace AppLaunch {
+        class Registry;
     }
 }
 
@@ -85,7 +90,7 @@ public:
             const QSharedPointer<MirServer> &mirServer,
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
-            const QSharedPointer<DesktopFileReader::Factory> &desktopFileReaderFactory,
+            const std::shared_ptr<Ubuntu::AppLaunch::Registry> &ualRegistry,
             const QSharedPointer<ProcInfo> &processInfo,
             const QSharedPointer<SettingsInterface> &settings,
             QObject *parent = 0);
@@ -157,7 +162,7 @@ private:
     Application* m_focusedApplication;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
-    QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
+    std::shared_ptr<Ubuntu::AppLaunch::Registry> m_ualRegistry;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;

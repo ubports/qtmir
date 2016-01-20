@@ -17,7 +17,6 @@
 // local
 #include "application.h"
 #include "application_manager.h"
-#include "desktopfilereader.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "taskcontroller.h"
@@ -32,20 +31,23 @@
 #include <mir/scene/session.h>
 #include <mir/scene/snapshot.h>
 
+// ual
+#include <libubuntu-app-launch-2/application.h>
+
 namespace ms = mir::scene;
 
 namespace qtmir
 {
 
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                         DesktopFileReader *desktopFileReader,
+                         const std::shared_ptr<Ubuntu::AppLaunch::Application>& ualApp,
                          const QStringList &arguments,
                          ApplicationManager *parent)
-    : ApplicationInfoInterface(desktopFileReader->appId(), parent)
+    : ApplicationInfoInterface("", parent)
     , m_sharedWakelock(sharedWakelock)
-    , m_desktopData(desktopFileReader)
+    , m_ualApp(ualApp)
     , m_pid(0)
-    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage(Application::MainStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
@@ -55,17 +57,14 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_closeTimer(0)
     , m_exemptFromLifecycle(false)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
+    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << appId();
 
     // Because m_state is InternalState::Starting
     acquireWakelock();
 
-    // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
-    m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
-
-    m_supportedOrientations = m_desktopData->supportedOrientations();
-
-    m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
+    // FIXME MIKE
+    //m_supportedOrientations = m_ualApp->supportedOrientations();
+    //m_rotatesWindowContents = m_ualApp->rotatesWindowContents();
 }
 
 Application::~Application()
@@ -100,7 +99,6 @@ Application::~Application()
         m_session->setApplication(nullptr);
         delete m_session;
     }
-    delete m_desktopData;
 }
 
 
@@ -121,64 +119,40 @@ void Application::wipeQMLCache()
 
 bool Application::isValid() const
 {
-    return m_desktopData->loaded();
-}
-
-QString Application::desktopFile() const
-{
-    return m_desktopData->file();
+    return !m_ualApp->appId().empty();
 }
 
 QString Application::appId() const
 {
-    return m_desktopData->appId();
+    return QString::fromStdString(std::string(m_ualApp->appId()));
 }
 
 QString Application::name() const
 {
-    return m_desktopData->name();
+    return QString::fromStdString(m_ualApp->info()->name());
 }
 
 QString Application::comment() const
 {
-    return m_desktopData->comment();
+    return QString::fromStdString(m_ualApp->info()->description());
 }
 
 QUrl Application::icon() const
 {
-    QString iconString = m_desktopData->icon();
-    QString pathString = m_desktopData->path();
-
-    if (QFileInfo(iconString).exists()) {
-        return QUrl(iconString);
-    } else if (QFileInfo(pathString + '/' + iconString).exists()) {
-        return QUrl(pathString + '/' + iconString);
-    } else {
-        return QUrl("image://theme/" + iconString);
-    }
+    // FIXME MIKE what about themed icons?
+    return QUrl(QString::fromStdString(m_ualApp->info()->iconPath()));
 }
 
 QString Application::splashTitle() const
 {
-    return m_desktopData->splashTitle();
+    // FIXME MIKE
+    return QString();
 }
 
 QUrl Application::splashImage() const
 {
-    if (m_desktopData->splashImage().isEmpty()) {
-        return QUrl();
-    } else {
-        QFileInfo imageFileInfo(m_desktopData->path(), m_desktopData->splashImage());
-        if (imageFileInfo.exists()) {
-            return QUrl::fromLocalFile(imageFileInfo.canonicalFilePath());
-        } else {
-            qCWarning(QTMIR_APPLICATIONS)
-                << QString("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
-                    .arg(appId()).arg(imageFileInfo.absoluteFilePath());
-
-            return QUrl();
-        }
-    }
+    // FIXME MIKE
+    return QUrl();
 }
 
 QColor Application::colorFromString(const QString &colorString, const char *colorName) const
@@ -233,35 +207,26 @@ const char* Application::internalStateToStr(InternalState state)
 
 bool Application::splashShowHeader() const
 {
-    QString showHeader = m_desktopData->splashShowHeader();
-    if (showHeader.toLower() == "true") {
-        return true;
-    } else {
-        return false;
-    }
+    // FIXME MIKE
+    return false;
 }
 
 QColor Application::splashColor() const
 {
-    QString colorStr = m_desktopData->splashColor();
-    return colorFromString(colorStr, "splashColor");
+    // FIXME MIKE
+    return QColor();
 }
 
 QColor Application::splashColorHeader() const
 {
-    QString colorStr = m_desktopData->splashColorHeader();
-    return colorFromString(colorStr, "splashColorHeader");
+    // FIXME MIKE
+    return QColor();
 }
 
 QColor Application::splashColorFooter() const
 {
-    QString colorStr = m_desktopData->splashColorFooter();
-    return colorFromString(colorStr, "splashColorFooter");
-}
-
-QString Application::exec() const
-{
-    return m_desktopData->exec();
+    // FIXME MIKE
+    return QColor();
 }
 
 Application::Stage Application::stage() const
@@ -688,7 +653,8 @@ void Application::timerEvent(QTimerEvent *event)
 
 bool Application::isTouchApp() const
 {
-    return m_desktopData->isTouchApp();
+    // FIXME MIKE
+    return true; //m_ualApp->isTouchApp();
 }
 
 bool Application::exemptFromLifecycle() const
@@ -705,11 +671,6 @@ void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
         m_exemptFromLifecycle = exemptFromLifecycle;
         Q_EMIT exemptFromLifecycleChanged(m_exemptFromLifecycle);
     }
-}
-
-QString Application::longAppId() const
-{
-    return m_longAppId;
 }
 
 Qt::ScreenOrientations Application::supportedOrientations() const

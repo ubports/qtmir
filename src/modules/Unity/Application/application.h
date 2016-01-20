@@ -36,11 +36,16 @@ namespace mir {
     }
 }
 
+namespace Ubuntu {
+    namespace AppLaunch {
+        class Application;
+    }
+}
+
 namespace qtmir
 {
 
 class ApplicationManager;
-class DesktopFileReader;
 class Session;
 class SharedWakelock;
 
@@ -48,8 +53,6 @@ class Application : public unity::shell::application::ApplicationInfoInterface
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString desktopFile READ desktopFile CONSTANT)
-    Q_PROPERTY(QString exec READ exec CONSTANT)
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
     Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
     Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
@@ -81,7 +84,7 @@ public:
     };
 
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                DesktopFileReader *desktopFileReader,
+                const std::shared_ptr<Ubuntu::AppLaunch::Application>& ualApp,
                 const QStringList &arguments,
                 ApplicationManager *parent);
     virtual ~Application();
@@ -121,8 +124,6 @@ public:
     bool canBeResumed() const;
 
     bool isValid() const;
-    QString desktopFile() const;
-    QString exec() const;
     bool fullscreen() const;
 
     Stages supportedStages() const;
@@ -155,7 +156,6 @@ protected:
 
 private:
 
-    QString longAppId() const;
     void acquireWakelock() const;
     void releaseWakelock() const;
     void setPid(pid_t pid);
@@ -174,8 +174,7 @@ private:
     void doClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
-    DesktopFileReader* m_desktopData;
-    QString m_longAppId;
+    std::shared_ptr<Ubuntu::AppLaunch::Application> m_ualApp;
     pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;
