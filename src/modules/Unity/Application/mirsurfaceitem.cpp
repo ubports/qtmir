@@ -110,6 +110,8 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
+
+    onScreenChanged(window()->screen());
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -699,6 +701,7 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
                 Qt::DirectConnection);
 
+        onScreenChanged(m_window->screen());
         connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::onScreenChanged);
     }
 }
