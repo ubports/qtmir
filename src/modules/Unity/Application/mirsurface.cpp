@@ -79,7 +79,7 @@ mir::EventUPtr makeMirEvent(QMouseEvent *qtEvent, MirPointerAction action)
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, action,
+    return mir::events::make_event(0 /*DeviceID */, timestamp, std::vector<uint8_t>{} /* cookie */, modifiers, action,
                                    buttons, qtEvent->x(), qtEvent->y(), 0, 0, 0, 0);
 }
 
@@ -89,7 +89,7 @@ mir::EventUPtr makeMirEvent(QHoverEvent *qtEvent, MirPointerAction action)
 
     MirPointerButtons buttons = 0;
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, mir_input_event_modifier_none, action,
+    return mir::events::make_event(0 /*DeviceID */, timestamp, std::vector<uint8_t>{} /* cookie */, mir_input_event_modifier_none, action,
                                    buttons, qtEvent->posF().x(), qtEvent->posF().y(), 0, 0, 0, 0);
 }
 
@@ -99,7 +99,7 @@ mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
-    return mir::events::make_event(0 /*DeviceID */, timestamp, 0 /* mac */, modifiers, mir_pointer_action_motion,
+    return mir::events::make_event(0 /*DeviceID */, timestamp, std::vector<uint8_t>{} /* cookie */, modifiers, mir_pointer_action_motion,
                                    buttons, qtEvent->x(), qtEvent->y(),
                                    qtEvent->angleDelta().x(), qtEvent->angleDelta().y(),
                                    0, 0);
@@ -123,7 +123,7 @@ mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent)
         action = mir_keyboard_action_repeat;
 
     return mir::events::make_event(0 /* DeviceID */, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtEvent->timestamp())),
-                           0 /* mac */, action, qtEvent->nativeVirtualKey(),
+                           std::vector<uint8_t>{} /* cookie */, action, qtEvent->nativeVirtualKey(),
                            qtEvent->nativeScanCode(),
                            qtEvent->nativeModifiers());
 }
@@ -135,7 +135,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 {
     auto modifiers = getMirModifiersFromQt(qmods);
     auto ev = mir::events::make_event(0, uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(qtTimestamp)),
-                                      0 /* mac */, modifiers);
+                                      std::vector<uint8_t>{} /* cookie */, modifiers);
 
     for (int i = 0; i < qtTouchPoints.count(); ++i) {
         auto touchPoint = qtTouchPoints.at(i);
