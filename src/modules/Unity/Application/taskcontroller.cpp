@@ -94,9 +94,9 @@ bool TaskController::appIdHasProcessId(const QString& appId, const pid_t pid) co
     return m_appController->appIdHasProcessId(pid, appId);
 }
 
-QFileInfo TaskController::findDesktopFileForAppId(const QString &appId) const
+std::shared_ptr<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QString &appId) const
 {
-    return m_appController->findDesktopFileForAppId(appId);
+    return m_appController->getInfoForApp(appId);
 }
 
 bool TaskController::suspend(const QString &appId)

@@ -18,13 +18,15 @@
 #ifndef APPLICATION_CONTROLLER_H
 #define APPLICATION_CONTROLLER_H
 
+#include <memory>
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QFileInfo>
 
 namespace qtmir
 {
+
+class ApplicationInfo;
 
 class ApplicationController : public QObject
 {
@@ -42,7 +44,6 @@ public:
 
     ApplicationController& operator=(const ApplicationController&) = delete;
 
-    virtual pid_t primaryPidForAppId(const QString &appId) = 0;
     virtual bool appIdHasProcessId(pid_t pid, const QString &appId) = 0;
 
     virtual bool stopApplicationWithAppId(const QString &appId) = 0;
@@ -51,7 +52,7 @@ public:
     virtual bool pauseApplicationWithAppId(const QString &appId) = 0;
     virtual bool resumeApplicationWithAppId(const QString &appId) = 0;
 
-    virtual QFileInfo findDesktopFileForAppId(const QString &appId) const = 0;
+    virtual std::shared_ptr<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const = 0;
 
 Q_SIGNALS:
     void applicationAboutToBeStarted(const QString &appId);

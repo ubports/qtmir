@@ -50,12 +50,7 @@
 // std
 #include <csignal>
 
-// UAL
-#include <libubuntu-app-launch-2/application.h>
-#include <libubuntu-app-launch-2/registry.h>
-
 namespace ms = mir::scene;
-namespace ual = Ubuntu::AppLaunch;
 
 Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
 
@@ -68,13 +63,14 @@ namespace {
 
 // FIXME: To be removed once shell has fully adopted short appIds!!
 QString toShortAppIdIfPossible(const QString &appId) {
-    ual::AppID fullAppID = ual::AppID::parse(appId.toStdString());
-    if (fullAppID.empty()) {
-        return appId;
-    } else {
+    QRegExp longAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*");
+    if (longAppIdMask.exactMatch(appId)) {
         qWarning() << "WARNING: long App ID encountered:" << appId;
-        return QString::fromStdString(fullAppID.appname.value());
+        // input string a long AppId, chop the version string off the end
+        QStringList parts = appId.split("_");
+        return QString("%1_%2").arg(parts.first()).arg(parts.at(1));
     }
+    return appId;
 }
 
 void connectToSessionListener(ApplicationManager *manager, SessionListener *listener)
@@ -130,7 +126,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
 
     QSharedPointer<upstart::ApplicationController> appController(new upstart::ApplicationController());
     QSharedPointer<TaskController> taskController(new TaskController(nullptr, appController));
-    std::shared_ptr<ual::Registry> ualRegistry(new ual::Registry());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
     QSharedPointer<Settings> settings(new Settings());
@@ -144,7 +139,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              mirServer,
                                              taskController,
                                              sharedWakelock,
-                                             ualRegistry,
                                              procInfo,
                                              settings
                                          );
@@ -180,7 +174,6 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<MirServer>& mirServer,
         const QSharedPointer<TaskController>& taskController,
         const QSharedPointer<SharedWakelock>& sharedWakelock,
-        const std::shared_ptr<ual::Registry>& ualRegistry,
         const QSharedPointer<ProcInfo>& procInfo,
         const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
@@ -189,7 +182,6 @@ ApplicationManager::ApplicationManager(
     , m_focusedApplication(nullptr)
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
-    , m_ualRegistry(ualRegistry)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
     , m_settings(settings)
@@ -387,7 +379,7 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
     } else {
         application = new Application(
                     m_sharedWakelock,
-                    ual::Application::create(ual::AppID::discover(appId.toStdString()), m_ualRegistry),
+                    m_taskController->getInfoForApp(appId),
                     arguments,
                     this);
 
@@ -415,7 +407,7 @@ void ApplicationManager::onProcessStarting(const QString &appId)
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
         application = new Application(
                     m_sharedWakelock,
-                    ual::Application::create(ual::AppID::discover(appId.toStdString()), m_ualRegistry),
+                    m_taskController->getInfoForApp(appId),
                     QStringList(),
                     this);
 
@@ -577,14 +569,14 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     }
 
     /*
-     * Hack: Allow maliit-server to be authorized even without UAL.
+     * Hack: Allow maliit-server to be authorized even without upstart.
      */
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
     if (info && info->startsWith("maliit-server ")) {
         authorized = true;
     } else {
         qWarning() << "ApplicationManager REJECTED connection from app with pid" << pid
-                   << "as it was not launched by ubuntu-app-launch";
+                   << "as it was not launched by upstart";
     }
 }
 
@@ -699,7 +691,7 @@ void ApplicationManager::add(Application* application)
     m_applications.append(application);
     endInsertRows();
     Q_EMIT countChanged();
-    Q_EMIT applicationAdded(appId);
+    Q_EMIT applicationAdded(application->appId());
     if (m_applications.size() == 1) {
         Q_EMIT emptyChanged();
     }

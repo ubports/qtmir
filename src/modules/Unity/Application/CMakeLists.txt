@@ -42,6 +42,7 @@ set(QMLMIRPLUGIN_SRC
     sessionmanager.cpp
     sharedwakelock.cpp
     upstart/applicationcontroller.cpp
+    upstart/applicationinfo.cpp
     tracepoints.c
     settings.cpp
 # We need to run moc on these headers
@@ -53,6 +54,7 @@ set(QMLMIRPLUGIN_SRC
 # Feed the automoc monster
     session_interface.h
     applicationcontroller.h
+    applicationinfo.h
     settings_interface.h
     )
 

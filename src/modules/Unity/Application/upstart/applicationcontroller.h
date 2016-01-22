@@ -31,7 +31,6 @@ public:
     ApplicationController();
     ~ApplicationController();
 
-    pid_t primaryPidForAppId(const QString& appId) override;
     bool appIdHasProcessId(pid_t pid, const QString& appId) override;
 
     bool stopApplicationWithAppId(const QString& appId) override;
@@ -40,7 +39,7 @@ public:
     bool pauseApplicationWithAppId(const QString& appId) override;
     bool resumeApplicationWithAppId(const QString& appId) override;
 
-    QFileInfo findDesktopFileForAppId(const QString &appId) const override;
+    std::shared_ptr<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const override;
 
 private:
     struct Private;

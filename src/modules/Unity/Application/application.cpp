@@ -16,6 +16,7 @@
 
 // local
 #include "application.h"
+#include "applicationinfo.h"
 #include "application_manager.h"
 #include "session.h"
 #include "sharedwakelock.h"
@@ -31,21 +32,18 @@
 #include <mir/scene/session.h>
 #include <mir/scene/snapshot.h>
 
-// ual
-#include <libubuntu-app-launch-2/application.h>
-
 namespace ms = mir::scene;
 
 namespace qtmir
 {
 
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                         const std::shared_ptr<Ubuntu::AppLaunch::Application>& ualApp,
+                         const std::shared_ptr<ApplicationInfo>& appInfo,
                          const QStringList &arguments,
                          ApplicationManager *parent)
-    : ApplicationInfoInterface("", parent)
+    : ApplicationInfoInterface(appInfo->appId(), parent)
     , m_sharedWakelock(sharedWakelock)
-    , m_ualApp(ualApp)
+    , m_appInfo(appInfo)
     , m_pid(0)
     , m_stage(Application::MainStage)
     , m_state(InternalState::Starting)
@@ -57,14 +55,14 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_closeTimer(0)
     , m_exemptFromLifecycle(false)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << appId();
+    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << appInfo->appId();
 
     // Because m_state is InternalState::Starting
     acquireWakelock();
 
-    // FIXME MIKE
-    //m_supportedOrientations = m_ualApp->supportedOrientations();
-    //m_rotatesWindowContents = m_ualApp->rotatesWindowContents();
+    m_supportedOrientations = m_appInfo->supportedOrientations();
+
+    m_rotatesWindowContents = m_appInfo->rotatesWindowContents();
 }
 
 Application::~Application()
@@ -119,40 +117,38 @@ void Application::wipeQMLCache()
 
 bool Application::isValid() const
 {
-    return !m_ualApp->appId().empty();
+    // FIXME MIKE is this right?
+    return !m_appInfo->appId().isEmpty();
 }
 
 QString Application::appId() const
 {
-    return QString::fromStdString(std::string(m_ualApp->appId()));
+    return m_appInfo->appId();
 }
 
 QString Application::name() const
 {
-    return QString::fromStdString(m_ualApp->info()->name());
+    return m_appInfo->name();
 }
 
 QString Application::comment() const
 {
-    return QString::fromStdString(m_ualApp->info()->description());
+    return m_appInfo->comment();
 }
 
 QUrl Application::icon() const
 {
-    // FIXME MIKE what about themed icons?
-    return QUrl(QString::fromStdString(m_ualApp->info()->iconPath()));
+    return m_appInfo->icon();
 }
 
 QString Application::splashTitle() const
 {
-    // FIXME MIKE
-    return QString();
+    return m_appInfo->splashTitle();
 }
 
 QUrl Application::splashImage() const
 {
-    // FIXME MIKE
-    return QUrl();
+    return m_appInfo->splashImage();
 }
 
 QColor Application::colorFromString(const QString &colorString, const char *colorName) const
@@ -213,20 +209,20 @@ bool Application::splashShowHeader() const
 
 QColor Application::splashColor() const
 {
-    // FIXME MIKE
-    return QColor();
+    QString colorStr = m_appInfo->splashColor();
+    return colorFromString(colorStr, "splashColor");
 }
 
 QColor Application::splashColorHeader() const
 {
-    // FIXME MIKE
-    return QColor();
+    QString colorStr = m_appInfo->splashColorHeader();
+    return colorFromString(colorStr, "splashColorHeader");
 }
 
 QColor Application::splashColorFooter() const
 {
-    // FIXME MIKE
-    return QColor();
+    QString colorStr = m_appInfo->splashColorFooter();
+    return colorFromString(colorStr, "splashColorFooter");
 }
 
 Application::Stage Application::stage() const
@@ -653,8 +649,7 @@ void Application::timerEvent(QTimerEvent *event)
 
 bool Application::isTouchApp() const
 {
-    // FIXME MIKE
-    return true; //m_ualApp->isTouchApp();
+    return m_appInfo->isTouchApp();
 }
 
 bool Application::exemptFromLifecycle() const

@@ -38,12 +38,6 @@ namespace mir {
     }
 }
 
-namespace Ubuntu {
-    namespace AppLaunch {
-        class Registry;
-    }
-}
-
 class MirServer;
 
 namespace qtmir {
@@ -90,7 +84,6 @@ public:
             const QSharedPointer<MirServer> &mirServer,
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
-            const std::shared_ptr<Ubuntu::AppLaunch::Registry> &ualRegistry,
             const QSharedPointer<ProcInfo> &processInfo,
             const QSharedPointer<SettingsInterface> &settings,
             QObject *parent = 0);
@@ -162,7 +155,6 @@ private:
     Application* m_focusedApplication;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
-    std::shared_ptr<Ubuntu::AppLaunch::Registry> m_ualRegistry;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
