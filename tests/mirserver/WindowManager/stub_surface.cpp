@@ -189,7 +189,8 @@ void StubSurface::remove_observer(std::weak_ptr < mir::scene::SurfaceObserver > 
 {
 }
 
-void StubSurface::set_keymap(xkb_rule_names const& /*rules*/)
+void StubSurface::set_keymap(MirInputDeviceId /*id*/, std::string const& /*model*/, std::string const& /*layout*/,
+    std::string const& /*variant*/, std::string const& /*options*/)
 {
 }
 
