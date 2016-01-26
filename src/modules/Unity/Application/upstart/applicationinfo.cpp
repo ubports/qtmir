@@ -31,59 +31,101 @@ ApplicationInfo::ApplicationInfo(const QString &appId, std::shared_ptr<Ubuntu::A
 
 QString ApplicationInfo::appId() const
 {
-    return m_appId;
+    if (m_info) {
+        return m_appId;
+    } else {
+        return QString();
+    }
 }
 
 QString ApplicationInfo::name() const
 {
-    return QString::fromStdString(m_info->name().value());
+    if (m_info) {
+        return QString::fromStdString(m_info->name().value());
+    } else {
+        return QString();
+    }
 }
 
 QString ApplicationInfo::comment() const
 {
-    return QString::fromStdString(m_info->description().value());
+    if (m_info) {
+        return QString::fromStdString(m_info->description().value());
+    } else {
+        return QString();
+    }
 }
 
 QUrl ApplicationInfo::icon() const
 {
-    return QUrl::fromLocalFile(QString::fromStdString(m_info->iconPath().value()));
+    if (m_info) {
+        return QUrl::fromLocalFile(QString::fromStdString(m_info->iconPath().value()));
+    } else {
+        return QUrl();
+    }
 }
 
 QString ApplicationInfo::splashTitle() const
 {
-    return QString::fromStdString(m_info->splash().title.value());
+    if (m_info) {
+        return QString::fromStdString(m_info->splash().title.value());
+    } else {
+        return QString();
+    }
 }
 
 QUrl ApplicationInfo::splashImage() const
 {
-    return QUrl::fromLocalFile(QString::fromStdString(m_info->splash().image.value()));
+    if (m_info) {
+        return QUrl::fromLocalFile(QString::fromStdString(m_info->splash().image.value()));
+    } else {
+        return QUrl();
+    }
 }
 
 bool ApplicationInfo::splashShowHeader() const
 {
-    // FIXME MIKE
-    return false;
+    if (m_info) {
+        return m_info->splash().showHeader.value();
+    } else {
+        return false;
+    }
 }
 
 QString ApplicationInfo::splashColor() const
 {
-    return QString::fromStdString(m_info->splash().backgroundColor.value());
+    if (m_info) {
+        return QString::fromStdString(m_info->splash().backgroundColor.value());
+    } else {
+        return QString();
+    }
 }
 
 QString ApplicationInfo::splashColorHeader() const
 {
-    return QString::fromStdString(m_info->splash().headerColor.value());
+    if (m_info) {
+        return QString::fromStdString(m_info->splash().headerColor.value());
+    } else {
+        return QString();
+    }
 }
 
 QString ApplicationInfo::splashColorFooter() const
 {
-    return QString::fromStdString(m_info->splash().footerColor.value());
+    if (m_info) {
+        return QString::fromStdString(m_info->splash().footerColor.value());
+    } else {
+        return QString();
+    }
 }
 
 Qt::ScreenOrientations ApplicationInfo::supportedOrientations() const
 {
-    auto orientations = m_info->supportedOrientations();
-    Qt::ScreenOrientations response;
+    Ubuntu::AppLaunch::Application::Info::Orientations orientations;
+    if (m_info) {
+        orientations = m_info->supportedOrientations();
+    }
+    Qt::ScreenOrientations response = Qt::PrimaryOrientation;
     if (orientations.portrait)
         response |= Qt::PortraitOrientation;
     if (orientations.landscape)
@@ -97,14 +139,21 @@ Qt::ScreenOrientations ApplicationInfo::supportedOrientations() const
 
 bool ApplicationInfo::rotatesWindowContents() const
 {
-    // FIXME MIKE
-    return false;
+    if (m_info) {
+        return m_info->rotatesWindowContents().value();
+    } else {
+        return false;
+    }
 }
 
 
 bool ApplicationInfo::isTouchApp() const
 {
-    return m_info->ubuntuLifecycle().value();
+    if (m_info) {
+        return m_info->ubuntuLifecycle().value();
+    } else {
+        return true;
+    }
 }
 
 } // namespace upstart

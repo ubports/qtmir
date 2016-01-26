@@ -22,7 +22,7 @@
 extern "C" {
     #include "ubuntu-app-launch.h"
 }
-#include <libubuntu-app-launch-2/registry.h>
+#include <ubuntu-app-launch/registry.h>
 
 namespace ual = Ubuntu::AppLaunch;
 
@@ -34,7 +34,6 @@ namespace upstart
 struct ApplicationController::Private
 {
     std::shared_ptr<ual::Registry> registry;
-    std::shared_ptr<ApplicationInfo> appInfo;
     UbuntuAppLaunchAppObserver preStartCallback = nullptr;
     UbuntuAppLaunchAppObserver startedCallback = nullptr;
     UbuntuAppLaunchAppObserver stopCallback = nullptr;
@@ -61,6 +60,21 @@ QString toShortAppIdIfPossible(const QString &appId) {
     } else {
         return appId;
     }
+}
+
+std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shared_ptr<ual::Registry> registry)
+{
+    QStringList pieces = inputAppId.split("_");
+    ual::AppID appId;
+    switch (pieces.size()) {
+    case 2:
+        appId = ual::AppID::discover(pieces[0].toStdString(), pieces[1].toStdString());
+        break;
+    default:
+        appId = ual::AppID::parse(inputAppId.toStdString());
+        break;
+    }
+    return ual::Application::create(appId, registry);
 }
 
 } // namespace
@@ -133,10 +147,9 @@ ApplicationController::~ApplicationController()
     ubuntu_app_launch_observer_delete_app_failed(impl->failureCallback, this);
 }
 
-bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& inputAppId)
+bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& appId)
 {
-    auto appId = ual::AppID::parse(inputAppId.toStdString());
-    auto app = ual::Application::create(appId, impl->registry);
+    auto app = createApp(appId, impl->registry);
 
     for (auto &instance: app->instances()) {
         if (instance->hasPid(pid)) {
@@ -147,10 +160,9 @@ bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& inputApp
     return false;
 }
 
-bool ApplicationController::stopApplicationWithAppId(const QString& inputAppId)
+bool ApplicationController::stopApplicationWithAppId(const QString& appId)
 {
-    auto appId = ual::AppID::parse(inputAppId.toStdString());
-    auto app = ual::Application::create(appId, impl->registry);
+    auto app = createApp(appId, impl->registry);
 
     for (auto &instance: app->instances()) {
         instance->stop();
@@ -159,10 +171,9 @@ bool ApplicationController::stopApplicationWithAppId(const QString& inputAppId)
     return true;
 }
 
-bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& inputAppId, const QStringList& arguments)
+bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& appId, const QStringList& arguments)
 {
-    auto appId = ual::AppID::parse(inputAppId.toStdString());
-    auto app = ual::Application::create(appId, impl->registry);
+    auto app = createApp(appId, impl->registry);
 
     // Convert arguments QStringList into format suitable for ubuntu-app-launch
     std::vector<ual::Application::URL> urls;
@@ -175,10 +186,9 @@ bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& inpu
     return true;
 }
 
-bool ApplicationController::pauseApplicationWithAppId(const QString& inputAppId)
+bool ApplicationController::pauseApplicationWithAppId(const QString& appId)
 {
-    auto appId = ual::AppID::parse(inputAppId.toStdString());
-    auto app = ual::Application::create(appId, impl->registry);
+    auto app = createApp(appId, impl->registry);
 
     for (auto &instance: app->instances()) {
         instance->pause();
@@ -187,10 +197,9 @@ bool ApplicationController::pauseApplicationWithAppId(const QString& inputAppId)
     return true;
 }
 
-bool ApplicationController::resumeApplicationWithAppId(const QString& inputAppId)
+bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
 {
-    auto appId = ual::AppID::parse(inputAppId.toStdString());
-    auto app = ual::Application::create(appId, impl->registry);
+    auto app = createApp(appId, impl->registry);
 
     for (auto &instance: app->instances()) {
         instance->resume();
@@ -199,15 +208,11 @@ bool ApplicationController::resumeApplicationWithAppId(const QString& inputAppId
     return true;
 }
 
-std::shared_ptr<qtmir::ApplicationInfo> ApplicationController::getInfoForApp(const QString &inputAppId) const
+std::shared_ptr<qtmir::ApplicationInfo> ApplicationController::getInfoForApp(const QString &appId) const
 {
-    if (!impl->appInfo) {
-        auto appId = ual::AppID::parse(inputAppId.toStdString());
-        auto app = ual::Application::create(appId, impl->registry);
-        QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(appId)));
-        impl->appInfo = std::make_shared<qtmir::upstart::ApplicationInfo>(shortAppId, app->info());
-    }
-    return impl->appInfo;
+    auto app = createApp(appId, impl->registry);
+    QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
+    return std::make_shared<qtmir::upstart::ApplicationInfo>(shortAppId, app->info());
 }
 
 } // namespace upstart

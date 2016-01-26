@@ -20,7 +20,7 @@
 
 #include "../applicationinfo.h"
 
-#include <libubuntu-app-launch-2/application.h>
+#include <ubuntu-app-launch/application.h>
 
 namespace qtmir
 {

@@ -117,8 +117,7 @@ void Application::wipeQMLCache()
 
 bool Application::isValid() const
 {
-    // FIXME MIKE is this right?
-    return !m_appInfo->appId().isEmpty();
+    return !appId().isEmpty();
 }
 
 QString Application::appId() const
@@ -203,8 +202,7 @@ const char* Application::internalStateToStr(InternalState state)
 
 bool Application::splashShowHeader() const
 {
-    // FIXME MIKE
-    return false;
+    return m_appInfo->splashShowHeader();
 }
 
 QColor Application::splashColor() const

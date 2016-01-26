@@ -569,10 +569,23 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     }
 
     /*
-     * Hack: Allow maliit-server to be authorized even without upstart.
+     * Hack: Allow maliit and unity8-dash to be authorized even without upstart.
      */
+    QStringList arguments;
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
-    if (info && info->startsWith("maliit-server ")) {
+    if (info) {
+        arguments = info->asStringList();
+    }
+    if (arguments.first() == "maliit-server") {
+        authorized = true;
+    } else if (arguments.first() == "unity8-dash") {
+        auto application = new Application(
+            m_sharedWakelock,
+            m_taskController->getInfoForApp("unity8-dash"),
+            arguments,
+            this);
+        application->setPid(pid);
+        add(application);
         authorized = true;
     } else {
         qWarning() << "ApplicationManager REJECTED connection from app with pid" << pid
