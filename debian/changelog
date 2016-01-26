@@ -1,3 +1,11 @@
+qtmir (0.4.7+16.04.20160122-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Fixed issue where stopping the session while suspending was causing
+    app close to stall. (LP: #1536133)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 22 Jan 2016 16:54:39 +0000
+
 qtmir (0.4.7+16.04.20160104-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada ]
