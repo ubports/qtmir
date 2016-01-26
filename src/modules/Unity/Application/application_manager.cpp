@@ -504,10 +504,17 @@ void ApplicationManager::onProcessStopped(const QString &appId)
 
 void ApplicationManager::onProcessSuspended(const QString &appId)
 {
+    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessSuspended - appId=" << appId;
+
     Application *application = findApplication(appId);
-    if (application) {
-        application->setProcessState(Application::ProcessSuspended);
+
+    if (!application) {
+        qDebug() << "ApplicationManager::onProcessSuspended reports stop of appId=" << appId
+                 << "which AppMan is not managing, ignoring the event";
+        return;
     }
+
+    application->setProcessState(Application::ProcessSuspended);
 }
 
 void ApplicationManager::onFocusRequested(const QString& appId)

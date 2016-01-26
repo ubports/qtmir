@@ -93,7 +93,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void updateFullscreenProperty();
 
-private:
+protected:
     void setParentSession(Session* session);
     void setState(State state);
     void doResume();

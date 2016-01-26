@@ -248,6 +248,7 @@ Application::State Application::state() const
         return Running;
     case InternalState::Suspended:
         return Suspended;
+    case InternalState::StoppedResumable:
     case InternalState::Stopped:
     default:
         return Stopped;
@@ -387,7 +388,6 @@ void Application::close()
         // too late
         break;
     }
-
 }
 
 void Application::doClose()
@@ -549,8 +549,12 @@ void Application::setProcessState(ProcessState newProcessState)
         }
         break;
     case ProcessSuspended:
-        Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
-        setInternalState(InternalState::Suspended);
+        if (m_state == InternalState::Closing) {
+            // If we get a process suspension event while we're closing, resume the process.
+            Q_EMIT resumeProcessRequested();
+        } else {
+            setInternalState(InternalState::Suspended);
+        }
         break;
     case ProcessFailed:
         // we assume the session always stop before the process
@@ -606,7 +610,7 @@ void Application::resume()
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::resume - appId=" << appId();
 
-    if (m_state == InternalState::Suspended) {
+    if (m_state == InternalState::Suspended || m_state == InternalState::SuspendingWaitProcess) {
         setInternalState(InternalState::Running);
         Q_EMIT resumeProcessRequested();
         if (m_processState == ProcessSuspended) {
@@ -715,7 +719,12 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if (!canBeResumed()
+        if ((m_state == InternalState::SuspendingWaitProcess || m_state == InternalState::SuspendingWaitProcess) &&
+             m_processState != Application::ProcessFailed) {
+            // Session stopped normally while we're waiting for suspension.
+            doClose();
+            Q_EMIT resumeProcessRequested();
+        } else if (!canBeResumed()
                 || m_state == InternalState::Starting
                 || m_state == InternalState::Running
                 || m_state == InternalState::Closing) {
