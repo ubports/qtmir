@@ -64,16 +64,7 @@ QString toShortAppIdIfPossible(const QString &appId) {
 
 std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shared_ptr<ual::Registry> registry)
 {
-    QStringList pieces = inputAppId.split("_");
-    ual::AppID appId;
-    switch (pieces.size()) {
-    case 2:
-        appId = ual::AppID::discover(pieces[0].toStdString(), pieces[1].toStdString());
-        break;
-    default:
-        appId = ual::AppID::parse(inputAppId.toStdString());
-        break;
-    }
+    auto appId = ual::AppID::find(inputAppId);
     return ual::Application::create(appId, registry);
 }
 
