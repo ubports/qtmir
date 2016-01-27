@@ -1881,7 +1881,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
     onSessionStarting(session);
 
     // Create fake QML cache for this app
-    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+    QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
                  + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
@@ -1927,7 +1927,7 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
     // Create fake QML cache for this app
-    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+    QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
                  + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
@@ -1976,7 +1976,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
     // Create fake QML cache for this app
-    QString path(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)
+    QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
                  + QStringLiteral("/QML/Apps/") + appId);
     QDir dir(path);
     dir.mkpath(path);
