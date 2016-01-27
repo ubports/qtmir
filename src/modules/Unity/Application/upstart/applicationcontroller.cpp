@@ -222,7 +222,7 @@ bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
 std::shared_ptr<qtmir::ApplicationInfo> ApplicationController::getInfoForApp(const QString &appId) const
 {
     auto app = createApp(appId, impl->registry);
-    if (!app) {
+    if (!app || !app->info()) {
         return {};
     }
 
