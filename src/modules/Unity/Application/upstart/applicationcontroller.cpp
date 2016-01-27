@@ -17,6 +17,7 @@
 
 #include "applicationcontroller.h"
 #include "applicationinfo.h"
+#include "logging.h"
 
 // upstart
 extern "C" {
@@ -65,6 +66,10 @@ QString toShortAppIdIfPossible(const QString &appId) {
 std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shared_ptr<ual::Registry> registry)
 {
     auto appId = ual::AppID::find(inputAppId.toStdString());
+    if (appId.empty()) {
+        qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::createApp could not find appId" << inputAppId;
+        return {};
+    }
     return ual::Application::create(appId, registry);
 }
 
@@ -141,6 +146,9 @@ ApplicationController::~ApplicationController()
 bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& appId)
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
     for (auto &instance: app->instances()) {
         if (instance->hasPid(pid)) {
@@ -154,6 +162,9 @@ bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& appId)
 bool ApplicationController::stopApplicationWithAppId(const QString& appId)
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
     for (auto &instance: app->instances()) {
         instance->stop();
@@ -165,6 +176,9 @@ bool ApplicationController::stopApplicationWithAppId(const QString& appId)
 bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& appId, const QStringList& arguments)
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
     // Convert arguments QStringList into format suitable for ubuntu-app-launch
     std::vector<ual::Application::URL> urls;
@@ -180,6 +194,9 @@ bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& appI
 bool ApplicationController::pauseApplicationWithAppId(const QString& appId)
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
     for (auto &instance: app->instances()) {
         instance->pause();
@@ -191,6 +208,9 @@ bool ApplicationController::pauseApplicationWithAppId(const QString& appId)
 bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
     for (auto &instance: app->instances()) {
         instance->resume();
@@ -202,6 +222,10 @@ bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
 std::shared_ptr<qtmir::ApplicationInfo> ApplicationController::getInfoForApp(const QString &appId) const
 {
     auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return {};
+    }
+
     QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
     return std::make_shared<qtmir::upstart::ApplicationInfo>(shortAppId, app->info());
 }

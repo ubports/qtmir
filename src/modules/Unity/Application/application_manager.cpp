@@ -377,16 +377,17 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
     if (application) {
         application->setArguments(arguments);
     } else {
-        application = new Application(
-                    m_sharedWakelock,
-                    m_taskController->getInfoForApp(appId),
-                    arguments,
-                    this);
-
-        if (!application->isValid()) {
+        auto appInfo = m_taskController->getInfoForApp(appId);
+        if (!appInfo) {
             qWarning() << "Unable to instantiate application with appId" << appId;
             return nullptr;
         }
+
+        application = new Application(
+                    m_sharedWakelock,
+                    appInfo,
+                    arguments,
+                    this);
 
         // override stage if necessary
         if (application->stage() == Application::SideStage && flags.testFlag(ApplicationManager::ForceMainStage)) {
@@ -405,17 +406,17 @@ void ApplicationManager::onProcessStarting(const QString &appId)
 
     Application *application = findApplication(appId);
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
-        application = new Application(
-                    m_sharedWakelock,
-                    m_taskController->getInfoForApp(appId),
-                    QStringList(),
-                    this);
-
-        if (!application->isValid()) {
+        auto appInfo = m_taskController->getInfoForApp(appId);
+        if (!appInfo) {
             qWarning() << "Unable to instantiate application with appId" << appId;
             return;
         }
 
+        application = new Application(
+                    m_sharedWakelock,
+                    appInfo,
+                    QStringList(),
+                    this);
         add(application);
         Q_EMIT focusRequested(appId);
     }
@@ -586,9 +587,15 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     if (arguments.first() == "maliit-server") {
         authorized = true;
     } else if (arguments.first() == "unity8-dash") {
+        auto appInfo = m_taskController->getInfoForApp("unity8-dash");
+        if (!appInfo) {
+            qWarning() << "Unable to instantiate unity8-dash";
+            return;
+        }
+
         auto application = new Application(
             m_sharedWakelock,
-            m_taskController->getInfoForApp("unity8-dash"),
+            appInfo,
             arguments,
             this);
         application->setPid(pid);
