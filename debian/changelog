@@ -1,3 +1,9 @@
+qtmir (0.4.7+16.04.20160127.1-0ubuntu1) xenial; urgency=medium
+
+  * Changes for mir 0.19.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Wed, 27 Jan 2016 21:42:31 +0000
+
 qtmir (0.4.7+16.04.20160122-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
