@@ -226,7 +226,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         }
     }
 
-    if (qFuzzyCompare(screen.scale, m_scale)) {
+    if (!qFuzzyCompare(screen.scale, m_scale)) {
         m_scale = screen.scale;
         if (notify) {
             Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("scale"));
