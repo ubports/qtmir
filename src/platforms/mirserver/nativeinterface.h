@@ -31,6 +31,10 @@ public:
 
     virtual void *nativeResourceForIntegration(const QByteArray &resource);
 
+    QVariantMap windowProperties(QPlatformWindow *window) const override;
+    QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
+    QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
+
     QWeakPointer<MirServer> m_mirServer;
 };
 

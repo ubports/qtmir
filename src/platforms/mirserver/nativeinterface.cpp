@@ -16,6 +16,8 @@
 
 #include "nativeinterface.h"
 
+#include "screen.h"
+
 NativeInterface::NativeInterface(const QWeakPointer<MirServer> &server)
     : m_mirServer(server)
 {
@@ -38,4 +40,43 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
             result = server->promptSessionListener();
     }
     return result;
+}
+
+// Changes to these properties are emitted via the UbuntuNativeInterface::windowPropertyChanged
+// signal fired via UbuntuScreen. Connect to this signal for these properties updates.
+QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
+{
+    QVariantMap propertyMap;
+    auto s = static_cast<Screen*>(window->screen());
+    if (s) {
+        propertyMap.insert("scale", s->scale());
+        propertyMap.insert("formFactor", s->formFactor());
+    }
+    return propertyMap;
+}
+
+QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString &name) const
+{
+    auto s = static_cast<Screen*>(window->screen());
+    if (!s) {
+        return QVariant();
+    }
+
+    if (name == QStringLiteral("scale")) {
+        return s->scale();
+    } else if (name == QStringLiteral("formFactor")) {
+        return s->formFactor();
+    } else {
+        return QVariant();
+    }
+}
+
+QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const
+{
+    QVariant returnVal = windowProperty(window, name);
+    if (!returnVal.isValid()) {
+        return defaultValue;
+    } else {
+        return returnVal;
+    }
 }

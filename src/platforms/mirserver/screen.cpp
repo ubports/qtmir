@@ -17,6 +17,7 @@
 // local
 #include "screen.h"
 #include "logging.h"
+#include "nativeinterface.h"
 
 // Mir
 #include "mir/geometry/size.h"
@@ -26,7 +27,7 @@
 #include <mir/renderer/gl/render_target.h>
 
 // Qt
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <qpa/qwindowsysteminterface.h>
 #include <QThread>
 #include <QtMath>
@@ -214,9 +215,20 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
     // Scale, DPR & Form Factor
-    m_scale = screen.scale;
-    m_devicePixelRatio = qCeil(m_scale);
-    m_formFactor = screen.form_factor;
+    // Update the scale & form factor native-interface properties for the windows affected
+    // as there is no convenient way to emit signals for those custom properties on a QScreen
+    auto nativeInterface = qGuiApp->platformNativeInterface();
+    if (screen.form_factor != m_formFactor) {
+        m_formFactor = screen.form_factor;
+        Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("formFactor"));
+    }
+
+    if (qFuzzyCompare(screen.scale, m_scale)) {
+        m_scale = screen.scale;
+        Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("scale"));
+    }
+
+    m_devicePixelRatio = qCeil(m_scale); // FIXME: I probably need to announce this changing somehow
 
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
