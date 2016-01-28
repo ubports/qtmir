@@ -21,6 +21,7 @@
 
 // local
 #include "screens.h"
+#include "qquickscreenwindow.h"
 
 using namespace qtmir;
 
@@ -35,6 +36,7 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<QScreen*>("QScreen*");
 
         qmlRegisterType<qtmir::Screens>(uri, 0, 1, "Screens");
+        qmlRegisterType<qtmir::QQuickScreenWindow>(uri, 0, 1, "ScreenWindow");
     }
 };
 
