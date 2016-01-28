@@ -73,7 +73,7 @@ bool ScreenWindow::isExposed() const
 
 void ScreenWindow::setExposed(const bool exposed)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed;
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed << screen();
     if (m_exposed == exposed)
         return;
 
