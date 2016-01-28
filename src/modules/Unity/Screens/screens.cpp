@@ -123,5 +123,4 @@ void Screens::onScreenRemoved(QScreen *screen)
     Q_EMIT countChanged();
 }
 
-
 } // namespace qtmir
