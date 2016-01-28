@@ -125,7 +125,7 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     , m_screenWindow(nullptr)
     , m_unityScreen(nullptr)
 {
-    setMirDisplayConfiguration(screen);
+    setMirDisplayConfiguration(screen, false);
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
@@ -176,7 +176,8 @@ void Screen::onDisplayPowerStateChanged(int status, int reason)
     toggleSensors(status);
 }
 
-void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen)
+void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
+                                        bool notify)
 {
     // Note: DisplayConfigurationOutput will be destroyed after this function returns
 
@@ -220,19 +221,25 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     auto nativeInterface = qGuiApp->platformNativeInterface();
     if (screen.form_factor != m_formFactor) {
         m_formFactor = screen.form_factor;
-        Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("formFactor"));
+        if (notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("formFactor"));
+        }
     }
 
     if (qFuzzyCompare(screen.scale, m_scale)) {
         m_scale = screen.scale;
-        Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("scale"));
+        if (notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("scale"));
+        }
     }
 
     m_devicePixelRatio = qCeil(m_scale); // FIXME: I probably need to announce this changing somehow
 
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
-        QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
+        if (notify) {
+            QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
+        }
         if (m_screenWindow) { // resize corresponding window immediately
             m_screenWindow->setGeometry(m_geometry);
         }
@@ -241,7 +248,9 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // Refresh rate
     if (m_refreshRate != mode.vrefresh_hz) {
         m_refreshRate = mode.vrefresh_hz;
-        QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+        if (notify) {
+            QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+        }
     }
 }
 

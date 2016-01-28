@@ -82,7 +82,7 @@ public Q_SLOTS:
 protected:
     void setWindow(ScreenWindow *window);
 
-    void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &);
+    void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
     void swapBuffers();
     void makeCurrent();
