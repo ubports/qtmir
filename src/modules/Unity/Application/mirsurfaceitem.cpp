@@ -110,7 +110,11 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
+}
 
+void MirSurfaceItem::componentComplete()
+{
+    QQuickItem::componentComplete();
     onScreenChanged(window()->screen());
 }
 
