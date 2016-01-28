@@ -594,7 +594,7 @@ TEST_F(ApplicationManagerTests,appDoesNotStartWhenUsingBadDesktopFileHintSwitch)
     EXPECT_EQ(addedSpy.count(), 0);
 }
 
- /*
+/*
  * Test that an application launched via the command line with the --desktop_file_hint but an incorrect
  * desktop file specified is rejected
  */

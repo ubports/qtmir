@@ -18,7 +18,6 @@
 #ifndef APPLICATION_CONTROLLER_H
 #define APPLICATION_CONTROLLER_H
 
-#include <memory>
 #include <QObject>
 #include <QString>
 #include <QStringList>
