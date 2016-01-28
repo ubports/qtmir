@@ -23,13 +23,14 @@
 
 #include <gmock/gmock.h>
 
+#include "mock_application_info.h"
+
 namespace testing
 {
 struct MockApplicationController : public qtmir::ApplicationController
 {
-    MOCK_METHOD1(primaryPidForAppId, pid_t(const QString& appId));
     MOCK_METHOD2(appIdHasProcessId, bool(pid_t, const QString&));
-    MOCK_CONST_METHOD1(findDesktopFileForAppId, QFileInfo(const QString &appId));
+    MOCK_CONST_METHOD1(getInfoForApp, qtmir::ApplicationInfo *(const QString &));
 
     MOCK_METHOD1(stopApplicationWithAppId, bool(const QString&));
     MOCK_METHOD2(startApplicationWithAppIdAndArgs, bool(const QString&, const QStringList&));
@@ -39,17 +40,13 @@ struct MockApplicationController : public qtmir::ApplicationController
     MockApplicationController()
     {
         using namespace ::testing;
-        ON_CALL(*this, primaryPidForAppId(_))
-                .WillByDefault(
-                    Invoke(this, &MockApplicationController::doPrimaryPidForAppId));
-
         ON_CALL(*this, appIdHasProcessId(_, _))
                 .WillByDefault(
                     Invoke(this, &MockApplicationController::doAppIdHasProcessId));
 
-        ON_CALL(*this, findDesktopFileForAppId(_))
+        ON_CALL(*this, getInfoForApp(_))
                 .WillByDefault(
-                    Invoke(this, &MockApplicationController::doFindDesktopFileForAppId));
+                    Invoke(this, &MockApplicationController::doGetInfoForApp));
 
         ON_CALL(*this, stopApplicationWithAppId(_))
                 .WillByDefault(
@@ -68,15 +65,6 @@ struct MockApplicationController : public qtmir::ApplicationController
                     Invoke(this, &MockApplicationController::doResumeApplicationWithAppId));
     }
 
-    pid_t doPrimaryPidForAppId(const QString& appId)
-    {
-        auto it = children.find(appId);
-        if (it == children.end())
-            return -1;
-
-        return it->pid();
-    }
-
     bool doAppIdHasProcessId(pid_t pid, const QString& appId)
     {
         auto it = children.find(appId);
@@ -86,10 +74,9 @@ struct MockApplicationController : public qtmir::ApplicationController
         return it->pid() == pid;
     }
 
-    QFileInfo doFindDesktopFileForAppId(const QString& appId) const
+    qtmir::ApplicationInfo *doGetInfoForApp(const QString& appId)
     {
-        QString path = QString("/usr/share/applications/%1.desktop").arg(appId);
-        return QFileInfo(path);
+        return new NiceMock<MockApplicationInfo>(appId);
     }
 
     bool doStopApplicationWithAppId(const QString& appId)

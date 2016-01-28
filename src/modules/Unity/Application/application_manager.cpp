@@ -17,6 +17,7 @@
 // local
 #include "application_manager.h"
 #include "application.h"
+#include "applicationinfo.h"
 #include "dbuswindowstack.h"
 #include "session.h"
 #include "sharedwakelock.h"
@@ -577,34 +578,78 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     }
 
     /*
-     * Hack: Allow maliit and unity8-dash to be authorized even without upstart.
+     * Hack: Allow applications to be launched without being managed by upstart, where AppManager
+     * itself manages processes executed with a "--desktop_file_hint=/path/to/desktopFile.desktop"
+     * parameter attached. This exists until ubuntu-app-launch can notify shell any application is
+     * and so shell should allow it. Also reads the --stage parameter to determine the desired stage
      */
-    QStringList arguments;
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
-    if (info) {
-        arguments = info->asStringList();
-    }
-    if (arguments.first() == "maliit-server") {
-        authorized = true;
-    } else if (arguments.first() == "unity8-dash") {
-        auto appInfo = m_taskController->getInfoForApp("unity8-dash");
-        if (!appInfo) {
-            qWarning() << "Unable to instantiate unity8-dash";
-            return;
-        }
-
-        auto application = new Application(
-            m_sharedWakelock,
-            appInfo,
-            arguments,
-            this);
-        application->setPid(pid);
-        add(application);
-        authorized = true;
-    } else {
+    if (!info) {
         qWarning() << "ApplicationManager REJECTED connection from app with pid" << pid
-                   << "as it was not launched by upstart";
+                   << "as unable to read the process command line";
+        return;
     }
+
+    if (info->startsWith("maliit-server") || info->contains("qt5/libexec/QtWebProcess")) {
+        authorized = true;
+        return;
+    }
+
+    const QString desktopFileName = info->getParameter("--desktop_file_hint=");
+
+    if (desktopFileName.isNull()) {
+        qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
+                    << "as it was not launched by upstart, and no desktop_file_hint is specified";
+        return;
+    }
+
+    // Guess appId from the desktop file hint
+    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
+
+    qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
+
+    ApplicationInfo* appInfo;
+    appInfo = m_taskController->getInfoForApp(appId);
+
+    if (!appInfo) {
+        qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
+                    << "as the app specified by the desktop_file_hint argument could not be found";
+        return;
+    }
+
+    // some naughty applications use a script to launch the actual application. Check for the
+    // case where shell actually launched the script.
+    Application *application = findApplication(appInfo->appId());
+    if (application && application->state() == Application::Starting) {
+        qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
+                                    << "in application list with appId:" << application->appId();
+        delete appInfo;
+        application->setPid(pid);
+        authorized = true;
+        return;
+    }
+
+    // if stage supplied in CLI, fetch that
+    Application::Stage stage = Application::MainStage;
+    QString stageParam = info->getParameter("--stage_hint=");
+
+    if (stageParam == "side_stage") {
+        stage = Application::SideStage;
+    }
+
+    qCDebug(QTMIR_APPLICATIONS) << "New process with pid" << pid << "appeared, adding new application to the"
+                                << "application list with appId:" << appInfo->appId();
+
+    QStringList arguments(info->asStringList());
+    application = new Application(
+        m_sharedWakelock,
+        appInfo,
+        arguments,
+        this);
+    application->setPid(pid);
+    application->setStage(stage);
+    add(application);
+    authorized = true;
 }
 
 void ApplicationManager::onSessionStarting(std::shared_ptr<ms::Session> const& session)

@@ -219,15 +219,15 @@ bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
     return true;
 }
 
-std::shared_ptr<qtmir::ApplicationInfo> ApplicationController::getInfoForApp(const QString &appId) const
+qtmir::ApplicationInfo *ApplicationController::getInfoForApp(const QString &appId) const
 {
     auto app = createApp(appId, impl->registry);
     if (!app || !app->info()) {
-        return {};
+        return nullptr;
     }
 
     QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
-    return std::make_shared<qtmir::upstart::ApplicationInfo>(shortAppId, app->info());
+    return new qtmir::upstart::ApplicationInfo(shortAppId, app->info());
 }
 
 } // namespace upstart

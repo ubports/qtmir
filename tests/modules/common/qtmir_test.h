@@ -33,7 +33,7 @@
 #include <mirserver.h>
 
 #include "mock_application_controller.h"
-#include "mock_desktop_file_reader.h"
+#include "mock_application_info.h"
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
 #include "mock_prompt_session_manager.h"
@@ -110,9 +110,6 @@ public:
             mirServer,
             taskController,
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            QSharedPointer<DesktopFileReader::Factory>(
-                &desktopFileReaderFactory,
-                [](DesktopFileReader::Factory*){}),
             QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
             QSharedPointer<MockSettings>(&settings,[](MockSettings *){})
         }
@@ -135,14 +132,6 @@ public:
         ON_CALL(appController,appIdHasProcessId(procId, appId)).WillByDefault(Return(true));
 
         // Set up Mocks & signal watcher
-        auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-        ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-        ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-        EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
-                .Times(1)
-                .WillOnce(Return(mockDesktopFileReader));
-
         EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
                 .Times(1)
                 .WillOnce(Return(true));
@@ -159,13 +148,11 @@ public:
         sessionManager.onSessionStarting(appSession);
         
         Mock::VerifyAndClearExpectations(&appController);
-        Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
         return application;
     }
 
     testing::NiceMock<testing::MockApplicationController> appController;
     testing::NiceMock<testing::MockProcInfo> procInfo;
-    testing::NiceMock<testing::MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<testing::MockSharedWakelock> sharedWakelock;
     testing::NiceMock<testing::MockSettings> settings;
     QSharedPointer<FakeMirServer> mirServer;

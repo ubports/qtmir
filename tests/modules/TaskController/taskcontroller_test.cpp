@@ -15,10 +15,7 @@
  */
 
 #include <Unity/Application/taskcontroller.h>
-#include <Unity/Application/desktopfilereader.h>
 #include <Unity/Application/application.h>
-
-#include "mock_desktop_file_reader.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,9 +41,8 @@ struct TriggerableApplicationController : public ApplicationController
         Q_EMIT applicationFocusRequest(appId);
     }
 
-    MOCK_METHOD1(primaryPidForAppId, pid_t (const QString&));
     MOCK_METHOD2(appIdHasProcessId, bool(pid_t, const QString&));
-    MOCK_CONST_METHOD1(findDesktopFileForAppId, QFileInfo(const QString &appId));
+    MOCK_CONST_METHOD1(getInfoForApp, qtmir::ApplicationInfo *(const QString &));
 
     MOCK_METHOD1(stopApplicationWithAppId, bool(const QString&));
     MOCK_METHOD2(startApplicationWithAppIdAndArgs, bool(const QString&, const QStringList&));

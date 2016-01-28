@@ -52,7 +52,7 @@ public:
     virtual bool pauseApplicationWithAppId(const QString &appId) = 0;
     virtual bool resumeApplicationWithAppId(const QString &appId) = 0;
 
-    virtual std::shared_ptr<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const = 0;
+    virtual qtmir::ApplicationInfo *getInfoForApp(const QString &appId) const = 0;
 
 Q_SIGNALS:
     void applicationAboutToBeStarted(const QString &appId);

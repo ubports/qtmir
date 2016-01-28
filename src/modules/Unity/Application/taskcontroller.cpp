@@ -94,7 +94,7 @@ bool TaskController::appIdHasProcessId(const QString& appId, const pid_t pid) co
     return m_appController->appIdHasProcessId(pid, appId);
 }
 
-std::shared_ptr<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QString &appId) const
+qtmir::ApplicationInfo *TaskController::getInfoForApp(const QString &appId) const
 {
     return m_appController->getInfoForApp(appId);
 }

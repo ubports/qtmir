@@ -41,7 +41,7 @@ public:
     bool resume(const QString &appId);
 
     bool appIdHasProcessId(const QString &appId, const pid_t pid) const;
-    std::shared_ptr<ApplicationInfo> getInfoForApp(const QString &appId) const;
+    ApplicationInfo *getInfoForApp(const QString &appId) const;
 
 Q_SIGNALS:
     void processStarting(const QString &appId);

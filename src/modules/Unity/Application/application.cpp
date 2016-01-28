@@ -38,7 +38,7 @@ namespace qtmir
 {
 
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                         const std::shared_ptr<ApplicationInfo>& appInfo,
+                         ApplicationInfo *appInfo,
                          const QStringList &arguments,
                          ApplicationManager *parent)
     : ApplicationInfoInterface(appInfo->appId(), parent)
@@ -97,6 +97,7 @@ Application::~Application()
         m_session->setApplication(nullptr);
         delete m_session;
     }
+    delete m_appInfo;
 }
 
 

@@ -19,7 +19,7 @@
 
 #include "qtmir_test.h"
 
-#include <fake_desktopfilereader.h>
+#include <fake_application_info.h>
 #include <fake_session.h>
 #include <mock_session.h>
 
@@ -41,7 +41,7 @@ TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -79,7 +79,7 @@ TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running and then suspend it
@@ -106,7 +106,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running, suspend it, and finally stop it
@@ -140,12 +140,12 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
     EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
     EXPECT_CALL(sharedWakelock, release(_)).Times(0);
 
-    FakeDesktopFileReader *desktopFileReader = new FakeDesktopFileReader;
-    desktopFileReader->m_appId = QString("unity8-dash");
+    auto applicationInfo = new FakeApplicationInfo();
+    applicationInfo->m_appId = QString("unity8-dash");
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            desktopFileReader, QStringList(), nullptr));
+            applicationInfo, QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -183,7 +183,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenRunningAppStops)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -218,7 +218,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenAppStopsWhileSuspending)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -250,7 +250,7 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeDesktopFileReader, QStringList(), nullptr));
+            new FakeApplicationInfo(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -292,14 +292,14 @@ TEST_F(ApplicationTests, passesIsTouchAppThrough)
 {
     using namespace ::testing;
 
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(QString(), QFileInfo());
+    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>();
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            mockDesktopFileReader, QStringList(), nullptr));
+            mockApplicationInfo, QStringList(), nullptr));
 
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
+    ON_CALL(*mockApplicationInfo, isTouchApp()).WillByDefault(Return(true));
     ASSERT_TRUE(application->isTouchApp());
 
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(false));
+    ON_CALL(*mockApplicationInfo, isTouchApp()).WillByDefault(Return(false));
     ASSERT_FALSE(application->isTouchApp());
 }
