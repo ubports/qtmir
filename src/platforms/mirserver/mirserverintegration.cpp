@@ -152,7 +152,7 @@ void MirServerIntegration::initialize()
         screenAdded(screen);
     }
 
-    m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
+    m_nativeInterface = new NativeInterface(m_mirServer.data());
 
     m_clipboard->setupDBusService();
 }

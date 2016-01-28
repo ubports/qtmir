@@ -67,7 +67,7 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
+        instance = new MirSurfaceManager(nativeInterface->mirServer(), shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
     }

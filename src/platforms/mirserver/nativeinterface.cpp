@@ -16,10 +16,11 @@
 
 #include "nativeinterface.h"
 
+#include "mirserver.h"
 #include "screen.h"
 
-NativeInterface::NativeInterface(const QWeakPointer<MirServer> &server)
-    : m_mirServer(server)
+NativeInterface::NativeInterface(QMirServer *server)
+    : m_qMirServer(server)
 {
 }
 
@@ -27,7 +28,7 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 {
     void *result = nullptr;
 
-    auto const server = m_mirServer.lock();
+    auto const server = m_qMirServer->mirServer().lock();
 
     if (server) {
         if (resource == "SessionAuthorizer")
@@ -38,6 +39,8 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
             result = server->sessionListener();
         else if (resource == "PromptSessionListener")
             result = server->promptSessionListener();
+        else if (resource == "ScreensController")
+            result = m_qMirServer->screensController().data();
     }
     return result;
 }
@@ -47,7 +50,8 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
 {
     QVariantMap propertyMap;
-    auto s = static_cast<Screen*>(window->screen());
+    auto w = static_cast<ScreenWindow*>(window);
+    auto s = static_cast<Screen*>(w->screen());
     if (s) {
         propertyMap.insert("scale", s->scale());
         propertyMap.insert("formFactor", s->formFactor());
@@ -57,7 +61,11 @@ QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
 
 QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString &name) const
 {
-    auto s = static_cast<Screen*>(window->screen());
+    if (!window || name.isNull()) {
+        return QVariant();
+    }
+    auto w = static_cast<ScreenWindow*>(window);
+    auto s = static_cast<Screen*>(w->screen());
     if (!s) {
         return QVariant();
     }

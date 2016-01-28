@@ -22,12 +22,12 @@
 #include <qpa/qplatformnativeinterface.h>
 
 // local
-#include "mirserver.h"
+#include "qmirserver.h"
 
 class NativeInterface : public QPlatformNativeInterface
 {
 public:
-    NativeInterface(const QWeakPointer<MirServer> &);
+    NativeInterface(QMirServer *);
 
     virtual void *nativeResourceForIntegration(const QByteArray &resource);
 
@@ -35,7 +35,10 @@ public:
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
 
-    QWeakPointer<MirServer> m_mirServer;
+    QWeakPointer<MirServer> mirServer() { return m_qMirServer->mirServer(); }
+
+private:
+    QMirServer *m_qMirServer;
 };
 
 #endif // NATIVEINTEGRATION_H
