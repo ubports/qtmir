@@ -155,24 +155,6 @@ void ScreensModel::update()
         }
     );
 
-    // Match up the new Mir DisplayBuffers with each Screen
-    display->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
-        group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
-            // only way to match Screen to a DisplayBuffer is by matching the geometry
-            QRect dbGeom(buffer.view_area().top_left.x.as_int(),
-                         buffer.view_area().top_left.y.as_int(),
-                         buffer.view_area().size.width.as_int(),
-                         buffer.view_area().size.height.as_int());
-
-            for (auto screen : m_screenList) {
-                if (dbGeom == screen->geometry()) {
-                    screen->setMirDisplayBuffer(&buffer, &group);
-                    break;
-                }
-            }
-        });
-    });
-
     // Announce new Screens to Qt
     for (auto screen : newScreenList) {
         Q_EMIT screenAdded(screen);
@@ -181,7 +163,7 @@ void ScreensModel::update()
     // Move Windows from about-to-be-deleted Screens to new Screen
     auto i = windowMoveList.constBegin();
     while (i != windowMoveList.constEnd()) {
-        qCDebug(QTMIR_SCREENS) << "Moving ScreenWindow" << i.key() << "from Screen" << static_cast<Screen*>(i.key()->screen()) << "to" << i.value();
+        qCDebug(QTMIR_SCREENS) << "Moving ScreenWindow" << i.key() << "from" << static_cast<Screen*>(i.key()->screen()) << "to" << i.value();
         i.key()->setScreen(i.value());
         i++;
     }
@@ -201,6 +183,24 @@ void ScreensModel::update()
         }
         delete screen;
     }
+
+    // Match up the new Mir DisplayBuffers with each Screen
+    display->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
+            // only way to match Screen to a DisplayBuffer is by matching the geometry
+            QRect dbGeom(buffer.view_area().top_left.x.as_int(),
+                         buffer.view_area().top_left.y.as_int(),
+                         buffer.view_area().size.width.as_int(),
+                         buffer.view_area().size.height.as_int());
+
+            for (auto screen : m_screenList) {
+                if (dbGeom == screen->geometry()) {
+                    screen->setMirDisplayBuffer(&buffer, &group);
+                    break;
+                }
+            }
+        });
+    });
 
     qCDebug(QTMIR_SCREENS) << "=======================================";
     for (auto screen: m_screenList) {
@@ -222,7 +222,7 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
     bool canUpdateExisting = true;
 
     if (!qFuzzyCompare(screen->scale(), output.scale)) {
-        canUpdateExisting = false;
+        canUpdateExisting = true; //false; FIXME
     }
 
     return canUpdateExisting;
