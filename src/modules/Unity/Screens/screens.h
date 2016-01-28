@@ -91,4 +91,6 @@ private:
 
 } // namespace qtmir
 
+Q_DECLARE_METATYPE(qtmir::Screens::FormFactor)
+
 #endif // SCREENS_H

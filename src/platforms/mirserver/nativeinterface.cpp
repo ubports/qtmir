@@ -73,7 +73,7 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     if (name == QStringLiteral("scale")) {
         return s->scale();
     } else if (name == QStringLiteral("formFactor")) {
-        return s->formFactor();
+        return static_cast<int>(s->formFactor()); // naughty, should add enum to Qt's Type system
     } else {
         return QVariant();
     }

@@ -18,20 +18,21 @@ Instantiator {
         Component.onDestruction: {
             print("Window destroyed")
         }
-        onScaleChanged: print("NOTICE: scale changed for", model.screen);
+        onScaleChanged: print("NOTICE: scale changed for", model.screen, "to", scale);
+        onFormFactorChanged: print("NOTICE: form factor changed for", model.screen, "to", formFactor)
         Button {
             anchors { left: parent.left; bottom: parent.bottom }
             height: 100
             width: parent.width / 2
             text: "Scale up"
-            onClicked: window.setScale(window.scale + 0.2)
+            onClicked: window.setScaleAndFormFactor(window.scale + 0.2, Screens.FormFactorMonitor)
         }
         Button {
             anchors { right: parent.right; bottom: parent.bottom }
             height: 100
             width: parent.width / 2
             text: "Scale down"
-            onClicked: window.setScale(window.scale - 0.2)
+            onClicked: window.setScaleAndFormFactor(window.scale - 0.2, Screens.FormFactorTablet)
         }
     }
 }
