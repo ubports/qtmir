@@ -26,7 +26,7 @@ namespace mg = mir::graphics;
 
 ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
         const std::shared_ptr<mir::graphics::Display> &display,
-        const std::weak_ptr<mir::shell::DisplayConfigurationController> &controller,
+        const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
         QObject *parent)
     : QObject(parent)
     , m_screensModel(model)
@@ -57,11 +57,6 @@ CustomScreenConfigurationList ScreensController::configuration()
 bool ScreensController::setConfiguration(CustomScreenConfigurationList newConfig)
 {
     using namespace mir::geometry;
-    auto controller = m_displayConfigurationController.lock();
-
-    if (!controller) {
-        return false;
-    }
 
     auto displayConfiguration = m_display->configuration();
 
@@ -84,6 +79,6 @@ bool ScreensController::setConfiguration(CustomScreenConfigurationList newConfig
         return false;
     }
 
-    controller->set_base_configuration(std::move(displayConfiguration));
+    m_displayConfigurationController->set_base_configuration(std::move(displayConfiguration));
     return true;
 }

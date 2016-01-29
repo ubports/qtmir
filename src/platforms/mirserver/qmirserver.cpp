@@ -78,6 +78,7 @@ void QMirServer::stop()
     Q_D(QMirServer);
 
     if (d->serverThread->isRunning()) {
+        d->screensController.clear();
         d->serverThread->stop();
         if (!d->serverThread->wait(10000)) {
             // do something to indicate fail during shutdown
