@@ -115,7 +115,9 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
 void MirSurfaceItem::componentComplete()
 {
     QQuickItem::componentComplete();
-    onScreenChanged(window()->screen());
+    if (window()) {
+        onScreenChanged(window()->screen());
+    }
 }
 
 MirSurfaceItem::~MirSurfaceItem()
