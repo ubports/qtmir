@@ -45,12 +45,7 @@ ScreenWindow::ScreenWindow(QWindow *window)
     , m_exposed(false)
     , m_winId(newWId())
 {
-    // Register with the Screen it is associated with
-    auto myScreen = static_cast<Screen *>(screen());
-    Q_ASSERT(myScreen);
-    myScreen->setWindow(this);
-
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by" << myScreen;
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "UNBACKED!";
 
     QRect screenGeometry(screen()->availableGeometry());
     if (window->geometry() != screenGeometry) {
@@ -81,6 +76,19 @@ void ScreenWindow::setExposed(const bool exposed)
     if (!window())
         return;
 
+    if (exposed) {
+        // Register with the Screen it is associated with when marked visible.
+        auto myScreen = static_cast<Screen *>(window()->screen()->handle());
+        myScreen->setWindow(this);
+        qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by!" << myScreen << "with ID" << myScreen->outputId().as_value();
+
+        QRect screenGeometry(screen()->availableGeometry());
+        if (window()->geometry() != screenGeometry) {
+            setGeometry(screenGeometry);
+            window()->setGeometry(screenGeometry);
+        }
+    }
+
     // If backing a QQuickWindow, need to stop/start its renderer immediately
     auto quickWindow = static_cast<QQuickWindow *>(window());
     if (!quickWindow)
@@ -110,6 +118,7 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
     myScreen->setWindow(this);
 
     QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
+    setExposed(true); //GERRY - assumption setScreen only called while compositor running
 
     qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "NEWLY backed by" << myScreen;
 }

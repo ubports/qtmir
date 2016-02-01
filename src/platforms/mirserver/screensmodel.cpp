@@ -80,12 +80,7 @@ void ScreensModel::onCompositorStarting()
     update();
 
     // (Re)Start Qt's render thread by setting all windows with a corresponding screen to exposed.
-    for (auto screen : m_screenList) {
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window()) {
-            window->setExposed(true);
-        }
-    }
+    allWindowsSetExposed(true);
 }
 
 void ScreensModel::onCompositorStopping()
@@ -95,12 +90,7 @@ void ScreensModel::onCompositorStopping()
 
     // Stop Qt's render threads by setting all its windows it obscured. Must
     // block until all windows have their GL contexts released.
-    for (auto screen : m_screenList) {
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window()) {
-            window->setExposed(false);
-        }
-    }
+    allWindowsSetExposed(false);
 
     update();
 }
@@ -226,6 +216,16 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
     }
 
     return canUpdateExisting;
+}
+
+void ScreensModel::allWindowsSetExposed(bool exposed)
+{
+    Q_FOREACH(const auto window, qGuiApp->allWindows()) {
+        const auto handle = static_cast<ScreenWindow *>(window->handle());
+        if (handle) { //GERRY: at startup, some QWindow has no handle??
+            handle->setExposed(exposed);
+        }
+    }
 }
 
 Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
