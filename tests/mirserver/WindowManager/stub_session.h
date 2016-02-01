@@ -43,8 +43,8 @@ struct StubSession : mir::scene::Session
     mir::frontend::SurfaceId create_surface(
         mir::scene::SurfaceCreationParameters const& params,
         std::shared_ptr<mir::frontend::EventSink> const& sink) override;
-
     void destroy_surface(mir::frontend::SurfaceId surface) override;
+    void destroy_surface(std::weak_ptr<mir::scene::Surface> const& surface) override;
 
     std::shared_ptr<mir::scene::Surface> surface(mir::frontend::SurfaceId surface) const override;
     std::shared_ptr<mir::scene::Surface> surface_after(std::shared_ptr<mir::scene::Surface> const&) const override;
@@ -54,6 +54,8 @@ struct StubSession : mir::scene::Session
     mir::frontend::BufferStreamId create_buffer_stream(mir::graphics::BufferProperties const& props) override;
     void destroy_buffer_stream(mir::frontend::BufferStreamId stream) override;
     void configure_streams(mir::scene::Surface& surface, std::vector<mir::shell::StreamSpecification> const& config) override;
+
+    void send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) override;
 };
 
 #endif //QPAMIRSERVER_STUBSESSION_H

@@ -31,9 +31,15 @@ MockSurface::~MockSurface()
 
 void MockSurface::rename(const std::string &) {}
 
-void MockSurface::set_keymap(const xkb_rule_names &) {}
+void MockSurface::set_keymap(MirInputDeviceId,
+                             std::string const&,
+                             std::string const&,
+                             std::string const&,
+                             std::string const&)
+{
+}
 
-void MockSurface::consume(const MirEvent &event) { consume(&event); }
+// void MockSurface::consume(const MirEvent &event) { consume(&event); }
 
 } // namespace scene
 } // namespace mir

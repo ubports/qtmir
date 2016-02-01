@@ -84,7 +84,7 @@ void StubSceneSurface::remove_observer(const std::weak_ptr<mir::scene::SurfaceOb
 
 void StubSceneSurface::set_reception_mode(mir::input::InputReceptionMode mode) { input_mode = mode; }
 
-void StubSceneSurface::consume(const MirEvent &) {}
+void StubSceneSurface::consume(const MirEvent *) {}
 
 void StubSceneSurface::set_cursor_image(const std::shared_ptr<mir::graphics::CursorImage> &) {}
 

@@ -281,3 +281,40 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
 
     Mock::VerifyAndClear(promptSessionManager.get());
 }
+
+TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
+{
+    using namespace testing;
+
+    class SessionTestClass : public qtmir::Session
+    {
+    public:
+        SessionTestClass(const std::shared_ptr<mir::scene::Session>& session,
+                         const std::shared_ptr<mir::scene::PromptSessionManager>& promptSessionManager)
+            : Session(session, promptSessionManager) {}
+
+        using Session::m_suspendTimer;
+    };
+
+    const QString appId("test-app");
+    const pid_t procId = 5551;
+
+    auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
+
+    auto session = std::make_shared<SessionTestClass>(mirSession, mirServer->the_prompt_session_manager());
+    {
+        FakeMirSurface *surface = new FakeMirSurface;
+        session->registerSurface(surface);
+        surface->drawFirstFrame();
+    }
+    EXPECT_EQ(Session::Running, session->state());
+
+    EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));
+    session->suspend();
+    EXPECT_EQ(Session::Suspending, session->state());
+    EXPECT_TRUE(session->m_suspendTimer->isActive());
+
+    session->setLive(false);
+    EXPECT_EQ(Session::Stopped, session->state());
+    EXPECT_FALSE(session->m_suspendTimer->isActive());
+}

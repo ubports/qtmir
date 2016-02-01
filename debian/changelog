@@ -1,3 +1,44 @@
+qtmir (0.4.7+16.04.20160127.1-0ubuntu1) xenial; urgency=medium
+
+  * Changes for mir 0.19.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Wed, 27 Jan 2016 21:42:31 +0000
+
+qtmir (0.4.7+16.04.20160122-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Fixed issue where stopping the session while suspending was causing
+    app close to stall. (LP: #1536133)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 22 Jan 2016 16:54:39 +0000
+
+qtmir (0.4.7+16.04.20160104-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Update Session.fullscreen properties at the right time (LP:
+    #1525893)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 04 Jan 2016 09:38:12 +0000
+
+qtmir (0.4.7+16.04.20151222-0ubuntu1) xenial; urgency=medium
+
+  * No-change rebuild to get -gles in sync
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 22 Dec 2015 15:29:49 +0000
+
+qtmir (0.4.7+16.04.20151217-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * compatibility branch for Mir 0.18
+
+  [ Cemil Azizoglu ]
+  * compatibility branch for Mir 0.18
+
+  [ Kevin DuBois ]
+  * compatibility branch for Mir 0.18
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 17 Dec 2015 12:01:56 +0000
+
 qtmir (0.4.7+16.04.20151210-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
