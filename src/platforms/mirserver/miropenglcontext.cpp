@@ -148,7 +148,13 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
 void MirOpenGLContext::doneCurrent()
 {
-    // FIXME: create a temporary GL context just to release? Would be better to get existing one.
+    // FIXME: pity to have to resort to raw egl calls, but I see no easy way using Mir.
+    EGLDisplay eglDisplay = eglGetCurrentDisplay();
+    if (eglDisplay == EGL_NO_DISPLAY) {
+        qFatal("Unable to determine current EGL Display in order to release the current context");
+    } else {
+        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
 }
 
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)
