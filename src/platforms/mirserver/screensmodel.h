@@ -66,6 +66,7 @@ public:
 
 Q_SIGNALS:
     void screenAdded(Screen *screen);
+    void screenRemoved(Screen *screen);
 
 public Q_SLOTS:
     void update();

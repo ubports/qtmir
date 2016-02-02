@@ -162,7 +162,6 @@ void ScreensModel::update()
     for (auto screen: oldScreenList) {
         qCDebug(QTMIR_SCREENS) << "Removed Screen with id" << screen->m_outputId.as_value()
                                << "and geometry" << screen->geometry();
-        // The screen is automatically removed from Qt's internal list by the QPlatformScreen destructor.
         auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window() && window->isExposed()) {
             window->window()->hide();
@@ -171,7 +170,7 @@ void ScreensModel::update()
         if (!ok) {
             qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }
-        delete screen;
+        Q_EMIT screenRemoved(screen); // should delete the backing Screen
     }
 
     // Match up the new Mir DisplayBuffers with each Screen
@@ -220,10 +219,10 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
 
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
-    Q_FOREACH(const auto window, qGuiApp->allWindows()) {
-        const auto handle = static_cast<ScreenWindow *>(window->handle());
-        if (handle) { //GERRY: at startup, some QWindow has no handle??
-            handle->setExposed(exposed);
+    for (const auto screen : m_screenList) {
+        const auto window = static_cast<ScreenWindow *>(screen->window());
+        if (window && window->window()) {
+            window->setExposed(exposed);
         }
     }
 }
