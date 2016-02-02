@@ -53,6 +53,7 @@ public:
     Qt::ScreenOrientation nativeOrientation() const override { return m_nativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
     QPlatformCursor *cursor() const override;
+    QString name() const override;
 
     void toggleSensors(const bool enable) const;
 

@@ -98,6 +98,29 @@ enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat
     }
 }
 
+QString displayTypeToString(enum mir::graphics::DisplayConfigurationOutputType type)
+{
+    typedef mir::graphics::DisplayConfigurationOutputType Type;
+    switch (type) {
+    case Type::vga:           return QStringLiteral("VGP");
+    case Type::dvii:          return QStringLiteral("DVI-I");
+    case Type::dvid:          return QStringLiteral("DVI-D");
+    case Type::dvia:          return QStringLiteral("DVI-A");
+    case Type::composite:     return QStringLiteral("Composite");
+    case Type::svideo:        return QStringLiteral("S-Video");
+    case Type::lvds:          return QStringLiteral("LVDS");
+    case Type::component:     return QStringLiteral("Component");
+    case Type::ninepindin:    return QStringLiteral("9 Pin DIN");
+    case Type::displayport:   return QStringLiteral("DisplayPort");
+    case Type::hdmia:         return QStringLiteral("HDMI-A");
+    case Type::hdmib:         return QStringLiteral("HDMI-B");
+    case Type::tv:            return QStringLiteral("TV");
+    case Type::edp:           return QStringLiteral("EDP");
+    case Type::unknown:
+    default:
+        return QStringLiteral("Unknown");
+    } //switch
+}
 } // namespace {
 
 
@@ -233,7 +256,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         }
     }
 
-    m_devicePixelRatio = qCeil(m_scale); // FIXME: I probably need to announce this changing somehow
+    m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
@@ -317,6 +340,11 @@ QPlatformCursor *Screen::cursor() const
     return const_cast<QPlatformCursor *>(platformCursor);
 }
 
+QString Screen::name() const
+{
+    return displayTypeToString(m_type);
+}
+
 ScreenWindow *Screen::window() const
 {
     return m_screenWindow;
@@ -325,14 +353,14 @@ ScreenWindow *Screen::window() const
 void Screen::setWindow(ScreenWindow *window)
 {
     if (window && m_screenWindow) {
-        qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::setWindow - overwriting existing ScreenWindow";
+        qCDebug(QTMIR_SCREENS) << "Screen::setWindow - overwriting existing ScreenWindow";
     }
     m_screenWindow = window;
 }
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
 {
-    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << buffer << group;
+    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << this << as_render_target(buffer) << group;
     // This operation should only be performed while rendering is stopped
     m_renderTarget = as_render_target(buffer);
     m_displayGroup = group;
