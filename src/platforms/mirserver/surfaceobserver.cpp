@@ -96,6 +96,12 @@ void SurfaceObserver::cursor_image_set_to(const mir::graphics::CursorImage &curs
     Q_EMIT cursorChanged(qcursor);
 }
 
+void SurfaceObserver::keymap_changed(MirInputDeviceId, const std::string &, const std::string &layout,
+                                     const std::string &variant, const std::string &)
+{
+    Q_EMIT keymapChanged(QString::fromStdString(layout), QString::fromStdString(variant));
+}
+
 QCursor SurfaceObserver::createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage) {
     if (cursorImage.as_argb_8888() == nullptr) {
         // Must be a named cursor

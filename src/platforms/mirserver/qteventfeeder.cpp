@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -26,11 +26,11 @@
 #include <qpa/qplatformintegration.h>
 #include <QGuiApplication>
 #include <private/qguiapplication_p.h>
+#include <QTextCodec>
+#include <QDebug>
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
-
-#include <QDebug>
 
 // common dir
 #include <debughelpers.h>
@@ -352,20 +352,26 @@ static const uint32_t KeyTable[] = {
     0,                          0
 };
 
-static uint32_t translateKeysym(uint32_t sym, char *string, size_t size) {
-    Q_UNUSED(size);
-    string[0] = '\0';
+static uint32_t translateKeysym(uint32_t sym, const QString &text) {
+    int code = 0;
 
-    if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
+    QTextCodec *systemCodec = QTextCodec::codecForLocale();
+    if (sym < 128 || (sym < 256 && systemCodec->mibEnum() == 4)) {
+        // upper-case key, if known
+        code = isprint((int)sym) ? toupper((int)sym) : 0;
+    } else if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35) {
         return Qt::Key_F1 + (int(sym) - XKB_KEY_F1);
+    } else if (text.length() == 1 && text.unicode()->unicode() > 0x1f
+               && text.unicode()->unicode() != 0x7f
+               && !(sym >= XKB_KEY_dead_grave && sym <= XKB_KEY_dead_currency)) {
+        code = text.unicode()->toUpper().unicode();
+    } else {
+        for (int i = 0; KeyTable[i]; i += 2)
+            if (sym == KeyTable[i])
+                code = KeyTable[i + 1];
+    }
 
-    for (int i = 0; KeyTable[i]; i += 2)
-        if (sym == KeyTable[i])
-            return KeyTable[i + 1];
-
-    string[0] = sym;
-    string[1] = '\0';
-    return toupper(sym);
+    return code;
 }
 
 namespace {
@@ -611,9 +617,16 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     }
 
     // Key event propagation.
-    char s[2];
-    int keyCode = translateKeysym(xk_sym, s, sizeof(s));
-    QString text = QString::fromLatin1(s);
+    QString text;
+    QVarLengthArray<char, 32> chars(32);
+    {
+        int result = xkb_keysym_to_utf8(xk_sym, chars.data(), chars.size());
+
+        if (result > 0) {
+            text = QString::fromUtf8(chars.constData());
+        }
+    }
+    int keyCode = translateKeysym(xk_sym, text);
 
     QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
     if (context) {
@@ -636,8 +649,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
         timestamp.count(), keyType, keyCode, modifiers,
-        mir_keyboard_event_scan_code(kev),
-        mir_keyboard_event_key_code(kev),
+        mir_keyboard_event_scan_code(kev), xk_sym,
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
 }
 

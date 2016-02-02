@@ -27,6 +27,7 @@
 #include <QSGTextureProvider>
 #include <QTimer>
 #include <QWeakPointer>
+#include <QPair>
 
 #include "mirbuffersgtexture.h"
 #include "session.h"
@@ -121,6 +122,10 @@ public:
 
     QCursor cursor() const override;
 
+    QString keymapLayout() const override;
+    QString keymapVariant() const override;
+    Q_INVOKABLE void setKeymap(const QString &layout, const QString &variant) override;
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
@@ -130,6 +135,7 @@ private Q_SLOTS:
     void onFramesPostedObserved();
     void onSessionDestroyed();
     void emitSizeChanged();
+    void onKeymapChanged(const QString &layout, const QString &variant);
     void setCursor(const QCursor &cursor);
 
 private:
@@ -163,6 +169,7 @@ private:
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 
     QSize m_size;
+    QPair<QString,QString> m_keyMap; // pair of layout+variant
 
     QCursor m_cursor;
 };

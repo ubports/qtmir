@@ -186,6 +186,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::keymapChanged, this, &MirSurface::onKeymapChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         observer->setListener(this);
@@ -730,6 +731,12 @@ void MirSurface::emitSizeChanged()
     Q_EMIT sizeChanged(m_size);
 }
 
+void MirSurface::onKeymapChanged(const QString &layout, const QString &variant)
+{
+    m_keyMap = qMakePair(layout, variant);
+    Q_EMIT keymapChanged(layout, variant);
+}
+
 QString MirSurface::appId() const
 {
     QString appId;
@@ -742,9 +749,28 @@ QString MirSurface::appId() const
     return appId;
 }
 
+void MirSurface::setKeymap(const QString &layout, const QString &variant)
+{
+    if (layout.isEmpty()) {
+        qCWarning(QTMIR_SURFACES) << "Setting keymap with empty layout is not supported";
+        return;
+    }
+    m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
+}
+
 QCursor MirSurface::cursor() const
 {
     return m_cursor;
+}
+
+QString MirSurface::keymapLayout() const
+{
+    return m_keyMap.first;
+}
+
+QString MirSurface::keymapVariant() const
+{
+    return m_keyMap.second;
 }
 
 void MirSurface::setCursor(const QCursor &cursor)
