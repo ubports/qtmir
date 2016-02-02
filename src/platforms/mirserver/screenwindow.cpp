@@ -47,6 +47,7 @@ ScreenWindow::ScreenWindow(QWindow *window)
 {
     qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "UNBACKED!";
 
+    // Note: window->screen() is set to the primaryScreen(), if not specified explicitly.
     QRect screenGeometry(screen()->availableGeometry());
     if (window->geometry() != screenGeometry) {
         setGeometry(screenGeometry);
@@ -80,7 +81,7 @@ void ScreenWindow::setExposed(const bool exposed)
         // Register with the Screen it is associated with when marked visible.
         auto myScreen = static_cast<Screen *>(window()->screen()->handle());
         myScreen->setWindow(this);
-        qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by!" << myScreen << "with ID" << myScreen->outputId().as_value();
+        qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "now backed by" << myScreen << "with ID" << myScreen->outputId().as_value();
 
         QRect screenGeometry(screen()->availableGeometry());
         if (window()->geometry() != screenGeometry) {
