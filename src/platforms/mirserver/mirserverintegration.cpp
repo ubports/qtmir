@@ -148,6 +148,15 @@ void MirServerIntegration::initialize()
     }
     QObject::connect(screens.data(), &ScreensModel::screenAdded,
             [this](Screen *screen) { this->screenAdded(screen); });
+    QObject::connect(screens.data(), &ScreensModel::screenRemoved,
+            [this](Screen *screen) {
+#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
+        delete screen;
+#else
+        this->destroyScreen(screen);
+#endif
+    });
+
     Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);
     }
