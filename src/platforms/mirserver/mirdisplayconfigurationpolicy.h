@@ -30,6 +30,7 @@ public:
 
 private:
     const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
+    float m_defaultScale;
 };
 
 #endif // MIRDISPLAYCONFIGURATIONPOLICY_H
