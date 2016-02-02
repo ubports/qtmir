@@ -238,26 +238,6 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
-    // Scale, DPR & Form Factor
-    // Update the scale & form factor native-interface properties for the windows affected
-    // as there is no convenient way to emit signals for those custom properties on a QScreen
-    auto nativeInterface = qGuiApp->platformNativeInterface();
-    if (screen.form_factor != m_formFactor) {
-        m_formFactor = screen.form_factor;
-        if (notify) {
-            Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("formFactor"));
-        }
-    }
-
-    if (!qFuzzyCompare(screen.scale, m_scale)) {
-        m_scale = screen.scale;
-        if (notify) {
-            Q_EMIT nativeInterface->windowPropertyChanged(window(), QStringLiteral("scale"));
-        }
-    }
-
-    m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
-
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
         if (notify) {
@@ -273,6 +253,27 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         m_refreshRate = mode.vrefresh_hz;
         if (notify) {
             QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+        }
+    }
+
+    // Scale, DPR & Form Factor
+    // Update the scale & form factor native-interface properties for the windows affected
+    // as there is no convenient way to emit signals for those custom properties on a QScreen
+    m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
+
+    auto w = window(); // usually there is no Window associated with this Screen at this time.
+    auto nativeInterface = qGuiApp->platformNativeInterface();
+    if (screen.form_factor != m_formFactor) {
+        m_formFactor = screen.form_factor;
+        if (w && notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("formFactor"));
+        }
+    }
+
+    if (!qFuzzyCompare(screen.scale, m_scale)) {
+        m_scale = screen.scale;
+        if (w && notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("scale"));
         }
     }
 }
@@ -356,6 +357,10 @@ void Screen::setWindow(ScreenWindow *window)
         qCDebug(QTMIR_SCREENS) << "Screen::setWindow - overwriting existing ScreenWindow";
     }
     m_screenWindow = window;
+
+    auto nativeInterface = qGuiApp->platformNativeInterface();
+    Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
+    Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
 }
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
