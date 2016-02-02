@@ -358,9 +358,11 @@ void Screen::setWindow(ScreenWindow *window)
     }
     m_screenWindow = window;
 
-    auto nativeInterface = qGuiApp->platformNativeInterface();
-    Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
-    Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
+    if (m_screenWindow) {
+        auto nativeInterface = qGuiApp->platformNativeInterface();
+        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
+        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
+    }
 }
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
