@@ -664,6 +664,9 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
+        if (window()) {
+            onScreenChanged(window()->screen());
+        }
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
