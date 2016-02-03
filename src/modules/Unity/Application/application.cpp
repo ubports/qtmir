@@ -425,7 +425,7 @@ void Application::close()
         // already on the way
         break;
     case InternalState::StoppedResumable:
-        // process stopped while suspended. Stop it for good now.
+        // session stopped while suspended. Stop it for good now.
         setInternalState(InternalState::Stopped);
         break;
     case InternalState::Stopped:
