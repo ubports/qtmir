@@ -2170,3 +2170,38 @@ TEST_F(ApplicationManagerTests,CloseWhenSuspendedAfterSessionStopped)
     EXPECT_EQ(Application::Stopped, application->state());
     EXPECT_EQ(spy.count(), 1);
 }
+
+/*
+ * Test that an application that fails while suspended will stop on close request
+ */
+TEST_F(ApplicationManagerTests,CloseWhenSuspendedProcessFailed)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+
+    auto application = startApplication(procId, "testAppId");
+
+    qtmir::Session* session(static_cast<qtmir::Session*>(application->session()));
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session->session().get(), surface);
+    surface->drawFirstFrame();
+    EXPECT_EQ(Application::InternalState::Running, application->internalState());
+
+    // Session is suspended
+    suspend(application);
+
+    // Process failed
+    onSessionStopping(session->session());
+    applicationManager.onProcessFailed(appId, true);
+    applicationManager.onProcessStopped(appId);
+    EXPECT_EQ(Application::InternalState::StoppedResumable, application->internalState());
+
+    QSignalSpy spy(application, SIGNAL(stopped()));
+    application->close();
+
+    EXPECT_EQ(Application::Stopped, application->state());
+    EXPECT_EQ(spy.count(), 1);
+}
