@@ -196,7 +196,7 @@ void ScreensModel::update()
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->window()
-                               << "type:" << static_cast<int>(screen->outputType())
+                               << "type:" << screen->name()
                                << "scale:" << screen->scale();
     }
     qCDebug(QTMIR_SCREENS) << "=======================================";
