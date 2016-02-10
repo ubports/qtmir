@@ -1,3 +1,11 @@
+qtmir (0.4.7+16.04.20160208-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added fix and test for closing app during the StoppedResumable
+    state. (LP: #1541388)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 08 Feb 2016 09:36:17 +0000
+
 qtmir (0.4.7+16.04.20160127.1-0ubuntu1) xenial; urgency=medium
 
   * Changes for mir 0.19.
