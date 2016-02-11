@@ -13,7 +13,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     fake_desktopfilereader.cpp
     fake_mirsurface.cpp
     fake_session.cpp
-    mock_application_controller.cpp
+    mock_task_controller.cpp
     mock_desktop_file_reader.cpp
     mock_display.cpp
     mock_display_configuration.cpp
