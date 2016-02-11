@@ -107,7 +107,9 @@ MirServer::MirServer(int argc, char const* argv[],
     override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return {MirWindowManager::create(focus_controller, the_shell_display_layout())};
+            auto windowManager = MirWindowManager::create(focus_controller, the_shell_display_layout());
+            m_windowManager = windowManager;
+            return windowManager;
         });
 
     wrap_display_configuration_policy(
@@ -192,4 +194,9 @@ MirShell *MirServer::shell()
 {
     std::weak_ptr<MirShell> m_shell = the_shell();
     return m_shell.lock().get();
+}
+
+MirWindowManager *MirServer::windowManager()
+{
+    return m_windowManager.lock().get();
 }

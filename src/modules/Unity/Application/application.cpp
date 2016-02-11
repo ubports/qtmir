@@ -798,4 +798,20 @@ void Application::setCloseTimer(AbstractTimer *timer)
     connect(m_closeTimer, &Timer::timeout, this, &Application::stop);
 }
 
+QSize Application::initialSurfaceSize() const
+{
+    return m_initialSurfaceSize;
+}
+
+void Application::setInitialSurfaceSize(const QSize &size)
+{
+    qCDebug(QTMIR_APPLICATIONS).nospace() << "Application::setInitialSurfaceSize - appId=" << appId()
+        << " size=" << size;
+
+    if (size != m_initialSurfaceSize) {
+        m_initialSurfaceSize = size;
+        Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
+    }
+}
+
 } // namespace qtmir

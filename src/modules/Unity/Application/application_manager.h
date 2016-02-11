@@ -137,6 +137,8 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
+    void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
+                                       int type, QSize &size);
 
 private:
     void setFocused(Application *application);

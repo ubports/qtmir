@@ -100,16 +100,26 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
-    // TODO: Callback unity8 so that it can make a decision on that.
-    //       unity8 must bear in mind that the called function will be on a Mir thread though.
-    //       The QPA shouldn't be deciding for itself on such things.
-
+    QSize initialSize;
+    // can be connected to via Qt::BlockingQueuedConnection to alter surface initial size
+    {
+        int surfaceType = requestParameters.type.is_set() ? requestParameters.type.value() : -1;
+        Q_EMIT sessionAboutToCreateSurface(session, surfaceType, initialSize);
+    }
     ms::SurfaceCreationParameters placedParameters = requestParameters;
 
-    // Just make it fullscreen for now
-    mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
-    m_displayLayout->size_to_output(rect);
-    placedParameters.size = rect.size;
+    if (initialSize.isValid()) {
+        placedParameters.size.width = mir::geometry::Width(initialSize.width());
+        placedParameters.size.height = mir::geometry::Height(initialSize.height());
+    } else {
+        qCWarning(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): didn't get a initial surface"
+            " size from shell. Falling back to fullscreen placement";
+        // This is bad. Fallback to fullscreen
+        mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
+        m_displayLayout->size_to_output(rect);
+        placedParameters.size = rect.size;
+    }
+
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): size requested ("
                                 << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
@@ -174,9 +184,9 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     }
 }
 
-std::unique_ptr<MirWindowManager> MirWindowManager::create(
+std::shared_ptr<MirWindowManager> MirWindowManager::create(
     mir::shell::FocusController* /*focus_controller*/,
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
 {
-    return std::make_unique<MirWindowManagerImpl>(displayLayout);
+    return std::make_shared<MirWindowManagerImpl>(displayLayout);
 }

@@ -20,6 +20,7 @@
 #include <mir/shell/window_manager.h>
 
 #include <QObject>
+#include <QSize>
 
 namespace mir {
     namespace shell {
@@ -33,10 +34,14 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
     Q_OBJECT
 
 public:
-
-    static std::unique_ptr<MirWindowManager> create(
+    static std::shared_ptr<MirWindowManager> create(
         mir::shell::FocusController* focus_controller,
         const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+
+Q_SIGNALS:
+    // requires Qt::BlockingQueuedConnection!!
+    void sessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
+                                     int type, QSize &size);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */
