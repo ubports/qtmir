@@ -18,9 +18,12 @@
 #define SESSIONLISTENER_H
 
 #include <QObject>
+#include <QMap>
 
 #include "mir/scene/session_listener.h"
 #include "mir/scene/session.h"
+
+#include "sizehints.h"
 
 class SurfaceObserver;
 
@@ -39,6 +42,8 @@ public:
     void surface_created(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override;
     void destroying_surface(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override;
 
+    void surfaceAboutToBeCreated(mir::scene::Session&, qtmir::SizeHints sizeHints);
+
 Q_SIGNALS:
     void sessionStarting(std::shared_ptr<mir::scene::Session> const& session);
     void sessionStopping(std::shared_ptr<mir::scene::Session> const& session);
@@ -47,8 +52,12 @@ Q_SIGNALS:
 
     void sessionCreatedSurface(mir::scene::Session const*,
                                std::shared_ptr<mir::scene::Surface> const&,
-                               std::shared_ptr<SurfaceObserver> const&);
+                               std::shared_ptr<SurfaceObserver> const&,
+                               qtmir::SizeHints);
     void sessionDestroyingSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
+
+private:
+    QMap<mir::scene::Session*, qtmir::SizeHints> m_sizeHintsForNewSurface;
 };
 
 #endif // SESSIONLISTENER_H
