@@ -33,7 +33,6 @@
 
 // mir
 #include <mir/scene/surface.h>
-#include <mir_toolkit/common.h>
 
 namespace mir { namespace shell { class Shell; }}
 
@@ -121,6 +120,9 @@ public:
 
     QCursor cursor() const override;
 
+    Mir::ShellChrome shellChrome() const override;
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
@@ -165,6 +167,7 @@ private:
     QSize m_size;
 
     QCursor m_cursor;
+    Mir::ShellChrome m_shellChrome;
 };
 
 } // namespace qtmir

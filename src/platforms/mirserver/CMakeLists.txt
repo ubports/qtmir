@@ -71,6 +71,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     clipboard.cpp
     tileddisplayconfigurationpolicy.cpp
     tracepoints.c
+    windowmanagerlistener.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     )

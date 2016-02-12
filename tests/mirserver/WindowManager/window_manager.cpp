@@ -18,6 +18,7 @@
 #include "mirwindowmanager.h"
 #include "stub_surface.h"
 #include "stub_session.h"
+#include "windowmanagerlistener.h"
 
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
@@ -80,9 +81,10 @@ struct WindowManager : Test
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
     StubFocusController focus_controller;
+    QSharedPointer<WindowManagerListener> listener{new WindowManagerListener};
 
     const std::unique_ptr<MirWindowManager> window_manager =
-        MirWindowManager::create(&focus_controller, mock_display_layout);
+        MirWindowManager::create(&focus_controller, mock_display_layout, listener);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};
     const std::shared_ptr<MockSession> arbitrary_session = std::make_shared<NiceMock<MockSession>>();

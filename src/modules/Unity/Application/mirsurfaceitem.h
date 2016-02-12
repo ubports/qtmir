@@ -49,6 +49,7 @@ public:
     Mir::Type type() const override;
     QString name() const override;
     bool live() const override;
+    Mir::ShellChrome shellChrome() const override;
 
     Mir::State surfaceState() const override;
     void setSurfaceState(Mir::State) override;
@@ -70,6 +71,7 @@ public:
 
     FillMode fillMode() const override;
     void setFillMode(FillMode value) override;
+
 
     ////////
     // QQuickItem

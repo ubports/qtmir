@@ -20,6 +20,7 @@
 #include <mir/shell/window_manager.h>
 
 #include <QObject>
+#include <QSharedPointer>
 
 namespace mir {
     namespace shell {
@@ -27,6 +28,8 @@ namespace mir {
         class FocusController;
     }
 }
+
+class WindowManagerListener;
 
 class MirWindowManager : public QObject, public mir::shell::WindowManager
 {
@@ -36,7 +39,8 @@ public:
 
     static std::unique_ptr<MirWindowManager> create(
         mir::shell::FocusController* focus_controller,
-        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+        const QSharedPointer<WindowManagerListener> &windowManagerListener);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

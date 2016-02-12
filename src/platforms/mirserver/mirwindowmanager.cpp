@@ -17,6 +17,10 @@
 #include "mirwindowmanager.h"
 #include "logging.h"
 #include "tracepoints.h" // generated from tracepoints.tp
+#include "windowmanagerlistener.h"
+
+// Unity API
+#include <unity/shell/application/Mir.h>
 
 #include <mir/geometry/rectangle.h>
 #include <mir/scene/session.h>
@@ -32,7 +36,8 @@ class MirWindowManagerImpl : public MirWindowManager
 {
 public:
 
-    MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+    MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+                         const QSharedPointer<WindowManagerListener> &windowManagerListener);
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
 
@@ -75,12 +80,15 @@ public:
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
+    const QSharedPointer<WindowManagerListener> m_windowManagerListener;
 };
 
 }
 
-MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
-    m_displayLayout{displayLayout}
+MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+                                           const QSharedPointer<WindowManagerListener> &windowManagerListener)
+    : m_displayLayout{displayLayout}
+    , m_windowManagerListener(windowManagerListener)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::MirWindowManagerImpl";
 }
@@ -117,7 +125,16 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 
     tracepoint(qtmirserver, surfacePlacementEnd);
 
-    return build(session, placedParameters);
+    auto const result = build(session, placedParameters);
+    auto const surface = session->surface(result);
+
+    if (placedParameters.shell_chrome.is_set()) {
+        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
+            WindowManagerListener::ShellChrome,
+            QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(placedParameters.shell_chrome.value())));
+    }
+
+    return result;
 }
 
 void MirWindowManagerImpl::remove_surface(
@@ -171,12 +188,23 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
 {
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
+
+        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
+                                                        WindowManagerListener::Name,
+                                                        modifications.shell_chrome.value());
+    }
+
+    if (modifications.shell_chrome.is_set()) {
+        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
+            WindowManagerListener::ShellChrome,
+            QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(modifications.shell_chrome.value())));
     }
 }
 
 std::unique_ptr<MirWindowManager> MirWindowManager::create(
     mir::shell::FocusController* /*focus_controller*/,
-    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
+    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+    const QSharedPointer<WindowManagerListener> &windowManagerListener)
 {
-    return std::make_unique<MirWindowManagerImpl>(displayLayout);
+    return std::make_unique<MirWindowManagerImpl>(displayLayout, windowManagerListener);
 }

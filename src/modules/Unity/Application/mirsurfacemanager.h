@@ -29,6 +29,9 @@
 // Mir
 #include <mir_toolkit/common.h>
 
+// QPA server
+#include "windowmanagerlistener.h"
+
 
 namespace mir {
     namespace scene {
@@ -73,6 +76,10 @@ public Q_SLOTS:
                                  const std::shared_ptr<mir::scene::Surface> &,
                                  std::shared_ptr<SurfaceObserver> const&);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
+
+    void onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &,
+                           WindowManagerListener::SurfaceProperty property,
+                           const QVariant& value);
 
 protected:
     QHash<const mir::scene::Surface *, MirSurfaceInterface *> m_mirSurfaceToQmlSurfaceHash;

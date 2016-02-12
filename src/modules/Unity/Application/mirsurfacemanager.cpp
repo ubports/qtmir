@@ -52,6 +52,12 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
+void connectToWindowManagerListener(MirSurfaceManager *manager, WindowManagerListener *listener)
+{
+    QObject::connect(listener, &WindowManagerListener::surfaceMofidied,
+                     manager, &MirSurfaceManager::onSurfaceModified);
+}
+
 MirSurfaceManager* MirSurfaceManager::singleton()
 {
     if (!instance) {
@@ -65,11 +71,13 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
+        WindowManagerListener *windowManagerListener = static_cast<WindowManagerListener*>(nativeInterface->nativeResourceForIntegration("WindowManagerListener"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
+        connectToWindowManagerListener(instance, windowManagerListener);
     }
     return instance;
 }
@@ -155,6 +163,34 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
 
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
+}
+
+void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
+                                          WindowManagerListener::SurfaceProperty property,
+                                          const QVariant &value)
+{
+    qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
+                            << "surface.name=" << surface->name().c_str()
+                            << "property=" << property
+                            << "value=" << value;
+
+    MirSurfaceInterface* qmlSurface = nullptr;
+    {
+        QMutexLocker lock(&m_mutex);
+        auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
+        if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
+
+            qmlSurface = it.value();
+        } else {
+            qCritical() << "MirSurfaceManager::onSurfaceModified: unable to find MirSurface corresponding"
+                        << "to surface=" << surface.get() << "surface.name=" << surface->name().c_str();
+            return;
+        }
+    }
+
+    if (property == WindowManagerListener::ShellChrome) {
+        qmlSurface->setShellChrome(value.value<Mir::ShellChrome>());
+    }
 }
 
 } // namespace qtmir

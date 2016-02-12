@@ -37,6 +37,7 @@ namespace qtmir {
 class MirSurfaceInterface : public unity::shell::application::MirSurfaceInterface
 {
     Q_OBJECT
+
 public:
     MirSurfaceInterface(QObject *parent = nullptr) : unity::shell::application::MirSurfaceInterface(parent) {}
     virtual ~MirSurfaceInterface() {}
@@ -86,8 +87,12 @@ public:
 
     virtual QCursor cursor() const = 0;
 
+    virtual Mir::ShellChrome shellChrome() const = 0;
+    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
+
 Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);
+    void shellChromeChanged(Mir::ShellChrome shellChrome);
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
