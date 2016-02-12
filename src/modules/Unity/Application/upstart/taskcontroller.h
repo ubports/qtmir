@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Canonical, Ltd.
+ * Copyright (C) 2013,2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,30 +15,30 @@
  *
  */
 
-#ifndef UPSTART_APPLICATION_CONTROLLER_H
-#define UPSTART_APPLICATION_CONTROLLER_H
+#ifndef QTMIR_UPSTART_TASK_CONTROLLER_H
+#define QTMIR_UPSTART_TASK_CONTROLLER_H
 
-#include "../applicationcontroller.h"
+#include "../taskcontroller.h"
 
 namespace qtmir
 {
 namespace upstart
 {
 
-class ApplicationController : public qtmir::ApplicationController
+class TaskController : public qtmir::TaskController
 {
 public:
-    ApplicationController();
-    ~ApplicationController();
+    TaskController();
+    ~TaskController();
 
     pid_t primaryPidForAppId(const QString& appId) override;
-    bool appIdHasProcessId(pid_t pid, const QString& appId) override;
+    bool appIdHasProcessId(const QString& appId, pid_t pid) override;
 
-    bool stopApplicationWithAppId(const QString& appId) override;
-    bool startApplicationWithAppIdAndArgs(const QString& appId, const QStringList& arguments) override;
+    bool stop(const QString& appId) override;
+    bool start(const QString& appId, const QStringList& arguments) override;
 
-    bool pauseApplicationWithAppId(const QString& appId) override;
-    bool resumeApplicationWithAppId(const QString& appId) override;
+    bool suspend(const QString& appId) override;
+    bool resume(const QString& appId) override;
 
     QFileInfo findDesktopFileForAppId(const QString &appId) const override;
 
@@ -50,4 +50,4 @@ private:
 } // namespace upstart
 } // namespace qtmir
 
-#endif // UPSTART_APPLICATION_CONTROLLER_H
+#endif // QTMIR_UPSTART_TASK_CONTROLLER_H

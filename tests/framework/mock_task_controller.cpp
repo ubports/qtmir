@@ -14,49 +14,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mock_application_controller.h"
+#include "mock_task_controller.h"
 
 namespace qtmir
 {
 
-MockApplicationController::MockApplicationController()
+MockTaskController::MockTaskController()
 {
     using namespace ::testing;
     ON_CALL(*this, primaryPidForAppId(_))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doPrimaryPidForAppId));
+                Invoke(this, &MockTaskController::doPrimaryPidForAppId));
 
     ON_CALL(*this, appIdHasProcessId(_, _))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doAppIdHasProcessId));
+                Invoke(this, &MockTaskController::doAppIdHasProcessId));
 
     ON_CALL(*this, findDesktopFileForAppId(_))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doFindDesktopFileForAppId));
+                Invoke(this, &MockTaskController::doFindDesktopFileForAppId));
 
-    ON_CALL(*this, stopApplicationWithAppId(_))
+    ON_CALL(*this, stop(_))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doStopApplicationWithAppId));
+                Invoke(this, &MockTaskController::doStop));
 
-    ON_CALL(*this, startApplicationWithAppIdAndArgs(_, _))
+    ON_CALL(*this, start(_, _))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doStartApplicationWithAppIdAndArgs));
+                Invoke(this, &MockTaskController::doStart));
 
-    ON_CALL(*this, pauseApplicationWithAppId(_))
+    ON_CALL(*this, suspend(_))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doPauseApplicationWithAppId));
+                Invoke(this, &MockTaskController::doSuspend));
 
-    ON_CALL(*this, resumeApplicationWithAppId(_))
+    ON_CALL(*this, resume(_))
             .WillByDefault(
-                Invoke(this, &MockApplicationController::doResumeApplicationWithAppId));
+                Invoke(this, &MockTaskController::doResume));
 }
 
-MockApplicationController::~MockApplicationController()
+MockTaskController::~MockTaskController()
 {
 
 }
 
-pid_t MockApplicationController::doPrimaryPidForAppId(const QString &appId)
+pid_t MockTaskController::doPrimaryPidForAppId(const QString &appId)
 {
     auto it = children.find(appId);
     if (it == children.end())
@@ -66,7 +66,7 @@ pid_t MockApplicationController::doPrimaryPidForAppId(const QString &appId)
 }
 
 
-bool MockApplicationController::doAppIdHasProcessId(pid_t pid, const QString &appId)
+bool MockTaskController::doAppIdHasProcessId(const QString &appId, pid_t pid)
 {
     auto it = children.find(appId);
     if (it == children.end())
@@ -76,14 +76,14 @@ bool MockApplicationController::doAppIdHasProcessId(pid_t pid, const QString &ap
 }
 
 
-QFileInfo MockApplicationController::doFindDesktopFileForAppId(const QString &appId) const
+QFileInfo MockTaskController::doFindDesktopFileForAppId(const QString &appId) const
 {
     QString path = QString("/usr/share/applications/%1.desktop").arg(appId);
     return QFileInfo(path);
 }
 
 
-bool MockApplicationController::doStopApplicationWithAppId(const QString &appId)
+bool MockTaskController::doStop(const QString &appId)
 {
     Q_UNUSED(appId);
 
@@ -91,7 +91,7 @@ bool MockApplicationController::doStopApplicationWithAppId(const QString &appId)
 }
 
 
-bool MockApplicationController::doStartApplicationWithAppIdAndArgs(const QString &appId, const QStringList &args)
+bool MockTaskController::doStart(const QString &appId, const QStringList &args)
 {
     Q_UNUSED(args);
 
@@ -112,14 +112,14 @@ bool MockApplicationController::doStartApplicationWithAppIdAndArgs(const QString
 }
 
 
-bool MockApplicationController::doPauseApplicationWithAppId(const QString &appId)
+bool MockTaskController::doSuspend(const QString &appId)
 {
     Q_UNUSED(appId);
 
     return false;
 }
 
-bool MockApplicationController::doResumeApplicationWithAppId(const QString &appId)
+bool MockTaskController::doResume(const QString &appId)
 {
     Q_UNUSED(appId);
 

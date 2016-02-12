@@ -15,7 +15,7 @@
  *
  */
 
-#include "applicationcontroller.h"
+#include "taskcontroller.h"
 
 // qtmir
 #include <logging.h>
@@ -33,7 +33,7 @@ namespace qtmir
 namespace upstart
 {
 
-struct ApplicationController::Private
+struct TaskController::Private
 {
     UbuntuAppLaunchAppObserver preStartCallback = nullptr;
     UbuntuAppLaunchAppObserver startedCallback = nullptr;
@@ -100,50 +100,50 @@ QString toLongAppIdIfPossible(const QString &shortAppId) {
 
 } // namespace
 
-ApplicationController::ApplicationController()
-    : qtmir::ApplicationController(),
+TaskController::TaskController()
+    : qtmir::TaskController(),
       impl(new Private())
 {
     impl->preStartCallback = [](const gchar * appId, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationAboutToBeStarted(toShortAppIdIfPossible(appId)));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->processStarting(toShortAppIdIfPossible(appId)));
     };
 
     impl->startedCallback = [](const gchar * appId, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
+        auto thiz = static_cast<TaskController*>(userData);
         Q_EMIT(thiz->applicationStarted(toShortAppIdIfPossible(appId)));
     };
 
     impl->stopCallback = [](const gchar * appId, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationStopped(toShortAppIdIfPossible(appId)));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->processStopped(toShortAppIdIfPossible(appId)));
     };
 
     impl->focusCallback = [](const gchar * appId, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationFocusRequest(toShortAppIdIfPossible(appId)));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->focusRequested(toShortAppIdIfPossible(appId)));
     };
 
     impl->resumeCallback = [](const gchar * appId, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationResumeRequested(toShortAppIdIfPossible(appId)));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->resumeRequested(toShortAppIdIfPossible(appId)));
     };
 
     impl->pausedCallback = [](const gchar * appId, GPid *, gpointer userData) {
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationPaused(toShortAppIdIfPossible(appId)));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->processSuspended(toShortAppIdIfPossible(appId)));
     };
 
     impl->failureCallback = [](const gchar * appId, UbuntuAppLaunchAppFailed failureType, gpointer userData) {
-        ApplicationController::Error error;
+        TaskController::Error error;
         switch(failureType)
         {
-        case UBUNTU_APP_LAUNCH_APP_FAILED_CRASH: error = ApplicationController::Error::APPLICATION_CRASHED;
-        case UBUNTU_APP_LAUNCH_APP_FAILED_START_FAILURE: error = ApplicationController::Error::APPLICATION_FAILED_TO_START;
+        case UBUNTU_APP_LAUNCH_APP_FAILED_CRASH: error = TaskController::Error::APPLICATION_CRASHED;
+        case UBUNTU_APP_LAUNCH_APP_FAILED_START_FAILURE: error = TaskController::Error::APPLICATION_FAILED_TO_START;
         }
 
-        auto thiz = static_cast<ApplicationController*>(userData);
-        Q_EMIT(thiz->applicationError(toShortAppIdIfPossible(appId), error));
+        auto thiz = static_cast<TaskController*>(userData);
+        Q_EMIT(thiz->processFailed(toShortAppIdIfPossible(appId), error));
     };
 
     ubuntu_app_launch_observer_add_app_starting(impl->preStartCallback, this);
@@ -155,7 +155,7 @@ ApplicationController::ApplicationController()
     ubuntu_app_launch_observer_add_app_failed(impl->failureCallback, this);
 }
 
-ApplicationController::~ApplicationController()
+TaskController::~TaskController()
 {
     ubuntu_app_launch_observer_delete_app_starting(impl->preStartCallback, this);
     ubuntu_app_launch_observer_delete_app_started(impl->startedCallback, this);
@@ -166,30 +166,30 @@ ApplicationController::~ApplicationController()
     ubuntu_app_launch_observer_delete_app_failed(impl->failureCallback, this);
 }
 
-pid_t ApplicationController::primaryPidForAppId(const QString& appId)
+pid_t TaskController::primaryPidForAppId(const QString& appId)
 {
     GPid pid = ubuntu_app_launch_get_primary_pid(toLongAppIdIfPossible(appId).toLatin1().constData());
     if (!pid)
-        qDebug() << "ApplicationController::primaryPidForAppId FAILED to get PID for appId=" << appId;
+        qDebug() << "TaskController::primaryPidForAppId FAILED to get PID for appId=" << appId;
 
     return pid;
 }
 
-bool ApplicationController::appIdHasProcessId(pid_t pid, const QString& appId)
+bool TaskController::appIdHasProcessId(const QString& appId, pid_t pid)
 {
     return ubuntu_app_launch_pid_in_app_id(pid, toLongAppIdIfPossible(appId).toLatin1().constData());
 }
 
-bool ApplicationController::stopApplicationWithAppId(const QString& appId)
+bool TaskController::stop(const QString& appId)
 {
     auto result = ubuntu_app_launch_stop_application(toLongAppIdIfPossible(appId).toLatin1().constData());
     if (!result)
-        qDebug() << "ApplicationController::stopApplication FAILED to stop appId=" << appId;
+        qDebug() << "TaskController::stopApplication FAILED to stop appId=" << appId;
 
     return result;
 }
 
-bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& appId, const QStringList& arguments)
+bool TaskController::start(const QString& appId, const QStringList& arguments)
 {
     // Convert arguments QStringList into format suitable for ubuntu-app-launch
     // The last item should be null, which is done by g_new0, we just don't fill it.
@@ -206,33 +206,33 @@ bool ApplicationController::startApplicationWithAppIdAndArgs(const QString& appI
     g_strfreev(upstartArgs);
 
     if (!result)
-        qDebug() << "Application::Controller::startApplicationWithAppIdAndArgs FAILED to start appId" << appId;
+        qDebug() << "TaskController::start FAILED to start appId" << appId;
 
     return result;
 }
 
-bool ApplicationController::pauseApplicationWithAppId(const QString& appId)
+bool TaskController::suspend(const QString& appId)
 {
     auto result = ubuntu_app_launch_pause_application(toLongAppIdIfPossible(appId).toLatin1().constData());
     if (!result)
-        qDebug() << "ApplicationController::pauseApplication FAILED to pause appId=" << appId;
+        qDebug() << "TaskController::pauseApplication FAILED to pause appId=" << appId;
 
     return result;
 }
 
-bool ApplicationController::resumeApplicationWithAppId(const QString& appId)
+bool TaskController::resume(const QString& appId)
 {
     auto result = ubuntu_app_launch_resume_application(toLongAppIdIfPossible(appId).toLatin1().constData());
     if (!result)
-        qDebug() << "ApplicationController::resumeApplication FAILED to resume appId=" << appId;
+        qDebug() << "TaskController::resumeApplication FAILED to resume appId=" << appId;
 
     return result;
 }
 
 
-QFileInfo ApplicationController::findDesktopFileForAppId(const QString &appId) const
+QFileInfo TaskController::findDesktopFileForAppId(const QString &appId) const
 {
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::desktopFilePathForAppId - appId=" << appId;
+    qCDebug(QTMIR_APPLICATIONS) << "TaskController::desktopFilePathForAppId - appId=" << appId;
 
     // Search for the correct desktop file using a simple heuristic
     int dashPos = -1;

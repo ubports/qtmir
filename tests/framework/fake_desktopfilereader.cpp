@@ -16,8 +16,16 @@
 
 #include "fake_desktopfilereader.h"
 
+#include <QDebug>
+
 namespace qtmir
 {
+
+FakeDesktopFileReader::FakeDesktopFileReader(const QString &appId)
+    : DesktopFileReader()
+    , m_appId(appId)
+{
+}
 
 FakeDesktopFileReader::FakeDesktopFileReader()
 	: DesktopFileReader()
@@ -29,7 +37,7 @@ FakeDesktopFileReader::~FakeDesktopFileReader()
 {
 }
 
-QString FakeDesktopFileReader::file() const { return QString(); }
+QString FakeDesktopFileReader::file() const { return m_appId + ".desktop"; }
 
 QString FakeDesktopFileReader::appId() const { return m_appId; }
 

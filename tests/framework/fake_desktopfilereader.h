@@ -24,6 +24,7 @@ namespace qtmir {
 class FakeDesktopFileReader : public qtmir::DesktopFileReader
 {
 public:
+    FakeDesktopFileReader(const QString &appId);
     FakeDesktopFileReader();
     virtual ~FakeDesktopFileReader();
 

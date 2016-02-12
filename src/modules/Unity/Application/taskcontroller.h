@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2015 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -12,15 +12,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
-#ifndef TASKCONTROLLER_H
-#define TASKCONTROLLER_H
+#ifndef QTMIR_TASK_CONTROLLER_H
+#define QTMIR_TASK_CONTROLLER_H
 
 #include <QObject>
-
-#include "application.h"
-#include "applicationcontroller.h"
+#include <QString>
+#include <QStringList>
+#include <QFileInfo>
 
 namespace qtmir
 {
@@ -28,36 +29,44 @@ namespace qtmir
 class TaskController : public QObject
 {
     Q_OBJECT
+
 public:
-    TaskController(
-            QObject *parent,
-            const QSharedPointer<ApplicationController> &appController);
-    ~TaskController();
+    enum class Error
+    {
+        APPLICATION_CRASHED,
+        APPLICATION_FAILED_TO_START
+    };
 
-    bool start(const QString &appId, const QStringList &args);
-    bool stop(const QString &appId);
+    TaskController(const TaskController&) = delete;
+    virtual ~TaskController() = default;
 
-    bool suspend(const QString &appId);
-    bool resume(const QString &appId);
+    TaskController& operator=(const TaskController&) = delete;
 
-    bool appIdHasProcessId(const QString &appId, const pid_t pid) const;
-    QFileInfo findDesktopFileForAppId(const QString &appId) const;
+    virtual pid_t primaryPidForAppId(const QString &appId) = 0;
+    virtual bool appIdHasProcessId(const QString &appId, pid_t pid) = 0;
+
+    virtual bool stop(const QString &appId) = 0;
+    virtual bool start(const QString &appId, const QStringList &arguments) = 0;
+
+    virtual bool suspend(const QString &appId) = 0;
+    virtual bool resume(const QString &appId) = 0;
+
+    virtual QFileInfo findDesktopFileForAppId(const QString &appId) const = 0;
 
 Q_SIGNALS:
     void processStarting(const QString &appId);
+    void applicationStarted(const QString &appId);
     void processStopped(const QString &appId);
     void processSuspended(const QString &appId);
-    void processFailed(const QString &appId, const bool duringStartup);
     void focusRequested(const QString &appId);
     void resumeRequested(const QString &appId);
 
-private Q_SLOTS:
-    void onApplicationError(const QString &id, ApplicationController::Error error);
+    void processFailed(const QString &appId, TaskController::Error error);
 
-private:
-    const QSharedPointer<ApplicationController> m_appController;
+protected:
+    TaskController() = default;
 };
 
 } // namespace qtmir
 
-#endif // TASKCONTROLLER_H
+#endif // QTMIR_TASK_CONTROLLER_H
