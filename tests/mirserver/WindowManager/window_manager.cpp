@@ -81,7 +81,7 @@ struct WindowManager : Test
 
     StubFocusController focus_controller;
 
-    const std::unique_ptr<MirWindowManager> window_manager =
+    const std::shared_ptr<MirWindowManager> window_manager =
         MirWindowManager::create(&focus_controller, mock_display_layout);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};

@@ -108,6 +108,8 @@ public:
     bool isTouchApp() const override;
     bool exemptFromLifecycle() const override;
     void setExemptFromLifecycle(bool) override;
+    QSize initialSurfaceSize() const override;
+    void setInitialSurfaceSize(const QSize &size) override;
 
     void setStage(Stage stage);
 
@@ -188,6 +190,7 @@ private:
     ProcessState m_processState;
     AbstractTimer *m_closeTimer;
     bool m_exemptFromLifecycle;
+    QSize m_initialSurfaceSize;
 
     friend class ApplicationManager;
     friend class SessionManager;
