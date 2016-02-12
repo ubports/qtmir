@@ -19,6 +19,8 @@
 
 #include <mir/shell/window_manager.h>
 
+#include "sessionlistener.h"
+
 #include <QObject>
 #include <QSize>
 
@@ -35,8 +37,8 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
 
 public:
     static std::shared_ptr<MirWindowManager> create(
-        mir::shell::FocusController* focus_controller,
-        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+        const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+        std::shared_ptr<::SessionListener> sessionListener);
 
 Q_SIGNALS:
     // requires Qt::BlockingQueuedConnection!!
