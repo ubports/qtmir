@@ -3,14 +3,12 @@ set(
   mirsurfaceitem_test.cpp
   mirsurface_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_mirsurface.h
-  ${CMAKE_SOURCE_DIR}/tests/modules/common/fake_session.h
 )
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
-  ${CMAKE_SOURCE_DIR}/tests/modules/common
+  ${CMAKE_SOURCE_DIR}/tests/framework
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
@@ -19,10 +17,12 @@ add_executable(surfacemanager_test ${MIR_SURFACE_MANAGER_TEST_SOURCES})
 target_link_libraries(
   surfacemanager_test
 
-  qpa-mirserver
   unityapplicationplugin
 
   Qt5::Test
+
+  -L${CMAKE_BINARY_DIR}/tests/framework
+  qtmir-test-framework-static
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
