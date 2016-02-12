@@ -21,18 +21,17 @@
 
 #include <gtest/gtest.h>
 
+#include <QSharedPointer>
+
 #include <Unity/Application/application.h>
 #include <Unity/Application/application_manager.h>
-#include <Unity/Application/applicationcontroller.h>
 #include <Unity/Application/mirsurfacemanager.h>
 #include <Unity/Application/sessionmanager.h>
 #include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
-#include <Unity/Application/taskcontroller.h>
 #include <Unity/Application/proc_info.h>
 #include <mirserver.h>
 
-#include "mock_application_controller.h"
 #include "mock_desktop_file_reader.h"
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
@@ -40,6 +39,7 @@
 #include "mock_prompt_session.h"
 #include "mock_shared_wakelock.h"
 #include "mock_settings.h"
+#include "mock_task_controller.h"
 
 namespace ms = mir::scene;
 using namespace qtmir;
@@ -64,7 +64,8 @@ public:
 
     Application* startApplication(pid_t procId, QString const& appId);
 
-    testing::NiceMock<MockApplicationController> appController;
+    QSharedPointer<qtmir::TaskController> taskControllerSharedPointer{new testing::NiceMock<qtmir::MockTaskController>};
+    testing::NiceMock<qtmir::MockTaskController> *taskController{static_cast<testing::NiceMock<qtmir::MockTaskController>*>(taskControllerSharedPointer.data())};
     testing::NiceMock<MockProcInfo> procInfo;
     testing::NiceMock<MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
@@ -73,7 +74,6 @@ public:
     QSharedPointer<MirServer> mirServer;
 
     MirShell *mirShell{nullptr};
-    QSharedPointer<TaskController> taskController;
     ApplicationManager applicationManager;
     SessionManager sessionManager;
     MirSurfaceManager surfaceManager;

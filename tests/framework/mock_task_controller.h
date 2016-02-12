@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_APPLICATION_CONTROLLER_H
-#define MOCK_APPLICATION_CONTROLLER_H
+#ifndef MOCK_TASK_CONTROLLER_H
+#define MOCK_TASK_CONTROLLER_H
 
-#include <Unity/Application/applicationcontroller.h>
+#include <Unity/Application/taskcontroller.h>
 #include <QMap>
 
 #include <core/posix/fork.h>
@@ -26,33 +26,33 @@
 
 namespace qtmir
 {
-struct MockApplicationController : public qtmir::ApplicationController
+struct MockTaskController : public qtmir::TaskController
 {
-    MockApplicationController();
-    virtual ~MockApplicationController();
+    MockTaskController();
+    virtual ~MockTaskController();
 
     MOCK_METHOD1(primaryPidForAppId, pid_t(const QString& appId));
-    MOCK_METHOD2(appIdHasProcessId, bool(pid_t, const QString&));
+    MOCK_METHOD2(appIdHasProcessId, bool(const QString&, pid_t));
     MOCK_CONST_METHOD1(findDesktopFileForAppId, QFileInfo(const QString &appId));
 
-    MOCK_METHOD1(stopApplicationWithAppId, bool(const QString&));
-    MOCK_METHOD2(startApplicationWithAppIdAndArgs, bool(const QString&, const QStringList&));
-    MOCK_METHOD1(pauseApplicationWithAppId, bool(const QString&));
-    MOCK_METHOD1(resumeApplicationWithAppId, bool(const QString&));
+    MOCK_METHOD1(stop, bool(const QString&));
+    MOCK_METHOD2(start, bool(const QString&, const QStringList&));
+    MOCK_METHOD1(suspend, bool(const QString&));
+    MOCK_METHOD1(resume, bool(const QString&));
 
     pid_t doPrimaryPidForAppId(const QString& appId);
 
-    bool doAppIdHasProcessId(pid_t pid, const QString& appId);
+    bool doAppIdHasProcessId(const QString& appId, pid_t pid);
 
     QFileInfo doFindDesktopFileForAppId(const QString& appId) const;
 
-    bool doStopApplicationWithAppId(const QString& appId);
+    bool doStop(const QString& appId);
 
-    bool doStartApplicationWithAppIdAndArgs(const QString& appId, const QStringList& args);
+    bool doStart(const QString& appId, const QStringList& args);
 
-    bool doPauseApplicationWithAppId(const QString& appId);
+    bool doSuspend(const QString& appId);
 
-    bool doResumeApplicationWithAppId(const QString& appId);
+    bool doResume(const QString& appId);
 
 private:
     QMap<QString, core::posix::ChildProcess> children;
@@ -60,4 +60,4 @@ private:
 
 } // namespace qtmir
 
-#endif // MOCK_APPLICATION_CONTROLLER_H
+#endif // MOCK_TASK_CONTROLLER_H

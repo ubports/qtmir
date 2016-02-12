@@ -120,12 +120,8 @@ namespace testing
 QtMirTest::QtMirTest()
     : promptSessionManager(std::make_shared<StubPromptSessionManager>())
     , mirServer(QSharedPointer<MirServer>(new FakeMirServer(promptSessionManager)))
-    , taskController(QSharedPointer<TaskController>(
-                        new TaskController(
-                            nullptr,
-                            QSharedPointer<ApplicationController>(&appController, [](ApplicationController*){}))))
     , applicationManager(mirServer,
-                         taskController,
+                         taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<DesktopFileReader::Factory>(&desktopFileReaderFactory,[](DesktopFileReader::Factory*){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
@@ -144,7 +140,7 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
 {
     using namespace testing;
 
-    ON_CALL(appController,appIdHasProcessId(procId, appId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(appId, procId)).WillByDefault(Return(true));
 
     // Set up Mocks & signal watcher
     auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
@@ -155,7 +151,7 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
             .Times(1)
             .WillOnce(Return(mockDesktopFileReader));
 
-    EXPECT_CALL(appController, startApplicationWithAppIdAndArgs(appId, _))
+    EXPECT_CALL(*taskController, start(appId, _))
             .Times(1)
             .WillOnce(Return(true));
 
@@ -169,8 +165,8 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
     applicationManager.onSessionStarting(appSession);
     sessionManager.onSessionStarting(appSession);
-    
-    Mock::VerifyAndClearExpectations(&appController);
+
+    Mock::VerifyAndClearExpectations(taskController);
     Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
     return application;
 }

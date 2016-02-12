@@ -62,6 +62,13 @@ public:
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
 
+    int minimumWidth() const override { return 0; }
+    int minimumHeight() const override { return 0; }
+    int maximumWidth() const override { return 0; }
+    int maximumHeight() const override { return 0; }
+    int widthIncrement() const override { return 0; }
+    int heightIncrement() const override { return 0; }
+
     ////
     // qtmir.MirSurfaceInterface
 
@@ -116,6 +123,13 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
+
+    void setMinimumWidth(int) {}
+    void setMinimumHeight(int) {}
+    void setMaximumWidth(int) {}
+    void setMaximumHeight(int) {}
+    void setWidthIncrement(int) {}
+    void setHeightIncrement(int) {}
 
     ////
     // Test API from now on

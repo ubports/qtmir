@@ -30,6 +30,9 @@
 #include <mock_surface.h>
 #include <surfaceobserver.h>
 
+// mirserver
+#include <sizehints.h>
+
 using namespace qtmir;
 
 namespace ms = mir::scene;
@@ -40,7 +43,7 @@ public:
     MirSurfaceTest()
     {
         // We don't want the logging spam cluttering the test results
-        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));        
+        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));
     }
 };
 
@@ -59,7 +62,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver);
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver, SizeHints());
     surfaceObserver->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
@@ -82,7 +85,7 @@ TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr);
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, SizeHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -115,7 +118,7 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr);
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, SizeHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 

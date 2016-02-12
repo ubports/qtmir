@@ -32,6 +32,9 @@
 #include "mirbuffersgtexture.h"
 #include "session.h"
 
+// mirserver
+#include "sizehints.h"
+
 // mir
 #include <mir/scene/surface.h>
 #include <mir_toolkit/common.h>
@@ -50,7 +53,8 @@ public:
     MirSurface(std::shared_ptr<mir::scene::Surface> surface,
             SessionInterface* session,
             mir::shell::Shell *shell,
-            std::shared_ptr<SurfaceObserver> observer);
+            std::shared_ptr<SurfaceObserver> observer,
+            const SizeHints &);
     virtual ~MirSurface();
 
     ////
@@ -73,6 +77,13 @@ public:
 
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
+
+    int minimumWidth() const override;
+    int minimumHeight() const override;
+    int maximumWidth() const override;
+    int maximumHeight() const override;
+    int widthIncrement() const override;
+    int heightIncrement() const override;
 
     ////
     // qtmir::MirSurfaceInterface
@@ -129,6 +140,13 @@ public:
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
+    void setMinimumWidth(int) override;
+    void setMinimumHeight(int) override;
+    void setMaximumWidth(int) override;
+    void setMaximumHeight(int) override;
+    void setWidthIncrement(int) override;
+    void setHeightIncrement(int) override;
+
 private Q_SLOTS:
     void dropPendingBuffer();
     void onAttributeChanged(const MirSurfaceAttrib, const int);
@@ -172,6 +190,13 @@ private:
     QPair<QString,QString> m_keyMap; // pair of layout+variant
 
     QCursor m_cursor;
+
+    int m_minimumWidth{0};
+    int m_minimumHeight{0};
+    int m_maximumWidth{0};
+    int m_maximumHeight{0};
+    int m_widthIncrement{0};
+    int m_heightIncrement{0};
 };
 
 } // namespace qtmir
