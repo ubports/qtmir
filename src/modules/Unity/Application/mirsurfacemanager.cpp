@@ -112,6 +112,11 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
     if (session)
         session->registerSurface(qmlSurface);
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = qmlSurface;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     // Only notify QML of surface creation once it has drawn its first frame.
     connect(qmlSurface, &MirSurfaceInterface::firstFrameDrawn, this, [=]() {
         tracepoint(qtmir, firstFrameDrawn);
@@ -153,8 +158,18 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         }
     }
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        qmlSurface = nullptr;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
+}
+
+MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
+{
+    return m_inputMethodSurface;
 }
 
 } // namespace qtmir
