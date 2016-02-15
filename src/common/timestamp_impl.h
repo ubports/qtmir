@@ -15,9 +15,11 @@ T compressTimestamp(std::chrono::nanoseconds timestamp)
 {
     std::chrono::nanoseconds startTime = getStartTime(timestamp);
 
-    if (std::chrono::nanoseconds::max() > T::max() &&
-        timestamp - startTime > std::chrono::nanoseconds(T::max())) {
+    if (Q_UNLIKELY((std::chrono::nanoseconds::max() > T::max() &&
+                    timestamp - startTime > std::chrono::nanoseconds(T::max()))
+                   || timestamp < startTime)) {
         // we've overflowed the boundaries of the millisecond type.
+        // or the timestamp has travelled to the past
         resetStartTime(timestamp);
         return T(0);
     }

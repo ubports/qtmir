@@ -16,6 +16,7 @@
 
 #include "mirwindowmanager.h"
 #include "logging.h"
+#include "surfaceobserver.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 
 #include <mir/geometry/rectangle.h>
@@ -23,6 +24,8 @@
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
+
+#include <QMutexLocker>
 
 namespace ms = mir::scene;
 
@@ -32,7 +35,8 @@ class MirWindowManagerImpl : public MirWindowManager
 {
 public:
 
-    MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout);
+    MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+            std::shared_ptr<::SessionListener> sessionListener);
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
 
@@ -63,6 +67,11 @@ public:
         MirSurfaceAttrib attrib,
         int value) override;
 
+    void handle_raise_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     void modify_surface(
         const std::shared_ptr<mir::scene::Session>&,
         const std::shared_ptr<mir::scene::Surface>& surface,
@@ -70,12 +79,15 @@ public:
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
+    std::shared_ptr<::SessionListener> m_sessionListener;
 };
 
 }
 
-MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout) :
-    m_displayLayout{displayLayout}
+MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+        std::shared_ptr<::SessionListener> sessionListener) :
+    m_displayLayout{displayLayout},
+    m_sessionListener(sessionListener)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::MirWindowManagerImpl";
 }
@@ -95,16 +107,28 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
-    // TODO: Callback unity8 so that it can make a decision on that.
-    //       unity8 must bear in mind that the called function will be on a Mir thread though.
-    //       The QPA shouldn't be deciding for itself on such things.
+    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::SizeHints(requestParameters));
 
+    QSize initialSize;
+    // can be connected to via Qt::BlockingQueuedConnection to alter surface initial size
+    {
+        int surfaceType = requestParameters.type.is_set() ? requestParameters.type.value() : -1;
+        Q_EMIT sessionAboutToCreateSurface(session, surfaceType, initialSize);
+    }
     ms::SurfaceCreationParameters placedParameters = requestParameters;
 
-    // Just make it fullscreen for now
-    mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
-    m_displayLayout->size_to_output(rect);
-    placedParameters.size = rect.size;
+    if (initialSize.isValid()) {
+        placedParameters.size.width = mir::geometry::Width(initialSize.width());
+        placedParameters.size.height = mir::geometry::Height(initialSize.height());
+    } else {
+        qCWarning(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): didn't get a initial surface"
+            " size from shell. Falling back to fullscreen placement";
+        // This is bad. Fallback to fullscreen
+        mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
+        m_displayLayout->size_to_output(rect);
+        placedParameters.size = rect.size;
+    }
+
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): size requested ("
                                 << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
@@ -144,6 +168,13 @@ bool MirWindowManagerImpl::handle_pointer_event(MirPointerEvent const* /*event*/
     return false;
 }
 
+void MirWindowManagerImpl::handle_raise_surface(
+    std::shared_ptr<mir::scene::Session> const& /*session*/,
+    std::shared_ptr<mir::scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
+}
+
 int MirWindowManagerImpl::set_surface_attribute(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface,
@@ -160,11 +191,17 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
     }
+
+    QMutexLocker(&SurfaceObserver::mutex);
+    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
+    if (observer) {
+        observer->notifySizeHintChanges(modifications);
+    }
 }
 
-std::unique_ptr<MirWindowManager> MirWindowManager::create(
-    mir::shell::FocusController* /*focus_controller*/,
-    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout)
+std::shared_ptr<MirWindowManager> MirWindowManager::create(
+    const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
+    std::shared_ptr<::SessionListener> sessionListener)
 {
-    return std::make_unique<MirWindowManagerImpl>(displayLayout);
+    return std::make_shared<MirWindowManagerImpl>(displayLayout, sessionListener);
 }

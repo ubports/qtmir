@@ -90,6 +90,10 @@ void StubSession::destroy_surface(mir::frontend::SurfaceId /*surface*/)
 {
 }
 
+void StubSession::destroy_surface(std::weak_ptr<mir::scene::Surface> const& /*surface*/)
+{
+}
+
 std::shared_ptr<mir::scene::Surface> StubSession::surface(
     mir::frontend::SurfaceId /*surface*/) const
 {
@@ -121,5 +125,9 @@ void StubSession::destroy_buffer_stream(mir::frontend::BufferStreamId /*stream*/
 void StubSession::configure_streams(
     mir::scene::Surface& /*surface*/,
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
+{
+}
+
+void StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
 {
 }

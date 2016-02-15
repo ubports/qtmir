@@ -108,7 +108,6 @@ void Session::doSuspend()
 {
     Q_ASSERT(m_state == Session::Suspending);
 
-
     auto surfaceList = m_surfaces.list();
     if (surfaceList.empty()) {
         qCDebug(QTMIR_SESSIONS) << "Application::suspend - no surface to call stopFrameDropper() on!";
@@ -161,14 +160,34 @@ Session::State Session::state() const
     return m_state;
 }
 
-void Session::setState(State state) {
-    if (state != m_state) {
-        qCDebug(QTMIR_SESSIONS) << "Session::setState - session=" << name()
-            << "state=" << sessionStateToString(state);
-
-        m_state = state;
-        Q_EMIT stateChanged(m_state);
+void Session::setState(State state)
+{
+    if (m_state == state) {
+        return;
     }
+
+    qCDebug(QTMIR_SESSIONS) << "Session::setState - session=" << name()
+                            << "state=" << sessionStateToString(state);
+
+    if (m_state == Suspending) {
+        m_suspendTimer->stop();
+    }
+
+    m_state = state;
+
+    switch (m_state) {
+        case Starting:
+        case Running:
+            break;
+        case Suspending:
+            m_suspendTimer->start(1500);
+            break;
+        case Suspended:
+        case Stopped:
+            break;
+    }
+
+    Q_EMIT stateChanged(m_state);
 }
 
 bool Session::fullscreen() const
@@ -201,8 +220,6 @@ void Session::registerSurface(MirSurfaceInterface *newSurface)
         connect(newSurface, &MirSurfaceInterface::firstFrameDrawn,
                 this, [this, newSurface]() { this->appendSurface(newSurface); });
     }
-
-    updateFullscreenProperty();
 }
 
 void Session::appendSurface(MirSurfaceInterface *newSurface)
@@ -219,6 +236,8 @@ void Session::appendSurface(MirSurfaceInterface *newSurface)
     if (m_state == Starting) {
         setState(Running);
     }
+
+    updateFullscreenProperty();
 }
 
 void Session::removeSurface(MirSurfaceInterface* surface)
@@ -286,10 +305,7 @@ void Session::resume()
 
 void Session::doResume()
 {
-    if (m_state == Suspending) {
-        Q_ASSERT(m_suspendTimer->isActive());
-        m_suspendTimer->stop();
-    } else if (m_state == Suspended) {
+    if (m_state == Suspended) {
         Q_ASSERT(m_surfaces.rowCount() > 0);
         auto surfaceList = m_surfaces.list();
         for (int i = 0; i < surfaceList.count(); ++i) {
@@ -314,6 +330,8 @@ void Session::close()
 {
     qCDebug(QTMIR_SESSIONS) << "Session::close - " << name();
 
+    if (m_state == Stopped) return;
+
     auto surfaceList = m_surfaces.list();
     for (int i = 0; i < surfaceList.count(); ++i) {
         surfaceList[i]->close();
@@ -327,9 +345,6 @@ void Session::stop()
     if (m_state != Stopped) {
 
         stopPromptSessions();
-
-        if (m_suspendTimer->isActive())
-            m_suspendTimer->stop();
 
         {
             auto surfaceList = m_surfaces.list();

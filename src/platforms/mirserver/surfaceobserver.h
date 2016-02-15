@@ -21,8 +21,18 @@
 #include <QCursor>
 #include <QObject>
 #include <QMap>
+#include <QMutex>
 #include <QSize>
 #include <mir/scene/surface_observer.h>
+
+namespace mir {
+    namespace scene {
+        class Surface;
+    }
+    namespace shell {
+        class SurfaceSpecification;
+    }
+}
 
 class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver
 {
@@ -30,6 +40,7 @@ class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver
 
 public:
     SurfaceObserver();
+    virtual ~SurfaceObserver();
 
     void setListener(QObject *listener);
 
@@ -39,7 +50,7 @@ public:
     void hidden_set_to(bool) override {}
 
     // Get new frame notifications from Mir, called from a Mir thread.
-    void frame_posted(int frames_available) override;
+    void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
 
     void alpha_set_to(float) override {}
     void transformation_set_to(glm::mat4 const&) override {}
@@ -47,8 +58,16 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(xkb_rule_names const &) override {}
+    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+        std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
+    void cursor_image_removed() override;
+
+    void notifySizeHintChanges(const mir::shell::SurfaceSpecification&);
+
+    static SurfaceObserver *observerForSurface(const mir::scene::Surface *surface);
+    static void registerObserverForSurface(SurfaceObserver *observer, const mir::scene::Surface *surface);
+    static QMutex mutex;
 
 Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
@@ -57,11 +76,19 @@ Q_SIGNALS:
     void nameChanged(const QString &name);
     void cursorChanged(const QCursor &cursor);
 
+    void minimumWidthChanged(int);
+    void minimumHeightChanged(int);
+    void maximumWidthChanged(int);
+    void maximumHeightChanged(int);
+    void widthIncrementChanged(int);
+    void heightIncrementChanged(int);
+
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
     QObject *m_listener;
     bool m_framesPosted;
     QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
+    static QMap<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
 };
 
 #endif
