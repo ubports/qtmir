@@ -47,7 +47,8 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(xkb_rule_names const &) override {}
+    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+        std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 

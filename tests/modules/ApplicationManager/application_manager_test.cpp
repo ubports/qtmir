@@ -2131,3 +2131,75 @@ TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication
     qtApp.exec();
     EXPECT_EQ(1, spy.count());
 }
+
+/*
+ * Test that an application that is suspended after its session is stopped is closed
+ */
+TEST_F(ApplicationManagerTests,CloseWhenSuspendedAfterSessionStopped)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+
+    auto application = startApplication(procId, "testAppId");
+
+    qtmir::Session* session(static_cast<qtmir::Session*>(application->session()));
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session->session().get(), surface);
+    surface->drawFirstFrame();
+    EXPECT_EQ(Application::InternalState::Running, application->internalState());
+
+    // session is suspended
+    application->setRequestedState(Application::RequestedSuspended);
+    EXPECT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
+    session->doSuspend();
+    EXPECT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
+    session->setLive(false);
+    EXPECT_EQ(Application::InternalState::Closing, application->internalState());
+
+    // The process can be suspended after the session has dissapeared.
+    applicationManager.onProcessSuspended(application->appId());
+    EXPECT_EQ(Application::InternalState::Closing, application->internalState());
+
+    QSignalSpy spy(application, SIGNAL(stopped()));
+    applicationManager.onProcessStopped(application->appId());
+    EXPECT_EQ(Application::Stopped, application->state());
+    EXPECT_EQ(spy.count(), 1);
+}
+
+/*
+ * Test that an application that fails while suspended will stop on close request
+ */
+TEST_F(ApplicationManagerTests,CloseWhenSuspendedProcessFailed)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+
+    auto application = startApplication(procId, "testAppId");
+
+    qtmir::Session* session(static_cast<qtmir::Session*>(application->session()));
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session->session().get(), surface);
+    surface->drawFirstFrame();
+    EXPECT_EQ(Application::InternalState::Running, application->internalState());
+
+    // Session is suspended
+    suspend(application);
+
+    // Process failed
+    onSessionStopping(session->session());
+    applicationManager.onProcessFailed(appId, true);
+    applicationManager.onProcessStopped(appId);
+    EXPECT_EQ(Application::InternalState::StoppedResumable, application->internalState());
+
+    QSignalSpy spy(application, SIGNAL(stopped()));
+    application->close();
+
+    EXPECT_EQ(Application::Stopped, application->state());
+    EXPECT_EQ(spy.count(), 1);
+}
