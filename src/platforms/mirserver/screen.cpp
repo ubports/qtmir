@@ -342,7 +342,7 @@ void Screen::doneCurrent()
 bool Screen::internalDisplay() const
 {
     using namespace mir::graphics;
-    if (m_type == DisplayConfigurationOutputType::lvds) {
+    if (m_type == DisplayConfigurationOutputType::lvds || m_type == DisplayConfigurationOutputType::edp) {
         return true;
     }
     return false;
