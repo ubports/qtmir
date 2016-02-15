@@ -159,7 +159,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
     }
 
     if (qmlSurface->type() == Mir::InputMethodType) {
-        qmlSurface = nullptr;
+        m_inputMethodSurface = nullptr;
         Q_EMIT inputMethodSurfaceChanged();
     }
 
