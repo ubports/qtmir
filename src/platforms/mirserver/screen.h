@@ -55,8 +55,6 @@ public:
     QPlatformCursor *cursor() const override;
     QString name() const override;
 
-    void toggleSensors(const bool enable) const;
-
     float scale() const { return m_scale; }
     MirFormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
@@ -90,6 +88,9 @@ protected:
     void doneCurrent();
 
 private:
+    void toggleSensors(const bool enable) const;
+    bool internalDisplay() const;
+
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;

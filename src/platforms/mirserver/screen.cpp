@@ -160,9 +160,11 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
             ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
     qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen - initial currentOrientation is:" << m_currentOrientation;
 
-    QObject::connect(m_orientationSensor, &QOrientationSensor::readingChanged,
-                     this, &Screen::onOrientationReadingChanged);
-    m_orientationSensor->start();
+    if (internalDisplay()) { // only enable orientation sensor for device-internal display
+        QObject::connect(m_orientationSensor, &QOrientationSensor::readingChanged,
+                         this, &Screen::onOrientationReadingChanged);
+        m_orientationSensor->start();
+    }
 
     if (!skipDBusRegistration) {
         // FIXME This is a unity8 specific dbus call and shouldn't be in qtmir
@@ -196,7 +198,9 @@ bool Screen::orientationSensorEnabled()
 void Screen::onDisplayPowerStateChanged(int status, int reason)
 {
     Q_UNUSED(reason);
-    toggleSensors(status);
+    if (internalDisplay()) {
+        toggleSensors(status);
+    }
 }
 
 void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
@@ -399,4 +403,13 @@ void Screen::makeCurrent()
 void Screen::doneCurrent()
 {
     m_renderTarget->release_current();
+}
+
+bool Screen::internalDisplay() const
+{
+    using namespace mir::graphics;
+    if (m_type == DisplayConfigurationOutputType::lvds) {
+        return true;
+    }
+    return false;
 }
