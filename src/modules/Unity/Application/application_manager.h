@@ -30,6 +30,7 @@
 // local
 #include "application.h"
 #include "desktopfilereader.h"
+#include "taskcontroller.h"
 
 namespace mir {
     namespace scene {
@@ -47,7 +48,6 @@ class DBusWindowStack;
 class MirSurfaceManager;
 class ProcInfo;
 class SharedWakelock;
-class TaskController;
 class SettingsInterface;
 
 class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
@@ -117,7 +117,7 @@ public Q_SLOTS:
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
     void onProcessSuspended(const QString& appId);
-    void onProcessFailed(const QString& appId, const bool duringStartup);
+    void onProcessFailed(const QString& appId, TaskController::Error error);
     void onFocusRequested(const QString& appId);
     void onResumeRequested(const QString& appId);
 
@@ -127,6 +127,8 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
+    void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
+                                       int type, QSize &size);
 
 private:
     void setFocused(Application *application);

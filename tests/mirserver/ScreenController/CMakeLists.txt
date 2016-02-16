@@ -8,7 +8,7 @@ set(
 )
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}/tests/common
+  ${CMAKE_SOURCE_DIR}/tests/framework
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common
   ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
@@ -21,6 +21,9 @@ add_executable(ScreenControllerTest ${SCREENCONTROLLER_TEST_SOURCES})
 target_link_libraries(
   ScreenControllerTest
   qpa-mirserver
+
+  -L${CMAKE_BINARY_DIR}/tests/framework
+  qtmir-test-framework-static
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/mod
 set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -fno-strict-aliasing -Werror -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wall -fno-strict-aliasing -Werror -Wextra")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 
@@ -60,9 +60,9 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-pkg_check_modules(MIRSERVER mirserver>=0.17 REQUIRED)
-pkg_check_modules(MIRCLIENT mirclient>=0.17 REQUIRED)
-pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.17 REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.19 REQUIRED)
+pkg_check_modules(MIRCLIENT mirclient>=0.19 REQUIRED)
+pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.19 REQUIRED)
 
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)

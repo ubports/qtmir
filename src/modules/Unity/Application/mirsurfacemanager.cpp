@@ -34,6 +34,7 @@
 #include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
+#include "sizehints.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
 
@@ -97,13 +98,14 @@ MirSurfaceManager::~MirSurfaceManager()
 
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
                                                 const std::shared_ptr<mir::scene::Surface> &surface,
-                                                const std::shared_ptr<SurfaceObserver> &observer)
+                                                const std::shared_ptr<SurfaceObserver> &observer,
+                                                qtmir::SizeHints sizeHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurface(surface, session, m_shell, observer);
+    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, sizeHints);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);
@@ -111,6 +113,11 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
 
     if (session)
         session->registerSurface(qmlSurface);
+
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = qmlSurface;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
 
     // Only notify QML of surface creation once it has drawn its first frame.
     connect(qmlSurface, &MirSurfaceInterface::firstFrameDrawn, this, [=]() {
@@ -153,8 +160,18 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         }
     }
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = nullptr;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
+}
+
+MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
+{
+    return m_inputMethodSurface;
 }
 
 } // namespace qtmir

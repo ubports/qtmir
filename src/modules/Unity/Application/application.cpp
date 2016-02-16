@@ -20,7 +20,7 @@
 #include "desktopfilereader.h"
 #include "session.h"
 #include "sharedwakelock.h"
-#include "taskcontroller.h"
+#include "timer.h"
 
 // common
 #include <debughelpers.h>
@@ -53,7 +53,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
-    , m_closeTimer(0)
+    , m_closeTimer(nullptr)
     , m_exemptFromLifecycle(false)
 {
     qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
@@ -67,6 +67,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     m_supportedOrientations = m_desktopData->supportedOrientations();
 
     m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
+
+    setCloseTimer(new Timer);
 }
 
 Application::~Application()
@@ -102,12 +104,13 @@ Application::~Application()
         delete m_session;
     }
     delete m_desktopData;
+    delete m_closeTimer;
 }
 
 
 void Application::wipeQMLCache()
 {
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/"));
+    QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/QML/Apps/"));
     QDir dir(path);
     QStringList apps = dir.entryList();
     for (int i = 0; i < apps.size(); i++) {
@@ -437,11 +440,11 @@ void Application::close()
 
 void Application::doClose()
 {
-    Q_ASSERT(m_closeTimer == 0);
+    Q_ASSERT(!m_closeTimer->isRunning());;
     Q_ASSERT(m_session != nullptr);
 
     m_session->close();
-    m_closeTimer = startTimer(3000);
+    m_closeTimer->start();
     setInternalState(InternalState::Closing);
 }
 
@@ -686,14 +689,6 @@ void Application::stop()
     Q_EMIT stopProcessRequested();
 }
 
-void Application::timerEvent(QTimerEvent *event)
-{
-    if (event->timerId() == m_closeTimer) {
-        m_closeTimer = 0;
-        stop();
-    }
-}
-
 bool Application::isTouchApp() const
 {
     return m_desktopData->isTouchApp();
@@ -791,6 +786,32 @@ void Application::onSessionStateChanged(Session::State sessionState)
         } else {
             setInternalState(InternalState::StoppedResumable);
         }
+    }
+}
+
+void Application::setCloseTimer(AbstractTimer *timer)
+{
+    delete m_closeTimer;
+
+    m_closeTimer = timer;
+    m_closeTimer->setInterval(3000);
+    m_closeTimer->setSingleShot(true);
+    connect(m_closeTimer, &Timer::timeout, this, &Application::stop);
+}
+
+QSize Application::initialSurfaceSize() const
+{
+    return m_initialSurfaceSize;
+}
+
+void Application::setInitialSurfaceSize(const QSize &size)
+{
+    qCDebug(QTMIR_APPLICATIONS).nospace() << "Application::setInitialSurfaceSize - appId=" << appId()
+        << " size=" << size;
+
+    if (size != m_initialSurfaceSize) {
+        m_initialSurfaceSize = size;
+        Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
 }
 
