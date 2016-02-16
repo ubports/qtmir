@@ -28,6 +28,7 @@ class SessionAuthorizer;
 using MirShell = mir::shell::Shell;
 class PromptSessionListener;
 class ScreensModel;
+class MirWindowManager;
 
 // We use virtual inheritance of mir::Server to facilitate derived classes (e.g. testing)
 // calling initialization functions before MirServer is constructed.
@@ -63,12 +64,14 @@ public:
     SessionAuthorizer *sessionAuthorizer();
     SessionListener *sessionListener();
     PromptSessionListener *promptSessionListener();
+    MirWindowManager *windowManager();
     MirShell *shell();
 
 private:
     std::weak_ptr<MirShell> m_shell;
     std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
     std::weak_ptr<MirDisplayConfigurationPolicy> m_displayConfigurationPolicy;
+    std::weak_ptr<MirWindowManager> m_windowManager;
     const QSharedPointer<ScreensModel> m_screensModel;
 };
 

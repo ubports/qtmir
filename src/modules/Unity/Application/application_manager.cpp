@@ -22,8 +22,7 @@
 #include "session.h"
 #include "sharedwakelock.h"
 #include "proc_info.h"
-#include "taskcontroller.h"
-#include "upstart/applicationcontroller.h"
+#include "upstart/taskcontroller.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 #include "settings.h"
 
@@ -32,8 +31,8 @@
 #include "nativeinterface.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
-#include "taskcontroller.h"
 #include "logging.h"
+#include <mirwindowmanager.h>
 
 // mir
 #include <mir/scene/surface.h>
@@ -120,13 +119,12 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
         return nullptr;
     }
 
-    auto mirServer = nativeInterface->mirServer();
+    auto mirServer = nativeInterface->mirServer().lock();
 
     SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
-    QSharedPointer<upstart::ApplicationController> appController(new upstart::ApplicationController());
-    QSharedPointer<TaskController> taskController(new TaskController(nullptr, appController));
+    QSharedPointer<TaskController> taskController(new upstart::TaskController());
     QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
@@ -149,6 +147,9 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     connectToSessionListener(appManager, sessionListener);
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
+    connect(mirServer->windowManager(), &MirWindowManager::sessionAboutToCreateSurface,
+        appManager, &ApplicationManager::onSessionAboutToCreateSurface,
+        Qt::BlockingQueuedConnection);
 
     // Emit signal to notify Upstart that Mir is ready to receive client connections
     // see http://upstart.ubuntu.com/cookbook/#expect-stop
@@ -461,15 +462,14 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
         m_closingApplications.removeAll(application);
     });
     m_closingApplications.append(application);
-    application->close();
     return true;
 }
 
-void ApplicationManager::onProcessFailed(const QString &appId, const bool duringStartup)
+void ApplicationManager::onProcessFailed(const QString &appId, TaskController::Error error)
 {
     // Applications fail if they fail to launch, crash or are killed.
 
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessFailed - appId=" << appId << "duringStartup=" << duringStartup;
+    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessFailed - appId=" << appId;
 
     Application *application = findApplication(appId);
     if (!application) {
@@ -478,7 +478,7 @@ void ApplicationManager::onProcessFailed(const QString &appId, const bool during
         return;
     }
 
-    Q_UNUSED(duringStartup); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
+    Q_UNUSED(error); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
     application->setProcessState(Application::ProcessFailed);
     application->setPid(0);
 }
@@ -860,6 +860,25 @@ Application *ApplicationManager::findClosingApplication(const QString &inputAppI
         }
     }
     return nullptr;
+}
+
+void ApplicationManager::onSessionAboutToCreateSurface(
+        const std::shared_ptr<mir::scene::Session> &session, int type, QSize &size)
+{
+    if (type == mir_surface_type_normal) {
+        Application* application = findApplicationWithSession(session);
+
+        if (application) {
+            qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface appId="
+                << application->appId();
+            size = application->initialSurfaceSize();
+        } else {
+            qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface unknown app";
+        }
+    } else {
+        qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface type=" << type
+            << " NOOP";
+    }
 }
 
 } // namespace qtmir

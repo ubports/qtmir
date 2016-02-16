@@ -71,6 +71,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
+    sizehints.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h

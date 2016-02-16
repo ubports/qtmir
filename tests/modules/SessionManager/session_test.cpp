@@ -236,7 +236,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
     session->appendPromptSession(mirPromptSession);
 
-    EXPECT_CALL(*mirServer->the_mock_prompt_session_manager(), suspend_prompt_session(_)).Times(1);
+    EXPECT_CALL(*promptSessionManager, suspend_prompt_session(_)).Times(1);
 
     EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));
     session->suspend();
@@ -244,7 +244,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     session->doSuspend();
     EXPECT_EQ(Session::Suspended, session->state());
 
-    Mock::VerifyAndClear(mirServer->the_mock_prompt_session_manager().get());
+    Mock::VerifyAndClear(promptSessionManager.get());
 }
 
 TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
@@ -256,7 +256,7 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
@@ -273,13 +273,13 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
     session->appendPromptSession(mirPromptSession);
 
-    EXPECT_CALL(*mirServer->the_mock_prompt_session_manager(), resume_prompt_session(_)).Times(1);
+    EXPECT_CALL(*promptSessionManager, resume_prompt_session(_)).Times(1);
 
     EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_resumed));
     session->resume();
     EXPECT_EQ(Session::Running, session->state());
 
-    Mock::VerifyAndClear(mirServer->the_mock_prompt_session_manager().get());
+    Mock::VerifyAndClear(promptSessionManager.get());
 }
 
 TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)

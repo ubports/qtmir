@@ -174,7 +174,8 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         SessionInterface* session,
         mir::shell::Shell* shell,
-        std::shared_ptr<SurfaceObserver> observer)
+        std::shared_ptr<SurfaceObserver> observer,
+        const SizeHints &sizeHints)
     : MirSurfaceInterface()
     , m_surface(surface)
     , m_session(session)
@@ -185,12 +186,25 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_currentFrameNumber(0)
     , m_live(true)
 {
+    m_minimumWidth = sizeHints.minWidth;
+    m_minimumHeight = sizeHints.minHeight;
+    m_maximumWidth = sizeHints.maxWidth;
+    m_maximumHeight = sizeHints.maxHeight;
+    m_widthIncrement = sizeHints.widthIncrement;
+    m_heightIncrement = sizeHints.heightIncrement;
+
     m_surfaceObserver = observer;
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
+        connect(observer.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::setMinimumWidth);
+        connect(observer.get(), &SurfaceObserver::minimumHeightChanged, this, &MirSurface::setMinimumHeight);
+        connect(observer.get(), &SurfaceObserver::maximumWidthChanged, this, &MirSurface::setMaximumWidth);
+        connect(observer.get(), &SurfaceObserver::maximumHeightChanged, this, &MirSurface::setMaximumHeight);
+        connect(observer.get(), &SurfaceObserver::widthIncrementChanged, this, &MirSurface::setWidthIncrement);
+        connect(observer.get(), &SurfaceObserver::heightIncrementChanged, this, &MirSurface::setHeightIncrement);
         observer->setListener(this);
     }
 
@@ -765,4 +779,82 @@ void MirSurface::setCursor(const QCursor &cursor)
 
     m_cursor = cursor;
     Q_EMIT cursorChanged(m_cursor);
+}
+
+int MirSurface::minimumWidth() const
+{
+    return m_minimumWidth;
+}
+
+int MirSurface::minimumHeight() const
+{
+    return m_minimumHeight;
+}
+
+int MirSurface::maximumWidth() const
+{
+    return m_maximumWidth;
+}
+
+int MirSurface::maximumHeight() const
+{
+    return m_maximumHeight;
+}
+
+int MirSurface::widthIncrement() const
+{
+    return m_widthIncrement;
+}
+
+int MirSurface::heightIncrement() const
+{
+    return m_heightIncrement;
+}
+
+void MirSurface::setMinimumWidth(int value)
+{
+    if (value != m_minimumWidth) {
+        m_minimumWidth = value;
+        Q_EMIT minimumWidthChanged(value);
+    }
+}
+
+void MirSurface::setMinimumHeight(int value)
+{
+    if (value != m_minimumHeight) {
+        m_minimumHeight = value;
+        Q_EMIT minimumHeightChanged(value);
+    }
+}
+
+void MirSurface::setMaximumWidth(int value)
+{
+    if (value != m_maximumWidth) {
+        m_maximumWidth = value;
+        Q_EMIT maximumWidthChanged(value);
+    }
+}
+
+void MirSurface::setMaximumHeight(int value)
+{
+    if (value != m_maximumHeight) {
+        m_maximumHeight = value;
+        Q_EMIT maximumHeightChanged(value);
+    }
+}
+
+void MirSurface::setWidthIncrement(int value)
+{
+    if (value != m_widthIncrement) {
+        m_widthIncrement = value;
+        Q_EMIT widthIncrementChanged(value);
+    }
+}
+
+void MirSurface::setHeightIncrement(int value)
+{
+    if (value != m_heightIncrement) {
+        m_heightIncrement = value;
+        Q_EMIT heightIncrementChanged(value);
+    }
 }
