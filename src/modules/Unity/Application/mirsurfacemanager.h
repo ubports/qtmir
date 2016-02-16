@@ -29,9 +29,9 @@
 // Mir
 #include <mir_toolkit/common.h>
 
-// QPA server
-#include "windowmanagerlistener.h"
-
+// mirserver qpa
+#include <sizehints.h>
+#include <mirwindowmanager.h>
 
 namespace mir {
     namespace scene {
@@ -74,11 +74,12 @@ Q_SIGNALS:
 public Q_SLOTS:
     void onSessionCreatedSurface(const mir::scene::Session *,
                                  const std::shared_ptr<mir::scene::Surface> &,
-                                 std::shared_ptr<SurfaceObserver> const&);
+                                 std::shared_ptr<SurfaceObserver> const&,
+                                 qtmir::SizeHints);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
     void onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &,
-                           WindowManagerListener::SurfaceProperty property,
+                           MirWindowManager::SurfaceProperty property,
                            const QVariant& value);
 
 protected:

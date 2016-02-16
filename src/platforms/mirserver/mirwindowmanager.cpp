@@ -16,8 +16,8 @@
 
 #include "mirwindowmanager.h"
 #include "logging.h"
+#include "surfaceobserver.h"
 #include "tracepoints.h" // generated from tracepoints.tp
-#include "windowmanagerlistener.h"
 
 // Unity API
 #include <unity/shell/application/Mir.h>
@@ -28,6 +28,8 @@
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
 
+#include <QMutexLocker>
+
 namespace ms = mir::scene;
 
 namespace
@@ -37,7 +39,7 @@ class MirWindowManagerImpl : public MirWindowManager
 public:
 
     MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
-                         const QSharedPointer<WindowManagerListener> &windowManagerListener);
+            std::shared_ptr<::SessionListener> sessionListener);
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
 
@@ -80,17 +82,19 @@ public:
 
 private:
     std::shared_ptr<mir::shell::DisplayLayout> const m_displayLayout;
-    const QSharedPointer<WindowManagerListener> m_windowManagerListener;
+    std::shared_ptr<::SessionListener> m_sessionListener;
 };
 
 }
 
 MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
-                                           const QSharedPointer<WindowManagerListener> &windowManagerListener)
-    : m_displayLayout{displayLayout}
-    , m_windowManagerListener(windowManagerListener)
+        std::shared_ptr<::SessionListener> sessionListener) :
+    m_displayLayout{displayLayout},
+    m_sessionListener(sessionListener)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::MirWindowManagerImpl";
+
+    qRegisterMetaType<MirWindowManager::SurfaceProperty>("MirWindowManager::SurfaceProperty");
 }
 
 void MirWindowManagerImpl::add_session(std::shared_ptr<ms::Session> const& /*session*/)
@@ -108,16 +112,28 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
-    // TODO: Callback unity8 so that it can make a decision on that.
-    //       unity8 must bear in mind that the called function will be on a Mir thread though.
-    //       The QPA shouldn't be deciding for itself on such things.
+    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::SizeHints(requestParameters));
 
+    QSize initialSize;
+    // can be connected to via Qt::BlockingQueuedConnection to alter surface initial size
+    {
+        int surfaceType = requestParameters.type.is_set() ? requestParameters.type.value() : -1;
+        Q_EMIT sessionAboutToCreateSurface(session, surfaceType, initialSize);
+    }
     ms::SurfaceCreationParameters placedParameters = requestParameters;
 
-    // Just make it fullscreen for now
-    mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
-    m_displayLayout->size_to_output(rect);
-    placedParameters.size = rect.size;
+    if (initialSize.isValid()) {
+        placedParameters.size.width = mir::geometry::Width(initialSize.width());
+        placedParameters.size.height = mir::geometry::Height(initialSize.height());
+    } else {
+        qCWarning(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): didn't get a initial surface"
+            " size from shell. Falling back to fullscreen placement";
+        // This is bad. Fallback to fullscreen
+        mir::geometry::Rectangle rect{requestParameters.top_left, requestParameters.size};
+        m_displayLayout->size_to_output(rect);
+        placedParameters.size = rect.size;
+    }
+
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::add_surface(): size requested ("
                                 << requestParameters.size.width.as_int() << "," << requestParameters.size.height.as_int() << ") and placed ("
@@ -129,9 +145,9 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
     auto const surface = session->surface(result);
 
     if (placedParameters.shell_chrome.is_set()) {
-        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
-            WindowManagerListener::ShellChrome,
-            QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(placedParameters.shell_chrome.value())));
+        Q_EMIT surfaceMofidied(surface,
+                MirWindowManager::ShellChrome,
+                QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(placedParameters.shell_chrome.value())));
     }
 
     return result;
@@ -189,22 +205,27 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
 
-        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
-                                                        WindowManagerListener::Name,
-                                                        modifications.shell_chrome.value());
+        Q_EMIT surfaceMofidied(surface,
+                               MirWindowManager::Name,
+                               modifications.shell_chrome.value());
     }
 
     if (modifications.shell_chrome.is_set()) {
-        Q_EMIT m_windowManagerListener->surfaceMofidied(surface,
-            WindowManagerListener::ShellChrome,
+        Q_EMIT surfaceMofidied(surface,
+            MirWindowManager::ShellChrome,
             QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(modifications.shell_chrome.value())));
+    }
+
+    QMutexLocker(&SurfaceObserver::mutex);
+    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
+    if (observer) {
+        observer->notifySizeHintChanges(modifications);
     }
 }
 
-std::unique_ptr<MirWindowManager> MirWindowManager::create(
-    mir::shell::FocusController* /*focus_controller*/,
+std::shared_ptr<MirWindowManager> MirWindowManager::create(
     const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
-    const QSharedPointer<WindowManagerListener> &windowManagerListener)
+    std::shared_ptr<::SessionListener> sessionListener)
 {
-    return std::make_unique<MirWindowManagerImpl>(displayLayout, windowManagerListener);
+    return std::make_shared<MirWindowManagerImpl>(displayLayout, sessionListener);
 }

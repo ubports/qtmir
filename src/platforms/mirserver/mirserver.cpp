@@ -31,7 +31,6 @@
 #include "qteventfeeder.h"
 #include "tileddisplayconfigurationpolicy.h"
 #include "logging.h"
-#include "windowmanagerlistener.h"
 
 // std
 #include <memory>
@@ -61,7 +60,6 @@ MirServer::MirServer(int argc, char const* argv[],
                      const QSharedPointer<ScreenController> &screenController, QObject* parent)
     : QObject(parent)
     , m_screenController(screenController)
-    , m_windowManagerListener(new WindowManagerListener)
 {
     set_command_line_handler(&ignore_unparsed_arguments);
     set_command_line(argc, argv);
@@ -106,10 +104,13 @@ MirServer::MirServer(int argc, char const* argv[],
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
+    override_the_window_manager_builder([this](mir::shell::FocusController*)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return {MirWindowManager::create(focus_controller, the_shell_display_layout(), m_windowManagerListener)};
+            auto windowManager = MirWindowManager::create(the_shell_display_layout(),
+                    std::static_pointer_cast<::SessionListener>(the_session_listener()));
+            m_windowManager = windowManager;
+            return windowManager;
         });
 
     wrap_display_configuration_policy(
@@ -196,7 +197,7 @@ MirShell *MirServer::shell()
     return m_shell.lock().get();
 }
 
-WindowManagerListener *MirServer::windowManagerListener()
+MirWindowManager *MirServer::windowManager()
 {
-    return m_windowManagerListener.data();
+    return m_windowManager.lock().get();
 }

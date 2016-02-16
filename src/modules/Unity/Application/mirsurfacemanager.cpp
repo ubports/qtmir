@@ -34,6 +34,7 @@
 #include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
+#include "sizehints.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
 
@@ -52,9 +53,9 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
-void connectToWindowManagerListener(MirSurfaceManager *manager, WindowManagerListener *listener)
+void connectToWindowManager(MirSurfaceManager *manager, MirWindowManager *windowManager)
 {
-    QObject::connect(listener, &WindowManagerListener::surfaceMofidied,
+    QObject::connect(windowManager, &MirWindowManager::surfaceMofidied,
                      manager, &MirSurfaceManager::onSurfaceModified);
 }
 
@@ -71,13 +72,13 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        WindowManagerListener *windowManagerListener = static_cast<WindowManagerListener*>(nativeInterface->nativeResourceForIntegration("WindowManagerListener"));
+        MirWindowManager *windowManager = static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
-        connectToWindowManagerListener(instance, windowManagerListener);
+        connectToWindowManager(instance, windowManager);
     }
     return instance;
 }
@@ -105,13 +106,14 @@ MirSurfaceManager::~MirSurfaceManager()
 
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
                                                 const std::shared_ptr<mir::scene::Surface> &surface,
-                                                const std::shared_ptr<SurfaceObserver> &observer)
+                                                const std::shared_ptr<SurfaceObserver> &observer,
+                                                qtmir::SizeHints sizeHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurface(surface, session, m_shell, observer);
+    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, sizeHints);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);
@@ -166,7 +168,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
 }
 
 void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
-                                          WindowManagerListener::SurfaceProperty property,
+                                          MirWindowManager::SurfaceProperty property,
                                           const QVariant &value)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
@@ -188,7 +190,7 @@ void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surf
         }
     }
 
-    if (property == WindowManagerListener::ShellChrome) {
+    if (property == MirWindowManager::ShellChrome) {
         qmlSurface->setShellChrome(value.value<Mir::ShellChrome>());
     }
 }

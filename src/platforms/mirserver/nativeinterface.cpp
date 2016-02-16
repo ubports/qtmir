@@ -36,8 +36,8 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
             result = server->sessionListener();
         else if (resource == "PromptSessionListener")
             result = server->promptSessionListener();
-        else if (resource == "WindowManagerListener")
-            result = server->windowManagerListener();
+        else if (resource == "WindowManager")
+            result = server->windowManager();
     }
     return result;
 }

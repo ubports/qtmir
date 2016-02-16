@@ -18,12 +18,10 @@
 #include "mirwindowmanager.h"
 #include "stub_surface.h"
 #include "stub_session.h"
-#include "windowmanagerlistener.h"
 
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
-#include <mir/shell/focus_controller.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -56,35 +54,15 @@ struct MockSession : StubSession
     MOCK_CONST_METHOD1(surface, std::shared_ptr<ms::Surface> (mir::frontend::SurfaceId surface));
 };
 
-struct StubFocusController : msh::FocusController
-{
-public:
-    void focus_next_session() override {}
-
-    std::shared_ptr<ms::Session> focused_session() const override { return {}; }
-
-    void set_focus_to(
-        std::shared_ptr<ms::Session> const& /*focus_session*/,
-        std::shared_ptr<ms::Surface> const& /*focus_surface*/) override {}
-
-    std::shared_ptr<ms::Surface> focused_surface() const override { return {}; }
-
-    std::shared_ptr<ms::Surface> surface_at(Point /*cursor*/) const override { return {}; }
-
-    void raise(msh::SurfaceSet const& /*surfaces*/) override {}
-};
-
-
 struct WindowManager : Test
 {
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
-    StubFocusController focus_controller;
-    QSharedPointer<WindowManagerListener> listener{new WindowManagerListener};
+    std::shared_ptr<SessionListener> sessionListener = std::make_shared<SessionListener>();
 
-    const std::unique_ptr<MirWindowManager> window_manager =
-        MirWindowManager::create(&focus_controller, mock_display_layout, listener);
+    const std::shared_ptr<MirWindowManager> window_manager =
+        MirWindowManager::create(mock_display_layout, sessionListener);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};
     const std::shared_ptr<MockSession> arbitrary_session = std::make_shared<NiceMock<MockSession>>();
