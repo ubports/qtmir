@@ -37,11 +37,13 @@ namespace qtmir {
 class MirSurfaceInterface : public unity::shell::application::MirSurfaceInterface
 {
     Q_OBJECT
+
 public:
     MirSurfaceInterface(QObject *parent = nullptr) : unity::shell::application::MirSurfaceInterface(parent) {}
     virtual ~MirSurfaceInterface() {}
 
     virtual void setLive(bool value) = 0;
+    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
     virtual bool isFirstFrameDrawn() const = 0;
 

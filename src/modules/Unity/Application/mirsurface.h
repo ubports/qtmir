@@ -36,7 +36,6 @@
 
 // mir
 #include <mir/scene/surface.h>
-#include <mir_toolkit/common.h>
 
 namespace mir { namespace shell { class Shell; }}
 
@@ -132,6 +131,8 @@ public:
 
     QCursor cursor() const override;
 
+    Mir::ShellChrome shellChrome() const override;
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
     void setScreen(QScreen *screen) override;
 
 public Q_SLOTS:
@@ -185,6 +186,7 @@ private:
     QSize m_size;
 
     QCursor m_cursor;
+    Mir::ShellChrome m_shellChrome;
 
     int m_minimumWidth{0};
     int m_minimumHeight{0};

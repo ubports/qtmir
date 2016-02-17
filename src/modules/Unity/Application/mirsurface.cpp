@@ -185,6 +185,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_textureUpdated(false)
     , m_currentFrameNumber(0)
     , m_live(true)
+    , m_shellChrome(Mir::NormalChrome)
 {
     m_minimumWidth = sizeHints.minWidth;
     m_minimumHeight = sizeHints.minHeight;
@@ -764,6 +765,20 @@ QCursor MirSurface::cursor() const
     return m_cursor;
 }
 
+Mir::ShellChrome MirSurface::shellChrome() const
+{
+    return m_shellChrome;
+}
+
+void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
+{
+    if (m_shellChrome != shellChrome) {
+        m_shellChrome = shellChrome;
+
+        Q_EMIT shellChromeChanged(shellChrome);
+    }
+}
+
 void MirSurface::setScreen(QScreen *screen)
 {
     using namespace mir::geometry;
@@ -771,7 +786,6 @@ void MirSurface::setScreen(QScreen *screen)
     auto targetScreenTopLeftPx = screen->geometry().topLeft(); // * screen->devicePixelRatio(); GERRY?
     DEBUG_MSG << "moved to" << targetScreenTopLeftPx << "px";
     m_surface->move_to(Point{ X{targetScreenTopLeftPx.x()}, Y{targetScreenTopLeftPx.y()} });
-}
 
 void MirSurface::setCursor(const QCursor &cursor)
 {

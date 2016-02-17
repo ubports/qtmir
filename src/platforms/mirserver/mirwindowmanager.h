@@ -36,6 +36,11 @@ class MirWindowManager : public QObject, public mir::shell::WindowManager
     Q_OBJECT
 
 public:
+    enum SurfaceProperty {
+        Name,
+        ShellChrome
+    };
+
     static std::shared_ptr<MirWindowManager> create(
         const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
         std::shared_ptr<::SessionListener> sessionListener);
@@ -44,6 +49,10 @@ Q_SIGNALS:
     // requires Qt::BlockingQueuedConnection!!
     void sessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
                                      int type, QSize &size);
+
+    void surfaceMofidied(const std::shared_ptr<mir::scene::Surface>& surface,
+                         MirWindowManager::SurfaceProperty property,
+                         const QVariant& value);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

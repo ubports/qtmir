@@ -253,13 +253,15 @@ void Session::removeSurface(MirSurfaceInterface* surface)
             Q_EMIT lastSurfaceChanged(lastSurface());
         }
     }
+
+    updateFullscreenProperty();
 }
 
 void Session::updateFullscreenProperty()
 {
     if (m_surfaces.rowCount() > 0) {
         // TODO: Figure out something better
-        setFullscreen(m_surfaces.list().at(0)->state() == Mir::FullscreenState);
+        setFullscreen(lastSurface()->state() == Mir::FullscreenState);
     } else {
         // Keep the current value of the fullscreen property until we get a new
         // surface

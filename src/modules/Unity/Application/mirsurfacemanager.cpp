@@ -53,6 +53,12 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
+void connectToWindowManager(MirSurfaceManager *manager, MirWindowManager *windowManager)
+{
+    QObject::connect(windowManager, &MirWindowManager::surfaceMofidied,
+                     manager, &MirSurfaceManager::onSurfaceModified);
+}
+
 MirSurfaceManager* MirSurfaceManager::singleton()
 {
     if (!instance) {
@@ -66,11 +72,13 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
+        MirWindowManager *windowManager = static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         instance = new MirSurfaceManager(nativeInterface->mirServer(), shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
+        connectToWindowManager(instance, windowManager);
     }
     return instance;
 }
@@ -114,6 +122,11 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
     if (session)
         session->registerSurface(qmlSurface);
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = qmlSurface;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     // Only notify QML of surface creation once it has drawn its first frame.
     connect(qmlSurface, &MirSurfaceInterface::firstFrameDrawn, this, [=]() {
         tracepoint(qtmir, firstFrameDrawn);
@@ -155,8 +168,46 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         }
     }
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = nullptr;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
+}
+
+MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
+{
+    qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
+                            << "surface.name=" << surface->name().c_str()
+                            << "property=" << property
+                            << "value=" << value;
+
+    MirSurfaceInterface* qmlSurface = nullptr;
+    {
+        QMutexLocker lock(&m_mutex);
+        auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
+        if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
+
+            qmlSurface = it.value();
+        } else {
+            qCritical() << "MirSurfaceManager::onSurfaceModified: unable to find MirSurface corresponding"
+                        << "to surface=" << surface.get() << "surface.name=" << surface->name().c_str();
+            return;
+        }
+    }
+
+    if (property == MirWindowManager::ShellChrome) {
+        qmlSurface->setShellChrome(value.value<Mir::ShellChrome>());
+    }
+}
+
+void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
+                                          MirWindowManager::SurfaceProperty property,
+                                          const QVariant &value)
+{
+    return m_inputMethodSurface;
 }
 
 } // namespace qtmir

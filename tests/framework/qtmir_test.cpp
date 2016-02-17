@@ -155,7 +155,7 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
             .Times(1)
             .WillOnce(Return(true));
 
-    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto application = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
 
     bool authed = false;
