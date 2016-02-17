@@ -786,6 +786,7 @@ void MirSurface::setScreen(QScreen *screen)
     auto targetScreenTopLeftPx = screen->geometry().topLeft(); // * screen->devicePixelRatio(); GERRY?
     DEBUG_MSG << "moved to" << targetScreenTopLeftPx << "px";
     m_surface->move_to(Point{ X{targetScreenTopLeftPx.x()}, Y{targetScreenTopLeftPx.y()} });
+}
 
 void MirSurface::setCursor(const QCursor &cursor)
 {
