@@ -366,6 +366,11 @@ void Screen::setWindow(ScreenWindow *window)
         auto nativeInterface = qGuiApp->platformNativeInterface();
         Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
         Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
+
+        if (m_screenWindow->geometry() != geometry()) {
+            qCDebug(QTMIR_SCREENS) << "Screen::setWindow - new geometry for shell surface" << window->window() << geometry();
+            m_screenWindow->setGeometry(geometry());
+        }
     }
 }
 
