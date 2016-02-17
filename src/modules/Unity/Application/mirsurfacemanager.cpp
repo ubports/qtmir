@@ -122,6 +122,11 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
     if (session)
         session->registerSurface(qmlSurface);
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = qmlSurface;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     // Only notify QML of surface creation once it has drawn its first frame.
     connect(qmlSurface, &MirSurfaceInterface::firstFrameDrawn, this, [=]() {
         tracepoint(qtmir, firstFrameDrawn);
@@ -163,13 +168,16 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         }
     }
 
+    if (qmlSurface->type() == Mir::InputMethodType) {
+        m_inputMethodSurface = nullptr;
+        Q_EMIT inputMethodSurfaceChanged();
+    }
+
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
 }
 
-void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
-                                          MirWindowManager::SurfaceProperty property,
-                                          const QVariant &value)
+MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
                             << "surface.name=" << surface->name().c_str()
@@ -193,6 +201,13 @@ void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surf
     if (property == MirWindowManager::ShellChrome) {
         qmlSurface->setShellChrome(value.value<Mir::ShellChrome>());
     }
+}
+
+void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
+                                          MirWindowManager::SurfaceProperty property,
+                                          const QVariant &value)
+{
+    return m_inputMethodSurface;
 }
 
 } // namespace qtmir

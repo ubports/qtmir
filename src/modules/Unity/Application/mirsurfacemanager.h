@@ -55,7 +55,7 @@ class SessionManager;
 class MirSurfaceManager : public QObject
 {
     Q_OBJECT
-
+    Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
         const QSharedPointer<MirServer>& mirServer,
@@ -67,7 +67,10 @@ public:
 
     static MirSurfaceManager* singleton();
 
+    MirSurfaceInterface* inputMethodSurface() const;
+
 Q_SIGNALS:
+    void inputMethodSurfaceChanged();
     void surfaceCreated(MirSurfaceInterface* surface);
     void surfaceDestroyed(MirSurfaceInterface* surface);
 
@@ -91,6 +94,7 @@ private:
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
     static MirSurfaceManager *instance;
+    MirSurfaceInterface* m_inputMethodSurface = nullptr;
 };
 
 } // namespace qtmir
