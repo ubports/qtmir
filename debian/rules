@@ -20,21 +20,43 @@ USES_GLES2 = $(findstring $(DEB_HOST_ARCH), $(gles2_architectures))
 	dh $@ --parallel --fail-missing
 
 override_dh_clean:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	rm -rf $(TMP1_DIR)
+endif
+	rm -rf $(TMP2_DIR)
 	dh_clean
 
 override_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	mkdir -p $(ANDROID_DIR) && dh_auto_configure -B$(ANDROID_DIR) -- $(FLAGS) $(CURDIR) -DUSE_OPENGLES=1
+# See comment in CMakeLists.txt
+	mkdir -p $(DESKTOP_DIR) && dh_auto_configure -B$(DESKTOP_DIR) -- $(FLAGS) $(CURDIR) -DUSE_OPENGL_BUT_LINK_AGAINST_OPENGLES=1
+else
+	mkdir -p $(DESKTOP_DIR) && dh_auto_configure -B$(DESKTOP_DIR) -- $(FLAGS) $(CURDIR) -DUSE_OPENGLES=1
+endif
 
 override_dh_auto_build:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	dh_auto_build -B$(ANDROID_DIR)
+endif
+	dh_auto_build -B$(DESKTOP_DIR)
 
 override_dh_auto_test:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	dh_auto_test -B$(ANDROID_DIR)
+endif
+	dh_auto_test -B$(DESKTOP_DIR)
 
 override_dh_auto_install:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	dh_auto_install -B$(ANDROID_DIR) --destdir=$(TMP1_DIR)
+endif
+	dh_auto_install -B$(DESKTOP_DIR) --destdir=$(TMP2_DIR)
 
 override_dh_install:
+ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	dh_install --sourcedir=$(TMP1_DIR) -pqtmir-android
-	dh_install --sourcedir=$(TMP1_DIR) -pqtdeclarative5-qtmir-plugin
+endif
+	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-desktop
+	dh_install --sourcedir=$(TMP2_DIR) -pqtdeclarative5-qtmir-plugin
+	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-tests
