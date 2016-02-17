@@ -177,7 +177,9 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
     Q_EMIT surfaceDestroyed(qmlSurface);
 }
 
-MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
+void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
+                                          MirWindowManager::SurfaceProperty property,
+                                          const QVariant &value)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
                             << "surface.name=" << surface->name().c_str()
@@ -203,9 +205,7 @@ MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
     }
 }
 
-void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
-                                          MirWindowManager::SurfaceProperty property,
-                                          const QVariant &value)
+MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const
 {
     return m_inputMethodSurface;
 }
