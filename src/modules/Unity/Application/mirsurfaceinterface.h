@@ -43,6 +43,7 @@ public:
     virtual ~MirSurfaceInterface() {}
 
     virtual void setLive(bool value) = 0;
+    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
     virtual bool isFirstFrameDrawn() const = 0;
 
@@ -87,12 +88,8 @@ public:
 
     virtual QCursor cursor() const = 0;
 
-    virtual Mir::ShellChrome shellChrome() const = 0;
-    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
-
 Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);
-    void shellChromeChanged(Mir::ShellChrome shellChrome);
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
