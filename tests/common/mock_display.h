@@ -31,7 +31,7 @@ public:
 };
 
 struct MockDisplay : public mir::graphics::Display
-{
+{Display
 public:
     MOCK_METHOD1(for_each_display_sync_group, void(std::function<void(mir::graphics::DisplaySyncGroup&)> const&));
     MOCK_CONST_METHOD0(configuration, std::unique_ptr<mir::graphics::DisplayConfiguration>());
@@ -46,6 +46,8 @@ public:
     MOCK_METHOD0(resume, void());
     MOCK_METHOD1(create_hardware_cursor, std::shared_ptr<mir::graphics::Cursor>(std::shared_ptr<mir::graphics::CursorImage> const&));
     MOCK_METHOD0(create_gl_context, std::unique_ptr<mir::graphics::GLContext>());
+    MOCK_METHOD2(create_virtual_output, std::unique_ptr<mir::graphics::VirtualOutput> (int width, int height));
+
 };
 
 
