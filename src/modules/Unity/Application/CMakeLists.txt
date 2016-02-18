@@ -30,7 +30,6 @@ set(QMLMIRPLUGIN_SRC
     plugin.cpp
     applicationscreenshotprovider.cpp
     dbuswindowstack.cpp
-    taskcontroller.cpp
     mirsurfacemanager.cpp
     ubuntukeyboardinfo.cpp
     mirsurface.cpp
@@ -41,8 +40,10 @@ set(QMLMIRPLUGIN_SRC
     session.cpp
     sessionmanager.cpp
     sharedwakelock.cpp
-    upstart/applicationcontroller.cpp
     upstart/applicationinfo.cpp
+    upstart/taskcontroller.cpp
+    timer.cpp
+    timesource.cpp
     tracepoints.c
     settings.cpp
 # We need to run moc on these headers
@@ -53,8 +54,8 @@ set(QMLMIRPLUGIN_SRC
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
 # Feed the automoc monster
     session_interface.h
-    applicationcontroller.h
     applicationinfo.h
+    taskcontroller.h
     settings_interface.h
     )
 

@@ -43,6 +43,7 @@ class ApplicationManager;
 class ApplicationInfo;
 class Session;
 class SharedWakelock;
+class AbstractTimer;
 
 class Application : public unity::shell::application::ApplicationInfoInterface
 {
@@ -105,6 +106,8 @@ public:
     bool isTouchApp() const override;
     bool exemptFromLifecycle() const override;
     void setExemptFromLifecycle(bool) override;
+    QSize initialSurfaceSize() const override;
+    void setInitialSurfaceSize(const QSize &size) override;
 
     void setStage(Stage stage);
 
@@ -129,6 +132,7 @@ public:
 
     // for tests
     InternalState internalState() const { return m_state; }
+    void setCloseTimer(AbstractTimer *timer);
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
@@ -145,9 +149,6 @@ private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
-
-protected:
-    void timerEvent(QTimerEvent *event);
 
 private:
 
@@ -181,8 +182,9 @@ private:
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
-    int m_closeTimer;
+    AbstractTimer *m_closeTimer;
     bool m_exemptFromLifecycle;
+    QSize m_initialSurfaceSize;
 
     friend class ApplicationManager;
     friend class SessionManager;

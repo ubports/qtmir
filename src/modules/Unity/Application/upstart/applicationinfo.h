@@ -30,7 +30,7 @@ namespace upstart
 class ApplicationInfo : public qtmir::ApplicationInfo
 {
 public:
-    ApplicationInfo(const QString &appId, std::shared_ptr<Ubuntu::AppLaunch::Application::Info> info);
+    ApplicationInfo(const QString &appId, std::shared_ptr<ubuntu::app_launch::Application::Info> info);
 
     QString appId() const override;
     QString name() const override;
@@ -48,7 +48,7 @@ public:
 
 private:
     QString m_appId;
-    std::shared_ptr<Ubuntu::AppLaunch::Application::Info> m_info;
+    std::shared_ptr<ubuntu::app_launch::Application::Info> m_info;
 };
 
 } // namespace upstart

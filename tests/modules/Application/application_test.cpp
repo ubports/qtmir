@@ -21,6 +21,7 @@
 
 #include <fake_application_info.h>
 #include <fake_session.h>
+#include <mock_application_info.h>
 #include <mock_session.h>
 
 #include <QScopedPointer>
@@ -292,7 +293,7 @@ TEST_F(ApplicationTests, passesIsTouchAppThrough)
 {
     using namespace ::testing;
 
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>();
+    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>("foo-app");
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
             mockApplicationInfo, QStringList(), nullptr));

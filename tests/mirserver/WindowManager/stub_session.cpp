@@ -127,3 +127,7 @@ void StubSession::configure_streams(
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
 {
 }
+
+void StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
+{
+}

@@ -22,7 +22,7 @@ namespace qtmir
 namespace upstart
 {
 
-ApplicationInfo::ApplicationInfo(const QString &appId, std::shared_ptr<Ubuntu::AppLaunch::Application::Info> info)
+ApplicationInfo::ApplicationInfo(const QString &appId, std::shared_ptr<ubuntu::app_launch::Application::Info> info)
     : qtmir::ApplicationInfo(),
       m_appId(appId),
       m_info(info)
@@ -102,7 +102,7 @@ bool ApplicationInfo::rotatesWindowContents() const
 
 bool ApplicationInfo::isTouchApp() const
 {
-    return m_info->ubuntuLifecycle().value();
+    return m_info->supportsUbuntuLifecycle().value();
 }
 
 } // namespace upstart

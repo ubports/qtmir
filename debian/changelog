@@ -1,3 +1,39 @@
+qtmir (0.4.7+16.04.20160212-0ubuntu1) xenial; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Provide branch prediction information to the if in compressTimestamp
+  * Reset start time if the timestamp travels to the past (LP: #1524488)
+
+  [ Daniel d'Andrada ]
+  * Let shell decide the initial surface size (LP: #1532974)
+  * Remove the useless TaskController
+  * Surface Size Hints
+  * Update mir version requirement
+
+  [ Michał Sawicz ]
+  * Bump unity-api dependencies
+  * Use QStandardPaths to determine QML cache location
+
+  [ Nick Dedekind ]
+  * Moved test framework into a static library for quicker
+    recompilation.
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 12 Feb 2016 00:07:26 +0000
+
+qtmir (0.4.7+16.04.20160208-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added fix and test for closing app during the StoppedResumable
+    state. (LP: #1541388)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 08 Feb 2016 09:36:17 +0000
+
+qtmir (0.4.7+16.04.20160127.1-0ubuntu1) xenial; urgency=medium
+
+  * Changes for mir 0.19.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Wed, 27 Jan 2016 21:42:31 +0000
+
 qtmir (0.4.7+16.04.20160122-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]

@@ -22,7 +22,6 @@
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
-#include <mir/shell/focus_controller.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -55,34 +54,15 @@ struct MockSession : StubSession
     MOCK_CONST_METHOD1(surface, std::shared_ptr<ms::Surface> (mir::frontend::SurfaceId surface));
 };
 
-struct StubFocusController : msh::FocusController
-{
-public:
-    void focus_next_session() override {}
-
-    std::shared_ptr<ms::Session> focused_session() const override { return {}; }
-
-    void set_focus_to(
-        std::shared_ptr<ms::Session> const& /*focus_session*/,
-        std::shared_ptr<ms::Surface> const& /*focus_surface*/) override {}
-
-    std::shared_ptr<ms::Surface> focused_surface() const override { return {}; }
-
-    std::shared_ptr<ms::Surface> surface_at(Point /*cursor*/) const override { return {}; }
-
-    void raise(msh::SurfaceSet const& /*surfaces*/) override {}
-};
-
-
 struct WindowManager : Test
 {
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
-    StubFocusController focus_controller;
+    std::shared_ptr<SessionListener> sessionListener = std::make_shared<SessionListener>();
 
-    const std::unique_ptr<MirWindowManager> window_manager =
-        MirWindowManager::create(&focus_controller, mock_display_layout);
+    const std::shared_ptr<MirWindowManager> window_manager =
+        MirWindowManager::create(mock_display_layout, sessionListener);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};
     const std::shared_ptr<MockSession> arbitrary_session = std::make_shared<NiceMock<MockSession>>();
@@ -118,7 +98,7 @@ struct WindowManager : Test
                 });
     }
 
-    static constexpr uint64_t arbitrary_mac = __LINE__;
+    std::vector<uint8_t> const arbitrary_cookie;
 };
 }
 
@@ -259,7 +239,7 @@ TEST_F(WindowManager, HandlesKeyboardEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_action,
         arbitrary_key_code,
         arbitrary_scan_code,
@@ -280,7 +260,7 @@ TEST_F(WindowManager, HandlesTouchEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_event_modifiers);
 
     const auto input_event = mir_event_get_input_event(generic_event.get());
@@ -306,7 +286,7 @@ TEST_F(WindowManager, HandlesPointerEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_event_modifiers,
         arbitrary_pointer_action,
         arbitrary_pointer_buttons,
