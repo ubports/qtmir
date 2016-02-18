@@ -19,6 +19,11 @@
 
 #include <mir/graphics/display.h>
 #include <mir/graphics/gl_context.h>
+#include <mir/version.h>
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 20, 0)
+#include <mir/graphics/virtual_output.h>
+#endif
 
 #include <gmock/gmock.h>
 #include "gmock_fixes.h"
@@ -31,7 +36,7 @@ public:
 };
 
 struct MockDisplay : public mir::graphics::Display
-{Display
+{
 public:
     MOCK_METHOD1(for_each_display_sync_group, void(std::function<void(mir::graphics::DisplaySyncGroup&)> const&));
     MOCK_CONST_METHOD0(configuration, std::unique_ptr<mir::graphics::DisplayConfiguration>());
@@ -46,8 +51,10 @@ public:
     MOCK_METHOD0(resume, void());
     MOCK_METHOD1(create_hardware_cursor, std::shared_ptr<mir::graphics::Cursor>(std::shared_ptr<mir::graphics::CursorImage> const&));
     MOCK_METHOD0(create_gl_context, std::unique_ptr<mir::graphics::GLContext>());
-    MOCK_METHOD2(create_virtual_output, std::unique_ptr<mir::graphics::VirtualOutput> (int width, int height));
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 20, 0)
+    MOCK_METHOD2(create_virtual_output, std::unique_ptr<mir::graphics::VirtualOutput> (int width, int height));
+#endif
 };
 
 
