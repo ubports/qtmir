@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -381,7 +381,7 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
     } else {
         auto appInfo = m_taskController->getInfoForApp(appId);
         if (!appInfo) {
-            qWarning() << "Unable to instantiate application with appId" << appId;
+            qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - Unable to instantiate application with appId" << appId;
             return nullptr;
         }
 
@@ -410,7 +410,7 @@ void ApplicationManager::onProcessStarting(const QString &appId)
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
         auto appInfo = m_taskController->getInfoForApp(appId);
         if (!appInfo) {
-            qWarning() << "Unable to instantiate application with appId" << appId;
+            qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - Unable to instantiate application with appId" << appId;
             return;
         }
 
