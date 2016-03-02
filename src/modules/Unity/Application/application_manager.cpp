@@ -381,7 +381,7 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
     } else {
         auto appInfo = m_taskController->getInfoForApp(appId);
         if (!appInfo) {
-            qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - Unable to instantiate application with appId" << appId;
+            qCWarning(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - Unable to instantiate application with appId" << appId;
             return nullptr;
         }
 
@@ -410,7 +410,7 @@ void ApplicationManager::onProcessStarting(const QString &appId)
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
         auto appInfo = m_taskController->getInfoForApp(appId);
         if (!appInfo) {
-            qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - Unable to instantiate application with appId" << appId;
+            qCWarning(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - Unable to instantiate application with appId" << appId;
             return;
         }
 
