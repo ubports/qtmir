@@ -81,9 +81,9 @@ public Q_SLOTS:
                                  qtmir::SizeHints);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
-    void onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &,
+    void onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &surface,
                            MirWindowManager::SurfaceProperty property,
-                           const QVariant& value);
+                           const QVariant &value);
 
 protected:
     QHash<const mir::scene::Surface *, MirSurfaceInterface *> m_mirSurfaceToQmlSurfaceHash;

@@ -50,9 +50,9 @@ Q_SIGNALS:
     void sessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
                                      int type, QSize &size);
 
-    void surfaceMofidied(const std::shared_ptr<mir::scene::Surface>& surface,
+    void surfaceModified(const std::shared_ptr<mir::scene::Surface> &surface,
                          MirWindowManager::SurfaceProperty property,
-                         const QVariant& value);
+                         const QVariant &value);
 };
 
 #endif /* QPAMIRSERVER_WINDOW_MANAGER_H */

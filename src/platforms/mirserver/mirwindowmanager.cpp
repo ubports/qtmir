@@ -145,7 +145,7 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
     auto const surface = session->surface(result);
 
     if (placedParameters.shell_chrome.is_set()) {
-        Q_EMIT surfaceMofidied(surface,
+        Q_EMIT surfaceModified(surface,
                 MirWindowManager::ShellChrome,
                 QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(placedParameters.shell_chrome.value())));
     }
@@ -205,13 +205,13 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
 
-        Q_EMIT surfaceMofidied(surface,
+        Q_EMIT surfaceModified(surface,
                                MirWindowManager::Name,
                                modifications.shell_chrome.value());
     }
 
     if (modifications.shell_chrome.is_set()) {
-        Q_EMIT surfaceMofidied(surface,
+        Q_EMIT surfaceModified(surface,
             MirWindowManager::ShellChrome,
             QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(modifications.shell_chrome.value())));
     }

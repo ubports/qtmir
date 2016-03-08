@@ -55,7 +55,7 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
 
 void connectToWindowManager(MirSurfaceManager *manager, MirWindowManager *windowManager)
 {
-    QObject::connect(windowManager, &MirWindowManager::surfaceMofidied,
+    QObject::connect(windowManager, &MirWindowManager::surfaceModified,
                      manager, &MirSurfaceManager::onSurfaceModified);
 }
 
@@ -177,7 +177,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
     Q_EMIT surfaceDestroyed(qmlSurface);
 }
 
-void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> & surface,
+void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &surface,
                                           MirWindowManager::SurfaceProperty property,
                                           const QVariant &value)
 {
@@ -191,7 +191,6 @@ void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surf
         QMutexLocker lock(&m_mutex);
         auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
         if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
-
             qmlSurface = it.value();
         } else {
             qCritical() << "MirSurfaceManager::onSurfaceModified: unable to find MirSurface corresponding"
