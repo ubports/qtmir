@@ -56,6 +56,8 @@ SurfaceObserver::SurfaceObserver()
     m_cursorNameToShape["dnd-copy"] = Qt::DragCopyCursor;
     m_cursorNameToShape["dnd-move"] = Qt::DragMoveCursor;
     m_cursorNameToShape["dnd-link"] = Qt::DragLinkCursor;
+
+    qRegisterMetaType<MirShellChrome>("MirShellChrome");
 }
 
 SurfaceObserver::~SurfaceObserver()
@@ -107,10 +109,9 @@ void SurfaceObserver::attrib_changed(MirSurfaceAttrib attribute, int value)
 void SurfaceObserver::resized_to(mir::geometry::Size const&size)
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
-
 }
 
-void SurfaceObserver::notifySizeHintChanges(const mir::shell::SurfaceSpecification &modifications)
+void SurfaceObserver::notifySurfaceModifications(const mir::shell::SurfaceSpecification &modifications)
 {
     if (modifications.min_width.is_set()) {
         Q_EMIT minimumWidthChanged(modifications.min_width.value().as_int());
@@ -129,6 +130,9 @@ void SurfaceObserver::notifySizeHintChanges(const mir::shell::SurfaceSpecificati
     }
     if (modifications.height_inc.is_set()) {
         Q_EMIT heightIncrementChanged(modifications.height_inc.value().as_int());
+    }
+    if (modifications.shell_chrome.is_set()) {
+        Q_EMIT shellChromeChanged(modifications.shell_chrome.value());
     }
 }
 

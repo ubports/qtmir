@@ -32,7 +32,7 @@
 #include "session.h"
 
 // mirserver
-#include "sizehints.h"
+#include "creationhints.h"
 
 // mir
 #include <mir/scene/surface.h>
@@ -52,7 +52,7 @@ public:
             SessionInterface* session,
             mir::shell::Shell *shell,
             std::shared_ptr<SurfaceObserver> observer,
-            const SizeHints &);
+            const CreationHints &);
     virtual ~MirSurface();
 
     ////
@@ -132,7 +132,6 @@ public:
     QCursor cursor() const override;
 
     Mir::ShellChrome shellChrome() const override;
-    void setShellChrome(Mir::ShellChrome shellChrome) override;
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
@@ -143,6 +142,7 @@ public Q_SLOTS:
     void setMaximumHeight(int) override;
     void setWidthIncrement(int) override;
     void setHeightIncrement(int) override;
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
 
 private Q_SLOTS:
     void dropPendingBuffer();

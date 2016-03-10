@@ -172,7 +172,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         SessionInterface* session,
         mir::shell::Shell* shell,
         std::shared_ptr<SurfaceObserver> observer,
-        const SizeHints &sizeHints)
+        const CreationHints &creationHints)
     : MirSurfaceInterface()
     , m_surface(surface)
     , m_session(session)
@@ -184,12 +184,13 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_live(true)
     , m_shellChrome(Mir::NormalChrome)
 {
-    m_minimumWidth = sizeHints.minWidth;
-    m_minimumHeight = sizeHints.minHeight;
-    m_maximumWidth = sizeHints.maxWidth;
-    m_maximumHeight = sizeHints.maxHeight;
-    m_widthIncrement = sizeHints.widthIncrement;
-    m_heightIncrement = sizeHints.heightIncrement;
+    m_minimumWidth = creationHints.minWidth;
+    m_minimumHeight = creationHints.minHeight;
+    m_maximumWidth = creationHints.maxWidth;
+    m_maximumHeight = creationHints.maxHeight;
+    m_widthIncrement = creationHints.widthIncrement;
+    m_heightIncrement = creationHints.heightIncrement;
+    m_shellChrome = creationHints.shellChrome;
 
     m_surfaceObserver = observer;
     if (observer) {
@@ -203,6 +204,9 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         connect(observer.get(), &SurfaceObserver::maximumHeightChanged, this, &MirSurface::setMaximumHeight);
         connect(observer.get(), &SurfaceObserver::widthIncrementChanged, this, &MirSurface::setWidthIncrement);
         connect(observer.get(), &SurfaceObserver::heightIncrementChanged, this, &MirSurface::setHeightIncrement);
+        connect(observer.get(), &SurfaceObserver::shellChromeChanged, this, [&](MirShellChrome shell_chrome) {
+            setShellChrome(static_cast<Mir::ShellChrome>(shell_chrome));
+        });
         observer->setListener(this);
     }
 

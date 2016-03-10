@@ -16,11 +16,21 @@
 
 #include <mir/scene/surface_creation_parameters.h>
 
-#include "sizehints.h"
+#include "creationhints.h"
 
 using namespace qtmir;
 
-SizeHints::SizeHints(const mir::scene::SurfaceCreationParameters &params)
+inline const char* shellChromeToString(Mir::ShellChrome chrome) {
+    switch (chrome) {
+        case Mir::ShellChrome::NormalChrome:
+            return "normal";
+        case Mir::ShellChrome::LowChrome:
+            return "low";
+    }
+    return "unknown";
+}
+
+CreationHints::CreationHints(const mir::scene::SurfaceCreationParameters &params)
 {
     minWidth = params.min_width.is_set() ? params.min_width.value().as_int() : 0;
     maxWidth = params.max_width.is_set() ? params.max_width.value().as_int() : 0;
@@ -30,15 +40,28 @@ SizeHints::SizeHints(const mir::scene::SurfaceCreationParameters &params)
 
     widthIncrement = params.width_inc.is_set() ? params.width_inc.value().as_int() : 0;
     heightIncrement = params.height_inc.is_set() ? params.height_inc.value().as_int() : 0;
+
+    if (params.shell_chrome.is_set()) {
+        switch (params.shell_chrome.value()) {
+            case mir_shell_chrome_normal:
+            default:
+                shellChrome = Mir::ShellChrome::NormalChrome;
+                break;
+            case mir_shell_chrome_low:
+                shellChrome = Mir::ShellChrome::NormalChrome;
+                break;
+        }
+    }
 }
 
-QString SizeHints::toString() const
+QString CreationHints::toString() const
 {
-    return QString("SizeHints(minW=%1,minH=%2,maxW=%3,maxH=%4,wIncr=%5,hInc=%6)")
+    return QString("CreationHints(minW=%1,minH=%2,maxW=%3,maxH=%4,wIncr=%5,hInc=%6,shellChrome=%7)")
         .arg(minWidth)
         .arg(minHeight)
         .arg(maxWidth)
         .arg(maxHeight)
         .arg(widthIncrement)
-        .arg(heightIncrement);
+        .arg(heightIncrement)
+        .arg(shellChromeToString(shellChrome));
 }

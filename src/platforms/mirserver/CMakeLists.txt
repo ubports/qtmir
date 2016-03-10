@@ -69,7 +69,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    sizehints.cpp
+    creationhints.cpp
     tileddisplayconfigurationpolicy.cpp
     tracepoints.c
 # We need to run moc on these headers

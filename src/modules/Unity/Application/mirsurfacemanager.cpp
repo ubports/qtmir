@@ -34,7 +34,7 @@
 #include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
-#include "sizehints.h"
+#include "creationhints.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
 
@@ -53,12 +53,6 @@ void connectToSessionListener(MirSurfaceManager *manager, SessionListener *liste
                      manager, &MirSurfaceManager::onSessionDestroyingSurface);
 }
 
-void connectToWindowManager(MirSurfaceManager *manager, MirWindowManager *windowManager)
-{
-    QObject::connect(windowManager, &MirWindowManager::surfaceModified,
-                     manager, &MirSurfaceManager::onSurfaceModified);
-}
-
 MirSurfaceManager* MirSurfaceManager::singleton()
 {
     if (!instance) {
@@ -72,13 +66,11 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        MirWindowManager *windowManager = static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
-        connectToWindowManager(instance, windowManager);
     }
     return instance;
 }
@@ -107,13 +99,13 @@ MirSurfaceManager::~MirSurfaceManager()
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
                                                 const std::shared_ptr<mir::scene::Surface> &surface,
                                                 const std::shared_ptr<SurfaceObserver> &observer,
-                                                qtmir::SizeHints sizeHints)
+                                                qtmir::CreationHints creationHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, sizeHints);
+    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, creationHints);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);
@@ -157,9 +149,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         QMutexLocker lock(&m_mutex);
         auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
         if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
-
             qmlSurface = it.value();
-
             m_mirSurfaceToQmlSurfaceHash.erase(it);
         } else {
             qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurface corresponding"
@@ -175,33 +165,6 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
 
     qmlSurface->setLive(false);
     Q_EMIT surfaceDestroyed(qmlSurface);
-}
-
-void MirSurfaceManager::onSurfaceModified(const std::shared_ptr<mir::scene::Surface> &surface,
-                                          MirWindowManager::SurfaceProperty property,
-                                          const QVariant &value)
-{
-    qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSurfaceModified - surface=" << surface.get()
-                            << "surface.name=" << surface->name().c_str()
-                            << "property=" << property
-                            << "value=" << value;
-
-    MirSurfaceInterface* qmlSurface = nullptr;
-    {
-        QMutexLocker lock(&m_mutex);
-        auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
-        if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
-            qmlSurface = it.value();
-        } else {
-            qCritical() << "MirSurfaceManager::onSurfaceModified: unable to find MirSurface corresponding"
-                        << "to surface=" << surface.get() << "surface.name=" << surface->name().c_str();
-            return;
-        }
-    }
-
-    if (property == MirWindowManager::ShellChrome) {
-        qmlSurface->setShellChrome(value.value<Mir::ShellChrome>());
-    }
 }
 
 MirSurfaceInterface* MirSurfaceManager::inputMethodSurface() const

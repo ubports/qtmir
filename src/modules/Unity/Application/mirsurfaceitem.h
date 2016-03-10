@@ -72,7 +72,6 @@ public:
     FillMode fillMode() const override;
     void setFillMode(FillMode value) override;
 
-
     ////////
     // QQuickItem
 
