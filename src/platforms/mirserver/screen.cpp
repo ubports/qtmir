@@ -301,6 +301,13 @@ void Screen::setWindow(ScreenWindow *window)
         qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::setWindow - overwriting existing ScreenWindow";
     }
     m_screenWindow = window;
+
+    if (m_screenWindow) {
+        if (m_screenWindow->geometry() != geometry()) {
+            qCDebug(QTMIR_SCREENS) << "Screen::setWindow - new geometry for shell surface" << window->window() << geometry();
+            m_screenWindow->setGeometry(geometry());
+        }
+    }
 }
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
