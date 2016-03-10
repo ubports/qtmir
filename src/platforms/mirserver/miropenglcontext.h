@@ -25,6 +25,7 @@
 
 
 class MirServer;
+class ScreenWindow;
 
 class MirOpenGLContext : public QObject, public QPlatformOpenGLContext
 {
@@ -49,6 +50,7 @@ public:
 
 private:
     QSurfaceFormat m_format;
+    ScreenWindow *m_currentWindow;
 #ifndef QT_NO_DEBUG
     QOpenGLDebugLogger *m_logger;
 #endif
