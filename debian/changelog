@@ -1,3 +1,33 @@
+qtmir (0.4.7+16.04.20160310.1-0ubuntu1) xenial; urgency=medium
+
+  [ Alan Griffiths ]
+  * Copy the Window Management work-in-progress from Mir examples.
+
+  [ Alberto Aguirre ]
+  * Hook MirOpenGLContext::doneCurrent to Screen::doneCurrent
+
+  [ Daniel d'Andrada ]
+  * Ensure QmlEngine doesn't delete our MirSurfaces
+
+  [ Gerry Boland ]
+  * Allow Mir remove command line arguments it understands, before
+    letting Qt process them.
+  * Ensure ScreenWindow geometry correctly set and used after moving
+    Screen (LP: #1545286)
+  * Screen: only enable orientation sensor for internal display. (LP:
+    #1545286)
+
+  [ Michael Terry ]
+  * Fix some mocks to use more realistic code paths.
+
+  [ Michael Zanetti ]
+  * Add a dedicated property for the inputMethodSurface (LP: #1545286)
+
+  [ Michał Sawicz ]
+  * Drop dummy autopkgtest
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 10 Mar 2016 09:29:49 +0000
+
 qtmir (0.4.7+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
   * Mir 0.20 Release
