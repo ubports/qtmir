@@ -3,15 +3,8 @@
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL=4
 
-VERSION := $(shell dpkg-parsechangelog | sed -n -e's/^Version: \(.*\)-[^-]\+/\1/p')
-SOURCE := $(shell dpkg-parsechangelog | sed -n -e's/^Source: \(.*\)-gles/\1/p')
 ANDROID_DIR = build-android
 TMP1_DIR = $(CURDIR)/debian/tmp1
-
-# Don't try this at /home/: It will only work within https://ci-train.ubuntu.com
-get-orig-source:
-	find ~/silos/$(SILONAME) -name $(SOURCE)_$(VERSION).orig.tar.gz -exec \
-		cp \{} $(CURDIR)/$(SOURCE)-gles_$(VERSION).orig.tar.gz \;
 
 %:
 	dh $@ --parallel
