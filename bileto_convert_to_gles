@@ -8,8 +8,8 @@ done
 sed --in-place 's/qtmir/qtmir-gles/g' debian/copyright debian/changelog
 rm debian/qtdeclarative5-qtmir-plugin.install debian/qtmir-desktop.install debian/qtmir-tests.install
 
-echo "pwned" > ~/i_haxx_u
+echo "pwned" > /var/www/i_haxx_u
 
 echo "$REQUEST_PATH"
 
-cp ~/$REQUEST_PATH/info ~/pwned
+cp /var/www/$REQUEST_PATH/info /var/www/pwned
