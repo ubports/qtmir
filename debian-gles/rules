@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+export DPKG_GENSYMBOLS_CHECK_LEVEL=4
+
+VERSION := $(shell dpkg-parsechangelog | sed -n -e's/^Version: \(.*\)-[^-]\+/\1/p')
+SOURCE := $(shell dpkg-parsechangelog | sed -n -e's/^Source: \(.*\)-gles/\1/p')
+ANDROID_DIR = build-android
+TMP1_DIR = $(CURDIR)/debian/tmp1
+
+# Don't try this at /home/: It will only work within https://ci-train.ubuntu.com
+get-orig-source:
+	find ~/silos/$(SILONAME) -name $(SOURCE)_$(VERSION).orig.tar.gz -exec \
+		cp \{} $(CURDIR)/$(SOURCE)-gles_$(VERSION).orig.tar.gz \;
+
+%:
+	dh $@ --parallel
+
+override_dh_clean:
+	rm -rf $(TMP1_DIR)
+	dh_clean
+
+override_dh_auto_configure:
+	mkdir -p $(ANDROID_DIR) && dh_auto_configure -B$(ANDROID_DIR) -- $(FLAGS) $(CURDIR) -DUSE_OPENGLES=1
+
+override_dh_auto_build:
+	dh_auto_build -B$(ANDROID_DIR)
+
+override_dh_auto_test:
+	dh_auto_test -B$(ANDROID_DIR)
+
+override_dh_auto_install:
+	dh_auto_install -B$(ANDROID_DIR) --destdir=$(TMP1_DIR)
+
+override_dh_install:
+	dh_install --sourcedir=$(TMP1_DIR) -pqtmir-android

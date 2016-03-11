@@ -1,0 +1,3 @@
+#!/bin/sh
+rm -rf debian/
+mv debian-gles/ debian/

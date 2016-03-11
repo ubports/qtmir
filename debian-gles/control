@@ -1,0 +1,71 @@
+Source: qtmir-gles
+Section: libs
+Priority: optional
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Build-Depends: cmake,
+               cmake-extras (>= 0.3),
+               debhelper (>= 9),
+               google-mock (>= 1.6.0+svn437),
+               libfontconfig1-dev,
+               libgles2-mesa-dev,
+               libglib2.0-dev,
+               libgsettings-qt-dev,
+               liblttng-ust-dev,
+               libmirclient-dev (>= 0.19.0),
+               libmircommon-dev (>= 0.19.0),
+               libmirserver-dev (>= 0.19.0),
+               libmtdev-dev,
+               libprocess-cpp-dev,
+               libqt5gui5-gles,
+               libqt5quick5-gles,
+               libqt5quickparticles5-gles,
+               libqt5quicktest5,
+               libqt5quickwidgets5-gles,
+               libqt5sensors5-dev,
+               libqt5test5,
+               libqtdbusmock1-dev (>= 0.2),
+               libqtdbustest1-dev (>= 0.2),
+               libubuntu-app-launch2-dev,
+               libubuntu-application-api-dev (>= 2.1.0),
+               libudev-dev,
+               libunity-api-dev (>= 7.106),
+               liburl-dispatcher1-dev,
+               libxkbcommon-dev,
+               libxrender-dev,
+               mir-renderer-gl-dev (>= 0.17.0),
+               pkg-config,
+# lttng-gen-ts needs python3, but doesn't depend on it itself: bug 1359147
+               python3:any,
+               qt5-default,
+               qtbase5-gles-dev,
+               qtbase5-private-gles-dev,
+               qtdeclarative5-dev,
+               qtdeclarative5-private-dev,
+Standards-Version: 3.9.5
+Homepage: https://launchpad.net/qtmir
+# if you don't have have commit access to this branch but would like to upload
+# directly to Ubuntu, don't worry: your changes will be merged back into the
+# upstream branch
+Vcs-Bzr: lp:qtmir/gles
+Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/gles/files
+Xs-Testsuite: autopkgtest
+
+Package: qtmir-android
+Architecture: amd64 i386
+Multi-Arch: same
+Conflicts: libqtmir,
+           qtmir-desktop,
+           qtubuntu-desktop,
+Replaces: libqtmir,
+          qtmir-desktop,
+          qtubuntu-desktop,
+Provides: qtmir,
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Qt platform abstraction (QPA) plugin for a Mir server (mobile) - OpenGLES
+ QtMir is a set of Qt5 components to enable one to write a Mir server with Qt.
+ It contains a QPA (Qt Platform Abstraction) plugin which creates and manages
+ a Mir server. It also exposes some internal Mir functionality.
+ .
+ This variant of the package is for Android-based phones and tablets (built
+ against the OpenGLES variant of qtbase).
