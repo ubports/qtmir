@@ -1,3 +1,7 @@
 #!/bin/sh
-rm -rf debian/
-mv debian-gles/ debian/
+for filename in debian/*.gles; do
+    mv "$filename" "debian/$(basename --suffix .gles "$filename")"
+done
+sed --in-place 's/qtmir/qtmir-gles/g' debian/copyright debian/changelog
+rm debian/qtdeclarative5-qtmir-plugin.install debian/qtmir-desktop.install debian/qtmir-tests.install
+

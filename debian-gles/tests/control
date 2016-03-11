@@ -1,3 +1,0 @@
-Tests: run-tests
-Restrictions: build-needed
-Depends: @
