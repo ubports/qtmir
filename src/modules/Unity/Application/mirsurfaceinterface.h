@@ -37,6 +37,7 @@ namespace qtmir {
 class MirSurfaceInterface : public unity::shell::application::MirSurfaceInterface
 {
     Q_OBJECT
+
 public:
     MirSurfaceInterface(QObject *parent = nullptr) : unity::shell::application::MirSurfaceInterface(parent) {}
     virtual ~MirSurfaceInterface() {}
@@ -98,6 +99,7 @@ public Q_SLOTS:
     virtual void setMaximumHeight(int) = 0;
     virtual void setWidthIncrement(int) = 0;
     virtual void setHeightIncrement(int) = 0;
+    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
 Q_SIGNALS:
     void firstFrameDrawn();

@@ -14,11 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_SIZEHINTS_H
-#define QTMIR_SIZEHINTS_H
+#ifndef QTMIR_CREATIONHINTS_H
+#define QTMIR_CREATIONHINTS_H
 
 #include <QMetaType>
 #include <QString>
+
+#include <unity/shell/application/Mir.h>
 
 namespace mir {
     namespace scene {
@@ -28,10 +30,10 @@ namespace mir {
 
 namespace qtmir {
 
-class SizeHints {
+class CreationHints {
 public:
-    SizeHints() {}
-    SizeHints(const mir::scene::SurfaceCreationParameters&);
+    CreationHints() {}
+    CreationHints(const mir::scene::SurfaceCreationParameters&);
 
     QString toString() const;
 
@@ -43,10 +45,12 @@ public:
 
     int widthIncrement{0};
     int heightIncrement{0};
+
+    Mir::ShellChrome shellChrome{Mir::ShellChrome::NormalChrome};
 };
 
 } // namespace qtmir
 
-Q_DECLARE_METATYPE(qtmir::SizeHints)
+Q_DECLARE_METATYPE(qtmir::CreationHints)
 
-#endif // QTMIR_SIZEHINTS_H
+#endif // QTMIR_CREATIONHINTS_H

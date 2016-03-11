@@ -33,11 +33,10 @@
 #include "session.h"
 
 // mirserver
-#include "sizehints.h"
+#include "creationhints.h"
 
 // mir
 #include <mir/scene/surface.h>
-#include <mir_toolkit/common.h>
 
 namespace mir { namespace shell { class Shell; }}
 
@@ -54,7 +53,7 @@ public:
             SessionInterface* session,
             mir::shell::Shell *shell,
             std::shared_ptr<SurfaceObserver> observer,
-            const SizeHints &);
+            const CreationHints &);
     virtual ~MirSurface();
 
     ////
@@ -133,6 +132,8 @@ public:
 
     QCursor cursor() const override;
 
+    Mir::ShellChrome shellChrome() const override;
+
     QString keymapLayout() const override;
     QString keymapVariant() const override;
     Q_INVOKABLE void setKeymap(const QString &layout, const QString &variant) override;
@@ -146,6 +147,7 @@ public Q_SLOTS:
     void setMaximumHeight(int) override;
     void setWidthIncrement(int) override;
     void setHeightIncrement(int) override;
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
 
 private Q_SLOTS:
     void dropPendingBuffer();
@@ -190,6 +192,7 @@ private:
     QPair<QString,QString> m_keyMap; // pair of layout+variant
 
     QCursor m_cursor;
+    Mir::ShellChrome m_shellChrome;
 
     int m_minimumWidth{0};
     int m_minimumHeight{0};

@@ -107,7 +107,7 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
-    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::SizeHints(requestParameters));
+    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::CreationHints(requestParameters));
 
     QSize initialSize;
     // can be connected to via Qt::BlockingQueuedConnection to alter surface initial size
@@ -136,7 +136,10 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 
     tracepoint(qtmirserver, surfacePlacementEnd);
 
-    return build(session, placedParameters);
+    auto const result = build(session, placedParameters);
+    auto const surface = session->surface(result);
+
+    return result;
 }
 
 void MirWindowManagerImpl::remove_surface(
@@ -188,14 +191,10 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
                                           const std::shared_ptr<mir::scene::Surface>& surface,
                                           const mir::shell::SurfaceSpecification& modifications)
 {
-    if (modifications.name.is_set()) {
-        surface->rename(modifications.name.value());
-    }
-
     QMutexLocker(&SurfaceObserver::mutex);
     SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
     if (observer) {
-        observer->notifySizeHintChanges(modifications);
+        observer->notifySurfaceModifications(modifications);
     }
 }
 

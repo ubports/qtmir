@@ -52,7 +52,6 @@ class Application : public unity::shell::application::ApplicationInfoInterface
     Q_PROPERTY(QString desktopFile READ desktopFile CONSTANT)
     Q_PROPERTY(QString exec READ exec CONSTANT)
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
-    Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
     Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
 
 public:
@@ -93,6 +92,7 @@ public:
     QString comment() const override;
     QUrl icon() const override;
     Stage stage() const override;
+    void setStage(Stage stage) override;
     State state() const override;
     RequestedState requestedState() const override;
     void setRequestedState(RequestedState) override;
@@ -110,8 +110,6 @@ public:
     void setExemptFromLifecycle(bool) override;
     QSize initialSurfaceSize() const override;
     void setInitialSurfaceSize(const QSize &size) override;
-
-    void setStage(Stage stage);
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
