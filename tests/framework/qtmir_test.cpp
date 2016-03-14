@@ -99,13 +99,13 @@ private:
 };
 
 
-namespace {  char const* argv[] = { nullptr }; }
+namespace { int argc = 0; char* argv[] = { nullptr }; }
 
 class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
-    : TestMirServerInit(promptSessionManager), MirServer(0, argv, QSharedPointer<ScreenController>())
+    : TestMirServerInit(promptSessionManager), MirServer(argc, argv, QSharedPointer<ScreenController>())
     {
     }
 

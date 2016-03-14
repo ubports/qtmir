@@ -53,7 +53,6 @@ public:
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
     QPlatformCursor *cursor() const override;
 
-    void toggleSensors(const bool enable) const;
     mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
 
     ScreenWindow* window() const;
@@ -79,6 +78,9 @@ protected:
     void doneCurrent();
 
 private:
+    void toggleSensors(const bool enable) const;
+    bool internalDisplay() const;
+
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;
