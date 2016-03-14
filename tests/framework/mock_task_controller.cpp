@@ -68,11 +68,11 @@ pid_t MockTaskController::doPrimaryPidForAppId(const QString &appId)
 
 bool MockTaskController::doAppIdHasProcessId(const QString &appId, pid_t pid)
 {
-    auto it = children.find(appId);
-    if (it == children.end())
-        return -1;
+    auto primaryPid = primaryPidForAppId(appId);
+    if (primaryPid == -1)
+        return false;
 
-    return it->pid() == pid;
+    return primaryPid == pid;
 }
 
 

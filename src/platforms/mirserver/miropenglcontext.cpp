@@ -36,8 +36,9 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
+    : m_currentWindow(nullptr)
 #ifndef QT_NO_DEBUG
-    : m_logger(new QOpenGLDebugLogger(this))
+      , m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
     auto display = server->the_display();
@@ -131,6 +132,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
     if (screenWindow) {
+        m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
 #ifndef QT_NO_DEBUG
@@ -148,7 +150,10 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
 void MirOpenGLContext::doneCurrent()
 {
-    // FIXME: create a temporary GL context just to release? Would be better to get existing one.
+    if (m_currentWindow) {
+        m_currentWindow->doneCurrent();
+        m_currentWindow = nullptr;
+    }
 }
 
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)

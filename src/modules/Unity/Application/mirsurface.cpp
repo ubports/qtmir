@@ -32,6 +32,9 @@
 // mirserver
 #include <logging.h>
 
+// Qt
+#include <QQmlEngine>
+
 using namespace qtmir;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
@@ -229,6 +232,8 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     // in practice rarely happen.
     m_frameDropperTimer.setInterval(200);
     m_frameDropperTimer.setSingleShot(false);
+
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 MirSurface::~MirSurface()
