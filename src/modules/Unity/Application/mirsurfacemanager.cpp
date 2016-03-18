@@ -102,7 +102,8 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
                                                 qtmir::CreationHints creationHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
-                            << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
+                            << "surface=" << surface.get() << "surface.name=" << surface->name().c_str()
+                            << "creationHints=" << creationHints.toString();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
     auto qmlSurface = new MirSurface(surface, session, m_shell, observer, creationHints);

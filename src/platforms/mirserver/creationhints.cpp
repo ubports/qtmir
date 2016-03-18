@@ -48,7 +48,7 @@ CreationHints::CreationHints(const mir::scene::SurfaceCreationParameters &params
                 shellChrome = Mir::ShellChrome::NormalChrome;
                 break;
             case mir_shell_chrome_low:
-                shellChrome = Mir::ShellChrome::NormalChrome;
+                shellChrome = Mir::ShellChrome::LowChrome;
                 break;
         }
     }
