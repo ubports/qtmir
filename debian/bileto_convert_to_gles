@@ -1,11 +1,16 @@
 #!/bin/sh
 
+# This script converts the debian/ packaging into an alternate source package
+# which builds with GLES. You should copy the source tree into a new directory
+# before running this script (so you have one copy for GLES and one copy for
+# regular GL).
+
 set -eux
 
 for filename in debian/*.gles; do
     mv "$filename" "debian/$(basename --suffix .gles "$filename")"
 done
 
-sed --in-place 's/qtmir/qtmir-gles/g' debian/copyright debian/changelog
+sed --in-place 's/^qtmir /qtmir-gles/g' debian/changelog
 
 rm debian/qtdeclarative5-qtmir-plugin.install debian/qtmir-desktop.install debian/qtmir-tests.install
