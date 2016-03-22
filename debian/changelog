@@ -1,9 +1,15 @@
-qtmir (0.4.8-0ubuntu1) UNRELEASED; urgency=medium
+qtmir (0.4.8+16.04.20160322.1-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
   * Added Application::setStage
 
- -- Nick Dedekind <nick.dedekind@canonical.com>  Thu, 03 Dec 2015 09:05:41 +0000
+  [ Lukáš Tinkl, Michał Sawicz ]
+  * Support for switching keyboard layouts (LP: #1524400, #1491340)
+
+  [ Lukáš Tinkl, Michał Sawicz, Nick Dedekind ]
+  * Add support for low shell chrome. (LP: #1535397)
+
+ -- Michael Zanetti <michael.zanetti@canonical.com>  Tue, 22 Mar 2016 16:18:06 +0000
 
 qtmir (0.4.7+16.04.20160310.1-0ubuntu1) xenial; urgency=medium
 
