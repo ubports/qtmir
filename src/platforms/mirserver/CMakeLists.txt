@@ -98,6 +98,7 @@ target_link_libraries(
     -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
+    ${XKBCOMMON_LIBRARIES}
 
     Qt5::Core
     Qt5::DBus

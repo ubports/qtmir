@@ -117,6 +117,10 @@ public:
         Q_EMIT closeRequested();
     }
 
+    QString keymapLayout() const override { return QString(); }
+    QString keymapVariant() const override { return QString(); }
+    void setKeymap(const QString &layout, const QString &variant) override;
+
 Q_SIGNALS:
     void closeRequested();
 
