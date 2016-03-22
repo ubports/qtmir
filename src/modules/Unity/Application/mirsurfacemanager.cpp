@@ -34,7 +34,7 @@
 #include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
-#include "sizehints.h"
+#include "creationhints.h"
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
 
@@ -99,13 +99,14 @@ MirSurfaceManager::~MirSurfaceManager()
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
                                                 const std::shared_ptr<mir::scene::Surface> &surface,
                                                 const std::shared_ptr<SurfaceObserver> &observer,
-                                                qtmir::SizeHints sizeHints)
+                                                qtmir::CreationHints creationHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
-                            << "surface=" << surface.get() << "surface.name=" << surface->name().c_str();
+                            << "surface=" << surface.get() << "surface.name=" << surface->name().c_str()
+                            << "creationHints=" << creationHints.toString();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, sizeHints);
+    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, creationHints);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);
@@ -149,9 +150,7 @@ void MirSurfaceManager::onSessionDestroyingSurface(const mir::scene::Session *se
         QMutexLocker lock(&m_mutex);
         auto it = m_mirSurfaceToQmlSurfaceHash.find(surface.get());
         if (it != m_mirSurfaceToQmlSurfaceHash.end()) {
-
             qmlSurface = it.value();
-
             m_mirSurfaceToQmlSurfaceHash.erase(it);
         } else {
             qCritical() << "MirSurfaceManager::onSessionDestroyingSurface: unable to find MirSurface corresponding"

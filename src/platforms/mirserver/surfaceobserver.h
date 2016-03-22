@@ -63,7 +63,7 @@ public:
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
-    void notifySizeHintChanges(const mir::shell::SurfaceSpecification&);
+    void notifySurfaceModifications(const mir::shell::SurfaceSpecification&);
 
     static SurfaceObserver *observerForSurface(const mir::scene::Surface *surface);
     static void registerObserverForSurface(SurfaceObserver *observer, const mir::scene::Surface *surface);
@@ -82,6 +82,7 @@ Q_SIGNALS:
     void maximumHeightChanged(int);
     void widthIncrementChanged(int);
     void heightIncrementChanged(int);
+    void shellChromeChanged(MirShellChrome);
 
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);

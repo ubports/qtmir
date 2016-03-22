@@ -34,7 +34,7 @@ SessionListener::SessionListener(QObject *parent) :
     qRegisterMetaType<std::shared_ptr<ms::Session>>("std::shared_ptr<mir::scene::Session>");
     qRegisterMetaType<std::shared_ptr<ms::Surface>>("std::shared_ptr<mir::scene::Surface>");
     qRegisterMetaType<std::shared_ptr<SurfaceObserver>>("std::shared_ptr<SurfaceObserver>");
-    qRegisterMetaType<qtmir::SizeHints>();
+    qRegisterMetaType<qtmir::CreationHints>();
 }
 
 SessionListener::~SessionListener()
@@ -77,9 +77,9 @@ void SessionListener::surface_created(ms::Session& session, std::shared_ptr<ms::
     SurfaceObserver::registerObserverForSurface(surfaceObserver.get(), surface.get());
     surface->add_observer(surfaceObserver);
 
-    qtmir::SizeHints sizeHints = m_sizeHintsForNewSurface.take(&session);
+    qtmir::CreationHints creationHints = m_creationHintsForNewSurface.take(&session);
 
-    Q_EMIT sessionCreatedSurface(&session, surface, surfaceObserver, sizeHints);
+    Q_EMIT sessionCreatedSurface(&session, surface, surfaceObserver, creationHints);
 }
 
 void SessionListener::destroying_surface(ms::Session& session, std::shared_ptr<ms::Surface> const& surface)
@@ -90,7 +90,7 @@ void SessionListener::destroying_surface(ms::Session& session, std::shared_ptr<m
     Q_EMIT sessionDestroyingSurface(&session, surface);
 }
 
-void SessionListener::surfaceAboutToBeCreated(mir::scene::Session& session, qtmir::SizeHints sizeHints)
+void SessionListener::surfaceAboutToBeCreated(mir::scene::Session& session, qtmir::CreationHints creationHints)
 {
-    m_sizeHintsForNewSurface[&session] = sizeHints;
+    m_creationHintsForNewSurface[&session] = creationHints;
 }

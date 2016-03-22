@@ -110,6 +110,9 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
+    Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
+    void setShellChrome(Mir::ShellChrome) override {}
+
     void close() override {
         Q_EMIT closeRequested();
     }

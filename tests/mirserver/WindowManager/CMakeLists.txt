@@ -12,6 +12,8 @@ add_executable(WindowManagerTest
 target_link_libraries(
   WindowManagerTest
 
+  Qt5::Test
+
   qpa-mirserver
 
   ${GTEST_BOTH_LIBRARIES}
