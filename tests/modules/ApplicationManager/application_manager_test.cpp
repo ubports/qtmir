@@ -165,7 +165,6 @@ TEST_F(ApplicationManagerTests,startApplicationSupportsShortAppId)
 
     auto application = applicationManager.startApplication(
                 shortAppId,
-                ApplicationManager::NoFlag,
                 QStringList());
 
     EXPECT_EQ(shortAppId, application->appId());
@@ -185,7 +184,6 @@ TEST_F(ApplicationManagerTests,startApplicationSupportsLongAppId)
 
     auto application = applicationManager.startApplication(
                 longAppId,
-                ApplicationManager::NoFlag,
                 QStringList());
 
     EXPECT_EQ(shortAppId, application->appId());
@@ -495,7 +493,7 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     // start the application
-    Application *theApp = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *theApp = applicationManager.startApplication(appId);
 
     // check application data
     EXPECT_EQ(Application::Starting, theApp->state());
@@ -694,7 +692,7 @@ TEST_F(ApplicationManagerTests,synchronousProcessStartedCallDoesNotDuplicateEntr
                       ));
 
     // start the application
-    Application *theApp = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *theApp = applicationManager.startApplication(appId);
 
     // check application data
     EXPECT_EQ(theApp->state(), Application::Starting);
@@ -764,7 +762,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_upstartStartingEve
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
@@ -799,7 +797,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
@@ -840,7 +838,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
 
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
@@ -876,7 +874,7 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -916,7 +914,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -956,7 +954,7 @@ TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *application = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -999,7 +997,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1041,7 +1039,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1089,7 +1087,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1144,7 +1142,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1194,7 +1192,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesStartingAppIsNowStopping)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1230,7 +1228,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1323,7 +1321,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1379,7 +1377,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1432,7 +1430,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session1 = std::make_shared<MockSession>("", procId1);
     std::shared_ptr<mir::scene::Session> session2 = std::make_shared<MockSession>("", procId2);
@@ -1488,7 +1486,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session1 = std::make_shared<MockSession>("", procId1);
     std::shared_ptr<mir::scene::Session> session2 = std::make_shared<MockSession>("", procId2);
@@ -1543,7 +1541,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1592,7 +1590,7 @@ TEST_F(ApplicationManagerTests, threadedScreenshot)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     auto session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1705,7 +1703,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
             .Times(1)
             .WillOnce(Return(true));
 
-    auto the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto the_app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1770,7 +1768,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
             .Times(1)
             .WillOnce(Return(true));
 
-    auto application = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto application = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1809,7 +1807,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1850,7 +1848,7 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *the_app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1896,7 +1894,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
         .Times(1)
         .WillOnce(Return(true));
 
-    Application *the_app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    Application *the_app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -1968,7 +1966,7 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
         .Times(1)
         .WillOnce(Return(true));
 
-    auto app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -2017,7 +2015,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
         .Times(1)
         .WillOnce(Return(true));
 
-    auto app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
@@ -2049,7 +2047,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
 
     // Trying to start a new instance of this app while we are still waiting for its current
     // instance to end yields no immediate result. This command gets queued instead.
-    EXPECT_EQ(nullptr, applicationManager.startApplication(appId, ApplicationManager::NoFlag));
+    EXPECT_EQ(nullptr, applicationManager.startApplication(appId));
 
     QSignalSpy appAddedSpy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
 
@@ -2114,7 +2112,7 @@ TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication
             [](const QString &appId, const QFileInfo&) { return new FakeDesktopFileReader(appId); }
         ));
 
-    auto app = applicationManager.startApplication(appId, ApplicationManager::NoFlag);
+    auto app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
     bool authed = true;
