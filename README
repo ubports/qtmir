@@ -17,6 +17,9 @@ $ cmake -DCMAKE_BUILD_TYPE=Debug
 To avoid building the tests (to speed up the build):
 $ cmake -DNO_TESTS=true
 
+To enable logging of Qt's OpenGL debug messages:
+$ cmake -DQGL_DEBUG=true
+
 To test the server, enter the demos directory, and run (NB: server should be run as root):
 
 $ sudo su
