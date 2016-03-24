@@ -16,11 +16,9 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
-#include <thread>
 #include <condition_variable>
 #include <QSignalSpy>
 
-#include <Unity/Application/applicationscreenshotprovider.h>
 #include <Unity/Application/timer.h>
 
 #include <fake_desktopfilereader.h>
@@ -1568,124 +1566,6 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     EXPECT_EQ(Application::Starting, app->state());
     EXPECT_EQ(1, focusRequestSpy.count());
     EXPECT_EQ(1, applicationManager.count());
-}
-
-/*
- * Test that screenshotting callback works cross thread.
- */
-TEST_F(ApplicationManagerTests, threadedScreenshot)
-{
-    using namespace testing;
-    const QString appId("webapp");
-    const pid_t procId = 5551;
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    ON_CALL(*taskController, primaryPidForAppId(appId)).WillByDefault(Return(procId));
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Invoke(createMockDesktopFileReader));
-
-    EXPECT_CALL(*taskController, start(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.startApplication(appId);
-    applicationManager.onProcessStarting(appId);
-    auto session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    ON_CALL(*session, take_snapshot(_)).WillByDefault(Invoke(
-        [&](mir::scene::SnapshotCallback const& callback)
-        {
-            std::thread ([&, callback]() {
-                std::unique_lock<std::mutex> lk(mutex);
-
-                mir::scene::Snapshot snapshot{mir::geometry::Size{0,0},
-                                              mir::geometry::Stride{0},
-                                              nullptr};
-
-                callback(snapshot);
-
-                done = true;
-                lk.unlock();
-                cv.notify_one();
-            }).detach();
-        }));
-
-    auto mockSurface = std::make_shared<ms::MockSurface>();
-    EXPECT_CALL(*session, default_surface()).WillRepeatedly(Return(mockSurface));
-
-    {
-        ApplicationScreenshotProvider screenshotProvider(&applicationManager);
-        QSize actualSize;
-        QSize requestedSize;
-        QString imageId(appId + "/123456");
-        screenshotProvider.requestImage(imageId, &actualSize, requestedSize);
-    }
-
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        cv.wait(lk, [&] { return done; } );
-        EXPECT_TRUE(done);
-    }
-
-    EXPECT_CALL(*taskController, stop(appId))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    applicationManager.stopApplication(appId);
-}
-
-/*
- * Test that screenshotting callback works when application has been deleted
- */
-TEST_F(ApplicationManagerTests, threadedScreenshotAfterAppDelete)
-{
-    using namespace testing;
-    const pid_t procId1 = 5551;
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-
-    auto application = startApplication(procId1, "webapp");
-    auto session = std::dynamic_pointer_cast<MockSession>(application->session()->session());
-    ON_CALL(*session, take_snapshot(_)).WillByDefault(Invoke(
-        [&](mir::scene::SnapshotCallback const& callback)
-        {
-            std::thread ([&, callback]() {
-                mir::scene::Snapshot snapshot{mir::geometry::Size{0,0},
-                                              mir::geometry::Stride{0},
-                                              nullptr};
-
-                // stop the application before calling the callback
-                applicationManager.stopApplication(application->appId());
-
-                callback(snapshot);
-
-                done = true;
-                cv.notify_one();
-            }).detach();
-        }));
-
-    auto mockSurface = std::make_shared<ms::MockSurface>();
-    EXPECT_CALL(*session, default_surface()).WillRepeatedly(Return(mockSurface));
-
-    {
-        ApplicationScreenshotProvider screenshotProvider(&applicationManager);
-        QSize actualSize;
-        QSize requestedSize;
-        QString imageId("webapp/123456");
-        screenshotProvider.requestImage(imageId, &actualSize, requestedSize);
-    }
-
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        cv.wait(lk, [&] { return done; } );
-    }
 }
 
 TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
