@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -30,17 +30,11 @@ FakeSession::~FakeSession()
 {
 }
 
-void FakeSession::release() {}
-
 QString FakeSession::name() const { return QString("foo-session"); }
 
 unity::shell::application::ApplicationInfoInterface *FakeSession::application() const { return m_application; }
 
-MirSurfaceInterface *FakeSession::lastSurface() const { return nullptr; }
-
-const ObjectListModel<MirSurfaceInterface> *FakeSession::surfaces() const { return nullptr; }
-
-SessionInterface *FakeSession::parentSession() const { return nullptr; }
+MirSurfaceListModel* FakeSession::surfaceList() { return &m_surfaceList; }
 
 SessionModel *FakeSession::childSessions() const { return nullptr; }
 
@@ -50,11 +44,12 @@ bool FakeSession::fullscreen() const { return false; }
 
 bool FakeSession::live() const { return true; }
 
-std::shared_ptr<mir::scene::Session> FakeSession::session() const { return nullptr; }
+std::shared_ptr<mir::scene::Session> FakeSession::session() const
+{
+    return m_session;
+}
 
 void FakeSession::registerSurface(MirSurfaceInterface *) {}
-
-void FakeSession::removeSurface(MirSurfaceInterface *) {}
 
 void FakeSession::setApplication(unity::shell::application::ApplicationInfoInterface *app)
 {
@@ -82,6 +77,9 @@ void FakeSession::stop()
 {
     setState(Stopped);
 }
+
+bool FakeSession::hasClosingSurfaces() const { return false; }
+bool FakeSession::hadSurface() const { return false; }
 
 void FakeSession::close() {}
 
@@ -114,6 +112,11 @@ void FakeSession::setState(SessionInterface::State state)
         m_state = state;
         Q_EMIT stateChanged(m_state);
     }
+}
+
+void FakeSession::setSession(std::shared_ptr<mir::scene::Session> session)
+{
+    m_session = session;
 }
 
 } // namespace qtmir

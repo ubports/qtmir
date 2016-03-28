@@ -18,6 +18,7 @@
 #include "application.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
+#include "mirfocuscontroller.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -559,8 +560,8 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
 
 void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
 {
-    if (m_surface && m_consumesInput && m_surface->live()) {
-        m_surface->setFocus(focused);
+    if (m_surface && m_consumesInput && m_surface->live() && focused) {
+        MirFocusController::instance()->setFocusedSurface(m_surface);
     }
 }
 
@@ -624,6 +625,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
     auto surface = static_cast<qtmir::MirSurfaceInterface*>(unitySurface);
     qCDebug(QTMIR_SURFACES).nospace() << "MirSurfaceItem::setSurface surface=" << surface;
+    auto focusController = MirFocusController::instance();
 
     if (surface == m_surface) {
         return;
@@ -632,8 +634,8 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     if (m_surface) {
         disconnect(m_surface, nullptr, this, nullptr);
 
-        if (hasActiveFocus() && m_consumesInput && m_surface->live()) {
-            m_surface->setFocus(false);
+        if (hasActiveFocus() && m_consumesInput && m_surface->live() && focusController->focusedSurface() == m_surface) {
+            focusController->setFocusedSurface(nullptr);
         }
 
         m_surface->unregisterView((qintptr)this);
@@ -678,8 +680,8 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             Q_EMIT orientationAngleChanged(m_surface->orientationAngle());
         }
 
-        if (m_consumesInput) {
-            m_surface->setFocus(hasActiveFocus());
+        if (m_consumesInput && hasActiveFocus()) {
+            focusController->setFocusedSurface(m_surface);
         }
     }
 

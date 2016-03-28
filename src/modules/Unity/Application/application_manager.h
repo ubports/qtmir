@@ -53,7 +53,6 @@ class SettingsInterface;
 class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
 {
     Q_OBJECT
-    Q_ENUMS(MoreRoles)
 
     // TODO: Move to unity::shell::application::ApplicationManagerInterface
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
@@ -63,12 +62,6 @@ public:
     {
     public:
         ApplicationManager* create();
-    };
-
-    // FIXME: these roles should be added to unity-api and removed from here
-    enum MoreRoles {
-        RoleSession = RoleExemptFromLifecycle+1,
-        RoleFullscreen,
     };
 
     static ApplicationManager* singleton();
@@ -111,8 +104,6 @@ public Q_SLOTS:
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
 
     void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
-    void onSessionDestroyingSurface(mir::scene::Session const* session,
-                                    std::shared_ptr<mir::scene::Surface> const& surface);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
@@ -129,6 +120,7 @@ private Q_SLOTS:
     void onAppDataChanged(const int role);
     void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
                                        int type, QSize &size);
+    void onApplicationClosing(Application *application);
 
 private:
     void setFocused(Application *application);

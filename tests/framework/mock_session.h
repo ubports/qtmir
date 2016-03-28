@@ -32,8 +32,7 @@ public:
     MOCK_CONST_METHOD0(name, QString());
     MOCK_CONST_METHOD0(application, unity::shell::application::ApplicationInfoInterface*());
     MOCK_CONST_METHOD0(lastSurface, MirSurfaceInterface*());
-    MOCK_CONST_METHOD0(surfaces, const ObjectListModel<MirSurfaceInterface>*());
-    MOCK_CONST_METHOD0(parentSession, SessionInterface*());
+    MOCK_METHOD0(surfaceList, MirSurfaceListModel*());
     MOCK_CONST_METHOD0(childSessions, SessionModel*());
 
     MOCK_CONST_METHOD0(state, State());
@@ -52,6 +51,8 @@ public:
     MOCK_METHOD0(resume, void());
     MOCK_METHOD0(close, void());
     MOCK_METHOD0(stop, void());
+    MOCK_CONST_METHOD0(hadSurface, bool());
+    MOCK_CONST_METHOD0(hasClosingSurfaces, bool());
 
     MOCK_METHOD1(addChildSession, void(SessionInterface* session));
     MOCK_METHOD2(insertChildSession, void(uint index, SessionInterface* session));

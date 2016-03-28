@@ -38,6 +38,9 @@ public:
     ApplicationManagerTests()
     {}
 
+    ~ApplicationManagerTests() {
+    }
+
     inline void onSessionStarting(const std::shared_ptr<mir::scene::Session> &session) {
         applicationManager.onSessionStarting(session);
         sessionManager.onSessionStarting(session);
@@ -488,7 +491,6 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
         .WillOnce(Return(true));
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     // start the application
     Application *theApp = applicationManager.startApplication(appId);
@@ -502,8 +504,6 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     // check signals were emitted
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
     EXPECT_EQ(1, applicationManager.count());
-    EXPECT_EQ(1, addedSpy.count());
-    EXPECT_EQ(appId, addedSpy.takeFirst().at(0).toString());
 
     // check application in list of apps
     Application *theAppAgain = applicationManager.findApplication(appId);
@@ -529,7 +529,6 @@ TEST_F(ApplicationManagerTests,appStartedByUpstart)
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusRequested(const QString &)));
 
     // upstart sends notification that the application was started
@@ -546,8 +545,6 @@ TEST_F(ApplicationManagerTests,appStartedByUpstart)
     // check signals were emitted
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
     EXPECT_EQ(1, applicationManager.count());
-    EXPECT_EQ(1, addedSpy.count());
-    EXPECT_EQ(appId, addedSpy.takeFirst().at(0).toString());
     EXPECT_EQ(1, focusSpy.count());
     EXPECT_EQ(appId, focusSpy.takeFirst().at(0).toString());
 }
@@ -578,7 +575,6 @@ TEST_F(ApplicationManagerTests,appStartedUsingCorrectDesktopFileHintSwitch)
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Return(mockDesktopFileReader));
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     // Mir requests authentication for an application that was started
     bool authed = false;
@@ -596,8 +592,6 @@ TEST_F(ApplicationManagerTests,appStartedUsingCorrectDesktopFileHintSwitch)
     // check signals were emitted
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(addedSpy.count(), 1);
-    EXPECT_EQ(addedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -617,7 +611,6 @@ TEST_F(ApplicationManagerTests,appDoesNotStartWhenUsingBadDesktopFileHintSwitch)
         .WillOnce(Return(cmdLine));
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     // Mir requests authentication for an application that was started
     bool authed = true;
@@ -631,7 +624,6 @@ TEST_F(ApplicationManagerTests,appDoesNotStartWhenUsingBadDesktopFileHintSwitch)
     // check no new signals were emitted
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(addedSpy.count(), 0);
 }
 
 /*
@@ -763,7 +755,6 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_upstartStartingEve
     applicationManager.startApplication(appId);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     // upstart sends notification that the application was started
     applicationManager.onProcessStarting(appId);
@@ -771,7 +762,6 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_upstartStartingEve
     // check no new signals were emitted and application state unchanged
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(addedSpy.count(), 0);
 
     Application *theApp = applicationManager.findApplication(appId);
     EXPECT_EQ(Application::Starting, theApp->state());
@@ -799,7 +789,6 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
     applicationManager.onProcessStarting(appId);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy addedSpy(&applicationManager, SIGNAL(applicationAdded(const QString &)));
 
     std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
 
@@ -810,7 +799,6 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
 
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(addedSpy.count(), 0);
 
     // Check application state and session are correctly set
     Application *theApp = applicationManager.findApplication(appId);
@@ -880,7 +868,6 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
     onSessionStarting(session);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     EXPECT_CALL(*taskController, stop(appId))
         .Times(1)
@@ -889,10 +876,15 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
     // Stop app
     applicationManager.stopApplication(appId);
 
+    Mock::VerifyAndClearExpectations(taskController);
+
+    // emulate mir session dying and taskController emitting processStopped(appId) in response
+    // to the taskController->stop(appId) call from applicationManager
+    onSessionStopping(session);
+    applicationManager.onProcessStopped(appId);
+
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -912,9 +904,9 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
         .Times(1)
         .WillOnce(Return(true));
 
-    applicationManager.startApplication(appId);
+    Application *app = applicationManager.startApplication(appId);
     applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<NiceMock<MockSession>>("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
@@ -924,58 +916,29 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
+
+    QSignalSpy closeRequestedSpy(surface, SIGNAL(closeRequested()));
 
     // Stop app
     applicationManager.stopApplication(appId);
 
-    EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
-    EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
-}
+    // Asking ApplicationManager to stop the application just makes it request its surfaces to be
+    // closed
+    EXPECT_EQ(1, closeRequestedSpy.count());
 
-/*
- * Test that a suspended application is stopped correctly
- */
-TEST_F(ApplicationManagerTests,shellStopsSuspendedAppCorrectly)
-{
-    using namespace ::testing;
-    const QString appId("testAppId");
-    const pid_t procId = 5551;
+    // comply
+    delete surface;
+    surface = nullptr;
 
-    // Set up Mocks & signal watcher
-    ON_CALL(*taskController, primaryPidForAppId(appId)).WillByDefault(Return(procId));
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Invoke(createMockDesktopFileReader));
+    // now it's the turn of the application process itself to go away, since its last surface has gone
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
 
-    EXPECT_CALL(*taskController, start(appId, _))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    Application *application = applicationManager.startApplication(appId);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-    applicationManager.onProcessStarting(appId);
-
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
-
-    suspend(application);
-
-    QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
-
-    // Stop app
-    applicationManager.stopApplication(appId);
+    // Simulates that the application complied to the close() request and stopped itself
+    onSessionStopping(session);
+    applicationManager.onProcessStopped(appId);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -1007,7 +970,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     onSessionStopping(session);
     // Upstart notifies of stopping app
@@ -1015,8 +977,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
     EXPECT_EQ(0, applicationManager.count());
-    EXPECT_EQ(1, removedSpy.count());
-    EXPECT_EQ(appId, removedSpy.takeFirst().at(0).toString());
 }
 
 /*
@@ -1049,7 +1009,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     onSessionStopping(session);
 
@@ -1061,8 +1020,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -1100,7 +1057,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir reports disconnection
     onSessionStopping(session);
@@ -1115,7 +1071,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 
     EXPECT_EQ(0, countSpy.count());
     EXPECT_EQ(1, applicationManager.count());
-    EXPECT_EQ(0, removedSpy.count());
 }
 
 /*
@@ -1155,7 +1110,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir reports disconnection
     onSessionStopping(session);
@@ -1170,7 +1124,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
-    EXPECT_EQ(removedSpy.count(), 0);
 }
 
 /*
@@ -1198,15 +1151,12 @@ TEST_F(ApplicationManagerTests,mirNotifiesStartingAppIsNowStopping)
     onSessionStarting(session);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app
     onSessionStopping(session);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -1239,15 +1189,12 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app
     onSessionStopping(session);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -1288,14 +1235,12 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app
     onSessionStopping(session);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
 
     Application *app = applicationManager.findApplication(appId);
     EXPECT_EQ(nullptr, app);
@@ -1346,14 +1291,12 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     ASSERT_EQ(Application::InternalState::Suspended, app->internalState());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app
     onSessionStopping(session);
 
     EXPECT_EQ(0, countSpy.count());
     EXPECT_EQ(1, applicationManager.count());
-    EXPECT_EQ(0, removedSpy.count());
 
     EXPECT_EQ(Application::Stopped, app->state());
 }
@@ -1382,6 +1325,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
+    Mock::VerifyAndClearExpectations(taskController);
     EXPECT_CALL(*taskController, stop(appId))
         .Times(1)
         .WillOnce(Return(true));
@@ -1389,7 +1333,6 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
     applicationManager.stopApplication(appId);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // the mir session always ends before upstart notifies the process has stopped
     onSessionStopping(session);
@@ -1398,7 +1341,6 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
     applicationManager.onProcessStopped(appId);
 
     EXPECT_EQ(0, countSpy.count());
-    EXPECT_EQ(0, removedSpy.count());
 }
 
 /*
@@ -1445,7 +1387,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app/Session
     onSessionStopping(session2);
@@ -1453,8 +1394,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-    EXPECT_EQ(removedSpy.count(), 1);
-    EXPECT_EQ(removedSpy.takeFirst().at(0).toString(), appId);
 }
 
 /*
@@ -1508,14 +1447,12 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     EXPECT_EQ(Application::Suspended, app->state());
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
-    QSignalSpy removedSpy(&applicationManager, SIGNAL(applicationRemoved(const QString &)));
 
     // Mir notifies of stopping app/Session
     onSessionStopping(session2);
     onSessionStopping(session1);
 
     EXPECT_EQ(0, countSpy.count());
-    EXPECT_EQ(0, removedSpy.count());
 }
 
 /*
@@ -1853,10 +1790,11 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    QSignalSpy spy(app, SIGNAL(destroyed(QObject*)));
-    QObject::connect(app, &QObject::destroyed, app, [&qtApp](){ qtApp.quit(); });
+    Mock::VerifyAndClearExpectations(taskController);
 
     // Stop app
+
+    QSignalSpy appDestroyedSpy(app, SIGNAL(destroyed(QObject*)));
 
     EXPECT_CALL(*taskController, stop(appId))
         .Times(1)
@@ -1870,8 +1808,11 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
 
-    qtApp.exec();
-    EXPECT_EQ(1, spy.count());
+    // DeferredDelete is special: likes to be called out specifically or it won't come out
+    qtApp.sendPostedEvents(app, QEvent::DeferredDelete);
+    qtApp.sendPostedEvents();
+
+    EXPECT_EQ(1, appDestroyedSpy.count());
 }
 
 /*
@@ -1922,14 +1863,20 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
 
     // Asking ApplicationManager to stop the application just makes it request its surfaces to be
     // closed
-    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
     EXPECT_EQ(1, closeRequestedSpy.count());
+
+    // comply
+    delete surface;
+    surface = nullptr;
+
+    // now it's the turn of the application process itself to go away, since its last surface has gone
+    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
 
     // Trying to start a new instance of this app while we are still waiting for its current
     // instance to end yields no immediate result. This command gets queued instead.
     EXPECT_EQ(nullptr, applicationManager.startApplication(appId));
 
-    QSignalSpy appAddedSpy(&applicationManager, SIGNAL(applicationAdded(const QString&)));
+    QSignalSpy appAddedSpy(&applicationManager, &QAbstractItemModel::rowsInserted);
 
     // Simulates that the application complied to the close() request and stopped itself
     onSessionStopping(session);
@@ -1940,176 +1887,4 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     qtApp.sendPostedEvents();
 
     EXPECT_EQ(1, appAddedSpy.count());
-}
-
-/*
- * Test that there is an attempt at polite exiting of the app by requesting closure of the surface.
- */
-TEST_F(ApplicationManagerTests,suspendedApplicationResumesClosesAndDeletes)
-{
-    using namespace ::testing;
-
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-    Application* app = startApplication(procId, appId);
-    std::shared_ptr<mir::scene::Session> session = app->session()->session();
-
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
-    EXPECT_EQ(Application::InternalState::Running, app->internalState());
-    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
-
-    // Suspend the application.
-    suspend(app);
-    EXPECT_EQ(Application::InternalState::Suspended, app->internalState());
-
-    // Stop app
-    applicationManager.stopApplication(appId);
-    EXPECT_EQ(Application::InternalState::Closing, app->internalState());
-    EXPECT_EQ(SessionInterface::Running,  app->session()->state());
-}
-
-/*
- * Test that a application which fails to close will eventually be forceable closed.
- */
-TEST_F(ApplicationManagerTests,failedApplicationCloseEventualyDeletesApplication)
-{
-    using namespace ::testing;
-
-    int argc = 0;
-    char* argv[0];
-    QCoreApplication qtApp(argc, argv); // app for deleteLater event
-
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    ON_CALL(procInfo,command_line(procId)).WillByDefault(Return(QByteArray("/usr/bin/testAppId")));
-    ON_CALL(*taskController,appIdHasProcessId(appId, procId)).WillByDefault(Return(true));
-
-    ON_CALL(desktopFileReaderFactory, createInstance(appId, _))
-        .WillByDefault(Invoke(
-            [](const QString &appId, const QFileInfo&) { return new FakeDesktopFileReader(appId); }
-        ));
-
-    auto app = applicationManager.startApplication(appId);
-    applicationManager.onProcessStarting(appId);
-    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
-    bool authed = true;
-    applicationManager.authorizeSession(procId, authed);
-    onSessionStarting(session);
-
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
-
-    EXPECT_EQ(Application::InternalState::Running, app->internalState());
-
-    QSharedPointer<FakeTimeSource> fakeTimeSource(new FakeTimeSource);
-    FakeTimer *fakeCloseTimer = new FakeTimer(fakeTimeSource);
-    app->setCloseTimer(fakeCloseTimer);
-
-    EXPECT_CALL(*taskController, stop(appId))
-        .Times(1)
-        .WillOnce(Invoke(
-            [this, session](const QString &appIdParam) {
-                // No point in emitting it as applicationManager is not connected to the taskController
-                // FIXME: Connect applicationManager to taskController so that we have a better test environment!
-                // In the meantime call the ApplicationManager method directly, emulating the missing
-                // signal-slot connection
-                // Q_EMIT taskController->processStopped(appIdParam);
-                onSessionStopping(session);
-                applicationManager.onProcessStopped(appIdParam);
-                return true;
-            }
-        ));
-
-    QSignalSpy appDestroyedSpy(app, SIGNAL(destroyed(QObject*)));
-
-    // Stop app
-    applicationManager.stopApplication(appId);
-
-    if (fakeCloseTimer->isRunning()) {
-        // Simulate that closeTimer has timed out.
-        fakeTimeSource->m_msecsSinceReference = fakeCloseTimer->nextTimeoutTime() + 1;
-        fakeCloseTimer->update();
-    }
-
-    // DeferredDelete is special: likes to be called out specifically or it won't come out
-    qtApp.sendPostedEvents(app, QEvent::DeferredDelete);
-    qtApp.sendPostedEvents();
-
-    EXPECT_EQ(1, appDestroyedSpy.count());
-}
-
-/*
- * Test that an application that is suspended after its session is stopped is closed
- */
-TEST_F(ApplicationManagerTests,CloseWhenSuspendedAfterSessionStopped)
-{
-    using namespace ::testing;
-
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    auto application = startApplication(procId, "testAppId");
-
-    qtmir::Session* session(static_cast<qtmir::Session*>(application->session()));
-
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session->session().get(), surface);
-    surface->drawFirstFrame();
-    EXPECT_EQ(Application::InternalState::Running, application->internalState());
-
-    // session is suspended
-    application->setRequestedState(Application::RequestedSuspended);
-    EXPECT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
-    session->doSuspend();
-    EXPECT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
-    session->setLive(false);
-    EXPECT_EQ(Application::InternalState::Closing, application->internalState());
-
-    // The process can be suspended after the session has dissapeared.
-    applicationManager.onProcessSuspended(application->appId());
-    EXPECT_EQ(Application::InternalState::Closing, application->internalState());
-
-    QSignalSpy spy(application, SIGNAL(stopped()));
-    applicationManager.onProcessStopped(application->appId());
-    EXPECT_EQ(Application::Stopped, application->state());
-    EXPECT_EQ(spy.count(), 1);
-}
-
-/*
- * Test that an application that fails while suspended will stop on close request
- */
-TEST_F(ApplicationManagerTests,CloseWhenSuspendedProcessFailed)
-{
-    using namespace ::testing;
-
-    const QString appId("testAppId");
-    quint64 procId = 5551;
-
-    auto application = startApplication(procId, "testAppId");
-
-    qtmir::Session* session(static_cast<qtmir::Session*>(application->session()));
-
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session->session().get(), surface);
-    surface->drawFirstFrame();
-    EXPECT_EQ(Application::InternalState::Running, application->internalState());
-
-    // Session is suspended
-    suspend(application);
-
-    // Process failed
-    onSessionStopping(session->session());
-    applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_FAILED_TO_START);
-    applicationManager.onProcessStopped(appId);
-    EXPECT_EQ(Application::InternalState::StoppedResumable, application->internalState());
-
-    QSignalSpy spy(application, SIGNAL(stopped()));
-    application->close();
-
-    EXPECT_EQ(Application::Stopped, application->state());
-    EXPECT_EQ(spy.count(), 1);
 }

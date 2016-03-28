@@ -15,6 +15,8 @@
  */
 
 #include "mirsurface.h"
+#include "mirsurfacelistmodel.h"
+#include "timer.h"
 #include "timestamp.h"
 
 // from common dir
@@ -27,6 +29,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir/shell/shell.h>
+#include <mir/scene/session.h>
 #include <mir_toolkit/event.h>
 
 // mirserver
@@ -188,6 +191,8 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_live(true)
     , m_shellChrome(Mir::NormalChrome)
 {
+    DEBUG_MSG << "()";
+
     m_minimumWidth = creationHints.minWidth;
     m_minimumHeight = creationHints.minHeight;
     m_maximumWidth = creationHints.maxWidth;
@@ -234,20 +239,22 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     m_frameDropperTimer.setSingleShot(false);
 
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    setCloseTimer(new Timer);
 }
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "]::~MirSurface() viewCount=" << m_views.count();
 
     Q_ASSERT(m_views.isEmpty());
 
-    if (m_session) {
-        m_session->removeSurface(this);
-    }
-
     QMutexLocker locker(&m_mutex);
     m_surface->remove_observer(m_surfaceObserver);
+
+    delete m_closeTimer;
+
+    Q_EMIT destroyed(this); // Early warning, while MirSurface methods can still be accessed.
 }
 
 void MirSurface::onFramesPostedObserved()
@@ -429,10 +436,7 @@ void MirSurface::setFocus(bool focus)
         return;
     }
 
-    // Temporary hotfix for http://pad.lv/1483752
-    if (m_session->childSessions()->rowCount() > 0) {
-        // has child trusted session, ignore any focus change attempts
-        DEBUG_MSG << "(" << focus << ") - has child trusted session, ignore any focus change attempts";
+    if (focus == focused()) {
         return;
     }
 
@@ -443,10 +447,33 @@ void MirSurface::setFocus(bool focus)
     } else {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_unfocused);
     }
+
+    Q_EMIT focusedChanged(focus);
+}
+
+bool MirSurface::canChangeFocus()
+{
+    // Temporary hotfix for http://pad.lv/1483752
+    if (m_session->childSessions()->rowCount() > 0) {
+        // has child trusted session, ignore any focus change attempts
+        return false;
+    } else {
+        return true;
+    }
 }
 
 void MirSurface::close()
 {
+    if (m_closingState != NotClosing) {
+        return;
+    }
+
+    DEBUG_MSG << "()";
+
+    m_closingState = Closing;
+    Q_EMIT closeRequested();
+    m_closeTimer->start();
+
     if (m_surface) {
         m_surface->request_client_surface_close();
     }
@@ -586,6 +613,7 @@ void MirSurface::setState(Mir::State qmlState)
 void MirSurface::setLive(bool value)
 {
     if (value != m_live) {
+        DEBUG_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
     }
@@ -907,5 +935,57 @@ void MirSurface::setHeightIncrement(int value)
     if (value != m_heightIncrement) {
         m_heightIncrement = value;
         Q_EMIT heightIncrementChanged(value);
+    }
+}
+
+bool MirSurface::focused() const
+{
+    return m_shell->get_surface_attribute(m_surface, mir_surface_attrib_focus) == mir_surface_focused;
+}
+
+unity::shell::application::MirSurfaceListInterface* MirSurface::promptSurfaceList()
+{
+    return &m_promptSurfaceList;
+}
+
+void MirSurface::requestFocus()
+{
+    DEBUG_MSG << "()";
+    Q_EMIT focusRequested();
+}
+
+void MirSurface::raise()
+{
+    DEBUG_MSG << "()";
+    Q_EMIT raiseRequested();
+}
+
+void MirSurface::onCloseTimedOut()
+{
+    Q_ASSERT(m_closingState == Closing);
+
+    DEBUG_MSG << "()";
+
+    m_closingState = CloseOverdue;
+
+    m_session->session()->destroy_surface(m_surface);
+}
+
+void MirSurface::setCloseTimer(AbstractTimer *timer)
+{
+    bool timerWasRunning = false;
+
+    if (m_closeTimer) {
+        timerWasRunning = m_closeTimer->isRunning();
+        delete m_closeTimer;
+    }
+
+    m_closeTimer = timer;
+    m_closeTimer->setInterval(3000);
+    m_closeTimer->setSingleShot(true);
+    connect(m_closeTimer, &AbstractTimer::timeout, this, &MirSurface::onCloseTimedOut);
+
+    if (timerWasRunning) {
+        m_closeTimer->start();
     }
 }

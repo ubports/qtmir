@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -81,8 +81,6 @@ void connectToSessionListener(ApplicationManager *manager, SessionListener *list
                      manager, &ApplicationManager::onSessionStopping);
     QObject::connect(listener, &SessionListener::sessionCreatedSurface,
                      manager, &ApplicationManager::onSessionCreatedSurface);
-    QObject::connect(listener, &SessionListener::sessionDestroyingSurface,
-                     manager, &ApplicationManager::onSessionDestroyingSurface);
 }
 
 void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
@@ -194,9 +192,6 @@ ApplicationManager::ApplicationManager(
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
-
-    m_roleNames.insert(RoleSession, "session");
-    m_roleNames.insert(RoleFullscreen, "fullscreen");
 }
 
 ApplicationManager::~ApplicationManager()
@@ -232,10 +227,8 @@ QVariant ApplicationManager::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(application->isTouchApp());
             case RoleExemptFromLifecycle:
                 return QVariant::fromValue(application->exemptFromLifecycle());
-            case RoleSession:
-                return QVariant::fromValue(application->session());
-            case RoleFullscreen:
-                return QVariant::fromValue(application->fullscreen());
+            case RoleApplication:
+                return QVariant::fromValue(application);
             default:
                 return QVariant();
         }
@@ -445,13 +438,18 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
     }
 
     application->close();
+
+    return true;
+}
+
+void ApplicationManager::onApplicationClosing(Application *application)
+{
     remove(application);
 
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {
         m_closingApplications.removeAll(application);
     });
     m_closingApplications.append(application);
-    return true;
 }
 
 void ApplicationManager::onProcessFailed(const QString &appId, TaskController::Error error)
@@ -542,10 +540,6 @@ void ApplicationManager::onAppDataChanged(const int role)
         Application *application = static_cast<Application*>(sender());
         QModelIndex appIndex = findIndex(application);
         Q_EMIT dataChanged(appIndex, appIndex, QVector<int>() << role);
-
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update" <<  application->appId();
-    } else {
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
     }
 }
 
@@ -678,23 +672,6 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     }
 }
 
-void ApplicationManager::onSessionDestroyingSurface(ms::Session const* session,
-                                                    std::shared_ptr<ms::Surface> const& surface)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onSessionDestroyingSurface - sessionName=" << session->name().c_str();
-    Q_UNUSED(surface);
-
-    Application* application = findApplicationWithSession(session);
-    if (application && application->state() == Application::Running) {
-        // If app in Running state but it destroys its surface, it's probably shutting down,
-        // in which case, we can preempt it and remove it from the App list immediately.
-        // FIXME: this is not desktop application friendly, but resolves issue where trust-prompt
-        // helpers take a long time to shut down, but destroys their surface quickly.
-        remove(application);
-        application->deleteLater();
-    }
-}
-
 Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
 {
     return findApplicationWithSession(session.get());
@@ -725,10 +702,14 @@ void ApplicationManager::add(Application* application)
     Q_ASSERT(application != nullptr);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::add - appId=" << application->appId();
 
-    connect(application, &Application::fullscreenChanged, this, [this](bool) { onAppDataChanged(RoleFullscreen); });
+    if (m_applications.indexOf(application) != -1) {
+        return;
+    }
+
     connect(application, &Application::focusedChanged, this, [this](bool) { onAppDataChanged(RoleFocused); });
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
     connect(application, &Application::stageChanged, this, [this](Application::Stage) { onAppDataChanged(RoleStage); });
+    connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
 
     QString appId = application->appId();
     QString longAppId = application->longAppId();
@@ -765,7 +746,6 @@ void ApplicationManager::add(Application* application)
     m_applications.append(application);
     endInsertRows();
     Q_EMIT countChanged();
-    Q_EMIT applicationAdded(application->appId());
     if (m_applications.size() == 1) {
         Q_EMIT emptyChanged();
     }
@@ -776,22 +756,28 @@ void ApplicationManager::remove(Application *application)
     Q_ASSERT(application != nullptr);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::remove - appId=" << application->appId();
 
+    int index = m_applications.indexOf(application);
+    if (index == -1) {
+        return;
+    }
+
+    beginRemoveRows(QModelIndex(), index, index);
+    m_applications.removeAt(index);
+    endRemoveRows();
+    Q_EMIT countChanged();
+    if (index == 0) {
+        Q_EMIT emptyChanged();
+    }
+
     disconnect(application, &Application::fullscreenChanged, this, 0);
     disconnect(application, &Application::focusedChanged, this, 0);
     disconnect(application, &Application::stateChanged, this, 0);
     disconnect(application, &Application::stageChanged, this, 0);
+    disconnect(application, &Application::closing, this, 0);
 
-    int i = m_applications.indexOf(application);
-    if (i != -1) {
-        beginRemoveRows(QModelIndex(), i, i);
-        m_applications.removeAt(i);
-        endRemoveRows();
-        Q_EMIT applicationRemoved(application->appId());
-        Q_EMIT countChanged();
-        if (i == 0) {
-            Q_EMIT emptyChanged();
-        }
-    }
+    // don't remove (as it's already being removed) but still delete the guy.
+    disconnect(application, &Application::stopped, this, 0);
+    connect(application, &Application::stopped, this, [application]() { application->deleteLater(); });
 
     if (application == m_focusedApplication) {
         m_focusedApplication = nullptr;

@@ -65,8 +65,6 @@ public:
 
     virtual void setFocus(bool focus) = 0;
 
-    virtual void close() = 0;
-
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
     virtual void mouseReleaseEvent(QMouseEvent *event) = 0;
@@ -87,8 +85,7 @@ public:
 
     virtual QCursor cursor() const = 0;
 
-Q_SIGNALS:
-    void cursorChanged(const QCursor &cursor);
+    virtual bool canChangeFocus() = 0;
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
@@ -102,6 +99,9 @@ public Q_SLOTS:
     virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
 Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
+    void raiseRequested();
+    void closeRequested();
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();

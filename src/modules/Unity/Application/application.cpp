@@ -32,6 +32,7 @@
 #include <mir/scene/session.h>
 #include <mir/scene/snapshot.h>
 
+namespace unityapp = unity::shell::application;
 namespace ms = mir::scene;
 
 #define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
@@ -55,7 +56,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
-    , m_closeTimer(nullptr)
+    , m_stopTimer(nullptr)
     , m_exemptFromLifecycle(false)
 {
     DEBUG_MSG << "()";
@@ -70,7 +71,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
 
     m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
 
-    setCloseTimer(new Timer);
+    setStopTimer(new Timer);
 }
 
 Application::~Application()
@@ -106,7 +107,7 @@ Application::~Application()
         delete m_session;
     }
     delete m_desktopData;
-    delete m_closeTimer;
+    delete m_stopTimer;
 }
 
 
@@ -289,10 +290,10 @@ Application::State Application::state() const
         return Starting;
     case InternalState::Running:
     case InternalState::RunningInBackground:
-    case InternalState::SuspendingWaitSession:
-    case InternalState::SuspendingWaitProcess:
     case InternalState::Closing:
         return Running;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         return Suspended;
     case InternalState::StoppedResumable:
@@ -319,20 +320,74 @@ void Application::setRequestedState(RequestedState value)
     m_requestedState = value;
     Q_EMIT requestedStateChanged(m_requestedState);
 
-    applyRequestedState();
+    updateState();
 }
 
-void Application::applyRequestedState()
+void Application::updateState()
 {
-    if (m_requestedState == RequestedRunning) {
+    if ((!m_session && m_state != InternalState::Starting && m_state != InternalState::StoppedResumable)
+        ||
+        (m_session && m_session->surfaceList()->isEmpty() && m_session->hasClosingSurfaces())) {
+        // As we might not be able to go to Closing state right now (eg, SuspendingWaitProcess),
+        // store the intent in a separate variable.
+        m_closing = true;
+    }
+
+    bool lostAllSurfaces = m_session && m_session->surfaceList()->isEmpty() && m_session->hadSurface()
+            && !m_session->hasClosingSurfaces();
+
+    if (m_closing || (lostAllSurfaces && m_state != InternalState::StoppedResumable)) {
+        applyClosing();
+    } else if (m_requestedState == RequestedRunning || (m_session && m_session->hasClosingSurfaces())) {
         applyRequestedRunning();
     } else {
         applyRequestedSuspended();
     }
 }
 
+void Application::applyClosing()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        // can't be
+        Q_ASSERT(false);
+        break;
+    case InternalState::Running:
+    case InternalState::RunningInBackground:
+        if (!m_stopTimer->isRunning()) {
+            m_stopTimer->start();
+        }
+        if (m_closing) {
+            setInternalState(InternalState::Closing);
+        }
+        break;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::Suspended:
+        resume();
+        break;
+    case InternalState::SuspendingWaitProcess:
+        // should leave the app alone until it reaches Suspended state
+        break;
+    case InternalState::Closing:
+        // leave it alone
+        Q_ASSERT(m_closing);
+        Q_ASSERT(m_stopTimer->isRunning());
+        break;
+    case InternalState::StoppedResumable:
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::Stopped:
+        break;
+    }
+}
+
 void Application::applyRequestedRunning()
 {
+    // We might be coming back from having lost all surfaces
+    if (m_stopTimer->isRunning()) {
+        m_stopTimer->stop();
+    }
+
     switch (m_state) {
     case InternalState::Starting:
         // should leave the app alone until it reaches Running state
@@ -349,6 +404,8 @@ void Application::applyRequestedRunning()
         // should leave the app alone until it reaches Suspended state
         break;
     case InternalState::Closing:
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
         respawn();
@@ -361,6 +418,11 @@ void Application::applyRequestedRunning()
 
 void Application::applyRequestedSuspended()
 {
+    // We might be coming back from having lost all surfaces
+    if (m_stopTimer->isRunning()) {
+        m_stopTimer->stop();
+    }
+
     switch (m_state) {
     case InternalState::Starting:
         // should leave the app alone until it reaches Running state
@@ -380,7 +442,8 @@ void Application::applyRequestedSuspended()
         // it's already going where we it's wanted
         break;
     case InternalState::Closing:
-        // don't suspend while it is closing
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:
@@ -416,16 +479,15 @@ void Application::close()
     switch (m_state) {
     case InternalState::Starting:
         stop();
+        // Don't wait for a confirmation.
+        setInternalState(InternalState::Stopped);
         break;
     case InternalState::Running:
-        doClose();
-        break;
     case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
-        setRequestedState(RequestedRunning);
-        doClose();
+        m_session->close();
         break;
     case InternalState::Closing:
         // already on the way
@@ -438,16 +500,6 @@ void Application::close()
         // too late
         break;
     }
-}
-
-void Application::doClose()
-{
-    Q_ASSERT(!m_closeTimer->isRunning());;
-    Q_ASSERT(m_session != nullptr);
-
-    m_session->close();
-    m_closeTimer->start();
-    setInternalState(InternalState::Closing);
 }
 
 void Application::setPid(pid_t pid)
@@ -468,7 +520,9 @@ void Application::setSession(SessionInterface *newSession)
         return;
 
     if (m_session) {
+        m_proxySurfaceList.setSourceList(nullptr);
         m_session->disconnect(this);
+        m_session->surfaceList()->disconnect(this);
         m_session->setApplication(nullptr);
         m_session->setParent(nullptr);
     }
@@ -500,12 +554,17 @@ void Application::setSession(SessionInterface *newSession)
 
         connect(m_session, &SessionInterface::stateChanged, this, &Application::onSessionStateChanged);
         connect(m_session, &SessionInterface::fullscreenChanged, this, &Application::fullscreenChanged);
+        connect(m_session, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
+        connect(m_session->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
 
         if (oldFullscreen != fullscreen())
             Q_EMIT fullscreenChanged(fullscreen());
+
+        m_proxySurfaceList.setSourceList(m_session->surfaceList());
     } else {
-        // this can only happen after the session has stopped and QML code called Session::release()
-        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable);
+        // this can only happen after the session has stopped
+        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable
+                || m_state == InternalState::Closing);
     }
 
     Q_EMIT sessionChanged(m_session);
@@ -545,6 +604,7 @@ void Application::setInternalState(Application::InternalState state)
             releaseWakelock();
             break;
         case InternalState::Closing:
+            Q_EMIT closing();
             acquireWakelock();
             break;
         case InternalState::StoppedResumable:
@@ -565,7 +625,7 @@ void Application::setInternalState(Application::InternalState state)
         Q_EMIT stateChanged(this->state());
     }
 
-    applyRequestedState();
+    updateState();
 }
 
 void Application::setFocused(bool focused)
@@ -597,12 +657,8 @@ void Application::setProcessState(ProcessState newProcessState)
         }
         break;
     case ProcessSuspended:
-        if (m_state == InternalState::Closing) {
-            // If we get a process suspension event while we're closing, resume the process.
-            Q_EMIT resumeProcessRequested();
-        } else {
-            setInternalState(InternalState::Suspended);
-        }
+        Q_ASSERT(m_state == InternalState::SuspendingWaitProcess);
+        setInternalState(InternalState::Suspended);
         break;
     case ProcessFailed:
         // we assume the session always stop before the process
@@ -633,7 +689,7 @@ void Application::setProcessState(ProcessState newProcessState)
         break;
     }
 
-    applyRequestedState();
+    updateState();
 }
 
 void Application::suspend()
@@ -659,12 +715,14 @@ void Application::resume()
     DEBUG_MSG << "()";
 
     if (m_state == InternalState::Suspended || m_state == InternalState::SuspendingWaitProcess) {
-        setInternalState(InternalState::Running);
         Q_EMIT resumeProcessRequested();
+        setInternalState(InternalState::Running);
         if (m_processState == ProcessSuspended) {
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?
         }
-        m_session->resume();
+        if (m_session) {
+            m_session->resume();
+        }
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setInternalState(InternalState::Running);
         m_session->resume();
@@ -764,11 +822,11 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if ((m_state == InternalState::SuspendingWaitProcess || m_state == InternalState::SuspendingWaitProcess) &&
-             m_processState != Application::ProcessFailed) {
-            // Session stopped normally while we're waiting for suspension.
-            doClose();
-            Q_EMIT resumeProcessRequested();
+        if ((m_state == InternalState::SuspendingWaitSession || m_state == InternalState::SuspendingWaitProcess)
+                && m_processState != Application::ProcessFailed) {
+            // Session stopped normally while we're waiting for suspension
+            stop();
+            setInternalState(InternalState::Stopped);
         } else if (!canBeResumed()
                 || m_state == InternalState::Starting
                 || m_state == InternalState::Running
@@ -789,14 +847,14 @@ void Application::onSessionStateChanged(Session::State sessionState)
     }
 }
 
-void Application::setCloseTimer(AbstractTimer *timer)
+void Application::setStopTimer(AbstractTimer *timer)
 {
-    delete m_closeTimer;
+    delete m_stopTimer;
 
-    m_closeTimer = timer;
-    m_closeTimer->setInterval(3000);
-    m_closeTimer->setSingleShot(true);
-    connect(m_closeTimer, &Timer::timeout, this, &Application::stop);
+    m_stopTimer = timer;
+    m_stopTimer->setInterval(1000);
+    m_stopTimer->setSingleShot(true);
+    connect(m_stopTimer, &Timer::timeout, this, &Application::stop);
 }
 
 QSize Application::initialSurfaceSize() const
@@ -812,6 +870,11 @@ void Application::setInitialSurfaceSize(const QSize &size)
         m_initialSurfaceSize = size;
         Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
+}
+
+unityapp::MirSurfaceListInterface* Application::surfaceList()
+{
+    return &m_proxySurfaceList;
 }
 
 } // namespace qtmir

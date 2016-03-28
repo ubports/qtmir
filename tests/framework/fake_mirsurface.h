@@ -18,6 +18,7 @@
 #define FAKE_MIRSURFACEINTERFACE_H
 
 #include <Unity/Application/mirsurfaceinterface.h>
+#include <Unity/Application/mirsurfacelistmodel.h>
 
 #include <QSharedPointer>
 #include <QSGTexture>
@@ -74,9 +75,17 @@ public:
 
     Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
 
+    bool focused() const override { return false; }
+
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override { return &m_promptSurfaceList;}
+
+    void requestFocus() override {}
+
     void close() override {
         Q_EMIT closeRequested();
     }
+
+    void raise() override {}
 
     ////
     // qtmir.MirSurfaceInterface
@@ -121,8 +130,7 @@ public:
 
     void setShellChrome(Mir::ShellChrome) override {}
 
-Q_SIGNALS:
-    void closeRequested();
+    bool canChangeFocus() override { return true; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
@@ -160,6 +168,8 @@ private:
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;
+
+    MirSurfaceListModel m_promptSurfaceList;
 };
 
 } // namespace qtmir
