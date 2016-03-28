@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -179,11 +179,6 @@ void FakeMirSurface::touchEvent(Qt::KeyboardModifiers mods,
 }
 
 QString FakeMirSurface::appId() const { return "foo-app"; }
-
-void FakeMirSurface::setKeymap(const QString &layout, const QString &variant)
-{
-    Q_EMIT keymapChanged(layout, variant);
-}
 
 void FakeMirSurface::onCompositorSwappedBuffers() {}
 
