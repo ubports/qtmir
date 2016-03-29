@@ -1,3 +1,14 @@
+qtmir (0.4.8+16.04.20160329.1-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Don't use preferred_mode_index. Some devices like TVs don't provide
+    a preferred mode, so preferred_mode_index may be out of range (a
+    clumsy way to represent 'none'). Instead use the resolution of the
+    current display mode, which should always be in range. (LP:
+    #1560497)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 29 Mar 2016 19:24:13 +0000
+
 qtmir (0.4.8+16.04.20160322.1-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
