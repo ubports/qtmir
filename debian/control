@@ -42,7 +42,6 @@ Homepage: https://launchpad.net/qtmir
 # upstream branch
 Vcs-Bzr: lp:qtmir
 Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
-Xs-Testsuite: autopkgtest
 
 Package: qtmir-android
 Architecture: armhf
