@@ -1,7 +1,5 @@
-Index: qtmir/debian/control
-===================================================================
---- qtmir.orig/debian/control
-+++ qtmir/debian/control
+--- a/debian/control
++++ b/debian/control
 @@ -1,4 +1,4 @@
 -Source: qtmir
 +Source: qtmir-gles
@@ -111,22 +109,16 @@ Index: qtmir/debian/control
 - QtMir QPA.
 + This variant of the package is for Android-based phones and tablets (built
 + against the OpenGLES variant of qtbase).
-Index: qtmir/debian/qtdeclarative5-qtmir-plugin.install
-===================================================================
---- qtmir.orig/debian/qtdeclarative5-qtmir-plugin.install
+--- a/debian/qtdeclarative5-qtmir-plugin.install
 +++ /dev/null
 @@ -1,2 +0,0 @@
 -usr/lib/*/qt5/qml/*
 -usr/share/glib-2.0/schemas
-Index: qtmir/debian/qtmir-desktop.install
-===================================================================
---- qtmir.orig/debian/qtmir-desktop.install
+--- a/debian/qtmir-desktop.install
 +++ /dev/null
 @@ -1 +0,0 @@
 -usr/lib/*/qt5/plugins/platforms/*
-Index: qtmir/debian/qtmir-tests.install
-===================================================================
---- qtmir.orig/debian/qtmir-tests.install
+--- a/debian/qtmir-tests.install
 +++ /dev/null
 @@ -1,6 +0,0 @@
 -usr/bin/qtmir-demo-client
@@ -135,10 +127,8 @@ Index: qtmir/debian/qtmir-tests.install
 -usr/share/qtmir/benchmarks/*
 -usr/share/qtmir/qtmir-demo-client/*
 -usr/share/qtmir/qtmir-demo-shell/
-Index: qtmir/debian/rules
-===================================================================
---- qtmir.orig/debian/rules
-+++ qtmir/debian/rules
+--- a/debian/rules
++++ b/debian/rules
 @@ -3,60 +3,27 @@
  
  export DPKG_GENSYMBOLS_CHECK_LEVEL=4

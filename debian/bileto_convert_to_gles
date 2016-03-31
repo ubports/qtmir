@@ -15,6 +15,7 @@ set -eux
 #     quilt refresh
 
 # Steps to refresh this quilt patch when nongles changes:
+#     export QUILT_PATCHES=debian/gles-patches
 #     quilt push -af
 #     # fix up
 #     quilt refresh
