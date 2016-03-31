@@ -31,20 +31,15 @@ void MirFocusController::setFocusedSurface(unityapp::MirSurfaceInterface *unityA
         return;
     }
 
-    // TODO: get rid of this hack (see MirSurface::canChangeFocus() implementation)
-    if (surface && !surface->canChangeFocus()) {
-        return;
-    }
-
     m_previouslyFocusedSurface = m_focusedSurface;
     m_focusedSurface = surface;
 
     if (m_previouslyFocusedSurface) {
-        m_previouslyFocusedSurface->setFocus(false);
+        m_previouslyFocusedSurface->setFocused(false);
     }
 
     if (m_focusedSurface) {
-        m_focusedSurface->setFocus(true);
+        m_focusedSurface->setFocused(true);
         m_focusedSurface->raise();
     }
 

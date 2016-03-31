@@ -118,7 +118,8 @@ public:
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
 
-    void setFocus(bool focus) override;
+    void setFocused(bool focus) override;
+    void setActiveFocus(bool focus) override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -144,8 +145,6 @@ public:
     QString keymap() const override;
 
     Mir::ShellChrome shellChrome() const override;
-
-    bool canChangeFocus() override;
 
     ////
     // Own API
@@ -216,6 +215,8 @@ private:
     int m_maximumHeight{0};
     int m_widthIncrement{0};
     int m_heightIncrement{0};
+
+    bool m_focused{false};
 
     enum ClosingState {
         NotClosing = 0,

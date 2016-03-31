@@ -107,7 +107,8 @@ public:
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
 
-    void setFocus(bool focus) override;
+    void setFocused(bool focus) override;
+    void setActiveFocus(bool focus) override;
 
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
@@ -129,8 +130,6 @@ public:
     QCursor cursor() const override { return QCursor(); }
 
     void setShellChrome(Mir::ShellChrome) override {}
-
-    bool canChangeFocus() override { return true; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;

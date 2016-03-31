@@ -430,13 +430,25 @@ bool MirSurface::numBuffersReadyForCompositor()
     return m_surface->buffers_ready_for_compositor(userId);
 }
 
-void MirSurface::setFocus(bool focus)
+void MirSurface::setFocused(bool value)
+{
+    if (m_focused == value)
+        return;
+
+    m_focused = value;
+    Q_EMIT focusedChanged(value);
+}
+
+void MirSurface::setActiveFocus(bool focus)
 {
     if (!m_session) {
         return;
     }
 
-    if (focus == focused()) {
+    // Temporary hotfix for http://pad.lv/1483752
+    if (m_session->childSessions()->rowCount() > 0) {
+        // has child trusted session, ignore any focus change attempts
+        DEBUG_MSG << "(" << focus << ") - has child trusted session, ignore any focus change attempts";
         return;
     }
 
@@ -446,19 +458,6 @@ void MirSurface::setFocus(bool focus)
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
     } else {
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_unfocused);
-    }
-
-    Q_EMIT focusedChanged(focus);
-}
-
-bool MirSurface::canChangeFocus()
-{
-    // Temporary hotfix for http://pad.lv/1483752
-    if (m_session->childSessions()->rowCount() > 0) {
-        // has child trusted session, ignore any focus change attempts
-        return false;
-    } else {
-        return true;
     }
 }
 
@@ -940,7 +939,7 @@ void MirSurface::setHeightIncrement(int value)
 
 bool MirSurface::focused() const
 {
-    return m_shell->get_surface_attribute(m_surface, mir_surface_attrib_focus) == mir_surface_focused;
+    return m_focused;
 }
 
 unity::shell::application::MirSurfaceListInterface* MirSurface::promptSurfaceList()
