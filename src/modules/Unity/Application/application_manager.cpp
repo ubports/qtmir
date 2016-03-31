@@ -50,6 +50,9 @@
 // std
 #include <csignal>
 
+// Unity API
+#include <unity/shell/application/MirSurfaceInterface.h>
+
 namespace ms = mir::scene;
 
 Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
@@ -269,7 +272,12 @@ bool ApplicationManager::requestFocusApplication(const QString &inputAppId)
         return false;
     }
 
-    Q_EMIT focusRequested(appId);
+    auto surfaceList = application->surfaceList();
+    if (surfaceList->count() == 0)
+        return false;
+
+    surfaceList->get(0)->requestFocus();
+
     return true;
 }
 
