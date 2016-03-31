@@ -7,7 +7,20 @@
 
 set -eux
 
-QUILT_PATCHES=debian/gles-patches
+# Steps to generate this quilt patch:
+#     export QUILT_PATCHES=debian/gles-patches
+#     quilt new convert-to-gles.patch
+#     quilt add debian/*
+#     # apply changes
+#     quilt refresh
+
+# Steps to refresh this quilt patch when nongles changes:
+#     quilt push -af
+#     # fix up
+#     quilt refresh
+#     quilt pop -a
+
+export QUILT_PATCHES=debian/gles-patches
 quilt push -a
 
 sed --in-place 's/^qtmir /qtmir-gles /g' debian/changelog
