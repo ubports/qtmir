@@ -27,16 +27,16 @@
 #include <QSGTextureProvider>
 #include <QTimer>
 #include <QWeakPointer>
+#include <QPair>
 
 #include "mirbuffersgtexture.h"
 #include "session.h"
 
 // mirserver
-#include "sizehints.h"
+#include "creationhints.h"
 
 // mir
 #include <mir/scene/surface.h>
-#include <mir_toolkit/common.h>
 
 namespace mir { namespace shell { class Shell; }}
 
@@ -53,7 +53,7 @@ public:
             SessionInterface* session,
             mir::shell::Shell *shell,
             std::shared_ptr<SurfaceObserver> observer,
-            const SizeHints &);
+            const CreationHints &);
     virtual ~MirSurface();
 
     ////
@@ -132,6 +132,12 @@ public:
 
     QCursor cursor() const override;
 
+    Mir::ShellChrome shellChrome() const override;
+
+    QString keymapLayout() const override;
+    QString keymapVariant() const override;
+    Q_INVOKABLE void setKeymap(const QString &layout, const QString &variant) override;
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
@@ -141,6 +147,7 @@ public Q_SLOTS:
     void setMaximumHeight(int) override;
     void setWidthIncrement(int) override;
     void setHeightIncrement(int) override;
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
 
 private Q_SLOTS:
     void dropPendingBuffer();
@@ -148,6 +155,7 @@ private Q_SLOTS:
     void onFramesPostedObserved();
     void onSessionDestroyed();
     void emitSizeChanged();
+    void onKeymapChanged(const QString &layout, const QString &variant);
     void setCursor(const QCursor &cursor);
 
 private:
@@ -181,8 +189,10 @@ private:
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 
     QSize m_size;
+    QPair<QString,QString> m_keyMap; // pair of layout+variant
 
     QCursor m_cursor;
+    Mir::ShellChrome m_shellChrome;
 
     int m_minimumWidth{0};
     int m_minimumHeight{0};

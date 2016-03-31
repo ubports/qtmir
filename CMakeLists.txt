@@ -64,6 +64,7 @@ pkg_check_modules(MIRSERVER mirserver>=0.19 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.19 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.19 REQUIRED)
 
+pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
 pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-2 REQUIRED)
@@ -75,7 +76,7 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=13)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=14)
 
 include_directories(${APPLICATION_API_INCLUDE_DIRS})
 

@@ -110,9 +110,16 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
+    Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
+    void setShellChrome(Mir::ShellChrome) override {}
+
     void close() override {
         Q_EMIT closeRequested();
     }
+
+    QString keymapLayout() const override { return QString(); }
+    QString keymapVariant() const override { return QString(); }
+    void setKeymap(const QString &layout, const QString &variant) override;
 
 Q_SIGNALS:
     void closeRequested();
