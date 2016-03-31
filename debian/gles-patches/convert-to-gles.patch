@@ -32,8 +32,8 @@ Index: inline-gles-quilt/debian/control
 +               qtbase5-private-gles-dev,
                 qtdeclarative5-dev,
                 qtdeclarative5-private-dev,
- Standards-Version: 3.9.5
-@@ -45,7 +51,7 @@ Vcs-Browser: http://bazaar.launchpad.net
+                quilt,
+@@ -46,7 +52,7 @@ Vcs-Browser: http://bazaar.launchpad.net
  Xs-Testsuite: autopkgtest
  
  Package: qtmir-android
@@ -42,7 +42,7 @@ Index: inline-gles-quilt/debian/control
  Multi-Arch: same
  Conflicts: libqtmir,
             qtmir-desktop,
-@@ -56,65 +62,10 @@ Replaces: libqtmir,
+@@ -57,65 +63,10 @@ Replaces: libqtmir,
  Provides: qtmir,
  Depends: ${misc:Depends},
           ${shlibs:Depends},
