@@ -108,7 +108,6 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     m_updateMirSurfaceSizeTimer.setInterval(1);
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
-    connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
 }
@@ -556,13 +555,6 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
     }
 
     m_surface->setViewVisibility((qintptr)this, isVisible());
-}
-
-void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
-{
-    if (m_surface && m_consumesInput && m_surface->live() && focused) {
-        MirFocusController::instance()->setFocusedSurface(m_surface);
-    }
 }
 
 void MirSurfaceItem::invalidateSceneGraph()
