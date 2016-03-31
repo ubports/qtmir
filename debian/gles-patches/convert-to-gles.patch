@@ -1,5 +1,7 @@
---- a/debian/control
-+++ b/debian/control
+Index: inline-gles-quilt/debian/control
+===================================================================
+--- inline-gles-quilt.orig/debian/control
++++ inline-gles-quilt/debian/control
 @@ -1,4 +1,4 @@
 -Source: qtmir
 +Source: qtmir-gles
@@ -109,16 +111,22 @@
 - QtMir QPA.
 + This variant of the package is for Android-based phones and tablets (built
 + against the OpenGLES variant of qtbase).
---- a/debian/qtdeclarative5-qtmir-plugin.install
+Index: inline-gles-quilt/debian/qtdeclarative5-qtmir-plugin.install
+===================================================================
+--- inline-gles-quilt.orig/debian/qtdeclarative5-qtmir-plugin.install
 +++ /dev/null
 @@ -1,2 +0,0 @@
 -usr/lib/*/qt5/qml/*
 -usr/share/glib-2.0/schemas
---- a/debian/qtmir-desktop.install
+Index: inline-gles-quilt/debian/qtmir-desktop.install
+===================================================================
+--- inline-gles-quilt.orig/debian/qtmir-desktop.install
 +++ /dev/null
 @@ -1 +0,0 @@
 -usr/lib/*/qt5/plugins/platforms/*
---- a/debian/qtmir-tests.install
+Index: inline-gles-quilt/debian/qtmir-tests.install
+===================================================================
+--- inline-gles-quilt.orig/debian/qtmir-tests.install
 +++ /dev/null
 @@ -1,6 +0,0 @@
 -usr/bin/qtmir-demo-client
@@ -127,8 +135,10 @@
 -usr/share/qtmir/benchmarks/*
 -usr/share/qtmir/qtmir-demo-client/*
 -usr/share/qtmir/qtmir-demo-shell/
---- a/debian/rules
-+++ b/debian/rules
+Index: inline-gles-quilt/debian/rules
+===================================================================
+--- inline-gles-quilt.orig/debian/rules
++++ inline-gles-quilt/debian/rules
 @@ -3,60 +3,27 @@
  
  export DPKG_GENSYMBOLS_CHECK_LEVEL=4
