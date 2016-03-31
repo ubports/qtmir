@@ -25,3 +25,5 @@ export QUILT_PATCHES=debian/gles-patches
 quilt push -a
 
 sed --in-place 's/^qtmir /qtmir-gles /g' debian/changelog
+
+rm --recursive --force ./.pc/
