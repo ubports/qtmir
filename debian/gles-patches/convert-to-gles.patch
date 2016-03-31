@@ -157,8 +157,7 @@ Index: inline-gles-quilt/debian/rules
 -USES_GLES2 = $(findstring $(DEB_HOST_ARCH), $(gles2_architectures))
  
  %:
--	dh $@ --parallel --fail-missing
-+	dh $@ --parallel
+ 	dh $@ --parallel --fail-missing
  
  override_dh_clean:
 -ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
