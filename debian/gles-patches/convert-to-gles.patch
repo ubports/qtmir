@@ -111,30 +111,6 @@ Index: inline-gles-quilt/debian/control
 - QtMir QPA.
 + This variant of the package is for Android-based phones and tablets (built
 + against the OpenGLES variant of qtbase).
-Index: inline-gles-quilt/debian/qtdeclarative5-qtmir-plugin.install
-===================================================================
---- inline-gles-quilt.orig/debian/qtdeclarative5-qtmir-plugin.install
-+++ /dev/null
-@@ -1,2 +0,0 @@
--usr/lib/*/qt5/qml/*
--usr/share/glib-2.0/schemas
-Index: inline-gles-quilt/debian/qtmir-desktop.install
-===================================================================
---- inline-gles-quilt.orig/debian/qtmir-desktop.install
-+++ /dev/null
-@@ -1 +0,0 @@
--usr/lib/*/qt5/plugins/platforms/*
-Index: inline-gles-quilt/debian/qtmir-tests.install
-===================================================================
---- inline-gles-quilt.orig/debian/qtmir-tests.install
-+++ /dev/null
-@@ -1,6 +0,0 @@
--usr/bin/qtmir-demo-client
--usr/bin/qtmir-demo-shell
--usr/share/applications/qtmir-demo-client.desktop
--usr/share/qtmir/benchmarks/*
--usr/share/qtmir/qtmir-demo-client/*
--usr/share/qtmir/qtmir-demo-shell/
 Index: inline-gles-quilt/debian/rules
 ===================================================================
 --- inline-gles-quilt.orig/debian/rules
