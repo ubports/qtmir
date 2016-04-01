@@ -761,6 +761,7 @@ void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
 {
     if (m_exemptFromLifecycle != exemptFromLifecycle)
     {
+        DEBUG_MSG << "(" << exemptFromLifecycle << ")";
         // We don't adjust current suspension state, we only care about exempt
         // status going into a suspend.
         m_exemptFromLifecycle = exemptFromLifecycle;
