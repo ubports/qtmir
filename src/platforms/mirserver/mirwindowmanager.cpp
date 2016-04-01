@@ -196,6 +196,10 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
     if (observer) {
         observer->notifySurfaceModifications(modifications);
     }
+
+    if (modifications.name.is_set()) {
+        surface->rename(modifications.name.value());
+    }
 }
 
 std::shared_ptr<MirWindowManager> MirWindowManager::create(
