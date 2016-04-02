@@ -171,7 +171,7 @@ Index: inline-gles-quilt/debian/rules
  
  override_dh_install:
 -ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
-+	cat $(CURDIR)/debian/qtmir-tests.install $(CURDIR)/debian/qtdeclarative5-qtmir-plugin.install | xargs -I% sh -c "rm -rf %"
++	cat $(CURDIR)/debian/qtmir-tests.install $(CURDIR)/debian/qtdeclarative5-qtmir-plugin.install | xargs -I% sh -c "rm -rf $(TMP1_DIR)/%"
  	dh_install --sourcedir=$(TMP1_DIR) -pqtmir-android
 -endif
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-desktop
