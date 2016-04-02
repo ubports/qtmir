@@ -33,8 +33,8 @@ Index: inline-gles-quilt/debian/control
                 qtdeclarative5-dev,
                 qtdeclarative5-private-dev,
                 quilt,
-@@ -46,7 +52,7 @@ Vcs-Browser: http://bazaar.launchpad.net
- Xs-Testsuite: autopkgtest
+@@ -45,7 +51,7 @@ Vcs-Bzr: lp:qtmir
+ Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
  
  Package: qtmir-android
 -Architecture: armhf
@@ -42,7 +42,7 @@ Index: inline-gles-quilt/debian/control
  Multi-Arch: same
  Conflicts: libqtmir,
             qtmir-desktop,
-@@ -57,65 +63,10 @@ Replaces: libqtmir,
+@@ -56,65 +62,10 @@ Replaces: libqtmir,
  Provides: qtmir,
  Depends: ${misc:Depends},
           ${shlibs:Depends},

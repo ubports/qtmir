@@ -1,3 +1,9 @@
+qtmir (0.4.8+16.04.20160330-0ubuntu1) xenial; urgency=medium
+
+  * Drop leftover Xs-Testsuite header
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Mar 2016 22:53:20 +0000
+
 qtmir (0.4.8+16.04.20160329.1-0ubuntu1) xenial; urgency=medium
 
   [ Daniel van Vugt ]
