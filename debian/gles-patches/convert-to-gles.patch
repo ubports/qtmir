@@ -115,7 +115,7 @@ Index: inline-gles-quilt/debian/rules
 ===================================================================
 --- inline-gles-quilt.orig/debian/rules
 +++ inline-gles-quilt/debian/rules
-@@ -3,60 +3,27 @@
+@@ -3,60 +3,28 @@
  
  export DPKG_GENSYMBOLS_CHECK_LEVEL=4
  
@@ -168,6 +168,7 @@ Index: inline-gles-quilt/debian/rules
  	dh_auto_install -B$(ANDROID_DIR) --destdir=$(TMP1_DIR)
 -endif
 -	dh_auto_install -B$(DESKTOP_DIR) --destdir=$(TMP2_DIR)
++	cat $(CURDIR)/debian/qtmir-tests.install $(CURDIR)/debian/qtdeclarative5-qtmir-plugin.install | xargs rm -rf
  
  override_dh_install:
 -ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
