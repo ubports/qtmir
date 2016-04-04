@@ -1468,6 +1468,10 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     const QString appId("testAppId");
     const pid_t procId = 5551;
 
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
     // Set up Mocks & signal watcher
     ON_CALL(*taskController, primaryPidForAppId(appId)).WillByDefault(Return(procId));
     ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Invoke(createMockDesktopFileReader));
@@ -1489,11 +1493,21 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     surface->drawFirstFrame();
     suspend(app);
 
+    surface->setLive(false);
     onSessionStopping(session);
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_CRASHED);
     applicationManager.onProcessStopped(appId);
 
     EXPECT_EQ(Application::Stopped, app->state());
+
+    delete surface; surface = nullptr;
+
+    // Session should have called deleteLater() on itself, as it's zombie and doesn't hold any surface
+    // But DeferredDelete is special: likes to be called out specifically or it won't come out
+    qtApp.sendPostedEvents(app->session(), QEvent::DeferredDelete);
+    qtApp.sendPostedEvents();
+
+    ASSERT_EQ(app->session(), nullptr);
 
     QSignalSpy focusRequestSpy(&applicationManager, SIGNAL(focusRequested(const QString &)));
 
