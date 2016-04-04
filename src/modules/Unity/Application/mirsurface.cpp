@@ -615,6 +615,9 @@ void MirSurface::setLive(bool value)
         DEBUG_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
+        if (m_views.isEmpty() && !m_live) {
+            deleteLater();
+        }
     }
 }
 
