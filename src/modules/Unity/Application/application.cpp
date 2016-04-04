@@ -32,6 +32,9 @@
 #include <mir/scene/session.h>
 #include <mir/scene/snapshot.h>
 
+// Unity API
+#include <unity/shell/application/MirSurfaceInterface.h>
+
 namespace unityapp = unity::shell::application;
 namespace ms = mir::scene;
 
@@ -876,6 +879,17 @@ void Application::setInitialSurfaceSize(const QSize &size)
 unityapp::MirSurfaceListInterface* Application::surfaceList()
 {
     return &m_proxySurfaceList;
+}
+
+void Application::requestFocus()
+{
+    if (m_proxySurfaceList.rowCount() > 0) {
+        DEBUG_MSG << "() - Requesting focus for most recent app surface";
+        m_proxySurfaceList.get(0)->requestFocus();
+    } else {
+        DEBUG_MSG << "() - emitting focusRequested()";
+        Q_EMIT focusRequested();
+    }
 }
 
 } // namespace qtmir

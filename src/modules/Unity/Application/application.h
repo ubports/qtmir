@@ -134,6 +134,8 @@ public:
     // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }
 
+    void requestFocus();
+
     // for tests
     void setStopTimer(AbstractTimer *timer);
     AbstractTimer *stopTimer() const { return m_stopTimer; }

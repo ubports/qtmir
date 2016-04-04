@@ -272,11 +272,7 @@ bool ApplicationManager::requestFocusApplication(const QString &inputAppId)
         return false;
     }
 
-    auto surfaceList = application->surfaceList();
-    if (surfaceList->count() == 0)
-        return false;
-
-    surfaceList->get(0)->requestFocus();
+    application->requestFocus();
 
     return true;
 }
@@ -413,14 +409,14 @@ void ApplicationManager::onProcessStarting(const QString &appId)
         }
 
         add(application);
-        Q_EMIT focusRequested(appId);
+        application->requestFocus();
     }
     else {
-        if (application->state() == Application::Stopped) {
+        if (application->internalState() == Application::InternalState::StoppedResumable) {
             // url-dispatcher can relaunch apps which have been OOM-killed - AppMan must accept the newly spawned
             // application and focus it immediately (as user expects app to still be running).
             qCDebug(QTMIR_APPLICATIONS) << "Stopped application appId=" << appId << "is being resumed externally";
-            Q_EMIT focusRequested(appId);
+            application->requestFocus();
         } else {
             qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting application already found with appId"
                                         << appId;
@@ -521,7 +517,10 @@ void ApplicationManager::onFocusRequested(const QString& appId)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onFocusRequested - appId=" << appId;
 
-    Q_EMIT focusRequested(appId);
+    Application *application = findApplication(appId);
+    if (application) {
+        application->requestFocus();
+    }
 }
 
 void ApplicationManager::onResumeRequested(const QString& appId)
@@ -538,7 +537,7 @@ void ApplicationManager::onResumeRequested(const QString& appId)
     // We interpret this as a focus request for a suspended app.
     // Shell will have this app resumed if it complies with the focus request
     if (application->state() == Application::Suspended) {
-        Q_EMIT focusRequested(appId);
+        application->requestFocus();
     }
 }
 
@@ -718,6 +717,9 @@ void ApplicationManager::add(Application* application)
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
     connect(application, &Application::stageChanged, this, [this](Application::Stage) { onAppDataChanged(RoleStage); });
     connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
+    connect(application, &ApplicationInfoInterface::focusRequested, this, [this, application]() {
+        Q_EMIT focusRequested(application->appId());
+    });
 
     QString appId = application->appId();
     QString longAppId = application->longAppId();
@@ -782,6 +784,7 @@ void ApplicationManager::remove(Application *application)
     disconnect(application, &Application::stateChanged, this, 0);
     disconnect(application, &Application::stageChanged, this, 0);
     disconnect(application, &Application::closing, this, 0);
+    disconnect(application, &ApplicationInfoInterface::focusRequested, this, 0);
 
     // don't remove (as it's already being removed) but still delete the guy.
     disconnect(application, &Application::stopped, this, 0);
