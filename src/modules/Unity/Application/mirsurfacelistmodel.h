@@ -83,6 +83,7 @@ public:
     void setSourceList(MirSurfaceListModel *sourceList);
 
     Q_INVOKABLE unity::shell::application::MirSurfaceInterface *get(int index) override;
+    const unity::shell::application::MirSurfaceInterface *get(int index) const;
     // QAbstractItemModel methods
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;

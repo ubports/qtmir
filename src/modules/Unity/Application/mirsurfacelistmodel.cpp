@@ -240,6 +240,15 @@ unityapp::MirSurfaceInterface *ProxySurfaceListModel::get(int index)
     return m_sourceList->get(index);
 }
 
+const unityapp::MirSurfaceInterface *ProxySurfaceListModel::get(int index) const
+{
+    if (!m_sourceList) {
+        return nullptr;
+    }
+
+    return m_sourceList->get(index);
+}
+
 int ProxySurfaceListModel::rowCount(const QModelIndex &parent) const
 {
     if (!m_sourceList) {

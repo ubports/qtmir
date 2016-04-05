@@ -18,8 +18,13 @@
 
 #include "mirsurfaceinterface.h"
 
+// mirserver
+#include <logging.h>
+
 namespace unityapp = unity::shell::application;
 using namespace qtmir;
+
+#define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirFocusController::" << __func__
 
 MirFocusController *MirFocusController::m_instance = nullptr;
 
@@ -30,6 +35,8 @@ void MirFocusController::setFocusedSurface(unityapp::MirSurfaceInterface *unityA
     if (m_focusedSurface == surface) {
         return;
     }
+
+    DEBUG_MSG << "(" << surface << ")";
 
     m_previouslyFocusedSurface = m_focusedSurface;
     m_focusedSurface = surface;

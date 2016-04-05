@@ -97,6 +97,8 @@ public:
 
     virtual QCursor cursor() const = 0;
 
+    virtual SessionInterface* session() = 0;
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 

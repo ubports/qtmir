@@ -146,6 +146,8 @@ public:
 
     Mir::ShellChrome shellChrome() const override;
 
+    SessionInterface* session() override { return m_session.data(); }
+
     ////
     // Own API
 

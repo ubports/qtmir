@@ -211,4 +211,9 @@ void FakeMirSurface::updateVisibility()
     }
 }
 
+void FakeMirSurface::setSession(SessionInterface *session)
+{
+    m_session = session;
+}
+
 } // namespace qtmir

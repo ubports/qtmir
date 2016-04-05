@@ -19,6 +19,7 @@
 #include "application.h"
 #include "desktopfilereader.h"
 #include "dbuswindowstack.h"
+#include "mirfocuscontroller.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "proc_info.h"
@@ -57,7 +58,9 @@ namespace ms = mir::scene;
 
 Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
 
-using namespace unity::shell::application;
+namespace unityapi = unity::shell::application;
+
+#define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::" << __func__
 
 namespace qtmir
 {
@@ -185,7 +188,6 @@ ApplicationManager::ApplicationManager(
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
-    , m_focusedApplication(nullptr)
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
@@ -195,6 +197,9 @@ ApplicationManager::ApplicationManager(
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
+
+    connect(MirFocusController::instance(), &MirFocusController::focusedSurfaceChanged,
+        this, &ApplicationManager::updateFocusedApplication);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -279,44 +284,18 @@ bool ApplicationManager::requestFocusApplication(const QString &inputAppId)
 
 QString ApplicationManager::focusedApplicationId() const
 {
-    if (m_focusedApplication) {
-        return m_focusedApplication->appId();
+    Application *focusedApplication = nullptr;
+    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
+    if (surface) {
+        auto self = const_cast<ApplicationManager*>(this);
+        focusedApplication = self->findApplication(surface);
+    }
+
+    if (focusedApplication) {
+        return focusedApplication->appId();
     } else {
         return QString();
     }
-}
-
-bool ApplicationManager::focusApplication(const QString &inputAppId)
-{
-    const QString appId = toShortAppIdIfPossible(inputAppId);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::focusApplication - appId=" << appId;
-    Application *application = findApplication(appId);
-
-    if (!application) {
-        qDebug() << "No such running application with appId=" << appId;
-        return false;
-    }
-
-    if (m_focusedApplication) {
-        m_focusedApplication->setFocused(false);
-    }
-
-    m_focusedApplication = application;
-    m_focusedApplication->setFocused(true);
-
-    move(m_applications.indexOf(application), 0);
-    Q_EMIT focusedApplicationIdChanged();
-    m_dbusWindowStack->FocusedWindowChanged(0, application->appId(), application->stage());
-
-    return true;
-}
-
-void ApplicationManager::unfocusCurrentApplication()
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::unfocusCurrentApplication";
-
-    m_focusedApplication = nullptr;
-    Q_EMIT focusedApplicationIdChanged();
 }
 
 /**
@@ -717,7 +696,7 @@ void ApplicationManager::add(Application* application)
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
     connect(application, &Application::stageChanged, this, [this](Application::Stage) { onAppDataChanged(RoleStage); });
     connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
-    connect(application, &ApplicationInfoInterface::focusRequested, this, [this, application]() {
+    connect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, [this, application]() {
         Q_EMIT focusRequested(application->appId());
     });
 
@@ -784,16 +763,11 @@ void ApplicationManager::remove(Application *application)
     disconnect(application, &Application::stateChanged, this, 0);
     disconnect(application, &Application::stageChanged, this, 0);
     disconnect(application, &Application::closing, this, 0);
-    disconnect(application, &ApplicationInfoInterface::focusRequested, this, 0);
+    disconnect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, 0);
 
     // don't remove (as it's already being removed) but still delete the guy.
     disconnect(application, &Application::stopped, this, 0);
     connect(application, &Application::stopped, this, [application]() { application->deleteLater(); });
-
-    if (application == m_focusedApplication) {
-        m_focusedApplication = nullptr;
-        Q_EMIT focusedApplicationIdChanged();
-    }
 }
 
 void ApplicationManager::move(int from, int to) {
@@ -865,6 +839,45 @@ void ApplicationManager::onSessionAboutToCreateSurface(
         qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface type=" << type
             << " NOOP";
     }
+}
+
+void ApplicationManager::updateFocusedApplication()
+{
+    Application *focusedApplication = nullptr;
+    Application *previouslyFocusedApplication = nullptr;
+
+    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
+    if (surface) {
+        focusedApplication = findApplication(surface);
+    }
+
+    surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->previouslyFocusedSurface());
+    if (surface) {
+        previouslyFocusedApplication = findApplication(surface);
+    }
+
+    if (focusedApplication != previouslyFocusedApplication) {
+        if (focusedApplication) {
+            DEBUG_MSG << "() focused " << focusedApplication->appId();
+            Q_EMIT focusedApplication->focusedChanged(true);
+            this->move(this->m_applications.indexOf(focusedApplication), 0);
+        }
+        if (previouslyFocusedApplication) {
+            DEBUG_MSG << "() unfocused " << previouslyFocusedApplication->appId();
+            Q_EMIT previouslyFocusedApplication->focusedChanged(false);
+        }
+        Q_EMIT focusedApplicationIdChanged();
+    }
+}
+
+Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* surface)
+{
+    for (Application *app : m_applications) {
+        if (app->session() == surface->session()) {
+            return app;
+        }
+    }
+    return nullptr;
 }
 
 } // namespace qtmir

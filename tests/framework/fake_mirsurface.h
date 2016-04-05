@@ -129,7 +129,7 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
-    void setShellChrome(Mir::ShellChrome) override {}
+    SessionInterface* session() override { return m_session; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
@@ -140,6 +140,7 @@ public Q_SLOTS:
     void setMaximumHeight(int) {}
     void setWidthIncrement(int) {}
     void setHeightIncrement(int) {}
+    void setShellChrome(Mir::ShellChrome) override {}
 
     ////
     // Test API from now on
@@ -151,6 +152,8 @@ public:
     bool isFrameDropperRunning() const;
 
     QList<TouchEvent> &touchesReceived();
+
+    void setSession(SessionInterface *session);
 
 private:
     void updateVisibility();
@@ -169,6 +172,8 @@ private:
     QList<TouchEvent> m_touchesReceived;
 
     MirSurfaceListModel m_promptSurfaceList;
+
+    SessionInterface *m_session{nullptr};
 };
 
 } // namespace qtmir

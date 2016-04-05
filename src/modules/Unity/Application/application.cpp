@@ -54,7 +54,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
-    , m_focused(false)
     , m_arguments(arguments)
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
@@ -457,7 +456,11 @@ void Application::applyRequestedSuspended()
 
 bool Application::focused() const
 {
-    return m_focused;
+    bool someSurfaceHasFocus = false; // to be proven wrong
+    for (int i = 0; i < m_proxySurfaceList.rowCount() && !someSurfaceHasFocus; ++i) {
+        someSurfaceHasFocus |= m_proxySurfaceList.get(i)->focused();
+    }
+    return someSurfaceHasFocus;
 }
 
 bool Application::fullscreen() const
@@ -629,16 +632,6 @@ void Application::setInternalState(Application::InternalState state)
     }
 
     updateState();
-}
-
-void Application::setFocused(bool focused)
-{
-    DEBUG_MSG << "(focused=" << focused << ")";
-
-    if (m_focused != focused) {
-        m_focused = focused;
-        Q_EMIT focusedChanged(focused);
-    }
 }
 
 void Application::setProcessState(ProcessState newProcessState)

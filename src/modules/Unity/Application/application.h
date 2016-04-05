@@ -164,7 +164,6 @@ private:
     void releaseWakelock() const;
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
-    void setFocused(bool focus);
     void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
@@ -184,7 +183,6 @@ private:
     Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;
-    bool m_focused;
     QStringList m_arguments;
     Qt::ScreenOrientations m_supportedOrientations;
     bool m_rotatesWindowContents;

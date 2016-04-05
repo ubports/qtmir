@@ -19,13 +19,13 @@
 #include <condition_variable>
 #include <QSignalSpy>
 
+#include <Unity/Application/mirfocuscontroller.h>
 #include <Unity/Application/timer.h>
 
 #include <fake_desktopfilereader.h>
 #include <fake_mirsurface.h>
 #include <mock_surface.h>
 #include <qtmir_test.h>
-
 
 using namespace qtmir;
 using mir::scene::MockSession;
@@ -355,36 +355,6 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     EXPECT_EQ(true, authed);
     EXPECT_EQ(Application::Running, the_app->state());
     EXPECT_EQ(first_session, the_app->session()->session());
-}
-
-TEST_F(ApplicationManagerTests, focused_app_can_rerequest_focus)
-{
-    using namespace ::testing;
-    const pid_t a_procId = 5921;
-    const char an_app_id[] = "some_app";
-    QByteArray a_cmd("/usr/bin/app1 --desktop_file_hint=some_app");
-    FakeMirSurface *aSurface = new FakeMirSurface;
-
-    ON_CALL(procInfo, command_line(_)).WillByDefault(Return(a_cmd));
-    ON_CALL(*taskController, appIdHasProcessId(_,_)).WillByDefault(Return(false));
-
-    bool authed = true;
-
-    std::shared_ptr<mir::scene::Session> a_session = std::make_shared<MockSession>("Oo", a_procId);
-
-    applicationManager.authorizeSession(a_procId, authed);
-    onSessionStarting(a_session);
-    onSessionCreatedSurface(a_session.get(), aSurface);
-    aSurface->drawFirstFrame();
-
-    Application * the_app = applicationManager.findApplication(an_app_id);
-    applicationManager.focusApplication(an_app_id);
-
-    EXPECT_EQ(Application::Running, the_app->state());
-    EXPECT_EQ(true, the_app->focused());
-
-    applicationManager.focusApplication(an_app_id);
-    EXPECT_EQ(true, the_app->focused());
 }
 
 TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_requested)
@@ -1901,4 +1871,75 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     qtApp.sendPostedEvents();
 
     EXPECT_EQ(1, appAddedSpy.count());
+}
+
+/*
+  Change focus between surfaces of different applications and check that
+  ApplicationManager::focusedApplicationId changes accordingly
+ */
+TEST_F(ApplicationManagerTests,focusedApplicationId)
+{
+    using namespace ::testing;
+
+    const QString appId1("testAppId1");
+    quint64 procId1 = 5551;
+    const QString appId2("testAppId2");
+    quint64 procId2 = 5552;
+
+    ON_CALL(*taskController, primaryPidForAppId(appId1)).WillByDefault(Return(procId1));
+    ON_CALL(desktopFileReaderFactory, createInstance(appId1, _)).WillByDefault(Invoke(createMockDesktopFileReader));
+    ON_CALL(*taskController, primaryPidForAppId(appId2)).WillByDefault(Return(procId2));
+    ON_CALL(desktopFileReaderFactory, createInstance(appId2, _)).WillByDefault(Invoke(createMockDesktopFileReader));
+
+    EXPECT_CALL(*taskController, start(appId1, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    auto app1 = applicationManager.startApplication(appId1);
+    applicationManager.onProcessStarting(appId1);
+    std::shared_ptr<mir::scene::Session> session1 = std::make_shared<MockSession>("", procId1);
+    bool authed = true;
+    applicationManager.authorizeSession(procId1, authed);
+    onSessionStarting(session1);
+
+    FakeMirSurface *surface1 = new FakeMirSurface;
+    surface1->setSession(app1->session());
+    onSessionCreatedSurface(session1.get(), surface1);
+    surface1->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app1->internalState());
+
+    MirFocusController::instance()->setFocusedSurface(surface1);
+
+    EXPECT_EQ(appId1, applicationManager.focusedApplicationId());
+
+    EXPECT_CALL(*taskController, start(appId2, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    auto app2 = applicationManager.startApplication(appId2);
+    applicationManager.onProcessStarting(appId2);
+    std::shared_ptr<mir::scene::Session> session2 = std::make_shared<MockSession>("", procId2);
+    authed = true;
+    applicationManager.authorizeSession(procId2, authed);
+    onSessionStarting(session2);
+
+    FakeMirSurface *surface2 = new FakeMirSurface;
+    surface2->setSession(app2->session());
+    onSessionCreatedSurface(session2.get(), surface2);
+    surface2->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app2->internalState());
+
+    MirFocusController::instance()->setFocusedSurface(surface2);
+
+    EXPECT_EQ(appId2, applicationManager.focusedApplicationId());
+
+    MirFocusController::instance()->setFocusedSurface(surface1);
+
+    EXPECT_EQ(appId1, applicationManager.focusedApplicationId());
+
+    // clean up
+    delete surface1;
+    delete surface2;
 }
