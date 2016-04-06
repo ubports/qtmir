@@ -79,7 +79,9 @@ public:
 
     unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override { return &m_promptSurfaceList;}
 
-    void requestFocus() override {}
+    void requestFocus() override {
+        Q_EMIT focusRequested();
+    }
 
     void close() override {
         Q_EMIT closeRequested();

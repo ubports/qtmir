@@ -110,6 +110,9 @@ Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
     void liveChanged(bool live);
 
+    // Emitted when any surface in this session emits focusRequested()
+    void focusRequested();
+
     // For Application use
     void hasClosingSurfacesChanged();
 };

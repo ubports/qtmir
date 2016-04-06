@@ -224,6 +224,7 @@ void Session::prependSurface(MirSurfaceInterface *newSurface)
         {
             this->removeSurface(newSurface);
         });
+    connect(newSurface, &MirSurfaceInterface::focusRequested, this, &SessionInterface::focusRequested);
 
     m_surfaceList.prependSurface(newSurface);
     m_hadSurface = true;

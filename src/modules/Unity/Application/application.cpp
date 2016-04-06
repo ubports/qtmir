@@ -561,6 +561,7 @@ void Application::setSession(SessionInterface *newSession)
         connect(m_session, &SessionInterface::stateChanged, this, &Application::onSessionStateChanged);
         connect(m_session, &SessionInterface::fullscreenChanged, this, &Application::fullscreenChanged);
         connect(m_session, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
+        connect(m_session, &SessionInterface::focusRequested, this, &Application::focusRequested);
         connect(m_session->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
 
         if (oldFullscreen != fullscreen())

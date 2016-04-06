@@ -1957,3 +1957,45 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     delete surface1;
     delete surface2;
 }
+
+/*
+ This is the compatibility mode between application-centric window management
+ and the new (proper) surface-based window management
+
+ Whenever a surface request focus, its corresponding application should do likewise,
+ causing ApplicationManager::focusRequested(appId) to be emitted as well.
+ */
+TEST_F(ApplicationManagerTests,surfaceFocusRequestGeneratesApplicationFocusRequest)
+{
+    using namespace ::testing;
+
+    const QString appId("testAppId");
+    quint64 procId = 5551;
+
+    ON_CALL(*taskController, primaryPidForAppId(appId)).WillByDefault(Return(procId));
+    ON_CALL(desktopFileReaderFactory, createInstance(appId, _)).WillByDefault(Invoke(createMockDesktopFileReader));
+
+    EXPECT_CALL(*taskController, start(appId, _))
+        .Times(1)
+        .WillOnce(Return(true));
+
+    auto app = applicationManager.startApplication(appId);
+    applicationManager.onProcessStarting(appId);
+    std::shared_ptr<mir::scene::Session> session = std::make_shared<MockSession>("", procId);
+    bool authed = true;
+    applicationManager.authorizeSession(procId, authed);
+    onSessionStarting(session);
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session.get(), surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(Application::InternalState::Running, app->internalState());
+
+    QSignalSpy focusRequestedSpy(&applicationManager,
+            &unityapi::ApplicationManagerInterface::focusRequested);
+
+    surface->requestFocus();
+
+    EXPECT_EQ(1, focusRequestedSpy.count());
+}

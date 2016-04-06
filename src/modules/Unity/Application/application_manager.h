@@ -119,7 +119,6 @@ public Q_SLOTS:
     void onResumeRequested(const QString& appId);
 
 Q_SIGNALS:
-    void focusRequested(const QString &appId);
     void emptyChanged();
 
 private Q_SLOTS:
