@@ -31,6 +31,7 @@ using namespace qtmir;
 using mir::scene::MockSession;
 
 namespace ms = mir::scene;
+namespace unityapi = unity::shell::application;
 
 class ApplicationManagerTests : public ::testing::QtMirTest
 {
@@ -1881,6 +1882,10 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
 {
     using namespace ::testing;
 
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv);
+
     const QString appId1("testAppId1");
     quint64 procId1 = 5551;
     const QString appId2("testAppId2");
@@ -1909,8 +1914,13 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
 
     EXPECT_EQ(Application::InternalState::Running, app1->internalState());
 
-    MirFocusController::instance()->setFocusedSurface(surface1);
+    QSignalSpy focusedApplicationIdChangedSpy(&applicationManager,
+            &unityapi::ApplicationManagerInterface::focusedApplicationIdChanged);
 
+    MirFocusController::instance()->setFocusedSurface(surface1);
+    qtApp.processEvents(); // process queued signal-slot connections
+
+    EXPECT_EQ(1, focusedApplicationIdChangedSpy.count());
     EXPECT_EQ(appId1, applicationManager.focusedApplicationId());
 
     EXPECT_CALL(*taskController, start(appId2, _))
@@ -1932,11 +1942,15 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     EXPECT_EQ(Application::InternalState::Running, app2->internalState());
 
     MirFocusController::instance()->setFocusedSurface(surface2);
+    qtApp.processEvents(); // process queued signal-slot connections
 
+    EXPECT_EQ(2, focusedApplicationIdChangedSpy.count());
     EXPECT_EQ(appId2, applicationManager.focusedApplicationId());
 
     MirFocusController::instance()->setFocusedSurface(surface1);
+    qtApp.processEvents(); // process queued signal-slot connections
 
+    EXPECT_EQ(3, focusedApplicationIdChangedSpy.count());
     EXPECT_EQ(appId1, applicationManager.focusedApplicationId());
 
     // clean up

@@ -154,6 +154,7 @@ private:
     QSharedPointer<SettingsInterface> m_settings;
     QList<Application*> m_closingApplications;
     QList<QString> m_queuedStartApplications;
+    bool m_modelUnderChange{false};
     static ApplicationManager* the_application_manager;
 
     friend class Application;

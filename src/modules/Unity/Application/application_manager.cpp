@@ -198,8 +198,16 @@ ApplicationManager::ApplicationManager(
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
 
+    /*
+        All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
+        be processed by slots immediately and then trigger yet more model changes.
+
+        The connection below is queued to avoid stacked model change attempts cause by the above,
+        such as attempting to raise the newly focused application while another one is still
+        getting removed from the model.
+     */
     connect(MirFocusController::instance(), &MirFocusController::focusedSurfaceChanged,
-        this, &ApplicationManager::updateFocusedApplication);
+        this, &ApplicationManager::updateFocusedApplication, Qt::QueuedConnection);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -686,11 +694,15 @@ Application* ApplicationManager::findApplicationWithPid(const pid_t pid)
 void ApplicationManager::add(Application* application)
 {
     Q_ASSERT(application != nullptr);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::add - appId=" << application->appId();
 
     if (m_applications.indexOf(application) != -1) {
+        DEBUG_MSG << "(appId=" << application->appId() << ") - already exists";
         return;
     }
+    DEBUG_MSG << "(appId=" << application->appId() << ")";
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
 
     connect(application, &Application::focusedChanged, this, [this](bool) { onAppDataChanged(RoleFocused); });
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
@@ -738,17 +750,26 @@ void ApplicationManager::add(Application* application)
     if (m_applications.size() == 1) {
         Q_EMIT emptyChanged();
     }
+
+    m_modelUnderChange = false;
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - after " << toString();
 }
 
 void ApplicationManager::remove(Application *application)
 {
     Q_ASSERT(application != nullptr);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::remove - appId=" << application->appId();
 
     int index = m_applications.indexOf(application);
     if (index == -1) {
+        DEBUG_MSG << "(appId=" << application->appId() << ") - not found";
         return;
     }
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - before " << toString();
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
 
     beginRemoveRows(QModelIndex(), index, index);
     m_applications.removeAt(index);
@@ -768,11 +789,18 @@ void ApplicationManager::remove(Application *application)
     // don't remove (as it's already being removed) but still delete the guy.
     disconnect(application, &Application::stopped, this, 0);
     connect(application, &Application::stopped, this, [application]() { application->deleteLater(); });
+
+    m_modelUnderChange = false;
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - after " << toString();
 }
 
 void ApplicationManager::move(int from, int to) {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move - from=" << from << "to=" << to;
     if (from == to) return;
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
 
     if (from >= 0 && from < m_applications.size() && to >= 0 && to < m_applications.size()) {
         QModelIndex parent;
@@ -784,6 +812,9 @@ void ApplicationManager::move(int from, int to) {
         m_applications.move(from, to);
         endMoveRows();
     }
+
+    m_modelUnderChange = false;
+
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move after " << toString();
 }
 
