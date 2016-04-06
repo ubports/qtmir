@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -25,9 +25,14 @@
 // the test subject
 #include <Unity/Application/mirsurface.h>
 
-// tests/modules/common
+#include <Unity/Application/timer.h>
+
+// tests/framework
 #include <fake_session.h>
+#include <mock_mir_session.h>
 #include <mock_surface.h>
+
+// tests/modules/common
 #include <surfaceobserver.h>
 
 // mirserver
@@ -136,4 +141,52 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
 
     delete fakeSession;
     delete surface;
+}
+
+/*
+ * Test that a surface whose client fails to comply with a close request will eventually get destroyed.
+ */
+TEST_F(MirSurfaceTest, failedSurfaceCloseEventualyDestroysSurface)
+{
+    using namespace ::testing;
+    const pid_t pid = 1234;
+    const char appId[] = "test-app";
+
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
+    auto fakeSession = new FakeSession();
+    auto mirSession = std::make_shared<mir::scene::MockSession>(appId, pid);
+    fakeSession->setSession(mirSession);
+
+    auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
+
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
+    bool surfaceDeleted = false;
+    QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
+
+    QSharedPointer<FakeTimeSource> fakeTimeSource(new FakeTimeSource);
+    QPointer<FakeTimer> fakeTimer(new FakeTimer(fakeTimeSource));
+    surface->setCloseTimer(fakeTimer.data()); // surface takes ownership of the timer
+
+    qintptr view = (qintptr)1;
+    surface->registerView(view);
+
+    EXPECT_CALL(*mirSession.get(), destroy_surface(An<const std::weak_ptr<mir::scene::Surface> &>()))
+        .Times(1);
+
+    surface->close();
+
+    if (fakeTimer->isRunning()) {
+        // Simulate that closeTimer has timed out.
+        fakeTimeSource->m_msecsSinceReference = fakeTimer->nextTimeoutTime() + 1;
+        fakeTimer->update();
+    }
+
+    // clean up
+    surface->setLive(false);
+    surface->unregisterView(view);
+    delete surface;
+    delete fakeSession;
 }
