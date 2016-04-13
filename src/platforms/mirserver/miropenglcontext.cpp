@@ -37,7 +37,7 @@
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
     : m_currentWindow(nullptr)
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
       , m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
@@ -84,7 +84,7 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
     m_format.setStencilBufferSize(server->the_gl_config()->stencil_buffer_bits());
     m_format.setSamples(-1);
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
     const char* string = (const char*) glGetString(GL_VENDOR);
     qDebug() << "OpenGL ES vendor: " << qPrintable(string);
     string = (const char*) glGetString(GL_RENDERER);
@@ -135,7 +135,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
         m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
         if (!m_logger->isLogging() && m_logger->initialize()) {
             m_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
             m_logger->enableMessages();
