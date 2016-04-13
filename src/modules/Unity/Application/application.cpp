@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -34,6 +34,8 @@
 
 namespace ms = mir::scene;
 
+#define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
+
 namespace qtmir
 {
 
@@ -56,7 +58,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_closeTimer(nullptr)
     , m_exemptFromLifecycle(false)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
+    DEBUG_MSG << "()";
 
     // Because m_state is InternalState::Starting
     acquireWakelock();
@@ -73,7 +75,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
 
 Application::~Application()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::~Application";
+    DEBUG_MSG << "()";
 
     // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
     if (m_processState == Application::ProcessUnknown) {
@@ -312,8 +314,8 @@ void Application::setRequestedState(RequestedState value)
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setRequestedState - appId=" << appId()
-                                << "requestedState=" << applicationStateToStr(value);
+    DEBUG_MSG << "(requestedState=" << applicationStateToStr(value) << ")";
+
     m_requestedState = value;
     Q_EMIT requestedStateChanged(m_requestedState);
 
@@ -409,7 +411,7 @@ pid_t Application::pid() const
 
 void Application::close()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
+    DEBUG_MSG << "()";
 
     switch (m_state) {
     case InternalState::Starting:
@@ -460,7 +462,7 @@ void Application::setArguments(const QStringList arguments)
 
 void Application::setSession(SessionInterface *newSession)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setSession - appId=" << appId() << "session=" << newSession;
+    DEBUG_MSG << "(session=" << newSession << ")";
 
     if (newSession == m_session)
         return;
@@ -511,12 +513,11 @@ void Application::setSession(SessionInterface *newSession)
 
 void Application::setStage(Application::Stage stage)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setStage - appId=" << appId() << "stage=" << stage;
-
     if (m_stage != stage) {
         if ((stage | m_supportedStages) == 0) {
             return;
         }
+        DEBUG_MSG << "(stage=" << stage << ")";
 
         m_stage = stage;
         Q_EMIT stageChanged(stage);
@@ -529,8 +530,7 @@ void Application::setInternalState(Application::InternalState state)
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setInternalState - appId=" << appId()
-        << "state=" << internalStateToStr(state);
+    DEBUG_MSG << "(state=" << internalStateToStr(state) << ")";
 
     auto oldPublicState = this->state();
     m_state = state;
@@ -570,7 +570,7 @@ void Application::setInternalState(Application::InternalState state)
 
 void Application::setFocused(bool focused)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setFocused - appId=" << appId() << "focused=" << focused;
+    DEBUG_MSG << "(focused=" << focused << ")";
 
     if (m_focused != focused) {
         m_focused = focused;
@@ -638,7 +638,7 @@ void Application::setProcessState(ProcessState newProcessState)
 
 void Application::suspend()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::suspend - appId=" << appId();
+    DEBUG_MSG << "()";
 
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
@@ -656,7 +656,7 @@ void Application::suspend()
 
 void Application::resume()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::resume - appId=" << appId();
+    DEBUG_MSG << "()";
 
     if (m_state == InternalState::Suspended || m_state == InternalState::SuspendingWaitProcess) {
         setInternalState(InternalState::Running);
@@ -675,7 +675,7 @@ void Application::resume()
 
 void Application::respawn()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::respawn - appId=" << appId();
+    DEBUG_MSG << "()";
 
     setInternalState(InternalState::Starting);
 
@@ -684,7 +684,7 @@ void Application::respawn()
 
 void Application::stop()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::stop - appId=" << appId();
+    DEBUG_MSG << "()";
 
     Q_EMIT stopProcessRequested();
 }
@@ -806,8 +806,7 @@ QSize Application::initialSurfaceSize() const
 
 void Application::setInitialSurfaceSize(const QSize &size)
 {
-    qCDebug(QTMIR_APPLICATIONS).nospace() << "Application::setInitialSurfaceSize - appId=" << appId()
-        << " size=" << size;
+    DEBUG_MSG << "(size=" << size << ")";
 
     if (size != m_initialSurfaceSize) {
         m_initialSurfaceSize = size;
