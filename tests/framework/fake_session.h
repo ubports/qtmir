@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,6 +15,7 @@
  */
 
 #include <Unity/Application/session_interface.h>
+#include <Unity/Application/mirsurfacelistmodel.h>
 #include <QDebug>
 
 #ifndef QTMIR_FAKE_SESSION_H
@@ -30,14 +31,9 @@ public:
     FakeSession();
     virtual ~FakeSession();
 
-    // For QML use
-    void release() override;
-
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceInterface* lastSurface() const override;
-    const ObjectListModel<MirSurfaceInterface>* surfaces() const override;
-    SessionInterface* parentSession() const override;
+    MirSurfaceListModel* surfaceList() override;
     SessionModel* childSessions() const override;
     State state() const override;
     bool fullscreen() const override;
@@ -48,7 +44,6 @@ public:
     // For MirSurfaceItem and MirSurfaceManager use
 
     void registerSurface(MirSurfaceInterface*) override;
-    void removeSurface(MirSurfaceInterface*) override;
 
     // For Application use
 
@@ -56,6 +51,8 @@ public:
     void suspend() override;
     void resume() override;
     void stop() override;
+    bool hadSurface() const override;
+    bool hasClosingSurfaces() const override;
 
     void close() override;
 
@@ -77,10 +74,13 @@ public:
     // For tests
 
     void setState(State state);
+    void setSession(std::shared_ptr<mir::scene::Session> session);
 
 private:
     unity::shell::application::ApplicationInfoInterface* m_application;
     State m_state;
+    std::shared_ptr<mir::scene::Session> m_session;
+    MirSurfaceListModel m_surfaceList;
 };
 
 } // namespace qtmi

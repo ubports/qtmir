@@ -18,6 +18,7 @@
 #define FAKE_MIRSURFACEINTERFACE_H
 
 #include <Unity/Application/mirsurfaceinterface.h>
+#include <Unity/Application/mirsurfacelistmodel.h>
 
 #include <QSharedPointer>
 #include <QSGTexture>
@@ -74,9 +75,19 @@ public:
 
     Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
 
+    bool focused() const override { return false; }
+
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override { return &m_promptSurfaceList;}
+
+    void requestFocus() override {
+        Q_EMIT focusRequested();
+    }
+
     void close() override {
         Q_EMIT closeRequested();
     }
+
+    void raise() override {}
 
     ////
     // qtmir.MirSurfaceInterface
@@ -98,7 +109,8 @@ public:
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
 
-    void setFocus(bool focus) override;
+    void setFocused(bool focus) override;
+    void setActiveFocus(bool focus) override;
 
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
@@ -119,10 +131,7 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
-    void setShellChrome(Mir::ShellChrome) override {}
-
-Q_SIGNALS:
-    void closeRequested();
+    SessionInterface* session() override { return m_session; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
@@ -133,6 +142,7 @@ public Q_SLOTS:
     void setMaximumHeight(int) {}
     void setWidthIncrement(int) {}
     void setHeightIncrement(int) {}
+    void setShellChrome(Mir::ShellChrome) override {}
 
     ////
     // Test API from now on
@@ -144,6 +154,8 @@ public:
     bool isFrameDropperRunning() const;
 
     QList<TouchEvent> &touchesReceived();
+
+    void setSession(SessionInterface *session);
 
 private:
     void updateVisibility();
@@ -160,6 +172,10 @@ private:
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;
+
+    MirSurfaceListModel m_promptSurfaceList;
+
+    SessionInterface *m_session{nullptr};
 };
 
 } // namespace qtmir

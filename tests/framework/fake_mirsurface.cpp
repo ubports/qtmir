@@ -150,7 +150,9 @@ unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
 
 bool FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
 
-void FakeMirSurface::setFocus(bool focus) { m_focused = focus; }
+void FakeMirSurface::setFocused(bool focus) { m_focused = focus; }
+
+void FakeMirSurface::setActiveFocus(bool) {}
 
 void FakeMirSurface::mousePressEvent(QMouseEvent *) {}
 
@@ -207,6 +209,11 @@ void FakeMirSurface::updateVisibility()
         m_visible = newVisible;
         Q_EMIT visibleChanged(newVisible);
     }
+}
+
+void FakeMirSurface::setSession(SessionInterface *session)
+{
+    m_session = session;
 }
 
 } // namespace qtmir
