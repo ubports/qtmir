@@ -79,7 +79,7 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
             }
 
             output.top_left = mir::geometry::Point{nextTopLeftPosition, 0};
-            nextTopLeftPosition += output.modes[output.preferred_mode_index].size.width.as_int();
+            nextTopLeftPosition += output.modes[output.current_mode_index].size.width.as_int();
 
             if (phoneDetected) {
                 if (screenCount == 1 || output.type == mg::DisplayConfigurationOutputType::lvds) {

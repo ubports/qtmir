@@ -61,7 +61,7 @@ struct StubSurface : mir::scene::Surface
     void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const& observer) override;
     void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-        std::string const& variant, std::string const& options) override;
+                    std::string const& variant, std::string const& options) override;
     void rename(std::string const& title) override;
 };
 

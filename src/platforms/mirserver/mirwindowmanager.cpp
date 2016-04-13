@@ -19,9 +19,6 @@
 #include "surfaceobserver.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 
-// Unity API
-#include <unity/shell/application/Mir.h>
-
 #include <mir/geometry/rectangle.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface_creation_parameters.h>
@@ -93,8 +90,6 @@ MirWindowManagerImpl::MirWindowManagerImpl(const std::shared_ptr<mir::shell::Dis
     m_sessionListener(sessionListener)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "MirWindowManagerImpl::MirWindowManagerImpl";
-
-    qRegisterMetaType<MirWindowManager::SurfaceProperty>("MirWindowManager::SurfaceProperty");
 }
 
 void MirWindowManagerImpl::add_session(std::shared_ptr<ms::Session> const& /*session*/)
@@ -112,7 +107,7 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 {
     tracepoint(qtmirserver, surfacePlacementStart);
 
-    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::SizeHints(requestParameters));
+    m_sessionListener->surfaceAboutToBeCreated(*session.get(), qtmir::CreationHints(requestParameters));
 
     QSize initialSize;
     // can be connected to via Qt::BlockingQueuedConnection to alter surface initial size
@@ -143,12 +138,6 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 
     auto const result = build(session, placedParameters);
     auto const surface = session->surface(result);
-
-    if (placedParameters.shell_chrome.is_set()) {
-        Q_EMIT surfaceMofidied(surface,
-                MirWindowManager::ShellChrome,
-                QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(placedParameters.shell_chrome.value())));
-    }
 
     return result;
 }
@@ -202,24 +191,10 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
                                           const std::shared_ptr<mir::scene::Surface>& surface,
                                           const mir::shell::SurfaceSpecification& modifications)
 {
-    if (modifications.name.is_set()) {
-        surface->rename(modifications.name.value());
-
-        Q_EMIT surfaceMofidied(surface,
-                               MirWindowManager::Name,
-                               modifications.shell_chrome.value());
-    }
-
-    if (modifications.shell_chrome.is_set()) {
-        Q_EMIT surfaceMofidied(surface,
-            MirWindowManager::ShellChrome,
-            QVariant::fromValue<Mir::ShellChrome>(static_cast<Mir::ShellChrome>(modifications.shell_chrome.value())));
-    }
-
     QMutexLocker(&SurfaceObserver::mutex);
     SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
     if (observer) {
-        observer->notifySizeHintChanges(modifications);
+        observer->notifySurfaceModifications(modifications);
     }
 }
 

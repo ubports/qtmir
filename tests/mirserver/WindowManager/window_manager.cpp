@@ -15,9 +15,12 @@
  *
  */
 
+#include <QSignalSpy>
+
 #include "mirwindowmanager.h"
 #include "stub_surface.h"
 #include "stub_session.h"
+#include "surfaceobserver.h"
 
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
@@ -218,11 +221,29 @@ TEST_F(WindowManager, HandlesModifySurface)
 {
     add_surface();
 
-    msh::SurfaceSpecification spec;
+    SurfaceObserver surfaceObserver;
+    SurfaceObserver::registerObserverForSurface(&surfaceObserver, arbitrary_surface.get());
 
-    EXPECT_NO_THROW(
-        window_manager->modify_surface(arbitrary_session, arbitrary_surface, spec);
-    );
+    mir::shell::SurfaceSpecification modifications;
+    modifications.min_width = mir::geometry::Width(100);
+    modifications.min_height = mir::geometry::Height(101);
+    modifications.max_width = mir::geometry::Width(102);
+    modifications.max_height = mir::geometry::Height(103);
+    modifications.shell_chrome = mir_shell_chrome_low;
+
+    QSignalSpy spyMinimumWidthChanged(&surfaceObserver, SIGNAL(minimumWidthChanged(int)));
+    QSignalSpy spyMinimumHeightChanged(&surfaceObserver, SIGNAL(minimumHeightChanged(int)));
+    QSignalSpy spyMaximumWidthChanged(&surfaceObserver, SIGNAL(maximumWidthChanged(int)));
+    QSignalSpy spyMaximumHeightChanged(&surfaceObserver, SIGNAL(maximumHeightChanged(int)));
+    QSignalSpy spyShellChromeChanged(&surfaceObserver, SIGNAL(shellChromeChanged(MirShellChrome)));
+
+    window_manager->modify_surface(arbitrary_session, arbitrary_surface, modifications);
+
+    EXPECT_EQ(100, spyMinimumWidthChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(101, spyMinimumHeightChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(102, spyMaximumWidthChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(103, spyMaximumHeightChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(mir_shell_chrome_low, spyShellChromeChanged.takeFirst().at(0).toInt());
 
     window_manager->remove_surface(arbitrary_session, arbitrary_surface);
 }

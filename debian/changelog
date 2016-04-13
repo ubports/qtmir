@@ -1,9 +1,68 @@
-qtmir (0.4.8-0ubuntu1) UNRELEASED; urgency=medium
+qtmir (0.4.8+16.04.20160330-0ubuntu1) xenial; urgency=medium
+
+  * Drop leftover Xs-Testsuite header
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Mar 2016 22:53:20 +0000
+
+qtmir (0.4.8+16.04.20160329.1-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Don't use preferred_mode_index. Some devices like TVs don't provide
+    a preferred mode, so preferred_mode_index may be out of range (a
+    clumsy way to represent 'none'). Instead use the resolution of the
+    current display mode, which should always be in range. (LP:
+    #1560497)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 29 Mar 2016 19:24:13 +0000
+
+qtmir (0.4.8+16.04.20160322.1-0ubuntu1) xenial; urgency=medium
 
   [ Nick Dedekind ]
   * Added Application::setStage
 
- -- Nick Dedekind <nick.dedekind@canonical.com>  Thu, 03 Dec 2015 09:05:41 +0000
+  [ Lukáš Tinkl, Michał Sawicz ]
+  * Support for switching keyboard layouts (LP: #1524400, #1491340)
+
+  [ Lukáš Tinkl, Michał Sawicz, Nick Dedekind ]
+  * Add support for low shell chrome. (LP: #1535397)
+
+ -- Michael Zanetti <michael.zanetti@canonical.com>  Tue, 22 Mar 2016 16:18:06 +0000
+
+qtmir (0.4.7+16.04.20160310.1-0ubuntu1) xenial; urgency=medium
+
+  [ Alan Griffiths ]
+  * Copy the Window Management work-in-progress from Mir examples.
+
+  [ Alberto Aguirre ]
+  * Hook MirOpenGLContext::doneCurrent to Screen::doneCurrent
+
+  [ Daniel d'Andrada ]
+  * Ensure QmlEngine doesn't delete our MirSurfaces
+
+  [ Gerry Boland ]
+  * Allow Mir remove command line arguments it understands, before
+    letting Qt process them.
+  * Ensure ScreenWindow geometry correctly set and used after moving
+    Screen (LP: #1545286)
+  * Screen: only enable orientation sensor for internal display. (LP:
+    #1545286)
+
+  [ Michael Terry ]
+  * Fix some mocks to use more realistic code paths.
+
+  [ Michael Zanetti ]
+  * Add a dedicated property for the inputMethodSurface (LP: #1545286)
+
+  [ Michał Sawicz ]
+  * Drop dummy autopkgtest
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 10 Mar 2016 09:29:49 +0000
+
+qtmir (0.4.7+16.04.20160219-0ubuntu1) xenial; urgency=medium
+
+  * Mir 0.20 Release
+
+ -- Alan Griffiths <ci-train-bot@canonical.com>  Fri, 19 Feb 2016 10:41:19 +0000
 
 qtmir (0.4.7+16.04.20160212-0ubuntu1) xenial; urgency=medium
 

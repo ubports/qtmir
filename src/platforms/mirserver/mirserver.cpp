@@ -19,6 +19,7 @@
 #include "mirserver.h"
 
 // local
+#include "argvHelper.h"
 #include "mircursorimages.h"
 #include "mirdisplayconfigurationpolicy.h"
 #include "mirglconfig.h"
@@ -47,22 +48,24 @@ namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-namespace
-{
-void ignore_unparsed_arguments(int /*argc*/, char const* const/*argv*/[])
-{
-}
-}
-
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 
-MirServer::MirServer(int argc, char const* argv[],
+
+MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
     , m_screensModel(screensModel)
 {
-    set_command_line_handler(&ignore_unparsed_arguments);
-    set_command_line(argc, argv);
+    bool unknownArgsFound = false;
+    set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
+        unknownArgsFound = true;
+        // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
+        // argc as filteredArgv only defined in this scope.
+        qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
+    });
+
+    // Casting char** to be a const char** safe as Mir won't change it, nor will we
+    set_command_line(argc, const_cast<const char **>(argv));
 
     override_the_session_listener([]
         {
@@ -130,7 +133,16 @@ MirServer::MirServer(int argc, char const* argv[],
         screensModel->init(the_display(), the_compositor());
     });
 
-    apply_settings();
+    try {
+        apply_settings();
+    } catch (const std::exception &ex) {
+        qCritical() << ex.what();
+        exit(1);
+    }
+
+    if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
+        argc = 1;
+    }
 
     // We will draw our own cursor.
     // FIXME: Call override_the_cusor() instead once this method becomes available in a
@@ -142,6 +154,7 @@ MirServer::MirServer(int argc, char const* argv[],
     });
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
+    qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
 }
 
 // Override default implementation to ensure we terminate the ScreensModel first.

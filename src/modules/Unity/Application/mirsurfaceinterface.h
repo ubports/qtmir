@@ -43,7 +43,6 @@ public:
     virtual ~MirSurfaceInterface() {}
 
     virtual void setLive(bool value) = 0;
-    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
     virtual bool isFirstFrameDrawn() const = 0;
 
@@ -102,6 +101,7 @@ public Q_SLOTS:
     virtual void setMaximumHeight(int) = 0;
     virtual void setWidthIncrement(int) = 0;
     virtual void setHeightIncrement(int) = 0;
+    virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
 Q_SIGNALS:
     void firstFrameDrawn();

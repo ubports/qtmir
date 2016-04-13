@@ -21,6 +21,8 @@ namespace qtmir
 
 MockProcInfo::MockProcInfo()
 {
+    using namespace ::testing;
+    ON_CALL(*this, command_line(_)).WillByDefault(Return(QByteArray()));
 }
 
 MockProcInfo::~MockProcInfo()

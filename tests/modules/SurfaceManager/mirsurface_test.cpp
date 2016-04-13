@@ -31,7 +31,7 @@
 #include <surfaceobserver.h>
 
 // mirserver
-#include <sizehints.h>
+#include <creationhints.h>
 
 using namespace qtmir;
 
@@ -62,7 +62,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver, SizeHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver, CreationHints());
     surfaceObserver->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
@@ -85,7 +85,7 @@ TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, SizeHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -118,7 +118,7 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, SizeHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 

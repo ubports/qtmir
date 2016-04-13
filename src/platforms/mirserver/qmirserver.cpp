@@ -25,24 +25,15 @@
 #include "qmirserver_p.h"
 #include "screen.h"
 
-QMirServer::QMirServer(const QStringList &arguments, QObject *parent)
+QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
     : QObject(parent)
     , d_ptr(new QMirServerPrivate())
 {
     Q_D(QMirServer);
 
-    // convert arguments back into argc-argv form that Mir wants
-    int argc = arguments.size();
-    char **argv = new char*[argc + 1];
-    for (int i = 0; i < argc; i++) {
-        argv[i] = new char[strlen(arguments.at(i).toStdString().c_str())+1];
-        memcpy(argv[i], arguments.at(i).toStdString().c_str(), strlen(arguments.at(i).toStdString().c_str())+1);
-    }
-    argv[argc] = nullptr;
-
     d->screensModel = QSharedPointer<ScreensModel>(new ScreensModel());
 
-    d->server = QSharedPointer<MirServer>(new MirServer(argc, const_cast<const char**>(argv), d->screensModel));
+    d->server = QSharedPointer<MirServer>(new MirServer(argc, argv, d->screensModel));
 
     d->serverThread = new MirServerThread(d->server);
 

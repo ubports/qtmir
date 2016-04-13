@@ -33,6 +33,8 @@
 // mirserver
 #include <logging.h>
 
+// Qt
+#include <QQmlEngine>
 #include <QScreen>
 
 using namespace qtmir;
@@ -175,7 +177,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         SessionInterface* session,
         mir::shell::Shell* shell,
         std::shared_ptr<SurfaceObserver> observer,
-        const SizeHints &sizeHints)
+        const CreationHints &creationHints)
     : MirSurfaceInterface()
     , m_surface(surface)
     , m_session(session)
@@ -187,17 +189,19 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_live(true)
     , m_shellChrome(Mir::NormalChrome)
 {
-    m_minimumWidth = sizeHints.minWidth;
-    m_minimumHeight = sizeHints.minHeight;
-    m_maximumWidth = sizeHints.maxWidth;
-    m_maximumHeight = sizeHints.maxHeight;
-    m_widthIncrement = sizeHints.widthIncrement;
-    m_heightIncrement = sizeHints.heightIncrement;
+    m_minimumWidth = creationHints.minWidth;
+    m_minimumHeight = creationHints.minHeight;
+    m_maximumWidth = creationHints.maxWidth;
+    m_maximumHeight = creationHints.maxHeight;
+    m_widthIncrement = creationHints.widthIncrement;
+    m_heightIncrement = creationHints.heightIncrement;
+    m_shellChrome = creationHints.shellChrome;
 
     m_surfaceObserver = observer;
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
+        connect(observer.get(), &SurfaceObserver::keymapChanged, this, &MirSurface::onKeymapChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         connect(observer.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::setMinimumWidth);
@@ -206,6 +210,9 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         connect(observer.get(), &SurfaceObserver::maximumHeightChanged, this, &MirSurface::setMaximumHeight);
         connect(observer.get(), &SurfaceObserver::widthIncrementChanged, this, &MirSurface::setWidthIncrement);
         connect(observer.get(), &SurfaceObserver::heightIncrementChanged, this, &MirSurface::setHeightIncrement);
+        connect(observer.get(), &SurfaceObserver::shellChromeChanged, this, [&](MirShellChrome shell_chrome) {
+            setShellChrome(static_cast<Mir::ShellChrome>(shell_chrome));
+        });
         observer->setListener(this);
     }
 
@@ -227,6 +234,8 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     // in practice rarely happen.
     m_frameDropperTimer.setInterval(200);
     m_frameDropperTimer.setSingleShot(false);
+
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 MirSurface::~MirSurface()
@@ -748,6 +757,12 @@ void MirSurface::emitSizeChanged()
     Q_EMIT sizeChanged(m_size);
 }
 
+void MirSurface::onKeymapChanged(const QString &layout, const QString &variant)
+{
+    m_keyMap = qMakePair(layout, variant);
+    Q_EMIT keymapChanged(layout, variant);
+}
+
 QString MirSurface::appId() const
 {
     QString appId;
@@ -760,6 +775,15 @@ QString MirSurface::appId() const
     return appId;
 }
 
+void MirSurface::setKeymap(const QString &layout, const QString &variant)
+{
+    if (layout.isEmpty()) {
+        qCWarning(QTMIR_SURFACES) << "Setting keymap with empty layout is not supported";
+        return;
+    }
+    m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
+}
+
 QCursor MirSurface::cursor() const
 {
     return m_cursor;
@@ -768,6 +792,16 @@ QCursor MirSurface::cursor() const
 Mir::ShellChrome MirSurface::shellChrome() const
 {
     return m_shellChrome;
+}
+
+QString MirSurface::keymapLayout() const
+{
+    return m_keyMap.first;
+}
+
+QString MirSurface::keymapVariant() const
+{
+    return m_keyMap.second;
 }
 
 void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)

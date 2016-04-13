@@ -36,8 +36,9 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
+    : m_currentWindow(nullptr)
 #ifndef QT_NO_DEBUG
-    : m_logger(new QOpenGLDebugLogger(this))
+      , m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
     auto display = server->the_display();
@@ -131,6 +132,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
     if (screenWindow) {
+        m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
 #ifndef QT_NO_DEBUG
@@ -148,12 +150,9 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
 void MirOpenGLContext::doneCurrent()
 {
-    // FIXME: pity to have to resort to raw egl calls, but I see no easy way using Mir.
-    EGLDisplay eglDisplay = eglGetCurrentDisplay();
-    if (eglDisplay == EGL_NO_DISPLAY) {
-        qFatal("Unable to determine current EGL Display in order to release the current context");
-    } else {
-        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (m_currentWindow) {
+        m_currentWindow->doneCurrent();
+        m_currentWindow = nullptr;
     }
 }
 

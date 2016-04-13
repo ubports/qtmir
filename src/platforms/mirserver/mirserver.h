@@ -42,8 +42,8 @@ class MirServer : public QObject, private virtual mir::Server
     Q_PROPERTY(PromptSessionListener* promptSessionListener READ promptSessionListener CONSTANT)
 
 public:
-    MirServer(int argc, char const* argv[], const QSharedPointer<ScreensModel> &, QObject* parent = 0);
-    ~MirServer() = default;
+    MirServer(int &argc, char **argv, const QSharedPointer<ScreensModel> &, QObject* parent = 0);
+    virtual ~MirServer() = default;
 
     /* mir specific */
     using mir::Server::run;
@@ -69,8 +69,6 @@ public:
 
 private:
     std::weak_ptr<MirShell> m_shell;
-    std::shared_ptr<QtEventFeeder> m_qtEventFeeder;
-    std::weak_ptr<MirDisplayConfigurationPolicy> m_displayConfigurationPolicy;
     std::weak_ptr<MirWindowManager> m_windowManager;
     const QSharedPointer<ScreensModel> m_screensModel;
 };

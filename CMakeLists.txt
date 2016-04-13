@@ -64,6 +64,7 @@ pkg_check_modules(MIRSERVER mirserver>=0.19 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.19 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.19 REQUIRED)
 
+pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
 pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-2 REQUIRED)
