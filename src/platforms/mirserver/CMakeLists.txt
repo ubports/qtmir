@@ -36,6 +36,8 @@ include_directories(
     ${APPLICATION_API_INCLUDE_DIRS}
 )
 
+add_subdirectory(wm-wip)
+
 # We have to remove -pedantic for tracepoints.c
 string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # Needed to compile tracepoints in C99 mode.
@@ -69,7 +71,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    sizehints.cpp
+    creationhints.cpp
     tileddisplayconfigurationpolicy.cpp
     tracepoints.c
 # We need to run moc on these headers
@@ -96,6 +98,7 @@ target_link_libraries(
     -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
+    ${XKBCOMMON_LIBRARIES}
 
     Qt5::Core
     Qt5::DBus

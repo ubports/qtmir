@@ -38,7 +38,7 @@ void TiledDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
         {
             if (output.connected && output.used) {
                 output.top_left = mir::geometry::Point{nextTopLeftPosition, 0};
-                nextTopLeftPosition += output.modes[output.preferred_mode_index].size.width.as_int();
+                nextTopLeftPosition += output.modes[output.current_mode_index].size.width.as_int();
             }
         });
 }

@@ -46,6 +46,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_appInfo(appInfo)
     , m_pid(0)
     , m_stage(Application::MainStage)
+    , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_focused(false)
     , m_arguments(arguments)
@@ -473,7 +474,7 @@ void Application::setStage(Application::Stage stage)
     qCDebug(QTMIR_APPLICATIONS) << "Application::setStage - appId=" << appId() << "stage=" << stage;
 
     if (m_stage != stage) {
-        if (stage | m_supportedStages) {
+        if ((stage | m_supportedStages) == 0) {
             return;
         }
 

@@ -42,9 +42,23 @@ void ScreenTest::SetUp()
     Screen::skipDBusRegistration = true;
 }
 
-TEST_F(ScreenTest, OrientationSensor)
+TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 {
-    Screen *screen = new Screen(fakeOutput1);
+    Screen *screen = new Screen(fakeOutput1); // is external display (dvi)
+
+    // Default state should be disabled
+    ASSERT_FALSE(screen->orientationSensorEnabled());
+
+    screen->onDisplayPowerStateChanged(0,0);
+    ASSERT_FALSE(screen->orientationSensorEnabled());
+
+    screen->onDisplayPowerStateChanged(1,0);
+    ASSERT_FALSE(screen->orientationSensorEnabled());
+}
+
+TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
+{
+    Screen *screen = new Screen(fakeOutput2); // is internal display
 
     // Default state should be active
     ASSERT_TRUE(screen->orientationSensorEnabled());

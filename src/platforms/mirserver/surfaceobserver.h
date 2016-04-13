@@ -24,6 +24,7 @@
 #include <QMutex>
 #include <QSize>
 #include <mir/scene/surface_observer.h>
+#include <mir/scene/surface.h>
 
 namespace mir {
     namespace scene {
@@ -58,12 +59,12 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
-        std::string const&, std::string const&) override {}
+    void keymap_changed(MirInputDeviceId, std::string const& model, std::string const& layout,
+                        std::string const& variant, std::string const& options) override;
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
-    void notifySizeHintChanges(const mir::shell::SurfaceSpecification&);
+    void notifySurfaceModifications(const mir::shell::SurfaceSpecification&);
 
     static SurfaceObserver *observerForSurface(const mir::scene::Surface *surface);
     static void registerObserverForSurface(SurfaceObserver *observer, const mir::scene::Surface *surface);
@@ -73,6 +74,7 @@ Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
     void resized(const QSize &size);
+    void keymapChanged(const QString &rules, const QString &variant);
     void nameChanged(const QString &name);
     void cursorChanged(const QCursor &cursor);
 
@@ -82,6 +84,7 @@ Q_SIGNALS:
     void maximumHeightChanged(int);
     void widthIncrementChanged(int);
     void heightIncrementChanged(int);
+    void shellChromeChanged(MirShellChrome);
 
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);

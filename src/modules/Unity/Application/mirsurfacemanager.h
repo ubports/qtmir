@@ -30,7 +30,7 @@
 #include <mir_toolkit/common.h>
 
 // mirserver qpa
-#include <sizehints.h>
+#include <creationhints.h>
 
 namespace mir {
     namespace scene {
@@ -54,7 +54,7 @@ class SessionManager;
 class MirSurfaceManager : public QObject
 {
     Q_OBJECT
-
+    Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
         const QSharedPointer<MirServer>& mirServer,
@@ -66,7 +66,10 @@ public:
 
     static MirSurfaceManager* singleton();
 
+    MirSurfaceInterface* inputMethodSurface() const;
+
 Q_SIGNALS:
+    void inputMethodSurfaceChanged();
     void surfaceCreated(MirSurfaceInterface* surface);
     void surfaceDestroyed(MirSurfaceInterface* surface);
 
@@ -74,7 +77,7 @@ public Q_SLOTS:
     void onSessionCreatedSurface(const mir::scene::Session *,
                                  const std::shared_ptr<mir::scene::Surface> &,
                                  std::shared_ptr<SurfaceObserver> const&,
-                                 qtmir::SizeHints);
+                                 qtmir::CreationHints);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:
@@ -86,6 +89,7 @@ private:
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
     static MirSurfaceManager *instance;
+    MirSurfaceInterface* m_inputMethodSurface = nullptr;
 };
 
 } // namespace qtmir

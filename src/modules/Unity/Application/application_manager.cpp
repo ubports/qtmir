@@ -333,13 +333,7 @@ void ApplicationManager::unfocusCurrentApplication()
  * @param arguments Command line arguments to pass to the application to be launched
  * @return Pointer to Application object representing the launched process. If process already running, return nullptr
  */
-Application* ApplicationManager::startApplication(const QString &appId,
-                                                  const QStringList &arguments)
-{
-    return startApplication(appId, NoFlag, arguments);
-}
-
-Application *ApplicationManager::startApplication(const QString &inputAppId, ExecFlags flags,
+Application* ApplicationManager::startApplication(const QString &inputAppId,
                                                   const QStringList &arguments)
 {
     tracepoint(qtmir, startApplication);
@@ -360,10 +354,10 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
         if (application) {
             m_queuedStartApplications.append(inputAppId);
             qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " is closing. Queuing start";
-            connect(application, &QObject::destroyed, this, [this, application, inputAppId, flags, arguments]() {
+            connect(application, &QObject::destroyed, this, [this, application, inputAppId, arguments]() {
                 m_queuedStartApplications.removeAll(inputAppId);
                 // start the app.
-                startApplication(inputAppId, flags, arguments);
+                startApplication(inputAppId, arguments);
             }, Qt::QueuedConnection); // Queued so that we finish the app removal before starting again.
             return nullptr;
         }
@@ -390,11 +384,6 @@ Application *ApplicationManager::startApplication(const QString &inputAppId, Exe
                     appInfo,
                     arguments,
                     this);
-
-        // override stage if necessary
-        if (application->stage() == Application::SideStage && flags.testFlag(ApplicationManager::ForceMainStage)) {
-            application->setStage(Application::MainStage);
-        }
 
         add(application);
     }
