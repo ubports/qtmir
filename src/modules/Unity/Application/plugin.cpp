@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,7 +20,6 @@
 // local
 #include "application.h"
 #include "application_manager.h"
-#include "applicationscreenshotprovider.h"
 #include "mirsurfacemanager.h"
 #include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
@@ -115,10 +114,6 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)
     {
         QQmlExtensionPlugin::initializeEngine(engine, uri);
-
-        qtmir::ApplicationManager* appManager
-                = static_cast<qtmir::ApplicationManager*>(applicationManagerSingleton(engine, nullptr));
-        engine->addImageProvider(QLatin1String("application"), new qtmir::ApplicationScreenshotProvider(appManager));
     }
 };
 

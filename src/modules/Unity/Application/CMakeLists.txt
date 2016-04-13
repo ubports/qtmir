@@ -29,7 +29,6 @@ set(QMLMIRPLUGIN_SRC
     ../../../common/debughelpers.cpp
     desktopfilereader.cpp
     plugin.cpp
-    applicationscreenshotprovider.cpp
     dbuswindowstack.cpp
     mirsurfacemanager.cpp
     ubuntukeyboardinfo.cpp
