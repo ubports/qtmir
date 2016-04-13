@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -69,6 +69,15 @@ public:
     int widthIncrement() const override { return 0; }
     int heightIncrement() const override { return 0; }
 
+    void setKeymap(const QString &) override {}
+    QString keymap() const override { return QString(); }
+
+    Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
+
+    void close() override {
+        Q_EMIT closeRequested();
+    }
+
     ////
     // qtmir.MirSurfaceInterface
 
@@ -110,16 +119,7 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
-    Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
     void setShellChrome(Mir::ShellChrome) override {}
-
-    void close() override {
-        Q_EMIT closeRequested();
-    }
-
-    QString keymapLayout() const override { return QString(); }
-    QString keymapVariant() const override { return QString(); }
-    void setKeymap(const QString &layout, const QString &variant) override;
 
 Q_SIGNALS:
     void closeRequested();

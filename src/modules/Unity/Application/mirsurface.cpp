@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -38,6 +38,7 @@
 using namespace qtmir;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
+#define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
 
 namespace {
 
@@ -199,7 +200,6 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
-        connect(observer.get(), &SurfaceObserver::keymapChanged, this, &MirSurface::onKeymapChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         connect(observer.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::setMinimumWidth);
@@ -755,12 +755,6 @@ void MirSurface::emitSizeChanged()
     Q_EMIT sizeChanged(m_size);
 }
 
-void MirSurface::onKeymapChanged(const QString &layout, const QString &variant)
-{
-    m_keyMap = qMakePair(layout, variant);
-    Q_EMIT keymapChanged(layout, variant);
-}
-
 QString MirSurface::appId() const
 {
     QString appId;
@@ -773,12 +767,41 @@ QString MirSurface::appId() const
     return appId;
 }
 
-void MirSurface::setKeymap(const QString &layout, const QString &variant)
+void MirSurface::setKeymap(const QString &layoutPlusVariant)
 {
-    if (layout.isEmpty()) {
-        qCWarning(QTMIR_SURFACES) << "Setting keymap with empty layout is not supported";
+    if (m_keymap == layoutPlusVariant) {
         return;
     }
+
+    DEBUG_MSG << "(" << layoutPlusVariant << ")";
+
+    m_keymap = layoutPlusVariant;
+    Q_EMIT keymapChanged(m_keymap);
+
+    applyKeymap();
+}
+
+QString MirSurface::keymap() const
+{
+    return m_keymap;
+}
+
+void MirSurface::applyKeymap()
+{
+    QStringList stringList = m_keymap.split("+", QString::SkipEmptyParts);
+
+    QString layout = stringList[0];
+    QString variant;
+
+    if (stringList.count() > 1) {
+        variant = stringList[1];
+    }
+
+    if (layout.isEmpty()) {
+        WARNING_MSG << "Setting keymap with empty layout is not supported";
+        return;
+    }
+
     m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
 }
 
@@ -790,16 +813,6 @@ QCursor MirSurface::cursor() const
 Mir::ShellChrome MirSurface::shellChrome() const
 {
     return m_shellChrome;
-}
-
-QString MirSurface::keymapLayout() const
-{
-    return m_keyMap.first;
-}
-
-QString MirSurface::keymapVariant() const
-{
-    return m_keyMap.second;
 }
 
 void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
