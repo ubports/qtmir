@@ -1,3 +1,18 @@
+qtmir (0.4.8+16.04.20160413-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Application: improve debug logging
+  * Logging of Qt's OpenGL debug messages now must be enabled via CMake
+    option
+  * MirSurface: replace keymapLayout and keymapVariant with keymap
+  * Remove application screenshot provider
+  * Surface-based window management
+
+  [ Michał Sawicz, Robert Bruce Park ]
+  * Inline -gles packaging.
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Wed, 13 Apr 2016 18:38:59 +0000
+
 qtmir (0.4.8+16.04.20160330-0ubuntu1) xenial; urgency=medium
 
   * Drop leftover Xs-Testsuite header
