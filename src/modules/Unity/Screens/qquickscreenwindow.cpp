@@ -70,18 +70,16 @@ void QQuickScreenWindow::setScreen(QScreen *screen)
     QQuickWindow::setScreen(screen);
 
     float scale = getScaleNativeProperty();
-    if (qFuzzyCompare(m_scale, scale)) {
-        return;
+    if (!qFuzzyCompare(m_scale, scale)) {
+        m_scale = scale;
+        Q_EMIT scaleChanged(m_scale);
     }
-    m_scale = scale;
-    Q_EMIT scaleChanged(m_scale);
 
     auto formFactor = getFormFactorNativeProperty();
-    if (formFactor == m_formFactor) {
-        return;
+    if (formFactor != m_formFactor) {
+        m_formFactor = formFactor;
+        Q_EMIT formFactorChanged(m_formFactor);
     }
-    m_formFactor = formFactor;
-    Q_EMIT formFactorChanged(m_formFactor);
 }
 
 qreal QQuickScreenWindow::scale()
