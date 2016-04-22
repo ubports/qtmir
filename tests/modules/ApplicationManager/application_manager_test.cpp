@@ -445,7 +445,7 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     const QString name("Test App");
 
     // Set up Mocks & signal watcher
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>(appId);
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>(appId));
     ON_CALL(*mockApplicationInfo, name()).WillByDefault(Return(name));
 
     EXPECT_CALL(*taskController, getInfoForApp(appId))
@@ -490,7 +490,7 @@ TEST_F(ApplicationManagerTests,appStartedByUpstart)
     const QString name("Test App");
 
     // Set up Mocks & signal watcher
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>(appId);
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>(appId));
     ON_CALL(*mockApplicationInfo, name()).WillByDefault(Return(name));
 
     EXPECT_CALL(*taskController, getInfoForApp(appId))
@@ -539,7 +539,7 @@ TEST_F(ApplicationManagerTests,appStartedUsingCorrectDesktopFileHintSwitch)
         .Times(1)
         .WillOnce(Return(cmdLine));
 
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>(appId);
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>(appId));
     ON_CALL(*mockApplicationInfo, name()).WillByDefault(Return(name));
 
     EXPECT_CALL(*taskController, getInfoForApp(appId))
@@ -614,7 +614,7 @@ TEST_F(ApplicationManagerTests,synchronousProcessStartedCallDoesNotDuplicateEntr
     const QString name("Test App");
 
     // Set up Mocks & signal watcher
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>(appId);
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>(appId));
     ON_CALL(*mockApplicationInfo, name()).WillByDefault(Return(name));
 
     EXPECT_CALL(*taskController, getInfoForApp(appId))

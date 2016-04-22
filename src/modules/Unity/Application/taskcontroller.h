@@ -19,6 +19,7 @@
 #define QTMIR_TASK_CONTROLLER_H
 
 #include <QObject>
+#include <QSharedPointer>
 #include <QString>
 #include <QStringList>
 
@@ -51,7 +52,7 @@ public:
     virtual bool suspend(const QString &appId) = 0;
     virtual bool resume(const QString &appId) = 0;
 
-    virtual qtmir::ApplicationInfo *getInfoForApp(const QString &appId) const = 0;
+    virtual QSharedPointer<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const = 0;
 
 Q_SIGNALS:
     void processStarting(const QString &appId);

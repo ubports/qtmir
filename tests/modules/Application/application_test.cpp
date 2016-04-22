@@ -42,7 +42,7 @@ TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -80,7 +80,7 @@ TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running and then suspend it
@@ -107,7 +107,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
     NiceMock<MockSession> *session = new NiceMock<MockSession>;
 
     // Get it running, suspend it, and finally stop it
@@ -141,7 +141,7 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
     EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
     EXPECT_CALL(sharedWakelock, release(_)).Times(0);
 
-    auto applicationInfo = new FakeApplicationInfo();
+    auto applicationInfo = QSharedPointer<FakeApplicationInfo>::create();
     applicationInfo->m_appId = QString("unity8-dash");
 
     QScopedPointer<Application> application(new Application(
@@ -184,7 +184,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenRunningAppStops)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -219,7 +219,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenAppStopsWhileSuspending)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -251,7 +251,7 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
 
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            new FakeApplicationInfo(), QStringList(), nullptr));
+            QSharedPointer<FakeApplicationInfo>::create(), QStringList(), nullptr));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -293,7 +293,7 @@ TEST_F(ApplicationTests, passesIsTouchAppThrough)
 {
     using namespace ::testing;
 
-    auto mockApplicationInfo = new NiceMock<MockApplicationInfo>("foo-app");
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>("foo-app"));
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
             mockApplicationInfo, QStringList(), nullptr));

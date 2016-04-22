@@ -79,7 +79,7 @@ public:
     };
 
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                ApplicationInfo *appInfo,
+                const QSharedPointer<ApplicationInfo>& appInfo,
                 const QStringList &arguments,
                 ApplicationManager *parent);
     virtual ~Application();
@@ -168,7 +168,7 @@ private:
     void doClose();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
-    ApplicationInfo *m_appInfo;
+    QSharedPointer<ApplicationInfo> m_appInfo;
     pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;

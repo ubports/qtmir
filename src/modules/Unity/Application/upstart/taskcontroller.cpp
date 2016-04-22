@@ -224,15 +224,16 @@ bool TaskController::resume(const QString& appId)
     return true;
 }
 
-qtmir::ApplicationInfo *TaskController::getInfoForApp(const QString &appId) const
+QSharedPointer<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QString &appId) const
 {
     auto app = createApp(appId, impl->registry);
     if (!app || !app->info()) {
-        return nullptr;
+        return QSharedPointer<qtmir::ApplicationInfo>();
     }
 
     QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
-    return new qtmir::upstart::ApplicationInfo(shortAppId, app->info());
+    auto appInfo = new qtmir::upstart::ApplicationInfo(shortAppId, app->info());
+    return QSharedPointer<qtmir::ApplicationInfo>(appInfo);
 }
 
 } // namespace upstart

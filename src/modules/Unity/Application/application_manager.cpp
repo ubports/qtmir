@@ -597,9 +597,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
 
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
 
-    ApplicationInfo* appInfo;
-    appInfo = m_taskController->getInfoForApp(appId);
-
+    auto appInfo = m_taskController->getInfoForApp(appId);
     if (!appInfo) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
                     << "as the app specified by the desktop_file_hint argument could not be found";
@@ -612,7 +610,6 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     if (application && application->state() == Application::Starting) {
         qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
                                     << "in application list with appId:" << application->appId();
-        delete appInfo;
         application->setPid(pid);
         authorized = true;
         return;

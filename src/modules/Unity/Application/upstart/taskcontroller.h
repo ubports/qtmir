@@ -39,7 +39,7 @@ public:
     bool suspend(const QString& appId) override;
     bool resume(const QString& appId) override;
 
-    qtmir::ApplicationInfo *getInfoForApp(const QString &appId) const override;
+    QSharedPointer<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const override;
 
 private:
     struct Private;

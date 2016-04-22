@@ -65,9 +65,9 @@ bool MockTaskController::doAppIdHasProcessId(const QString &appId, pid_t pid)
 }
 
 
-qtmir::ApplicationInfo *MockTaskController::doGetInfoForApp(const QString& appId) const
+QSharedPointer<qtmir::ApplicationInfo> MockTaskController::doGetInfoForApp(const QString& appId) const
 {
-    return new testing::NiceMock<MockApplicationInfo>(appId);
+    return QSharedPointer<qtmir::ApplicationInfo>(new testing::NiceMock<MockApplicationInfo>(appId));
 }
 
 

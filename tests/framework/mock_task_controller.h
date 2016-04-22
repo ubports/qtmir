@@ -32,7 +32,7 @@ struct MockTaskController : public qtmir::TaskController
     virtual ~MockTaskController();
 
     MOCK_METHOD2(appIdHasProcessId, bool(const QString&, pid_t));
-    MOCK_CONST_METHOD1(getInfoForApp, qtmir::ApplicationInfo *(const QString &));
+    MOCK_CONST_METHOD1(getInfoForApp, QSharedPointer<qtmir::ApplicationInfo> (const QString &));
 
     MOCK_METHOD1(stop, bool(const QString&));
     MOCK_METHOD2(start, bool(const QString&, const QStringList&));
@@ -41,7 +41,7 @@ struct MockTaskController : public qtmir::TaskController
 
     bool doAppIdHasProcessId(const QString& appId, pid_t pid);
 
-    qtmir::ApplicationInfo *doGetInfoForApp(const QString& appId) const;
+    QSharedPointer<qtmir::ApplicationInfo> doGetInfoForApp(const QString& appId) const;
 
     bool doStop(const QString& appId);
 
