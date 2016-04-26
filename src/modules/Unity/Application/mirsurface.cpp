@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,6 +15,8 @@
  */
 
 #include "mirsurface.h"
+#include "mirsurfacelistmodel.h"
+#include "timer.h"
 #include "timestamp.h"
 
 // from common dir
@@ -27,6 +29,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir/shell/shell.h>
+#include <mir/scene/session.h>
 #include <mir_toolkit/event.h>
 
 // mirserver
@@ -38,6 +41,7 @@
 using namespace qtmir;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
+#define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
 
 namespace {
 
@@ -187,6 +191,8 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_live(true)
     , m_shellChrome(Mir::NormalChrome)
 {
+    DEBUG_MSG << "()";
+
     m_minimumWidth = creationHints.minWidth;
     m_minimumHeight = creationHints.minHeight;
     m_maximumWidth = creationHints.maxWidth;
@@ -199,7 +205,6 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     if (observer) {
         connect(observer.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
         connect(observer.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
-        connect(observer.get(), &SurfaceObserver::keymapChanged, this, &MirSurface::onKeymapChanged);
         connect(observer.get(), &SurfaceObserver::nameChanged, this, &MirSurface::nameChanged);
         connect(observer.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
         connect(observer.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::setMinimumWidth);
@@ -234,20 +239,22 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     m_frameDropperTimer.setSingleShot(false);
 
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+
+    setCloseTimer(new Timer);
 }
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface::~MirSurface this=" << this << " viewCount=" << m_views.count();
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "]::~MirSurface() viewCount=" << m_views.count();
 
     Q_ASSERT(m_views.isEmpty());
 
-    if (m_session) {
-        m_session->removeSurface(this);
-    }
-
     QMutexLocker locker(&m_mutex);
     m_surface->remove_observer(m_surfaceObserver);
+
+    delete m_closeTimer;
+
+    Q_EMIT destroyed(this); // Early warning, while MirSurface methods can still be accessed.
 }
 
 void MirSurface::onFramesPostedObserved()
@@ -423,7 +430,16 @@ bool MirSurface::numBuffersReadyForCompositor()
     return m_surface->buffers_ready_for_compositor(userId);
 }
 
-void MirSurface::setFocus(bool focus)
+void MirSurface::setFocused(bool value)
+{
+    if (m_focused == value)
+        return;
+
+    m_focused = value;
+    Q_EMIT focusedChanged(value);
+}
+
+void MirSurface::setActiveFocus(bool focus)
 {
     if (!m_session) {
         return;
@@ -447,6 +463,16 @@ void MirSurface::setFocus(bool focus)
 
 void MirSurface::close()
 {
+    if (m_closingState != NotClosing) {
+        return;
+    }
+
+    DEBUG_MSG << "()";
+
+    m_closingState = Closing;
+    Q_EMIT closeRequested();
+    m_closeTimer->start();
+
     if (m_surface) {
         m_surface->request_client_surface_close();
     }
@@ -586,8 +612,12 @@ void MirSurface::setState(Mir::State qmlState)
 void MirSurface::setLive(bool value)
 {
     if (value != m_live) {
+        DEBUG_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
+        if (m_views.isEmpty() && !m_live) {
+            deleteLater();
+        }
     }
 }
 
@@ -755,12 +785,6 @@ void MirSurface::emitSizeChanged()
     Q_EMIT sizeChanged(m_size);
 }
 
-void MirSurface::onKeymapChanged(const QString &layout, const QString &variant)
-{
-    m_keyMap = qMakePair(layout, variant);
-    Q_EMIT keymapChanged(layout, variant);
-}
-
 QString MirSurface::appId() const
 {
     QString appId;
@@ -773,12 +797,41 @@ QString MirSurface::appId() const
     return appId;
 }
 
-void MirSurface::setKeymap(const QString &layout, const QString &variant)
+void MirSurface::setKeymap(const QString &layoutPlusVariant)
 {
-    if (layout.isEmpty()) {
-        qCWarning(QTMIR_SURFACES) << "Setting keymap with empty layout is not supported";
+    if (m_keymap == layoutPlusVariant) {
         return;
     }
+
+    DEBUG_MSG << "(" << layoutPlusVariant << ")";
+
+    m_keymap = layoutPlusVariant;
+    Q_EMIT keymapChanged(m_keymap);
+
+    applyKeymap();
+}
+
+QString MirSurface::keymap() const
+{
+    return m_keymap;
+}
+
+void MirSurface::applyKeymap()
+{
+    QStringList stringList = m_keymap.split("+", QString::SkipEmptyParts);
+
+    QString layout = stringList[0];
+    QString variant;
+
+    if (stringList.count() > 1) {
+        variant = stringList[1];
+    }
+
+    if (layout.isEmpty()) {
+        WARNING_MSG << "Setting keymap with empty layout is not supported";
+        return;
+    }
+
     m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
 }
 
@@ -790,16 +843,6 @@ QCursor MirSurface::cursor() const
 Mir::ShellChrome MirSurface::shellChrome() const
 {
     return m_shellChrome;
-}
-
-QString MirSurface::keymapLayout() const
-{
-    return m_keyMap.first;
-}
-
-QString MirSurface::keymapVariant() const
-{
-    return m_keyMap.second;
 }
 
 void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
@@ -894,5 +937,57 @@ void MirSurface::setHeightIncrement(int value)
     if (value != m_heightIncrement) {
         m_heightIncrement = value;
         Q_EMIT heightIncrementChanged(value);
+    }
+}
+
+bool MirSurface::focused() const
+{
+    return m_focused;
+}
+
+unity::shell::application::MirSurfaceListInterface* MirSurface::promptSurfaceList()
+{
+    return &m_promptSurfaceList;
+}
+
+void MirSurface::requestFocus()
+{
+    DEBUG_MSG << "()";
+    Q_EMIT focusRequested();
+}
+
+void MirSurface::raise()
+{
+    DEBUG_MSG << "()";
+    Q_EMIT raiseRequested();
+}
+
+void MirSurface::onCloseTimedOut()
+{
+    Q_ASSERT(m_closingState == Closing);
+
+    DEBUG_MSG << "()";
+
+    m_closingState = CloseOverdue;
+
+    m_session->session()->destroy_surface(m_surface);
+}
+
+void MirSurface::setCloseTimer(AbstractTimer *timer)
+{
+    bool timerWasRunning = false;
+
+    if (m_closeTimer) {
+        timerWasRunning = m_closeTimer->isRunning();
+        delete m_closeTimer;
+    }
+
+    m_closeTimer = timer;
+    m_closeTimer->setInterval(3000);
+    m_closeTimer->setSingleShot(true);
+    connect(m_closeTimer, &AbstractTimer::timeout, this, &MirSurface::onCloseTimedOut);
+
+    if (timerWasRunning) {
+        m_closeTimer->start();
     }
 }

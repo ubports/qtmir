@@ -22,7 +22,7 @@ Build-Depends: cmake,
                libubuntu-app-launch2-dev (>= 0.9),
                libubuntu-application-api-dev (>= 2.1.0),
                libudev-dev,
-               libunity-api-dev (>= 7.108),
+               libunity-api-dev (>= 7.110),
                liburl-dispatcher1-dev,
                libxkbcommon-dev,
                libxrender-dev,
@@ -35,6 +35,7 @@ Build-Depends: cmake,
                qtbase5-private-dev,
                qtdeclarative5-dev,
                qtdeclarative5-private-dev,
+               quilt,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/qtmir
 # if you don't have have commit access to this branch but would like to upload
@@ -92,7 +93,7 @@ Replaces: libqtmir,
 Conflicts: libqtmir,
            libunity-mir1,
 Provides: unity-application-impl,
-          unity-application-impl-14,
+          unity-application-impl-15,
 Description: Qt plugin for Unity specific Mir APIs
  QtMir provides Qt/QML bindings for Mir features that are exposed through the
  qtmir-desktop or qtmir-android QPA plugin such as Application management

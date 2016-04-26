@@ -19,7 +19,7 @@
 
 #include <qpa/qplatformopenglcontext.h>
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
 #include <QOpenGLDebugLogger>
 #endif
 
@@ -44,14 +44,14 @@ public:
 
     QFunctionPointer getProcAddress(const QByteArray &procName) override;
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
     Q_SLOT void onGlDebugMessageLogged(QOpenGLDebugMessage m) { qDebug() << m; }
 #endif
 
 private:
     QSurfaceFormat m_format;
     ScreenWindow *m_currentWindow;
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
     QOpenGLDebugLogger *m_logger;
 #endif
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -39,6 +39,14 @@ namespace mir {
     }
 }
 
+namespace unity {
+    namespace shell {
+        namespace application {
+            class MirSurfaceInterface;
+        }
+    }
+}
+
 class MirServer;
 
 namespace qtmir {
@@ -52,7 +60,6 @@ class SettingsInterface;
 class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
 {
     Q_OBJECT
-    Q_ENUMS(MoreRoles)
 
     // TODO: Move to unity::shell::application::ApplicationManagerInterface
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
@@ -62,12 +69,6 @@ public:
     {
     public:
         ApplicationManager* create();
-    };
-
-    // FIXME: these roles should be added to unity-api and removed from here
-    enum MoreRoles {
-        RoleSession = RoleExemptFromLifecycle+1,
-        RoleFullscreen,
     };
 
     static ApplicationManager* singleton();
@@ -86,8 +87,6 @@ public:
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
-    Q_INVOKABLE bool focusApplication(const QString &appId) override;
-    Q_INVOKABLE void unfocusCurrentApplication() override;
     Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments = QStringList()) override;
     Q_INVOKABLE bool stopApplication(const QString &appId) override;
 
@@ -109,8 +108,6 @@ public Q_SLOTS:
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
 
     void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
-    void onSessionDestroyingSurface(mir::scene::Session const* session,
-                                    std::shared_ptr<mir::scene::Surface> const& surface);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
@@ -120,13 +117,14 @@ public Q_SLOTS:
     void onResumeRequested(const QString& appId);
 
 Q_SIGNALS:
-    void focusRequested(const QString &appId);
     void emptyChanged();
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
     void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
                                        int type, QSize &size);
+    void onApplicationClosing(Application *application);
+    void updateFocusedApplication();
 
 private:
     void setFocused(Application *application);
@@ -140,11 +138,11 @@ private:
 
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
+    Application *findApplication(MirSurfaceInterface* surface);
 
     QSharedPointer<MirServer> m_mirServer;
 
     QList<Application*> m_applications;
-    Application* m_focusedApplication;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
@@ -152,6 +150,7 @@ private:
     QSharedPointer<SettingsInterface> m_settings;
     QList<Application*> m_closingApplications;
     QList<QString> m_queuedStartApplications;
+    bool m_modelUnderChange{false};
     static ApplicationManager* the_application_manager;
 
     friend class Application;
