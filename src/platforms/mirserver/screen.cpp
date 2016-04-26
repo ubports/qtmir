@@ -142,14 +142,14 @@ bool Screen::skipDBusRegistration = false;
 
 Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     : QObject(nullptr)
+    , m_refreshRate(-1.0)
+    , m_scale(1.0)
+    , m_formFactor(mir_form_factor_unknown)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
     , m_screenWindow(nullptr)
     , m_unityScreen(nullptr)
-    , m_formFactor(mir_form_factor_unknown)
-    , m_scale(1.0)
-    , m_refreshRate(-1.0)
 {
     setMirDisplayConfiguration(screen, false);
 
