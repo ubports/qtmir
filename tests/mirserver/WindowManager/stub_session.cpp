@@ -27,7 +27,7 @@ std::string StubSession::name() const
     return {};
 }
 
-void StubSession::force_requests_to_complete()
+void StubSession::drop_outstanding_requests()
 {
 }
 
