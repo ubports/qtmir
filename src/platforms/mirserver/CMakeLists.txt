@@ -5,6 +5,11 @@ pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
 add_definitions(-DQ_FONTCONFIGDATABASE)
 
+if (QGL_DEBUG)
+    message(STATUS "Qt's OpenGL debug logging enabled.")
+    add_definitions(-DQGL_DEBUG)
+endif()
+
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
 # Dirty hack: The private QtPlatformSupport include dirs are not made available via

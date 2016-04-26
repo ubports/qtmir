@@ -18,6 +18,7 @@
 #include "application.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
+#include "mirfocuscontroller.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -107,7 +108,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     m_updateMirSurfaceSizeTimer.setInterval(1);
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
-    connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
+    connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceActiveFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
 }
@@ -565,10 +566,10 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
     m_surface->setViewVisibility((qintptr)this, isVisible());
 }
 
-void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
+void MirSurfaceItem::updateMirSurfaceActiveFocus(bool focused)
 {
     if (m_surface && m_consumesInput && m_surface->live()) {
-        m_surface->setFocus(focused);
+        m_surface->setActiveFocus(focused);
     }
 }
 
@@ -641,7 +642,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         disconnect(m_surface, nullptr, this, nullptr);
 
         if (hasActiveFocus() && m_consumesInput && m_surface->live()) {
-            m_surface->setFocus(false);
+            m_surface->setActiveFocus(false);
         }
 
         m_surface->unregisterView((qintptr)this);
@@ -690,7 +691,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         }
 
         if (m_consumesInput) {
-            m_surface->setFocus(hasActiveFocus());
+            m_surface->setActiveFocus(hasActiveFocus());
         }
     }
 

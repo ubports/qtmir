@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -143,9 +143,14 @@ mir::frontend::SurfaceId MirWindowManagerImpl::add_surface(
 }
 
 void MirWindowManagerImpl::remove_surface(
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::weak_ptr<ms::Surface> const& /*surface*/)
+    std::shared_ptr<ms::Session> const& session,
+    std::weak_ptr<ms::Surface> const& surface)
 {
+    // Called when the client releases the surface, usually is response to a surface->close()
+    // request from us.
+    // Just destroy straight away as we already have code to gracefully handle surfaces being
+    // detroyed out of the blue (set the QML Surface::live to false and so on).
+    session->destroy_surface(surface);
 }
 
 void MirWindowManagerImpl::add_display(mir::geometry::Rectangle const& /*area*/)

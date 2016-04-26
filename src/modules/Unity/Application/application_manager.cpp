@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,6 +19,7 @@
 #include "application.h"
 #include "desktopfilereader.h"
 #include "dbuswindowstack.h"
+#include "mirfocuscontroller.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "proc_info.h"
@@ -50,11 +51,16 @@
 // std
 #include <csignal>
 
+// Unity API
+#include <unity/shell/application/MirSurfaceInterface.h>
+
 namespace ms = mir::scene;
 
 Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
 
-using namespace unity::shell::application;
+namespace unityapi = unity::shell::application;
+
+#define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::" << __func__
 
 namespace qtmir
 {
@@ -81,8 +87,6 @@ void connectToSessionListener(ApplicationManager *manager, SessionListener *list
                      manager, &ApplicationManager::onSessionStopping);
     QObject::connect(listener, &SessionListener::sessionCreatedSurface,
                      manager, &ApplicationManager::onSessionCreatedSurface);
-    QObject::connect(listener, &SessionListener::sessionDestroyingSurface,
-                     manager, &ApplicationManager::onSessionDestroyingSurface);
 }
 
 void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
@@ -184,7 +188,6 @@ ApplicationManager::ApplicationManager(
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_mirServer(mirServer)
-    , m_focusedApplication(nullptr)
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_desktopFileReaderFactory(desktopFileReaderFactory)
@@ -195,8 +198,16 @@ ApplicationManager::ApplicationManager(
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName("qtmir::ApplicationManager");
 
-    m_roleNames.insert(RoleSession, "session");
-    m_roleNames.insert(RoleFullscreen, "fullscreen");
+    /*
+        All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
+        be processed by slots immediately and then trigger yet more model changes.
+
+        The connection below is queued to avoid stacked model change attempts cause by the above,
+        such as attempting to raise the newly focused application while another one is still
+        getting removed from the model.
+     */
+    connect(MirFocusController::instance(), &MirFocusController::focusedSurfaceChanged,
+        this, &ApplicationManager::updateFocusedApplication, Qt::QueuedConnection);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -232,10 +243,8 @@ QVariant ApplicationManager::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(application->isTouchApp());
             case RoleExemptFromLifecycle:
                 return QVariant::fromValue(application->exemptFromLifecycle());
-            case RoleSession:
-                return QVariant::fromValue(application->session());
-            case RoleFullscreen:
-                return QVariant::fromValue(application->fullscreen());
+            case RoleApplication:
+                return QVariant::fromValue(application);
             default:
                 return QVariant();
         }
@@ -276,50 +285,25 @@ bool ApplicationManager::requestFocusApplication(const QString &inputAppId)
         return false;
     }
 
-    Q_EMIT focusRequested(appId);
+    application->requestFocus();
+
     return true;
 }
 
 QString ApplicationManager::focusedApplicationId() const
 {
-    if (m_focusedApplication) {
-        return m_focusedApplication->appId();
+    Application *focusedApplication = nullptr;
+    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
+    if (surface) {
+        auto self = const_cast<ApplicationManager*>(this);
+        focusedApplication = self->findApplication(surface);
+    }
+
+    if (focusedApplication) {
+        return focusedApplication->appId();
     } else {
         return QString();
     }
-}
-
-bool ApplicationManager::focusApplication(const QString &inputAppId)
-{
-    const QString appId = toShortAppIdIfPossible(inputAppId);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::focusApplication - appId=" << appId;
-    Application *application = findApplication(appId);
-
-    if (!application) {
-        qDebug() << "No such running application with appId=" << appId;
-        return false;
-    }
-
-    if (m_focusedApplication) {
-        m_focusedApplication->setFocused(false);
-    }
-
-    m_focusedApplication = application;
-    m_focusedApplication->setFocused(true);
-
-    move(m_applications.indexOf(application), 0);
-    Q_EMIT focusedApplicationIdChanged();
-    m_dbusWindowStack->FocusedWindowChanged(0, application->appId(), application->stage());
-
-    return true;
-}
-
-void ApplicationManager::unfocusCurrentApplication()
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::unfocusCurrentApplication";
-
-    m_focusedApplication = nullptr;
-    Q_EMIT focusedApplicationIdChanged();
 }
 
 /**
@@ -412,14 +396,14 @@ void ApplicationManager::onProcessStarting(const QString &appId)
         }
 
         add(application);
-        Q_EMIT focusRequested(appId);
+        application->requestFocus();
     }
     else {
-        if (application->state() == Application::Stopped) {
+        if (application->internalState() == Application::InternalState::StoppedResumable) {
             // url-dispatcher can relaunch apps which have been OOM-killed - AppMan must accept the newly spawned
             // application and focus it immediately (as user expects app to still be running).
             qCDebug(QTMIR_APPLICATIONS) << "Stopped application appId=" << appId << "is being resumed externally";
-            Q_EMIT focusRequested(appId);
+            application->requestFocus();
         } else {
             qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting application already found with appId"
                                         << appId;
@@ -445,13 +429,18 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
     }
 
     application->close();
+
+    return true;
+}
+
+void ApplicationManager::onApplicationClosing(Application *application)
+{
     remove(application);
 
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {
         m_closingApplications.removeAll(application);
     });
     m_closingApplications.append(application);
-    return true;
 }
 
 void ApplicationManager::onProcessFailed(const QString &appId, TaskController::Error error)
@@ -515,7 +504,10 @@ void ApplicationManager::onFocusRequested(const QString& appId)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onFocusRequested - appId=" << appId;
 
-    Q_EMIT focusRequested(appId);
+    Application *application = findApplication(appId);
+    if (application) {
+        application->requestFocus();
+    }
 }
 
 void ApplicationManager::onResumeRequested(const QString& appId)
@@ -532,7 +524,7 @@ void ApplicationManager::onResumeRequested(const QString& appId)
     // We interpret this as a focus request for a suspended app.
     // Shell will have this app resumed if it complies with the focus request
     if (application->state() == Application::Suspended) {
-        Q_EMIT focusRequested(appId);
+        application->requestFocus();
     }
 }
 
@@ -542,10 +534,6 @@ void ApplicationManager::onAppDataChanged(const int role)
         Application *application = static_cast<Application*>(sender());
         QModelIndex appIndex = findIndex(application);
         Q_EMIT dataChanged(appIndex, appIndex, QVector<int>() << role);
-
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " update" <<  application->appId();
-    } else {
-        qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onAppDataChanged: Received " << m_roleNames[role] << " signal but application has disappeard.";
     }
 }
 
@@ -678,23 +666,6 @@ void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
     }
 }
 
-void ApplicationManager::onSessionDestroyingSurface(ms::Session const* session,
-                                                    std::shared_ptr<ms::Surface> const& surface)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onSessionDestroyingSurface - sessionName=" << session->name().c_str();
-    Q_UNUSED(surface);
-
-    Application* application = findApplicationWithSession(session);
-    if (application && application->state() == Application::Running) {
-        // If app in Running state but it destroys its surface, it's probably shutting down,
-        // in which case, we can preempt it and remove it from the App list immediately.
-        // FIXME: this is not desktop application friendly, but resolves issue where trust-prompt
-        // helpers take a long time to shut down, but destroys their surface quickly.
-        remove(application);
-        application->deleteLater();
-    }
-}
-
 Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
 {
     return findApplicationWithSession(session.get());
@@ -723,12 +694,23 @@ Application* ApplicationManager::findApplicationWithPid(const pid_t pid)
 void ApplicationManager::add(Application* application)
 {
     Q_ASSERT(application != nullptr);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::add - appId=" << application->appId();
 
-    connect(application, &Application::fullscreenChanged, this, [this](bool) { onAppDataChanged(RoleFullscreen); });
+    if (m_applications.indexOf(application) != -1) {
+        DEBUG_MSG << "(appId=" << application->appId() << ") - already exists";
+        return;
+    }
+    DEBUG_MSG << "(appId=" << application->appId() << ")";
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
+
     connect(application, &Application::focusedChanged, this, [this](bool) { onAppDataChanged(RoleFocused); });
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
     connect(application, &Application::stageChanged, this, [this](Application::Stage) { onAppDataChanged(RoleStage); });
+    connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
+    connect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, [this, application]() {
+        Q_EMIT focusRequested(application->appId());
+    });
 
     QString appId = application->appId();
     QString longAppId = application->longAppId();
@@ -765,43 +747,60 @@ void ApplicationManager::add(Application* application)
     m_applications.append(application);
     endInsertRows();
     Q_EMIT countChanged();
-    Q_EMIT applicationAdded(application->appId());
     if (m_applications.size() == 1) {
         Q_EMIT emptyChanged();
     }
+
+    m_modelUnderChange = false;
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - after " << toString();
 }
 
 void ApplicationManager::remove(Application *application)
 {
     Q_ASSERT(application != nullptr);
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::remove - appId=" << application->appId();
+
+    int index = m_applications.indexOf(application);
+    if (index == -1) {
+        DEBUG_MSG << "(appId=" << application->appId() << ") - not found";
+        return;
+    }
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - before " << toString();
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
+
+    beginRemoveRows(QModelIndex(), index, index);
+    m_applications.removeAt(index);
+    endRemoveRows();
+    Q_EMIT countChanged();
+    if (index == 0) {
+        Q_EMIT emptyChanged();
+    }
 
     disconnect(application, &Application::fullscreenChanged, this, 0);
     disconnect(application, &Application::focusedChanged, this, 0);
     disconnect(application, &Application::stateChanged, this, 0);
     disconnect(application, &Application::stageChanged, this, 0);
+    disconnect(application, &Application::closing, this, 0);
+    disconnect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, 0);
 
-    int i = m_applications.indexOf(application);
-    if (i != -1) {
-        beginRemoveRows(QModelIndex(), i, i);
-        m_applications.removeAt(i);
-        endRemoveRows();
-        Q_EMIT applicationRemoved(application->appId());
-        Q_EMIT countChanged();
-        if (i == 0) {
-            Q_EMIT emptyChanged();
-        }
-    }
+    // don't remove (as it's already being removed) but still delete the guy.
+    disconnect(application, &Application::stopped, this, 0);
+    connect(application, &Application::stopped, this, [application]() { application->deleteLater(); });
 
-    if (application == m_focusedApplication) {
-        m_focusedApplication = nullptr;
-        Q_EMIT focusedApplicationIdChanged();
-    }
+    m_modelUnderChange = false;
+
+    DEBUG_MSG << "(appId=" << application->appId() << ") - after " << toString();
 }
 
 void ApplicationManager::move(int from, int to) {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move - from=" << from << "to=" << to;
     if (from == to) return;
+
+    Q_ASSERT(!m_modelUnderChange);
+    m_modelUnderChange = true;
 
     if (from >= 0 && from < m_applications.size() && to >= 0 && to < m_applications.size()) {
         QModelIndex parent;
@@ -813,6 +812,9 @@ void ApplicationManager::move(int from, int to) {
         m_applications.move(from, to);
         endMoveRows();
     }
+
+    m_modelUnderChange = false;
+
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move after " << toString();
 }
 
@@ -868,6 +870,45 @@ void ApplicationManager::onSessionAboutToCreateSurface(
         qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface type=" << type
             << " NOOP";
     }
+}
+
+void ApplicationManager::updateFocusedApplication()
+{
+    Application *focusedApplication = nullptr;
+    Application *previouslyFocusedApplication = nullptr;
+
+    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
+    if (surface) {
+        focusedApplication = findApplication(surface);
+    }
+
+    surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->previouslyFocusedSurface());
+    if (surface) {
+        previouslyFocusedApplication = findApplication(surface);
+    }
+
+    if (focusedApplication != previouslyFocusedApplication) {
+        if (focusedApplication) {
+            DEBUG_MSG << "() focused " << focusedApplication->appId();
+            Q_EMIT focusedApplication->focusedChanged(true);
+            this->move(this->m_applications.indexOf(focusedApplication), 0);
+        }
+        if (previouslyFocusedApplication) {
+            DEBUG_MSG << "() unfocused " << previouslyFocusedApplication->appId();
+            Q_EMIT previouslyFocusedApplication->focusedChanged(false);
+        }
+        Q_EMIT focusedApplicationIdChanged();
+    }
+}
+
+Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* surface)
+{
+    for (Application *app : m_applications) {
+        if (app->session() == surface->session()) {
+            return app;
+        }
+    }
+    return nullptr;
 }
 
 } // namespace qtmir

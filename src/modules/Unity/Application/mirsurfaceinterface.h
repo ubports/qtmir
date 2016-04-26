@@ -63,9 +63,19 @@ public:
     virtual bool numBuffersReadyForCompositor() = 0;
     // end of methods called from the rendering (scene graph) thread
 
-    virtual void setFocus(bool focus) = 0;
+    /*
+        Defines the unityapi::MirSurfaceInterface::focused() value, which is what shell sees.
+        Set centrally by MirFocusController and used for window-management purposes by shell.
+     */
+    virtual void setFocused(bool focus) = 0;
 
-    virtual void close() = 0;
+    /*
+        Defines the "focus" attribute of the underlying mir::scene::Surface, which is what
+        the client application sees.
+        Set by a MirSurfaceItem and used to inform the client application about the actual
+        focus, pretty much a one-to-one mapping with QML's active focus concept, hence the name.
+     */
+    virtual void setActiveFocus(bool focus) = 0;
 
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
@@ -89,8 +99,7 @@ public:
 
     virtual void setScreen(QScreen *screen) = 0;
 
-Q_SIGNALS:
-    void cursorChanged(const QCursor &cursor);
+    virtual SessionInterface* session() = 0;
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
@@ -104,6 +113,9 @@ public Q_SLOTS:
     virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
 Q_SIGNALS:
+    void cursorChanged(const QCursor &cursor);
+    void raiseRequested();
+    void closeRequested();
     void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
