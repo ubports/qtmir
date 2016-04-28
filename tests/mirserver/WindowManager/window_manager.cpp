@@ -50,6 +50,7 @@ struct MockDisplayLayout : msh::DisplayLayout
 struct MockSurface : StubSurface
 {
     MOCK_METHOD2(configure, int (MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD1(rename, void (std::string const& title));
 };
 
 struct MockSession : StubSession
@@ -219,10 +220,13 @@ TEST_F(WindowManager, HandlesRemoveDisplay)
 
 TEST_F(WindowManager, HandlesModifySurface)
 {
+    const auto surface = std::make_shared<MockSurface>();
+    EXPECT_CALL(*arbitrary_session, surface(_)).Times(AnyNumber()).WillRepeatedly(Return(surface));
     add_surface();
+    std::string title = "TestSurface";
 
     SurfaceObserver surfaceObserver;
-    SurfaceObserver::registerObserverForSurface(&surfaceObserver, arbitrary_surface.get());
+    SurfaceObserver::registerObserverForSurface(&surfaceObserver, surface.get());
 
     mir::shell::SurfaceSpecification modifications;
     modifications.min_width = mir::geometry::Width(100);
@@ -230,14 +234,16 @@ TEST_F(WindowManager, HandlesModifySurface)
     modifications.max_width = mir::geometry::Width(102);
     modifications.max_height = mir::geometry::Height(103);
     modifications.shell_chrome = mir_shell_chrome_low;
+    modifications.name = title;
 
     QSignalSpy spyMinimumWidthChanged(&surfaceObserver, SIGNAL(minimumWidthChanged(int)));
     QSignalSpy spyMinimumHeightChanged(&surfaceObserver, SIGNAL(minimumHeightChanged(int)));
     QSignalSpy spyMaximumWidthChanged(&surfaceObserver, SIGNAL(maximumWidthChanged(int)));
     QSignalSpy spyMaximumHeightChanged(&surfaceObserver, SIGNAL(maximumHeightChanged(int)));
     QSignalSpy spyShellChromeChanged(&surfaceObserver, SIGNAL(shellChromeChanged(MirShellChrome)));
+    EXPECT_CALL(*surface, rename(title));
 
-    window_manager->modify_surface(arbitrary_session, arbitrary_surface, modifications);
+    window_manager->modify_surface(arbitrary_session, surface, modifications);
 
     EXPECT_EQ(100, spyMinimumWidthChanged.takeFirst().at(0).toInt());
     EXPECT_EQ(101, spyMinimumHeightChanged.takeFirst().at(0).toInt());
@@ -245,7 +251,7 @@ TEST_F(WindowManager, HandlesModifySurface)
     EXPECT_EQ(103, spyMaximumHeightChanged.takeFirst().at(0).toInt());
     EXPECT_EQ(mir_shell_chrome_low, spyShellChromeChanged.takeFirst().at(0).toInt());
 
-    window_manager->remove_surface(arbitrary_session, arbitrary_surface);
+    window_manager->remove_surface(arbitrary_session, surface);
 }
 
 TEST_F(WindowManager, HandlesKeyboardEvent)
