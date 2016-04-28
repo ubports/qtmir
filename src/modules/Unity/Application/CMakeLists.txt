@@ -27,7 +27,6 @@ set(QMLMIRPLUGIN_SRC
     application.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
-    desktopfilereader.cpp
     plugin.cpp
     dbuswindowstack.cpp
     mirsurfacemanager.cpp
@@ -42,6 +41,7 @@ set(QMLMIRPLUGIN_SRC
     session.cpp
     sessionmanager.cpp
     sharedwakelock.cpp
+    upstart/applicationinfo.cpp
     upstart/taskcontroller.cpp
     timer.cpp
     timesource.cpp
@@ -57,6 +57,7 @@ set(QMLMIRPLUGIN_SRC
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceListInterface.h
 # Feed the automoc monster
     session_interface.h
+    applicationinfo.h
     taskcontroller.h
     settings_interface.h
     )

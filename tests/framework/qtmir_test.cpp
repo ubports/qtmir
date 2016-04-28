@@ -123,7 +123,6 @@ QtMirTest::QtMirTest()
     , applicationManager(mirServer,
                          taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-                         QSharedPointer<DesktopFileReader::Factory>(&desktopFileReaderFactory,[](DesktopFileReader::Factory*){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
     , sessionManager(mirServer, &applicationManager)
@@ -143,14 +142,6 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     ON_CALL(*taskController,appIdHasProcessId(appId, procId)).WillByDefault(Return(true));
 
     // Set up Mocks & signal watcher
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(appId, QFileInfo());
-    ON_CALL(*mockDesktopFileReader, loaded()).WillByDefault(Return(true));
-    ON_CALL(*mockDesktopFileReader, appId()).WillByDefault(Return(appId));
-
-    EXPECT_CALL(desktopFileReaderFactory, createInstance(appId, _))
-            .Times(1)
-            .WillOnce(Return(mockDesktopFileReader));
-
     EXPECT_CALL(*taskController, start(appId, _))
             .Times(1)
             .WillOnce(Return(true));
@@ -167,7 +158,6 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     sessionManager.onSessionStarting(appSession);
 
     Mock::VerifyAndClearExpectations(taskController);
-    Mock::VerifyAndClearExpectations(&desktopFileReaderFactory);
     return application;
 }
 

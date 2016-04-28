@@ -20,8 +20,9 @@
 #include "qtmir_test.h"
 
 #include <fake_mirsurface.h>
-#include <fake_desktopfilereader.h>
+#include <fake_application_info.h>
 #include <fake_session.h>
+#include <mock_application_info.h>
 #include <mock_session.h>
 
 #include <QScopedPointer>
@@ -67,7 +68,7 @@ public:
     {
         Application *application = new Application(
                 QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-                new FakeDesktopFileReader);
+                QSharedPointer<FakeApplicationInfo>::create());
 
         application->setStopTimer(new FakeTimer(fakeTimeSource));
 
@@ -200,12 +201,12 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
     EXPECT_CALL(sharedWakelock, acquire(_)).Times(0);
     EXPECT_CALL(sharedWakelock, release(_)).Times(0);
 
-    FakeDesktopFileReader *desktopFileReader = new FakeDesktopFileReader;
-    desktopFileReader->m_appId = QString("unity8-dash");
+    auto applicationInfo = QSharedPointer<FakeApplicationInfo>::create();
+    applicationInfo->m_appId = QString("unity8-dash");
 
     QScopedPointer<Application> application(new Application(
                 QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-                desktopFileReader));
+                applicationInfo));
 
     application->setProcessState(Application::ProcessRunning);
 
@@ -351,15 +352,15 @@ TEST_F(ApplicationTests, passesIsTouchAppThrough)
 {
     using namespace ::testing;
 
-    auto mockDesktopFileReader = new NiceMock<MockDesktopFileReader>(QString(), QFileInfo());
+    auto mockApplicationInfo = QSharedPointer<MockApplicationInfo>(new NiceMock<MockApplicationInfo>("foo-app"));
     QScopedPointer<Application> application(new Application(
             QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
-            mockDesktopFileReader, QStringList(), nullptr));
+            mockApplicationInfo, QStringList(), nullptr));
 
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(true));
+    ON_CALL(*mockApplicationInfo, isTouchApp()).WillByDefault(Return(true));
     ASSERT_TRUE(application->isTouchApp());
 
-    ON_CALL(*mockDesktopFileReader, isTouchApp()).WillByDefault(Return(false));
+    ON_CALL(*mockApplicationInfo, isTouchApp()).WillByDefault(Return(false));
     ASSERT_FALSE(application->isTouchApp());
 }
 

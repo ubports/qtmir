@@ -19,12 +19,14 @@
 #define QTMIR_TASK_CONTROLLER_H
 
 #include <QObject>
+#include <QSharedPointer>
 #include <QString>
 #include <QStringList>
-#include <QFileInfo>
 
 namespace qtmir
 {
+
+class ApplicationInfo;
 
 class TaskController : public QObject
 {
@@ -42,7 +44,6 @@ public:
 
     TaskController& operator=(const TaskController&) = delete;
 
-    virtual pid_t primaryPidForAppId(const QString &appId) = 0;
     virtual bool appIdHasProcessId(const QString &appId, pid_t pid) = 0;
 
     virtual bool stop(const QString &appId) = 0;
@@ -51,7 +52,7 @@ public:
     virtual bool suspend(const QString &appId) = 0;
     virtual bool resume(const QString &appId) = 0;
 
-    virtual QFileInfo findDesktopFileForAppId(const QString &appId) const = 0;
+    virtual QSharedPointer<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const = 0;
 
 Q_SIGNALS:
     void processStarting(const QString &appId);

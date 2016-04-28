@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mock_application_info.h"
 #include "mock_task_controller.h"
 
 namespace qtmir
@@ -22,17 +23,14 @@ namespace qtmir
 MockTaskController::MockTaskController()
 {
     using namespace ::testing;
-    ON_CALL(*this, primaryPidForAppId(_))
-            .WillByDefault(
-                Invoke(this, &MockTaskController::doPrimaryPidForAppId));
 
     ON_CALL(*this, appIdHasProcessId(_, _))
             .WillByDefault(
                 Invoke(this, &MockTaskController::doAppIdHasProcessId));
 
-    ON_CALL(*this, findDesktopFileForAppId(_))
+    ON_CALL(*this, getInfoForApp(_))
             .WillByDefault(
-                Invoke(this, &MockTaskController::doFindDesktopFileForAppId));
+                Invoke(this, &MockTaskController::doGetInfoForApp));
 
     ON_CALL(*this, stop(_))
             .WillByDefault(
@@ -56,30 +54,20 @@ MockTaskController::~MockTaskController()
 
 }
 
-pid_t MockTaskController::doPrimaryPidForAppId(const QString &appId)
-{
-    auto it = children.find(appId);
-    if (it == children.end())
-        return -1;
-
-    return it->pid();
-}
-
 
 bool MockTaskController::doAppIdHasProcessId(const QString &appId, pid_t pid)
 {
-    auto primaryPid = primaryPidForAppId(appId);
-    if (primaryPid == -1)
+    auto it = children.find(appId);
+    if (it == children.end())
         return false;
 
-    return primaryPid == pid;
+    return it->pid() == pid;
 }
 
 
-QFileInfo MockTaskController::doFindDesktopFileForAppId(const QString &appId) const
+QSharedPointer<qtmir::ApplicationInfo> MockTaskController::doGetInfoForApp(const QString& appId) const
 {
-    QString path = QString("/usr/share/applications/%1.desktop").arg(appId);
-    return QFileInfo(path);
+    return QSharedPointer<qtmir::ApplicationInfo>(new testing::NiceMock<MockApplicationInfo>(appId));
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015,2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,42 +14,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FAKE_DESKTOPFILEREADER_H
-#define FAKE_DESKTOPFILEREADER_H
+#ifndef FAKE_APPLICATION_INFO_H
+#define FAKE_APPLICATION_INFO_H
 
-#include <Unity/Application/desktopfilereader.h>
+#include <Unity/Application/applicationinfo.h>
 
 namespace qtmir {
 
-class FakeDesktopFileReader : public qtmir::DesktopFileReader
+class FakeApplicationInfo : public ApplicationInfo
 {
 public:
-    FakeDesktopFileReader(const QString &appId);
-    FakeDesktopFileReader();
-    virtual ~FakeDesktopFileReader();
+    FakeApplicationInfo(const QString &appId);
+    FakeApplicationInfo();
+    virtual ~FakeApplicationInfo();
 
-    QString file() const override;
     QString appId() const override;
     QString name() const override;
     QString comment() const override;
-    QString icon() const override;
-    QString exec() const override;
-    QString path() const override;
-    QString stageHint() const override;
+    QUrl icon() const override;
     QString splashTitle() const override;
-    QString splashImage() const override;
-    QString splashShowHeader() const override;
+    QUrl splashImage() const override;
+    bool splashShowHeader() const override;
     QString splashColor() const override;
     QString splashColorHeader() const override;
     QString splashColorFooter() const override;
     Qt::ScreenOrientations supportedOrientations() const override;
     bool rotatesWindowContents() const override;
     bool isTouchApp() const override;
-    bool loaded() const override;
 
     QString m_appId;
 };
 
 } // namespace qtmir
 
-#endif // FAKE_DESKTOPFILEREADER_H
+#endif // FAKE_APPLICATION_INFO_H

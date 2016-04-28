@@ -10,11 +10,10 @@ include_directories(
 )
 
 set(QTMIR_TEST_PRIVATE_SRC
-    fake_desktopfilereader.cpp
+    fake_application_info.cpp
     fake_mirsurface.cpp
     fake_session.cpp
-    mock_task_controller.cpp
-    mock_desktop_file_reader.cpp
+    mock_application_info.cpp
     mock_display.cpp
     mock_display_configuration.cpp
     mock_gl_display_buffer.cpp
@@ -28,6 +27,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_settings.cpp
     mock_shared_wakelock.cpp
     mock_surface.cpp
+    mock_task_controller.cpp
     stub_input_channel.cpp
     stub_scene_surface.cpp
     qtmir_test.cpp

@@ -16,8 +16,8 @@
 
 // local
 #include "application.h"
+#include "applicationinfo.h"
 #include "application_manager.h"
-#include "desktopfilereader.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "timer.h"
@@ -44,14 +44,14 @@ namespace qtmir
 {
 
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                         DesktopFileReader *desktopFileReader,
+                         const QSharedPointer<ApplicationInfo>& appInfo,
                          const QStringList &arguments,
                          ApplicationManager *parent)
-    : ApplicationInfoInterface(desktopFileReader->appId(), parent)
+    : ApplicationInfoInterface(appInfo->appId(), parent)
     , m_sharedWakelock(sharedWakelock)
-    , m_desktopData(desktopFileReader)
+    , m_appInfo(appInfo)
     , m_pid(0)
-    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage(Application::MainStage)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
@@ -66,12 +66,9 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     // Because m_state is InternalState::Starting
     acquireWakelock();
 
-    // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
-    m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
+    m_supportedOrientations = m_appInfo->supportedOrientations();
 
-    m_supportedOrientations = m_desktopData->supportedOrientations();
-
-    m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
+    m_rotatesWindowContents = m_appInfo->rotatesWindowContents();
 
     setStopTimer(new Timer);
 }
@@ -108,7 +105,6 @@ Application::~Application()
         m_session->setApplication(nullptr);
         delete m_session;
     }
-    delete m_desktopData;
     delete m_stopTimer;
 }
 
@@ -130,64 +126,37 @@ void Application::wipeQMLCache()
 
 bool Application::isValid() const
 {
-    return m_desktopData->loaded();
-}
-
-QString Application::desktopFile() const
-{
-    return m_desktopData->file();
+    return !appId().isEmpty();
 }
 
 QString Application::appId() const
 {
-    return m_desktopData->appId();
+    return m_appInfo->appId();
 }
 
 QString Application::name() const
 {
-    return m_desktopData->name();
+    return m_appInfo->name();
 }
 
 QString Application::comment() const
 {
-    return m_desktopData->comment();
+    return m_appInfo->comment();
 }
 
 QUrl Application::icon() const
 {
-    QString iconString = m_desktopData->icon();
-    QString pathString = m_desktopData->path();
-
-    if (QFileInfo(iconString).exists()) {
-        return QUrl(iconString);
-    } else if (QFileInfo(pathString + '/' + iconString).exists()) {
-        return QUrl(pathString + '/' + iconString);
-    } else {
-        return QUrl("image://theme/" + iconString);
-    }
+    return m_appInfo->icon();
 }
 
 QString Application::splashTitle() const
 {
-    return m_desktopData->splashTitle();
+    return m_appInfo->splashTitle();
 }
 
 QUrl Application::splashImage() const
 {
-    if (m_desktopData->splashImage().isEmpty()) {
-        return QUrl();
-    } else {
-        QFileInfo imageFileInfo(m_desktopData->path(), m_desktopData->splashImage());
-        if (imageFileInfo.exists()) {
-            return QUrl::fromLocalFile(imageFileInfo.canonicalFilePath());
-        } else {
-            qCWarning(QTMIR_APPLICATIONS)
-                << QString("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
-                    .arg(appId()).arg(imageFileInfo.absoluteFilePath());
-
-            return QUrl();
-        }
-    }
+    return m_appInfo->splashImage();
 }
 
 QColor Application::colorFromString(const QString &colorString, const char *colorName) const
@@ -242,35 +211,25 @@ const char* Application::internalStateToStr(InternalState state)
 
 bool Application::splashShowHeader() const
 {
-    QString showHeader = m_desktopData->splashShowHeader();
-    if (showHeader.toLower() == "true") {
-        return true;
-    } else {
-        return false;
-    }
+    return m_appInfo->splashShowHeader();
 }
 
 QColor Application::splashColor() const
 {
-    QString colorStr = m_desktopData->splashColor();
+    QString colorStr = m_appInfo->splashColor();
     return colorFromString(colorStr, "splashColor");
 }
 
 QColor Application::splashColorHeader() const
 {
-    QString colorStr = m_desktopData->splashColorHeader();
+    QString colorStr = m_appInfo->splashColorHeader();
     return colorFromString(colorStr, "splashColorHeader");
 }
 
 QColor Application::splashColorFooter() const
 {
-    QString colorStr = m_desktopData->splashColorFooter();
+    QString colorStr = m_appInfo->splashColorFooter();
     return colorFromString(colorStr, "splashColorFooter");
-}
-
-QString Application::exec() const
-{
-    return m_desktopData->exec();
 }
 
 Application::Stage Application::stage() const
@@ -746,7 +705,7 @@ void Application::stop()
 
 bool Application::isTouchApp() const
 {
-    return m_desktopData->isTouchApp();
+    return m_appInfo->isTouchApp();
 }
 
 bool Application::exemptFromLifecycle() const
@@ -764,11 +723,6 @@ void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
         m_exemptFromLifecycle = exemptFromLifecycle;
         Q_EMIT exemptFromLifecycleChanged(m_exemptFromLifecycle);
     }
-}
-
-QString Application::longAppId() const
-{
-    return m_longAppId;
 }
 
 Qt::ScreenOrientations Application::supportedOrientations() const

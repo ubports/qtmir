@@ -17,7 +17,7 @@
 // local
 #include "application_manager.h"
 #include "application.h"
-#include "desktopfilereader.h"
+#include "applicationinfo.h"
 #include "dbuswindowstack.h"
 #include "mirfocuscontroller.h"
 #include "session.h"
@@ -129,7 +129,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
     QSharedPointer<TaskController> taskController(new upstart::TaskController());
-    QSharedPointer<DesktopFileReader::Factory> fileReaderFactory(new DesktopFileReader::Factory());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
     QSharedPointer<SharedWakelock> sharedWakelock(new SharedWakelock);
     QSharedPointer<Settings> settings(new Settings());
@@ -143,7 +142,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              mirServer,
                                              taskController,
                                              sharedWakelock,
-                                             fileReaderFactory,
                                              procInfo,
                                              settings
                                          );
@@ -182,7 +180,6 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<MirServer>& mirServer,
         const QSharedPointer<TaskController>& taskController,
         const QSharedPointer<SharedWakelock>& sharedWakelock,
-        const QSharedPointer<DesktopFileReader::Factory>& desktopFileReaderFactory,
         const QSharedPointer<ProcInfo>& procInfo,
         const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
@@ -190,7 +187,6 @@ ApplicationManager::ApplicationManager(
     , m_mirServer(mirServer)
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
-    , m_desktopFileReaderFactory(desktopFileReaderFactory)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
     , m_settings(settings)
@@ -361,16 +357,17 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
     if (application) {
         application->setArguments(arguments);
     } else {
-        application = new Application(
-                    m_sharedWakelock,
-                    m_desktopFileReaderFactory->createInstance(appId, m_taskController->findDesktopFileForAppId(appId)),
-                    arguments,
-                    this);
-
-        if (!application->isValid()) {
-            qWarning() << "Unable to instantiate application with appId" << appId;
+        auto appInfo = m_taskController->getInfoForApp(appId);
+        if (!appInfo) {
+            qCWarning(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - Unable to instantiate application with appId" << appId;
             return nullptr;
         }
+
+        application = new Application(
+                    m_sharedWakelock,
+                    appInfo,
+                    arguments,
+                    this);
 
         add(application);
     }
@@ -384,17 +381,17 @@ void ApplicationManager::onProcessStarting(const QString &appId)
 
     Application *application = findApplication(appId);
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
-        application = new Application(
-                    m_sharedWakelock,
-                    m_desktopFileReaderFactory->createInstance(appId, m_taskController->findDesktopFileForAppId(appId)),
-                    QStringList(),
-                    this);
-
-        if (!application->isValid()) {
-            qWarning() << "Unable to instantiate application with appId" << appId;
+        auto appInfo = m_taskController->getInfoForApp(appId);
+        if (!appInfo) {
+            qCWarning(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - Unable to instantiate application with appId" << appId;
             return;
         }
 
+        application = new Application(
+                    m_sharedWakelock,
+                    appInfo,
+                    QStringList(),
+                    this);
         add(application);
         application->requestFocus();
     }
@@ -583,36 +580,24 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << desktopFileName;
-
     // Guess appId from the desktop file hint
     const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
 
-    // FIXME: right now we support --desktop_file_hint=appId for historical reasons. So let's try that in
-    // case we didn't get an existing .desktop file path
-    DesktopFileReader* desktopData;
-    if (QFileInfo::exists(desktopFileName)) {
-        desktopData = m_desktopFileReaderFactory->createInstance(appId, QFileInfo(desktopFileName));
-    } else {
-        qCDebug(QTMIR_APPLICATIONS) << "Unable to find file:" << desktopFileName
-                                    << "so will search standard paths for one named" << appId << ".desktop";
-        desktopData = m_desktopFileReaderFactory->createInstance(appId, m_taskController->findDesktopFileForAppId(appId));
-    }
+    qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
 
-    if (!desktopData->loaded()) {
-        delete desktopData;
+    auto appInfo = m_taskController->getInfoForApp(appId);
+    if (!appInfo) {
         qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                    << "as the file specified by the desktop_file_hint argument could not be opened";
+                    << "as the app specified by the desktop_file_hint argument could not be found";
         return;
     }
 
     // some naughty applications use a script to launch the actual application. Check for the
     // case where shell actually launched the script.
-    Application *application = findApplication(desktopData->appId());
+    Application *application = findApplication(appInfo->appId());
     if (application && application->state() == Application::Starting) {
         qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
                                     << "in application list with appId:" << application->appId();
-        delete desktopData;
         application->setPid(pid);
         authorized = true;
         return;
@@ -627,12 +612,12 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     }
 
     qCDebug(QTMIR_APPLICATIONS) << "New process with pid" << pid << "appeared, adding new application to the"
-                                << "application list with appId:" << desktopData->appId();
+                                << "application list with appId:" << appInfo->appId();
 
     QStringList arguments(info->asStringList());
     application = new Application(
         m_sharedWakelock,
-        desktopData,
+        appInfo,
         arguments,
         this);
     application->setPid(pid);
@@ -713,7 +698,6 @@ void ApplicationManager::add(Application* application)
     });
 
     QString appId = application->appId();
-    QString longAppId = application->longAppId();
     QStringList arguments = application->arguments();
 
     // The connection is queued as a workaround an issue in the PhoneStage animation that
@@ -726,7 +710,7 @@ void ApplicationManager::add(Application* application)
             Qt::QueuedConnection);
 
     connect(application, &Application::stopProcessRequested, this, [=]() {
-        if (!m_taskController->stop(application->longAppId()) && application->pid() > 0) {
+        if (!m_taskController->stop(appId) && application->pid() > 0) {
             qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
                        << "Sending SIGTERM to process:" << appId;
             kill(application->pid(), SIGTERM);
@@ -734,8 +718,8 @@ void ApplicationManager::add(Application* application)
         }
     });
 
-    connect(application, &Application::suspendProcessRequested, this, [=]() { m_taskController->suspend(longAppId); } );
-    connect(application, &Application::resumeProcessRequested, this, [=]() { m_taskController->resume(longAppId); } );
+    connect(application, &Application::suspendProcessRequested, this, [=]() { m_taskController->suspend(appId); } );
+    connect(application, &Application::resumeProcessRequested, this, [=]() { m_taskController->resume(appId); } );
 
     connect(application, &Application::stopped, this, [=]() {
         remove(application);

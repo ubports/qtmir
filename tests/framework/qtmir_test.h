@@ -32,7 +32,6 @@
 #include <Unity/Application/proc_info.h>
 #include <mirserver.h>
 
-#include "mock_desktop_file_reader.h"
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
 #include "mock_prompt_session_manager.h"
@@ -67,7 +66,6 @@ public:
     QSharedPointer<qtmir::TaskController> taskControllerSharedPointer{new testing::NiceMock<qtmir::MockTaskController>};
     testing::NiceMock<qtmir::MockTaskController> *taskController{static_cast<testing::NiceMock<qtmir::MockTaskController>*>(taskControllerSharedPointer.data())};
     testing::NiceMock<MockProcInfo> procInfo;
-    testing::NiceMock<MockDesktopFileReaderFactory> desktopFileReaderFactory;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
     std::shared_ptr<StubPromptSessionManager> promptSessionManager;

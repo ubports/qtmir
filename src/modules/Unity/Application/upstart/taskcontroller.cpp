@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014,2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,6 +15,7 @@
  *
  */
 
+#include "applicationinfo.h"
 #include "taskcontroller.h"
 
 // qtmir
@@ -27,6 +28,9 @@
 extern "C" {
     #include "ubuntu-app-launch.h"
 }
+#include <ubuntu-app-launch/registry.h>
+
+namespace ual = ubuntu::app_launch;
 
 namespace qtmir
 {
@@ -35,6 +39,7 @@ namespace upstart
 
 struct TaskController::Private
 {
+    std::shared_ptr<ual::Registry> registry;
     UbuntuAppLaunchAppObserver preStartCallback = nullptr;
     UbuntuAppLaunchAppObserver startedCallback = nullptr;
     UbuntuAppLaunchAppObserver stopCallback = nullptr;
@@ -63,39 +68,14 @@ QString toShortAppIdIfPossible(const QString &appId) {
     }
 }
 
-/**
- * @brief toLongAppIdIfPossible
- * @param shortAppId - any string that you think is a short appId
- * @return if valid short appId was input, the corresponding long appId is returned. If a long appId was
- * entered, it is returned unchanged. Anything else is also returned unchanged.
- */
-QString toLongAppIdIfPossible(const QString &shortAppId) {
-    if (ubuntu_app_launch_app_id_parse(shortAppId.toLatin1().constData(), nullptr, nullptr, nullptr)) {
-        // then we got a long appId after all, just return it
-        return shortAppId;
-    } else {
-        // try to parse the string in the form "$package_$application"
-        QRegExp shortAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+");
-        if (!shortAppIdMask.exactMatch(shortAppId)) {
-            // input string not a short appId, so just return it unchanged
-            return shortAppId;
-        }
-
-        // ask upstart for the long appId corresponding to this short appId
-        QStringList parts = shortAppId.split("_");
-        gchar *longAppId;
-        longAppId = ubuntu_app_launch_triplet_to_app_id(parts.first().toLatin1().constData(),
-                                                         parts.last().toLatin1().constData(),
-                                                         nullptr);
-        if (longAppId == nullptr) {
-            // was unable to construct a long appId from the short appId, return input unchanged
-            return shortAppId;
-        } else {
-            QString appId(longAppId);
-            g_free(longAppId);
-            return appId;
-        }
+std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shared_ptr<ual::Registry> registry)
+{
+    auto appId = ual::AppID::find(inputAppId.toStdString());
+    if (appId.empty()) {
+        qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::createApp could not find appId" << inputAppId;
+        return {};
     }
+    return ual::Application::create(appId, registry);
 }
 
 } // namespace
@@ -104,6 +84,8 @@ TaskController::TaskController()
     : qtmir::TaskController(),
       impl(new Private())
 {
+    impl->registry = std::make_shared<ual::Registry>();
+
     impl->preStartCallback = [](const gchar * appId, gpointer userData) {
         auto thiz = static_cast<TaskController*>(userData);
         Q_EMIT(thiz->processStarting(toShortAppIdIfPossible(appId)));
@@ -166,91 +148,92 @@ TaskController::~TaskController()
     ubuntu_app_launch_observer_delete_app_failed(impl->failureCallback, this);
 }
 
-pid_t TaskController::primaryPidForAppId(const QString& appId)
-{
-    GPid pid = ubuntu_app_launch_get_primary_pid(toLongAppIdIfPossible(appId).toLatin1().constData());
-    if (!pid)
-        qDebug() << "TaskController::primaryPidForAppId FAILED to get PID for appId=" << appId;
-
-    return pid;
-}
-
 bool TaskController::appIdHasProcessId(const QString& appId, pid_t pid)
 {
-    return ubuntu_app_launch_pid_in_app_id(pid, toLongAppIdIfPossible(appId).toLatin1().constData());
+    auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
+
+    for (auto &instance: app->instances()) {
+        if (instance->hasPid(pid)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool TaskController::stop(const QString& appId)
 {
-    auto result = ubuntu_app_launch_stop_application(toLongAppIdIfPossible(appId).toLatin1().constData());
-    if (!result)
-        qDebug() << "TaskController::stopApplication FAILED to stop appId=" << appId;
+    auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
-    return result;
+    for (auto &instance: app->instances()) {
+        instance->stop();
+    }
+
+    return true;
 }
 
 bool TaskController::start(const QString& appId, const QStringList& arguments)
 {
-    // Convert arguments QStringList into format suitable for ubuntu-app-launch
-    // The last item should be null, which is done by g_new0, we just don't fill it.
-    auto upstartArgs = g_new0(gchar *, arguments.length() + 1);
-
-    for (int i=0; i<arguments.length(); i++) {
-        upstartArgs[i] = g_strdup(arguments.at(i).toUtf8().data());
+    auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
     }
 
-    auto result = ubuntu_app_launch_start_application(
-                toLongAppIdIfPossible(appId).toLatin1().constData(),
-                static_cast<const gchar * const *>(upstartArgs));
+    // Convert arguments QStringList into format suitable for ubuntu-app-launch
+    std::vector<ual::Application::URL> urls;
+    for (auto &arg: arguments) {
+        urls.emplace_back(ual::Application::URL::from_raw(arg.toStdString()));
+    }
 
-    g_strfreev(upstartArgs);
+    app->launch(urls);
 
-    if (!result)
-        qDebug() << "TaskController::start FAILED to start appId" << appId;
-
-    return result;
+    return true;
 }
 
 bool TaskController::suspend(const QString& appId)
 {
-    auto result = ubuntu_app_launch_pause_application(toLongAppIdIfPossible(appId).toLatin1().constData());
-    if (!result)
-        qDebug() << "TaskController::pauseApplication FAILED to pause appId=" << appId;
+    auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
-    return result;
+    for (auto &instance: app->instances()) {
+        instance->pause();
+    }
+
+    return true;
 }
 
 bool TaskController::resume(const QString& appId)
 {
-    auto result = ubuntu_app_launch_resume_application(toLongAppIdIfPossible(appId).toLatin1().constData());
-    if (!result)
-        qDebug() << "TaskController::resumeApplication FAILED to resume appId=" << appId;
+    auto app = createApp(appId, impl->registry);
+    if (!app) {
+        return false;
+    }
 
-    return result;
+    for (auto &instance: app->instances()) {
+        instance->resume();
+    }
+
+    return true;
 }
 
-
-QFileInfo TaskController::findDesktopFileForAppId(const QString &appId) const
+QSharedPointer<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QString &appId) const
 {
-    qCDebug(QTMIR_APPLICATIONS) << "TaskController::desktopFilePathForAppId - appId=" << appId;
+    auto app = createApp(appId, impl->registry);
+    if (!app || !app->info()) {
+        return QSharedPointer<qtmir::ApplicationInfo>();
+    }
 
-    // Search for the correct desktop file using a simple heuristic
-    int dashPos = -1;
-    QString helper = toLongAppIdIfPossible(appId);
-    QString desktopFile;
-
-    do {
-        if (dashPos != -1) {
-            helper = helper.replace(dashPos, 1, '/');
-        }
-
-        desktopFile = QStandardPaths::locate(QStandardPaths::ApplicationsLocation, QString("%1.desktop").arg(helper));
-        if (!desktopFile.isEmpty()) return desktopFile;
-
-        dashPos = helper.indexOf("-");
-    } while (dashPos != -1);
-
-    return QFileInfo();
+    QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
+    auto appInfo = new qtmir::upstart::ApplicationInfo(shortAppId, app->info());
+    return QSharedPointer<qtmir::ApplicationInfo>(appInfo);
 }
 
 } // namespace upstart

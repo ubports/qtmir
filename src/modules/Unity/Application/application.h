@@ -41,7 +41,7 @@ namespace qtmir
 {
 
 class ApplicationManager;
-class DesktopFileReader;
+class ApplicationInfo;
 class Session;
 class SharedWakelock;
 class AbstractTimer;
@@ -79,7 +79,7 @@ public:
     };
 
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                DesktopFileReader *desktopFileReader,
+                const QSharedPointer<ApplicationInfo>& appInfo,
                 const QStringList &arguments = QStringList(),
                 ApplicationManager *parent = nullptr);
     virtual ~Application();
@@ -121,8 +121,6 @@ public:
     bool canBeResumed() const;
 
     bool isValid() const;
-    QString desktopFile() const;
-    QString exec() const;
     bool fullscreen() const;
 
     Stages supportedStages() const;
@@ -159,7 +157,6 @@ private Q_SLOTS:
 
 private:
 
-    QString longAppId() const;
     void acquireWakelock() const;
     void releaseWakelock() const;
     void setPid(pid_t pid);
@@ -177,8 +174,7 @@ private:
     void applyClosing();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
-    DesktopFileReader* m_desktopData;
-    QString m_longAppId;
+    QSharedPointer<ApplicationInfo> m_appInfo;
     pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;

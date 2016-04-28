@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013,2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -31,7 +31,6 @@ public:
     TaskController();
     ~TaskController();
 
-    pid_t primaryPidForAppId(const QString& appId) override;
     bool appIdHasProcessId(const QString& appId, pid_t pid) override;
 
     bool stop(const QString& appId) override;
@@ -40,7 +39,7 @@ public:
     bool suspend(const QString& appId) override;
     bool resume(const QString& appId) override;
 
-    QFileInfo findDesktopFileForAppId(const QString &appId) const override;
+    QSharedPointer<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const override;
 
 private:
     struct Private;

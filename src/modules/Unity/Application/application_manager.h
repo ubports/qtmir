@@ -29,7 +29,6 @@
 
 // local
 #include "application.h"
-#include "desktopfilereader.h"
 #include "taskcontroller.h"
 
 namespace mir {
@@ -78,7 +77,6 @@ public:
             const QSharedPointer<MirServer> &mirServer,
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
-            const QSharedPointer<DesktopFileReader::Factory> &desktopFileReaderFactory,
             const QSharedPointer<ProcInfo> &processInfo,
             const QSharedPointer<SettingsInterface> &settings,
             QObject *parent = 0);
@@ -147,7 +145,6 @@ private:
     QList<Application*> m_applications;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
-    QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
