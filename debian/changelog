@@ -1,3 +1,13 @@
+qtmir (0.4.8+16.04.20160428-0ubuntu1) xenial; urgency=medium
+
+  [ Lukáš Tinkl ]
+  * Regression fix: restore window title handling (LP: #1563522)
+
+  [ Michael Terry ]
+  * Use latest UbuntuAppLaunch API which supports libertine apps.
+
+ -- Michael Terry <michael.terry@canonical.com>  Thu, 28 Apr 2016 12:48:51 +0000
+
 qtmir (0.4.8+16.04.20160426-0ubuntu1) xenial; urgency=medium
 
   * Mir 0.22 compatibility
