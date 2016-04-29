@@ -1,3 +1,11 @@
+qtmir (0.4.8+16.04.20160429.1-0ubuntu1) xenial; urgency=medium
+
+  [ Gerry Boland, Michał Sawicz, Nick Dedekind ]
+  * Enhance ScreenController & the DisplayConfigurationPolicy to
+    implement dynamic grid units. (LP: #1573532)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 29 Apr 2016 20:04:55 +0000
+
 qtmir (0.4.8+16.04.20160428-0ubuntu1) xenial; urgency=medium
 
   [ Lukáš Tinkl ]
