@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -42,7 +42,7 @@
 #include "offscreensurface.h"
 #include "qmirserver.h"
 #include "screen.h"
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "screenwindow.h"
 #include "services.h"
 #include "ubuntutheme.h"
@@ -103,7 +103,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 {
     QWindowSystemInterface::flushWindowSystemEvents();
 
-    auto screens = m_mirServer->screenController().lock();
+    auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
         qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
         return nullptr;
@@ -142,17 +142,26 @@ void MirServerIntegration::initialize()
         exit(2);
     }
 
-    auto screens = m_mirServer->screenController().lock();
+    auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
-        qFatal("ScreenController not initialized");
+        qFatal("ScreensModel not initialized");
     }
-    QObject::connect(screens.data(), &ScreenController::screenAdded,
+    QObject::connect(screens.data(), &ScreensModel::screenAdded,
             [this](Screen *screen) { this->screenAdded(screen); });
+    QObject::connect(screens.data(), &ScreensModel::screenRemoved,
+            [this](Screen *screen) {
+#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
+        delete screen;
+#else
+        this->destroyScreen(screen);
+#endif
+    });
+
     Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);
     }
 
-    m_nativeInterface = new NativeInterface(m_mirServer->mirServer());
+    m_nativeInterface = new NativeInterface(m_mirServer.data());
 
     m_clipboard->setupDBusService();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -111,6 +111,14 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceActiveFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
+}
+
+void MirSurfaceItem::componentComplete()
+{
+    QQuickItem::componentComplete();
+    if (window()) {
+        updateScreen(window()->screen());
+    }
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -663,6 +671,9 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
+        if (window()) {
+            updateScreen(window()->screen());
+        }
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
@@ -704,7 +715,17 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     m_window = window;
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
-            Qt::DirectConnection);
+                Qt::DirectConnection);
+
+        updateScreen(m_window->screen());
+        connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::updateScreen);
+    }
+}
+
+void MirSurfaceItem::updateScreen(QScreen *screen)
+{
+    if (screen && m_surface) {
+        m_surface->setScreen(screen);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,24 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screencontroller.h"
-#include "stub_screen.h"
+#ifndef CUSTOMSCREENCONFIGURATION_H
+#define CUSTOMSCREENCONFIGURATION_H
 
-struct TestableScreenController : public ScreenController
+#include <QPoint>
+#include <QVector>
+
+#include <mir/graphics/display_configuration.h>
+
+struct CustomScreenConfiguration
 {
-    Q_OBJECT
+    mir::graphics::DisplayConfigurationOutputId id;
 
-public:
-    Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const override
-    {
-        return new StubScreen(output);
-    }
+    QPoint topLeft;
+    uint32_t currentModeIndex;
+    MirPowerMode powerMode;
+    MirOrientation orientation;
+    float scale;
+    MirFormFactor formFactor;
 
-    void do_init(const std::shared_ptr<mir::graphics::Display> &display,
-              const std::shared_ptr<mir::compositor::Compositor> &compositor)
-    {
-        init(display, compositor);
-    }
-
-    void do_terminate() { terminate(); }
+    // To read additional readonly state, consult the Screen
 };
+
+typedef QVector<CustomScreenConfiguration> CustomScreenConfigurationList;
+
+#endif // CUSTOMSCREENCONFIGURATION_H

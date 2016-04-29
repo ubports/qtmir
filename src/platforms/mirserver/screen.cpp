@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,6 +17,7 @@
 // local
 #include "screen.h"
 #include "logging.h"
+#include "nativeinterface.h"
 
 // Mir
 #include "mir/geometry/size.h"
@@ -26,9 +27,10 @@
 #include <mir/renderer/gl/render_target.h>
 
 // Qt
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <qpa/qwindowsysteminterface.h>
 #include <QThread>
+#include <QtMath>
 
 // Qt sensors
 #include <QtSensors/QOrientationReading>
@@ -96,6 +98,29 @@ enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat
     }
 }
 
+QString displayTypeToString(enum mir::graphics::DisplayConfigurationOutputType type)
+{
+    typedef mir::graphics::DisplayConfigurationOutputType Type;
+    switch (type) {
+    case Type::vga:           return QStringLiteral("VGP");
+    case Type::dvii:          return QStringLiteral("DVI-I");
+    case Type::dvid:          return QStringLiteral("DVI-D");
+    case Type::dvia:          return QStringLiteral("DVI-A");
+    case Type::composite:     return QStringLiteral("Composite");
+    case Type::svideo:        return QStringLiteral("S-Video");
+    case Type::lvds:          return QStringLiteral("LVDS");
+    case Type::component:     return QStringLiteral("Component");
+    case Type::ninepindin:    return QStringLiteral("9 Pin DIN");
+    case Type::displayport:   return QStringLiteral("DisplayPort");
+    case Type::hdmia:         return QStringLiteral("HDMI-A");
+    case Type::hdmib:         return QStringLiteral("HDMI-B");
+    case Type::tv:            return QStringLiteral("TV");
+    case Type::edp:           return QStringLiteral("EDP");
+    case Type::unknown:
+    default:
+        return QStringLiteral("Unknown");
+    } //switch
+}
 } // namespace {
 
 
@@ -117,13 +142,16 @@ bool Screen::skipDBusRegistration = false;
 
 Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     : QObject(nullptr)
+    , m_refreshRate(-1.0)
+    , m_scale(1.0)
+    , m_formFactor(mir_form_factor_unknown)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
     , m_screenWindow(nullptr)
     , m_unityScreen(nullptr)
 {
-    setMirDisplayConfiguration(screen);
+    setMirDisplayConfiguration(screen, false);
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
@@ -178,7 +206,8 @@ void Screen::onDisplayPowerStateChanged(int status, int reason)
     }
 }
 
-void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen)
+void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
+                                        bool notify)
 {
     // Note: DisplayConfigurationOutput will be destroyed after this function returns
 
@@ -191,10 +220,14 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setWidth(screen.physical_size_mm.width.as_float());
     m_physicalSize.setHeight(screen.physical_size_mm.height.as_float());
 
-    // Pixel Format
-    m_format = qImageFormatFromMirPixelFormat(screen.current_format);
+    // Screen capabilities
+    m_modes = screen.modes;
+    m_currentModeIndex = screen.current_mode_index;
+    m_preferredModeIndex = screen.preferred_mode_index;
+    m_pixelFormats = screen.pixel_formats;
 
-    // Pixel depth
+    // Current Pixel Format & depth
+    m_format = qImageFormatFromMirPixelFormat(screen.current_format);
     m_depth = 8 * MIR_BYTES_PER_PIXEL(screen.current_format);
 
     // Power mode
@@ -206,7 +239,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_geometry.setLeft(screen.top_left.x.as_int());
 
     // Mode = current resolution & refresh rate
-    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(screen.current_mode_index);
+    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
 
@@ -214,7 +247,9 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
-        QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
+        if (notify) {
+            QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
+        }
         if (m_screenWindow) { // resize corresponding window immediately
             m_screenWindow->setGeometry(m_geometry);
         }
@@ -223,7 +258,30 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // Refresh rate
     if (m_refreshRate != mode.vrefresh_hz) {
         m_refreshRate = mode.vrefresh_hz;
-        QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+        if (notify) {
+            QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+        }
+    }
+
+    // Scale, DPR & Form Factor
+    // Update the scale & form factor native-interface properties for the windows affected
+    // as there is no convenient way to emit signals for those custom properties on a QScreen
+    m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
+
+    auto w = window(); // usually there is no Window associated with this Screen at this time.
+    auto nativeInterface = qGuiApp->platformNativeInterface();
+    if (screen.form_factor != m_formFactor) {
+        m_formFactor = screen.form_factor;
+        if (w && notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("formFactor"));
+        }
+    }
+
+    if (!qFuzzyCompare(screen.scale, m_scale)) {
+        m_scale = screen.scale;
+        if (w && notify) {
+            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("scale"));
+        }
     }
 }
 
@@ -290,6 +348,11 @@ QPlatformCursor *Screen::cursor() const
     return const_cast<QPlatformCursor *>(platformCursor);
 }
 
+QString Screen::name() const
+{
+    return displayTypeToString(m_type);
+}
+
 ScreenWindow *Screen::window() const
 {
     return m_screenWindow;
@@ -298,11 +361,15 @@ ScreenWindow *Screen::window() const
 void Screen::setWindow(ScreenWindow *window)
 {
     if (window && m_screenWindow) {
-        qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::setWindow - overwriting existing ScreenWindow";
+        qCDebug(QTMIR_SCREENS) << "Screen::setWindow - overwriting existing ScreenWindow";
     }
     m_screenWindow = window;
 
     if (m_screenWindow) {
+        auto nativeInterface = qGuiApp->platformNativeInterface();
+        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
+        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
+
         if (m_screenWindow->geometry() != geometry()) {
             qCDebug(QTMIR_SCREENS) << "Screen::setWindow - new geometry for shell surface" << window->window() << geometry();
             m_screenWindow->setGeometry(geometry());
@@ -312,7 +379,7 @@ void Screen::setWindow(ScreenWindow *window)
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
 {
-    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << buffer << group;
+    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << this << as_render_target(buffer) << group;
     // This operation should only be performed while rendering is stopped
     m_renderTarget = as_render_target(buffer);
     m_displayGroup = group;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,7 +23,8 @@
 
 class QMirServerPrivate;
 class MirServer;
-class ScreenController;
+class ScreensController;
+class ScreensModel;
 
 class QMirServer: public QObject
 {
@@ -39,7 +40,8 @@ public:
 
     QWeakPointer<MirServer> mirServer() const;
 
-    QWeakPointer<ScreenController> screenController() const;
+    QWeakPointer<ScreensController> screensController() const;
+    QWeakPointer<ScreensModel> screensModel() const;
 
 Q_SIGNALS:
     void started();

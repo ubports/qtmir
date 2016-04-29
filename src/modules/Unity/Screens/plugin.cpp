@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -21,6 +21,7 @@
 
 // local
 #include "screens.h"
+#include "qquickscreenwindow.h"
 
 using namespace qtmir;
 
@@ -35,6 +36,9 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<QScreen*>("QScreen*");
 
         qmlRegisterType<qtmir::Screens>(uri, 0, 1, "Screens");
+        qRegisterMetaType<qtmir::Screens::FormFactor>("Screens::FormFactor");
+
+        qmlRegisterType<qtmir::QQuickScreenWindow>(uri, 0, 1, "ScreenWindow");
     }
 };
 

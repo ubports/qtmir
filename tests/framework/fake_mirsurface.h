@@ -87,6 +87,8 @@ public:
         Q_EMIT closeRequested();
     }
 
+    void setScreen(QScreen *) override {}
+
     void raise() override {}
 
     ////

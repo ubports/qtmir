@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -27,13 +27,16 @@ class Screens : public QAbstractListModel
 {
     Q_OBJECT
     Q_ENUMS(OutputTypes)
+    Q_ENUMS(FormFactor)
 
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum ItemRoles {
         ScreenRole = Qt::UserRole + 1,
-        OutputTypeRole
+        OutputTypeRole,
+        ScaleRole,
+        FormFactorRole,
     };
 
     enum OutputTypes {
@@ -52,6 +55,15 @@ public:
         HDMIB,
         TV,
         EDP
+    };
+
+    enum FormFactor {
+        FormFactorUnknown,
+        FormFactorPhone,
+        FormFactorTablet,
+        FormFactorMonitor,
+        FormFactorTV,
+        FormFactorProjector,
     };
 
     explicit Screens(QObject *parent = 0);
@@ -78,5 +90,7 @@ private:
 };
 
 } // namespace qtmir
+
+Q_DECLARE_METATYPE(qtmir::Screens::FormFactor)
 
 #endif // SCREENS_H
