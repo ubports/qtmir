@@ -123,7 +123,7 @@ private Q_SLOTS:
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
-    void onScreenChanged(QScreen *screen);
+    void updateScreen(QScreen *screen);
 
 private:
     void ensureTextureProvider();
