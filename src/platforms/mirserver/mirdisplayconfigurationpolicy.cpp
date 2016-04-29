@@ -56,7 +56,11 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
 
     //TODO: scan through saved configurations and select matching one to apply
 
-    // if LVDS panel, guess it is a phone/tablet
+    // We want to apply a particular display config policy when connecting an external display
+    // to a phone/tablet. We don't have a reliable way to distinguish a phone/tablet display
+    // from a laptop display as yet.
+    //
+    // Best we can do currently is guess that LVDS panel implies a phone/tablet
     bool phoneDetected = false;
     int screenCount = 0;
     conf.for_each_output(
