@@ -172,6 +172,7 @@ private:
     void applyRequestedRunning();
     void applyRequestedSuspended();
     void applyClosing();
+    void onSessionStopped();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
