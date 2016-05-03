@@ -48,9 +48,6 @@ namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
-
-
 MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreenController> &screenController, QObject* parent)
     : QObject(parent)
