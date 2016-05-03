@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,6 +17,7 @@
 #include "surfaceobserver.h"
 
 #include "namedcursor.h"
+#include "logging.h"
 
 #include <QImage>
 #include <QMetaObject>
@@ -56,6 +57,25 @@ SurfaceObserver::SurfaceObserver()
     m_cursorNameToShape["dnd-copy"] = Qt::DragCopyCursor;
     m_cursorNameToShape["dnd-move"] = Qt::DragMoveCursor;
     m_cursorNameToShape["dnd-link"] = Qt::DragLinkCursor;
+
+    // Used by Mir client API (mir_*_cursor_name strings)
+    m_cursorNameToShape["default"] = Qt::ArrowCursor;
+    m_cursorNameToShape["disabled"] = Qt::BlankCursor;
+    m_cursorNameToShape["arrow"] = Qt::ArrowCursor;
+    m_cursorNameToShape["busy"] = Qt::WaitCursor;
+    m_cursorNameToShape["caret"] = Qt::IBeamCursor;
+    m_cursorNameToShape["pointing-hand"] = Qt::PointingHandCursor;
+    m_cursorNameToShape["open-hand"] = Qt::OpenHandCursor;
+    m_cursorNameToShape["closed-hand"] = Qt::ClosedHandCursor;
+    m_cursorNameToShape["horizontal-resize"] = Qt::SizeHorCursor;
+    m_cursorNameToShape["vertical-resize"] = Qt::SizeVerCursor;
+    m_cursorNameToShape["diagonal-resize-bottom-to-top"] = Qt::SizeBDiagCursor;
+    m_cursorNameToShape["diagonal-resize-top_to_bottom"] = Qt::SizeFDiagCursor; // current string with typo
+    m_cursorNameToShape["diagonal-resize-top-to-bottom"] = Qt::SizeFDiagCursor; // how it will be when they fix it (if ever)
+    m_cursorNameToShape["omnidirectional-resize"] = Qt::SizeAllCursor;
+    m_cursorNameToShape["vsplit-resize"] = Qt::SplitVCursor;
+    m_cursorNameToShape["hsplit-resize"] = Qt::SplitHCursor;
+    m_cursorNameToShape["crosshair"] = Qt::CrossCursor;
 
     qRegisterMetaType<MirShellChrome>("MirShellChrome");
 }
@@ -171,7 +191,17 @@ QCursor SurfaceObserver::createQCursorFromMirCursorImage(const mir::graphics::Cu
         if (namedCursor) {
             // NB: If we need a named cursor not covered by Qt::CursorShape, we won't be able to
             //     used Qt's cursor API anymore for transmitting MirSurface's cursor image.
-            Qt::CursorShape cursorShape = m_cursorNameToShape.value(namedCursor->name(), Qt::ArrowCursor);
+
+            Qt::CursorShape cursorShape = Qt::ArrowCursor;
+            {
+                auto iterator = m_cursorNameToShape.find(namedCursor->name());
+                if (iterator == m_cursorNameToShape.end()) {
+                    qCWarning(QTMIR_SURFACES).nospace() << "SurfaceObserver: unrecognized cursor name "
+                        << namedCursor->name();
+                } else {
+                    cursorShape = iterator.value();
+                }
+            }
             return QCursor(cursorShape);
         } else {
             // shouldn't happen
