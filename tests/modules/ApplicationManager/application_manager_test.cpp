@@ -437,7 +437,7 @@ TEST_F(ApplicationManagerTests,appStartedByShell)
     EXPECT_EQ(Application::Starting, theApp->state());
     EXPECT_EQ(appId, theApp->appId());
     EXPECT_EQ(name, theApp->name());
-    EXPECT_FALSE(theApp->canBeResumed());
+    EXPECT_EQ(Application::ProcessUnknown, theApp->processState());
 
     // check signals were emitted
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
@@ -478,7 +478,7 @@ TEST_F(ApplicationManagerTests,appStartedByUpstart)
     EXPECT_EQ(Application::Starting, theApp->state());
     EXPECT_EQ(appId, theApp->appId());
     EXPECT_EQ(name, theApp->name());
-    EXPECT_EQ(true, theApp->canBeResumed());
+    EXPECT_NE(Application::ProcessUnknown, theApp->processState());
 
     // check signals were emitted
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
@@ -525,7 +525,7 @@ TEST_F(ApplicationManagerTests,appStartedUsingCorrectDesktopFileHintSwitch)
     EXPECT_EQ(theApp->state(), Application::Starting);
     EXPECT_EQ(theApp->appId(), appId);
     EXPECT_EQ(theApp->name(), name);
-    EXPECT_EQ(theApp->canBeResumed(), false);
+    EXPECT_EQ(theApp->processState(), Application::ProcessUnknown);
 
     // check signals were emitted
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
@@ -597,7 +597,7 @@ TEST_F(ApplicationManagerTests,synchronousProcessStartedCallDoesNotDuplicateEntr
     EXPECT_EQ(theApp->state(), Application::Starting);
     EXPECT_EQ(theApp->appId(), appId);
     EXPECT_EQ(theApp->name(), name);
-    EXPECT_EQ(theApp->canBeResumed(), true);
+    EXPECT_NE(Application::ProcessUnknown, theApp->processState());
 
     // check only once instance in the model
     EXPECT_EQ(applicationManager.count(), 1);

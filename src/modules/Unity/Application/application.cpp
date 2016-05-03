@@ -427,11 +427,6 @@ bool Application::fullscreen() const
     return m_session ? m_session->fullscreen() : false;
 }
 
-bool Application::canBeResumed() const
-{
-    return m_processState != ProcessUnknown;
-}
-
 pid_t Application::pid() const
 {
     return m_pid;
@@ -780,7 +775,7 @@ void Application::onSessionStateChanged(Session::State sessionState)
 
 void Application::onSessionStopped()
 {
-    switch(m_state) {
+    switch (m_state) {
     case InternalState::Starting:
         /* application has stopped before it managed to create a surface, we can
            assume it crashed on startup, and thus cannot be resumed */
@@ -793,7 +788,7 @@ void Application::onSessionStopped()
         break;
     case InternalState::RunningInBackground:
         if (m_processState == Application::ProcessFailed) {
-            /* killed by upstart while in background. Keep it in the window list
+            /* killed by the Out-Of-Memory killer while in background. Keep it in the window list
                as the user didn't want it to go away */
             setInternalState(InternalState::StoppedResumable);
         } else {
@@ -804,7 +799,7 @@ void Application::onSessionStopped()
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
         if (m_processState == Application::ProcessFailed) {
-            /* killed by upstart while suspended (or getting there), keep it around as the user
+            /* killed by the Out-Of-Memory killer while suspended (or getting there), keep it around as the user
                doesn't expect it to disappear */
             setInternalState(InternalState::StoppedResumable);
         } else {
@@ -819,7 +814,8 @@ void Application::onSessionStopped()
                Since this is not the case, keep it around. */
             setInternalState(InternalState::StoppedResumable);
         } else {
-            /* we're not able to respawn this application */
+            /* We're not able to respawn this application because it's not managed by upstart
+               (probably was launched via cmd line by user) */
             setInternalState(InternalState::Stopped);
         }
         break;

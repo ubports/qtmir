@@ -56,7 +56,7 @@ public:
     Q_DECLARE_FLAGS(Stages, Stage)
 
     enum ProcessState {
-        ProcessUnknown,
+        ProcessUnknown, // not managed by upstart, so we can't respawn that application
         ProcessRunning,
         ProcessSuspended,
         ProcessFailed, // it stopped, but because it was killed or because it crashed
@@ -117,8 +117,6 @@ public:
 
     SessionInterface* session() const;
     void setSession(SessionInterface *session);
-
-    bool canBeResumed() const;
 
     bool isValid() const;
     bool fullscreen() const;
