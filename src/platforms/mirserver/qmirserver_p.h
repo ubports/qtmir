@@ -26,10 +26,9 @@
 #include <mutex>
 
 // local
-#include "mirserver.h"
 #include "screenscontroller.h"
-#include "screensmodel.h"
 
+class MirServer;
 class QMirServer;
 class MirServerThread;
 
