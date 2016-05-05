@@ -57,7 +57,10 @@ class MirSurfaceManager : public QObject
     Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
-            MirShell* shell, SessionManager* sessionManager, QObject* parent);
+        MirShell* shell,
+        SessionManager* sessionManager,
+        QObject* parent
+    );
     ~MirSurfaceManager();
 
     static MirSurfaceManager* singleton();
