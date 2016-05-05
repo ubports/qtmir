@@ -64,7 +64,6 @@ public:
     MirShell *shell();
 
 private:
-    std::weak_ptr<MirShell> m_shell;
     std::weak_ptr<MirWindowManager> m_windowManager;
     const QSharedPointer<ScreensModel> m_screensModel;
 };
