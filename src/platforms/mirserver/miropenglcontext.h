@@ -23,15 +23,17 @@
 #include <QOpenGLDebugLogger>
 #endif
 
-
-class MirServer;
 class ScreenWindow;
+namespace mir { namespace graphics { class Display; class GLConfig; }}
 
 class MirOpenGLContext : public QObject, public QPlatformOpenGLContext
 {
     Q_OBJECT
 public:
-    MirOpenGLContext(const QSharedPointer<MirServer> &, const QSurfaceFormat &);
+    MirOpenGLContext(
+        mir::graphics::Display& display,
+        mir::graphics::GLConfig& gl_config
+        , const QSurfaceFormat &);
     ~MirOpenGLContext() = default;
 
     QSurfaceFormat format() const override;

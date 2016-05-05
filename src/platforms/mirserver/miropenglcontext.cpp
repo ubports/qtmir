@@ -18,7 +18,6 @@
 
 #include "offscreensurface.h"
 #include "mirglconfig.h"
-#include "mirserver.h"
 #include "screenwindow.h"
 
 #include <QDebug>
@@ -35,16 +34,17 @@
 // The Mir "Display" generates a shared GL context for all DisplayBuffers
 // (i.e. individual display output buffers) to use as a common base context.
 
-MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
+MirOpenGLContext::MirOpenGLContext(
+    mir::graphics::Display& display,
+    mir::graphics::GLConfig& gl_config,
+    const QSurfaceFormat &format)
     : m_currentWindow(nullptr)
 #ifdef QGL_DEBUG
       , m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
-    auto display = server->the_display();
-
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
-    std::unique_ptr<mir::graphics::GLContext> mirContext = display->create_gl_context();
+    std::unique_ptr<mir::graphics::GLContext> mirContext = display.create_gl_context();
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -80,8 +80,8 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
 
     // FIXME: the temporary gl context created by Mir does not have the attributes we specified
     // in the GLConfig, so need to set explicitly for now
-    m_format.setDepthBufferSize(server->the_gl_config()->depth_buffer_bits());
-    m_format.setStencilBufferSize(server->the_gl_config()->stencil_buffer_bits());
+    m_format.setDepthBufferSize(gl_config.depth_buffer_bits());
+    m_format.setStencilBufferSize(gl_config.stencil_buffer_bits());
     m_format.setSamples(-1);
 
 #ifdef QGL_DEBUG
