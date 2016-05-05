@@ -28,7 +28,6 @@
 #include "settings.h"
 
 // mirserver
-#include "mirserver.h"
 #include "nativeinterface.h"
 #include "sessionauthorizer.h"
 #include "logging.h"
@@ -121,8 +120,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
         return nullptr;
     }
 
-    auto mirServer = nativeInterface->mirServer().lock();
-
+    MirWindowManager *windowManager =  static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
     SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
@@ -137,7 +135,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     // of the QSharedPointer, and a double-delete results. Trying QQmlEngine::setObjectOwnership on the
     // object no effect, which it should. Need to investigate why.
     ApplicationManager* appManager = new ApplicationManager(
-                                             mirServer,
                                              taskController,
                                              sharedWakelock,
                                              procInfo,
@@ -147,9 +144,9 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     connectToSessionListener(appManager, sessionListener);
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
-    connect(mirServer->windowManager(), &MirWindowManager::sessionAboutToCreateSurface,
-        appManager, &ApplicationManager::onSessionAboutToCreateSurface,
-        Qt::BlockingQueuedConnection);
+    connect(windowManager, &MirWindowManager::sessionAboutToCreateSurface,
+            appManager, &ApplicationManager::onSessionAboutToCreateSurface,
+            Qt::BlockingQueuedConnection);
 
     // Emit signal to notify Upstart that Mir is ready to receive client connections
     // see http://upstart.ubuntu.com/cookbook/#expect-stop
@@ -175,14 +172,12 @@ ApplicationManager* ApplicationManager::singleton()
 }
 
 ApplicationManager::ApplicationManager(
-        const QSharedPointer<MirServer>& mirServer,
         const QSharedPointer<TaskController>& taskController,
         const QSharedPointer<SharedWakelock>& sharedWakelock,
         const QSharedPointer<ProcInfo>& procInfo,
         const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
-    , m_mirServer(mirServer)
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_procInfo(procInfo)

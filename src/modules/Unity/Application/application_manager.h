@@ -47,8 +47,6 @@ namespace unity {
     }
 }
 
-class MirServer;
-
 namespace qtmir {
 
 class DBusWindowStack;
@@ -74,7 +72,6 @@ public:
     static ApplicationManager* singleton();
 
     explicit ApplicationManager(
-            const QSharedPointer<MirServer> &mirServer,
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
             const QSharedPointer<ProcInfo> &processInfo,
@@ -139,8 +136,6 @@ private:
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
     Application *findApplication(MirSurfaceInterface* surface);
-
-    QSharedPointer<MirServer> m_mirServer;
 
     QList<Application*> m_applications;
     DBusWindowStack* m_dbusWindowStack;

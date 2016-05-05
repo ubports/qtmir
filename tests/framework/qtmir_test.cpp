@@ -120,8 +120,7 @@ namespace testing
 QtMirTest::QtMirTest()
     : promptSessionManager(std::make_shared<StubPromptSessionManager>())
     , mirServer(QSharedPointer<MirServer>(new FakeMirServer(promptSessionManager)))
-    , applicationManager(mirServer,
-                         taskControllerSharedPointer,
+    , applicationManager(taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
