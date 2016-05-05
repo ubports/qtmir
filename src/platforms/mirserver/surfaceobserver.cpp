@@ -194,8 +194,8 @@ QCursor SurfaceObserver::createQCursorFromMirCursorImage(const mir::graphics::Cu
 
             Qt::CursorShape cursorShape = Qt::ArrowCursor;
             {
-                auto iterator = m_cursorNameToShape.find(namedCursor->name());
-                if (iterator == m_cursorNameToShape.end()) {
+                auto iterator = m_cursorNameToShape.constFind(namedCursor->name());
+                if (iterator == m_cursorNameToShape.constEnd()) {
                     qCWarning(QTMIR_SURFACES).nospace() << "SurfaceObserver: unrecognized cursor name "
                         << namedCursor->name();
                 } else {
