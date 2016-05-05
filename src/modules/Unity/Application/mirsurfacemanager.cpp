@@ -31,7 +31,6 @@
 
 // QPA mirserver
 #include "nativeinterface.h"
-#include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
 #include "creationhints.h"
@@ -72,7 +71,7 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        instance = new MirSurfaceManager(nativeInterface->mirServer(), shell, SessionManager::singleton());
+        instance = new MirSurfaceManager(shell, SessionManager::singleton(), nullptr);
 
         connectToSessionListener(instance, sessionListener);
     }
@@ -80,12 +79,10 @@ MirSurfaceManager* MirSurfaceManager::singleton()
 }
 
 MirSurfaceManager::MirSurfaceManager(
-        const QSharedPointer<MirServer>& mirServer,
-        MirShell *shell,
+        MirShell* shell,
         SessionManager* sessionManager,
-        QObject *parent)
+        QObject* parent)
     : QObject(parent)
-    , m_mirServer(mirServer)
     , m_shell(shell)
     , m_sessionManager(sessionManager)
 {

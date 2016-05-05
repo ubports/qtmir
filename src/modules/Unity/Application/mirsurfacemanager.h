@@ -41,7 +41,6 @@ namespace mir {
     namespace shell { class Shell; }
 }
 
-class MirServer;
 class SurfaceObserver;
 
 namespace qtmir {
@@ -50,6 +49,7 @@ class Application;
 class ApplicationManager;
 class MirSurfaceInterface;
 class SessionManager;
+using MirShell = mir::shell::Shell;
 
 class MirSurfaceManager : public QObject
 {
@@ -57,11 +57,7 @@ class MirSurfaceManager : public QObject
     Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
-        const QSharedPointer<MirServer>& mirServer,
-        mir::shell::Shell *shell,
-        SessionManager* sessionManager,
-        QObject *parent = 0
-    );
+            MirShell* shell, SessionManager* sessionManager, QObject* parent);
     ~MirSurfaceManager();
 
     static MirSurfaceManager* singleton();
@@ -85,7 +81,6 @@ protected:
     QMutex m_mutex;
 
 private:
-    QSharedPointer<MirServer> m_mirServer;
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
     static MirSurfaceManager *instance;
