@@ -30,14 +30,12 @@
 // mirserver
 #include "mirserver.h"
 #include "nativeinterface.h"
-#include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "logging.h"
 #include <mirwindowmanager.h>
 
 // mir
 #include <mir/scene/surface.h>
-#include <mir/scene/session.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
 #include <mir/geometry/rectangles.h>

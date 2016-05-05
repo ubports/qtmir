@@ -24,7 +24,6 @@
 #include <QMutex>
 #include <QSize>
 #include <mir/scene/surface_observer.h>
-#include <mir/scene/surface.h>
 
 namespace mir {
     namespace scene {

@@ -47,15 +47,11 @@ public:
 
     /* mir specific */
     using mir::Server::run;
-    using mir::Server::the_compositor;
     using mir::Server::the_display;
     using mir::Server::the_display_configuration_controller;
     using mir::Server::the_gl_config;
     using mir::Server::the_main_loop;
-    using mir::Server::the_prompt_session_listener;
     using mir::Server::the_prompt_session_manager;
-    using mir::Server::the_session_authorizer;
-    using mir::Server::the_session_listener;
 
     void stop();
 
