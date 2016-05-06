@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -35,8 +35,8 @@
 // (i.e. individual display output buffers) to use as a common base context.
 
 MirOpenGLContext::MirOpenGLContext(
-    mir::graphics::Display& display,
-    mir::graphics::GLConfig& gl_config,
+    mir::graphics::Display &display,
+    mir::graphics::GLConfig &gl_config,
     const QSurfaceFormat &format)
     : m_currentWindow(nullptr)
 #ifdef QGL_DEBUG
