@@ -18,12 +18,14 @@
 #include <QObject>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QOpenGLContext>
 
 // local
 #include "mirserver.h"
 #include "qmirserver.h"
 #include "qmirserver_p.h"
 #include "screen.h"
+#include "miropenglcontext.h"
 
 QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
     : QObject(parent)
@@ -85,12 +87,6 @@ bool QMirServer::isRunning() const
     return d->serverThread->isRunning();
 }
 
-QWeakPointer<MirServer> QMirServer::mirServer() const
-{
-    Q_D(const QMirServer);
-    return d->server.toWeakRef();
-}
-
 QWeakPointer<ScreensModel> QMirServer::screensModel() const
 {
     Q_D(const QMirServer);
@@ -101,4 +97,39 @@ QWeakPointer<ScreensController> QMirServer::screensController() const
 {
     Q_D(const QMirServer);
     return d->screensController;
+}
+
+QPlatformOpenGLContext *QMirServer::createPlatformOpenGLContext(QOpenGLContext *context) const
+{
+    Q_D(const QMirServer);
+    return new MirOpenGLContext(*d->server->the_display(), *d->server->the_gl_config(), context->format());
+}
+
+void *QMirServer::nativeResourceForIntegration(const QByteArray &resource) const
+{
+    Q_D(const QMirServer);
+    void *result = nullptr;
+
+    if (d->server) {
+        if (resource == "SessionAuthorizer")
+            result = d->server->sessionAuthorizer();
+        else if (resource == "Shell")
+            result = d->server->shell();
+        else if (resource == "SessionListener")
+            result = d->server->sessionListener();
+        else if (resource == "PromptSessionListener")
+            result = d->server->promptSessionListener();
+        else if (resource == "WindowManager")
+            result = d->server->windowManager();
+        else if (resource == "ScreensController")
+            result = screensController().data();
+    }
+    return result;
+}
+
+std::shared_ptr<mir::scene::PromptSessionManager> QMirServer::thePromptSessionManager() const
+{
+    Q_D(const QMirServer);
+
+    return d->server->the_prompt_session_manager();
 }
