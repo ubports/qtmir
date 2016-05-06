@@ -59,7 +59,7 @@ public:
     explicit MirSurfaceManager(
         MirShell* shell,
         SessionManager* sessionManager,
-        QObject* parent
+        QObject* parent = nullptr
     );
     ~MirSurfaceManager();
 

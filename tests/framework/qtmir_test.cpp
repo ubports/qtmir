@@ -125,7 +125,7 @@ QtMirTest::QtMirTest()
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
     , sessionManager(mirServer, &applicationManager)
-    , surfaceManager(mirShell, &sessionManager, nullptr)
+    , surfaceManager(mirShell, &sessionManager)
 {
 }
 
