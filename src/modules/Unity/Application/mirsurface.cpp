@@ -24,11 +24,13 @@
 
 // mirserver
 #include <surfaceobserver.h>
+#include "screen.h"
 
 // Mir
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir/shell/shell.h>
+#include <mir/scene/surface.h>
 #include <mir/scene/session.h>
 #include <mir_toolkit/event.h>
 
@@ -37,6 +39,7 @@
 
 // Qt
 #include <QQmlEngine>
+#include <QScreen>
 
 using namespace qtmir;
 
@@ -852,6 +855,15 @@ void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
 
         Q_EMIT shellChromeChanged(shellChrome);
     }
+}
+
+void MirSurface::setScreen(QScreen *screen)
+{
+    using namespace mir::geometry;
+    // in Mir, this means moving the surface in Mir's scene to the matching display
+    auto targetScreenTopLeftPx = screen->geometry().topLeft(); // * screen->devicePixelRatio(); GERRY?
+    DEBUG_MSG << "moved to" << targetScreenTopLeftPx << "px";
+    m_surface->move_to(Point{ X{targetScreenTopLeftPx.x()}, Y{targetScreenTopLeftPx.y()} });
 }
 
 void MirSurface::setCursor(const QCursor &cursor)

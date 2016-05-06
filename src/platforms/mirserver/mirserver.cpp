@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -21,16 +21,16 @@
 // local
 #include "argvHelper.h"
 #include "mircursorimages.h"
-#include "mirwindowmanager.h"
+#include "mirdisplayconfigurationpolicy.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
+#include "mirwindowmanager.h"
 #include "promptsessionlistener.h"
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
-#include "tileddisplayconfigurationpolicy.h"
 #include "logging.h"
 
 // std
@@ -49,9 +49,9 @@ namespace msh = mir::shell;
 namespace ms = mir::scene;
 
 MirServer::MirServer(int &argc, char **argv,
-                     const QSharedPointer<ScreenController> &screenController, QObject* parent)
+                     const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
-    , m_screenController(screenController)
+    , m_screensModel(screensModel)
 {
     bool unknownArgsFound = false;
     set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
@@ -89,9 +89,9 @@ MirServer::MirServer(int &argc, char **argv,
             return std::make_shared<qtmir::MirCursorImages>();
         });
 
-    override_the_input_dispatcher([&screenController]
+    override_the_input_dispatcher([&screensModel]
         {
-            return std::make_shared<QtEventFeeder>(screenController);
+            return std::make_shared<QtEventFeeder>(screensModel);
         });
 
     override_the_gl_config([]
@@ -117,7 +117,7 @@ MirServer::MirServer(int &argc, char **argv,
         [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<TiledDisplayConfigurationPolicy>(wrapped);
+            return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
         });
 
     set_terminator([](int)
@@ -126,8 +126,8 @@ MirServer::MirServer(int &argc, char **argv,
             QCoreApplication::quit();
         });
 
-    add_init_callback([this, &screenController] {
-        screenController->init(the_display(), the_compositor());
+    add_init_callback([this, &screensModel] {
+        screensModel->init(the_display(), the_compositor());
     });
 
     try {
@@ -154,11 +154,11 @@ MirServer::MirServer(int &argc, char **argv,
     qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
 }
 
-// Override default implementation to ensure we terminate the ScreenController first.
+// Override default implementation to ensure we terminate the ScreensModel first.
 // Code path followed when Qt tries to shutdown the server.
 void MirServer::stop()
 {
-    m_screenController->terminate();
+    m_screensModel->terminate();
     mir::Server::stop();
 }
 
@@ -201,9 +201,9 @@ PromptSessionListener *MirServer::promptSessionListener()
     return static_cast<PromptSessionListener*>(sharedPtr.get());
 }
 
-MirShell *MirServer::shell()
+mir::shell::Shell *MirServer::shell()
 {
-    std::weak_ptr<MirShell> m_shell = the_shell();
+    std::weak_ptr<mir::shell::Shell> m_shell = the_shell();
     return m_shell.lock().get();
 }
 

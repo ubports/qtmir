@@ -54,6 +54,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     cursor.cpp
     logging.cpp
     mircursorimages.cpp
+    mirdisplayconfigurationpolicy.cpp
     mirwindowmanager.cpp
     mirsingleton.cpp
     qteventfeeder.cpp
@@ -67,8 +68,9 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     mirserver.cpp
     mirserverstatuslistener.cpp
     screen.cpp
-    screencontroller.cpp
     screenwindow.cpp
+    screenscontroller.cpp
+    screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     nativeinterface.cpp
@@ -78,7 +80,6 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ubuntutheme.cpp
     clipboard.cpp
     creationhints.cpp
-    tileddisplayconfigurationpolicy.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h

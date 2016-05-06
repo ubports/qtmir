@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -26,9 +26,9 @@
 #include <mutex>
 
 // local
-#include "mirserver.h"
-#include "screencontroller.h"
+#include "screenscontroller.h"
 
+class MirServer;
 class QMirServer;
 class MirServerThread;
 
@@ -36,7 +36,8 @@ class QMirServerPrivate
 {
 public:
     QSharedPointer<MirServer> server;
-    QSharedPointer<ScreenController> screenController;
+    QSharedPointer<ScreensController> screensController;
+    QSharedPointer<ScreensModel> screensModel;
     MirServerThread *serverThread;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "screencontroller.h"
+#include "screensmodel.h"
 
 #include "screenwindow.h"
 #include "qtcompositor.h"
@@ -38,16 +38,16 @@
 namespace mg = mir::graphics;
 
 
-ScreenController::ScreenController(QObject *parent)
+ScreensModel::ScreensModel(QObject *parent)
     : QObject(parent)
     , m_compositing(false)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::ScreenController";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::ScreensModel";
 }
 
 // init only after MirServer has initialized - runs on MirServerThread!!!
-void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &display,
-                            const std::shared_ptr<mir::compositor::Compositor> &compositor)
+void ScreensModel::init(const std::shared_ptr<mir::graphics::Display> &display,
+                        const std::shared_ptr<mir::compositor::Compositor> &compositor)
 {
     m_display = display;
     m_compositor = compositor;
@@ -57,55 +57,45 @@ void ScreenController::init(const std::shared_ptr<mir::graphics::Display> &displ
     // Queued connections work because the thread affinity of this class is with the Qt GUI thread.
     auto qtCompositor = static_cast<QtCompositor *>(compositor.get());
     connect(qtCompositor, &QtCompositor::starting,
-            this, &ScreenController::onCompositorStarting);
+            this, &ScreensModel::onCompositorStarting);
     connect(qtCompositor, &QtCompositor::stopping,
-            this, &ScreenController::onCompositorStopping, Qt::BlockingQueuedConnection);
+            this, &ScreensModel::onCompositorStopping, Qt::BlockingQueuedConnection);
 }
 
 // terminate before shutting down the Mir server, or else liable to deadlock with the blocking connection above
 // Runs on MirServerThread!!!
-void ScreenController::terminate()
+void ScreensModel::terminate()
 {
     auto qtCompositor = static_cast<QtCompositor *>(m_compositor.get());
     qtCompositor->disconnect();
 }
 
-void ScreenController::onCompositorStarting()
+void ScreensModel::onCompositorStarting()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStarting";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStarting";
     m_compositing = true;
 
     update();
 
     // (Re)Start Qt's render thread by setting all windows with a corresponding screen to exposed.
-    for (auto screen : m_screenList) {
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window()) {
-            window->setExposed(true);
-        }
-    }
+    allWindowsSetExposed(true);
 }
 
-void ScreenController::onCompositorStopping()
+void ScreensModel::onCompositorStopping()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::onCompositorStopping";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStopping";
     m_compositing = false;
 
     // Stop Qt's render threads by setting all its windows it obscured. Must
     // block until all windows have their GL contexts released.
-    for (auto screen : m_screenList) {
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window()) {
-            window->setExposed(false);
-        }
-    }
+    allWindowsSetExposed(false);
 
     update();
 }
 
-void ScreenController::update()
+void ScreensModel::update()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenController::update";
+    qCDebug(QTMIR_SCREENS) << "ScreensModel::update";
     auto display = m_display.lock();
     if (!display)
         return;
@@ -114,32 +104,62 @@ void ScreenController::update()
     // Mir only tells us something changed, it is up to us to figure out what.
     QList<Screen*> newScreenList;
     QList<Screen*> oldScreenList = m_screenList;
+    QHash<ScreenWindow*, Screen*> windowMoveList;
     m_screenList.clear();
 
     displayConfig->for_each_output(
-        [this, &oldScreenList, &newScreenList](const mg::DisplayConfigurationOutput &output) {
+        [this, &oldScreenList, &newScreenList, &windowMoveList](const mg::DisplayConfigurationOutput &output) {
             if (output.used && output.connected) {
                 Screen *screen = findScreenWithId(oldScreenList, output.id);
-                if (screen) { // we've already set up this display before, refresh its internals
-                    screen->setMirDisplayConfiguration(output);
-                    oldScreenList.removeAll(screen);
+                if (screen) { // we've already set up this display before
+
+                    // Can we re-use the existing Screen?
+                    if (canUpdateExistingScreen(screen, output)) {
+                        screen->setMirDisplayConfiguration(output);
+                        oldScreenList.removeAll(screen);
+                        m_screenList.append(screen);
+                    } else {
+                        // no, need to delete it and re-create with new config
+                        auto newScreen = createScreen(output);
+                        newScreenList.append(newScreen);
+                        qCDebug(QTMIR_SCREENS) << "Need to delete & re-create Screen with id" << output.id.as_value()
+                                               << "and geometry" << screen->geometry();
+
+                        // if Window on this Screen, arrange to move it to the new Screen
+                        if (screen->window()) {
+                            windowMoveList.insert(screen->window(), newScreen);
+                        }
+                        m_screenList.append(newScreen);
+                    }
                 } else {
                     // new display, so create Screen for it
-                    screen = this->createScreen(output);
+                    screen = createScreen(output);
                     newScreenList.append(screen);
                     qCDebug(QTMIR_SCREENS) << "Added Screen with id" << output.id.as_value()
                                            << "and geometry" << screen->geometry();
+                    m_screenList.append(screen);
                 }
-                m_screenList.append(screen);
             }
         }
     );
+
+    // Announce new Screens to Qt
+    for (auto screen : newScreenList) {
+        Q_EMIT screenAdded(screen);
+    }
+
+    // Move Windows from about-to-be-deleted Screens to new Screen
+    auto i = windowMoveList.constBegin();
+    while (i != windowMoveList.constEnd()) {
+        qCDebug(QTMIR_SCREENS) << "Moving ScreenWindow" << i.key() << "from" << static_cast<Screen*>(i.key()->screen()) << "to" << i.value();
+        i.key()->setScreen(i.value());
+        i++;
+    }
 
     // Delete any old & unused Screens
     for (auto screen: oldScreenList) {
         qCDebug(QTMIR_SCREENS) << "Removed Screen with id" << screen->m_outputId.as_value()
                                << "and geometry" << screen->geometry();
-        // The screen is automatically removed from Qt's internal list by the QPlatformScreen destructor.
         auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window() && window->isExposed()) {
             window->window()->hide();
@@ -148,7 +168,7 @@ void ScreenController::update()
         if (!ok) {
             qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }
-        delete screen;
+        Q_EMIT screenRemoved(screen); // should delete the backing Screen
     }
 
     // Match up the new Mir DisplayBuffers with each Screen
@@ -174,21 +194,43 @@ void ScreenController::update()
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->window()
-                               << "type" << static_cast<int>(screen->outputType());
+                               << "type:" << screen->name()
+                               << "scale:" << screen->scale();
     }
     qCDebug(QTMIR_SCREENS) << "=======================================";
+}
 
-    for (auto screen : newScreenList) {
-        Q_EMIT screenAdded(screen);
+bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::DisplayConfigurationOutput &output)
+{
+    // Compare the properties of the existing Screen with its new configuration. Properties
+    // like geometry, refresh rate and dpi can be updated on existing screens. Other property
+    // changes cannot be applied to existing screen, so will need to delete existing Screen and
+    // create new Screen with new properties.
+    bool canUpdateExisting = true;
+
+    if (!qFuzzyCompare(screen->scale(), output.scale)) {
+        canUpdateExisting = true; //false; FIXME
+    }
+
+    return canUpdateExisting;
+}
+
+void ScreensModel::allWindowsSetExposed(bool exposed)
+{
+    for (const auto screen : m_screenList) {
+        const auto window = static_cast<ScreenWindow *>(screen->window());
+        if (window && window->window()) {
+            window->setExposed(exposed);
+        }
     }
 }
 
-Screen* ScreenController::createScreen(const mir::graphics::DisplayConfigurationOutput &output) const
+Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
 {
     return new Screen(output);
 }
 
-Screen* ScreenController::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)
+Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)
 {
     for (Screen *screen : list) {
         if (screen->m_outputId == id) {
@@ -198,7 +240,7 @@ Screen* ScreenController::findScreenWithId(const QList<Screen *> &list, const mg
     return nullptr;
 }
 
-QWindow* ScreenController::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
+QWindow* ScreensModel::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
 {
     // This is a part optimization, and a part work-around for AP generated input events occasionally
     // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415

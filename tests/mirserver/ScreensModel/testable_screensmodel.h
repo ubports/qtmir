@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,22 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TILEDDISPLAYCONFIGURATIONPOLICY_H
-#define TILEDDISPLAYCONFIGURATIONPOLICY_H
+#include "screensmodel.h"
+#include "stub_screen.h"
 
-#include <mir/graphics/display_configuration_policy.h>
-
-#include <memory>
-
-class TiledDisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
+struct TestableScreensModel : public ScreensModel
 {
+    Q_OBJECT
+
 public:
-    TiledDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped);
+    Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const override
+    {
+        return new StubScreen(output);
+    }
 
-    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+    void do_init(const std::shared_ptr<mir::graphics::Display> &display,
+                 const std::shared_ptr<mir::compositor::Compositor> &compositor)
+    {
+        init(display, compositor);
+    }
 
-private:
-    const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
+    void do_terminate() { terminate(); }
 };
-
-#endif // TILEDDISPLAYCONFIGURATIONPOLICY_H

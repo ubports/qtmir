@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -105,7 +105,7 @@ class FakeMirServer: private TestMirServerInit, public MirServer
 {
 public:
     FakeMirServer(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
-    : TestMirServerInit(promptSessionManager), MirServer(argc, argv, QSharedPointer<ScreenController>())
+    : TestMirServerInit(promptSessionManager), MirServer(argc, argv, QSharedPointer<ScreensModel>())
     {
     }
 
@@ -120,13 +120,12 @@ namespace testing
 QtMirTest::QtMirTest()
     : promptSessionManager(std::make_shared<StubPromptSessionManager>())
     , mirServer(QSharedPointer<MirServer>(new FakeMirServer(promptSessionManager)))
-    , applicationManager(mirServer,
-                         taskControllerSharedPointer,
+    , applicationManager(taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
     , sessionManager(mirServer, &applicationManager)
-    , surfaceManager(mirServer, mirShell, &sessionManager)
+    , surfaceManager(mirShell, &sessionManager)
 {
 }
 

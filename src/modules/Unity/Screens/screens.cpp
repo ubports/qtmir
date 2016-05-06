@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -45,6 +45,8 @@ QHash<int, QByteArray> Screens::roleNames() const
     QHash<int, QByteArray> roles;
     roles[ScreenRole] = "screen";
     roles[OutputTypeRole] = "outputType";
+    roles[ScaleRole] = "scale";
+    roles[FormFactorRole] = "formFactor";
     return roles;
 }
 
@@ -57,13 +59,31 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     switch(role) {
     case ScreenRole:
         return QVariant::fromValue(m_screenList.at(index.row()));
-    case OutputTypeRole:
+    case OutputTypeRole: {
         auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
         if (screen) {
             return QVariant(static_cast<OutputTypes>(screen->outputType())); //FIXME: cheeky
-        } else
+        } else {
             return OutputTypes::Unknown;
+        }
     }
+    case ScaleRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return QVariant(screen->scale());
+        } else {
+            return 1.0;
+        }
+    }
+    case FormFactorRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return QVariant(static_cast<FormFactor>(screen->formFactor())); //FIXME: cheeky
+        } else {
+            return FormFactor::FormFactorUnknown;
+        }
+    }
+    } // switch
 
     return QVariant();
 }
@@ -102,6 +122,5 @@ void Screens::onScreenRemoved(QScreen *screen)
     Q_EMIT screenRemoved(screen);
     Q_EMIT countChanged();
 }
-
 
 } // namespace qtmir

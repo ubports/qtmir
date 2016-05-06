@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -96,6 +96,8 @@ public:
     virtual QString appId() const = 0;
 
     virtual QCursor cursor() const = 0;
+
+    virtual void setScreen(QScreen *screen) = 0;
 
     virtual SessionInterface* session() = 0;
 

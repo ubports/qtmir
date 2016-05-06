@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -31,10 +31,13 @@
 
 // QPA mirserver
 #include "nativeinterface.h"
-#include "mirserver.h"
 #include "sessionlistener.h"
 #include "logging.h"
 #include "creationhints.h"
+
+// mir
+#include <mir/scene/surface.h>
+
 
 namespace ms = mir::scene;
 
@@ -64,9 +67,9 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
+        mir::shell::Shell *shell = static_cast<mir::shell::Shell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
+        instance = new MirSurfaceManager(shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
     }
@@ -74,12 +77,10 @@ MirSurfaceManager* MirSurfaceManager::singleton()
 }
 
 MirSurfaceManager::MirSurfaceManager(
-        const QSharedPointer<MirServer>& mirServer,
-        MirShell *shell,
+        mir::shell::Shell* shell,
         SessionManager* sessionManager,
-        QObject *parent)
+        QObject* parent)
     : QObject(parent)
-    , m_mirServer(mirServer)
     , m_shell(shell)
     , m_sessionManager(sessionManager)
 {

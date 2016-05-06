@@ -36,9 +36,12 @@
 #include "creationhints.h"
 
 // mir
-#include <mir/scene/surface.h>
+#include <mir_toolkit/common.h>
 
-namespace mir { namespace shell { class Shell; }}
+namespace mir {
+namespace shell { class Shell; }
+namespace scene {class Surface; }
+}
 
 class SurfaceObserver;
 
@@ -147,6 +150,8 @@ public:
     Mir::ShellChrome shellChrome() const override;
 
     SessionInterface* session() override { return m_session.data(); }
+
+    void setScreen(QScreen *screen) override;
 
     ////
     // Own API
