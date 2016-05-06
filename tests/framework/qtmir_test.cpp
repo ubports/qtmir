@@ -124,7 +124,7 @@ QtMirTest::QtMirTest()
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
-    , sessionManager(mirServer, &applicationManager)
+    , sessionManager(mirServer->the_prompt_session_manager(), &applicationManager)
     , surfaceManager(mirShell, &sessionManager)
 {
 }

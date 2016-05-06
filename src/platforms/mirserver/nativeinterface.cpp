@@ -92,7 +92,13 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     }
 }
 
-QWeakPointer<MirServer> NativeInterface::mirServer()
+std::shared_ptr<mir::scene::PromptSessionManager> NativeInterface::thePromptSessionManager() const
 {
-    return m_qMirServer->mirServer();
+    if (auto const server = m_qMirServer->mirServer().lock())
+    {
+        return server->the_prompt_session_manager();
+    }
+
+    return nullptr;
 }
+
