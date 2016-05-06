@@ -69,7 +69,7 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         }
 
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
-        MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
+        mir::shell::Shell *shell = static_cast<mir::shell::Shell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
         instance = new MirSurfaceManager(shell, SessionManager::singleton());
 
@@ -79,7 +79,7 @@ MirSurfaceManager* MirSurfaceManager::singleton()
 }
 
 MirSurfaceManager::MirSurfaceManager(
-        MirShell* shell,
+        mir::shell::Shell* shell,
         SessionManager* sessionManager,
         QObject* parent)
     : QObject(parent)

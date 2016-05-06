@@ -71,7 +71,7 @@ public:
     std::shared_ptr<StubPromptSessionManager> promptSessionManager;
     QSharedPointer<MirServer> mirServer;
 
-    MirShell *mirShell{nullptr};
+    mir::shell::Shell *mirShell{nullptr};
     ApplicationManager applicationManager;
     SessionManager sessionManager;
     MirSurfaceManager surfaceManager;

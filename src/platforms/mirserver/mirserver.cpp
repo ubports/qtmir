@@ -204,9 +204,9 @@ PromptSessionListener *MirServer::promptSessionListener()
     return static_cast<PromptSessionListener*>(sharedPtr.get());
 }
 
-MirShell *MirServer::shell()
+mir::shell::Shell *MirServer::shell()
 {
-    std::weak_ptr<MirShell> m_shell = the_shell();
+    std::weak_ptr<mir::shell::Shell> m_shell = the_shell();
     return m_shell.lock().get();
 }
 

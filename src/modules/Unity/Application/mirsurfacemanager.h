@@ -49,7 +49,6 @@ class Application;
 class ApplicationManager;
 class MirSurfaceInterface;
 class SessionManager;
-using MirShell = mir::shell::Shell;
 
 class MirSurfaceManager : public QObject
 {
@@ -57,7 +56,7 @@ class MirSurfaceManager : public QObject
     Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
-        MirShell* shell,
+        mir::shell::Shell* shell,
         SessionManager* sessionManager,
         QObject* parent = nullptr
     );
