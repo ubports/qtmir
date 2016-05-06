@@ -16,8 +16,6 @@
 
 #include "offscreensurface.h"
 
-#include "mirserver.h"
-
 // Mir
 #include <mir/graphics/display.h>
 #include <mir/graphics/gl_context.h>

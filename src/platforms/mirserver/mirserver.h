@@ -25,7 +25,6 @@ class QtEventFeeder;
 class MirDisplayConfigurationPolicy;
 class SessionListener;
 class SessionAuthorizer;
-using MirShell = mir::shell::Shell;
 class PromptSessionListener;
 class ScreensModel;
 class MirWindowManager;
@@ -38,7 +37,7 @@ class MirServer : public QObject, private virtual mir::Server
 
     Q_PROPERTY(SessionAuthorizer* sessionAuthorizer READ sessionAuthorizer CONSTANT)
     Q_PROPERTY(SessionListener* sessionListener READ sessionListener CONSTANT)
-    Q_PROPERTY(MirShell* shell READ shell CONSTANT)
+    Q_PROPERTY(mir::shell::Shell* shell READ shell CONSTANT)
     Q_PROPERTY(PromptSessionListener* promptSessionListener READ promptSessionListener CONSTANT)
 
 public:
@@ -47,15 +46,11 @@ public:
 
     /* mir specific */
     using mir::Server::run;
-    using mir::Server::the_compositor;
     using mir::Server::the_display;
     using mir::Server::the_display_configuration_controller;
     using mir::Server::the_gl_config;
     using mir::Server::the_main_loop;
-    using mir::Server::the_prompt_session_listener;
     using mir::Server::the_prompt_session_manager;
-    using mir::Server::the_session_authorizer;
-    using mir::Server::the_session_listener;
 
     void stop();
 
@@ -65,10 +60,9 @@ public:
     SessionListener *sessionListener();
     PromptSessionListener *promptSessionListener();
     MirWindowManager *windowManager();
-    MirShell *shell();
+    mir::shell::Shell *shell();
 
 private:
-    std::weak_ptr<MirShell> m_shell;
     std::weak_ptr<MirWindowManager> m_windowManager;
     const QSharedPointer<ScreensModel> m_screensModel;
 };

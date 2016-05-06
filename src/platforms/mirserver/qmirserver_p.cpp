@@ -14,11 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "qmirserver_p.h"
+
 // Mir
 #include <mir/main_loop.h>
 
 // local
-#include "qmirserver_p.h"
+#include "mirserver.h"
+
 
 
 void MirServerThread::run()
