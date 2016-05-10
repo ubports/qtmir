@@ -589,3 +589,35 @@ TEST_F(ApplicationTests, stoppedWhileSuspendedTurnsIntoStoppeResumable)
 
     EXPECT_EQ(Application::InternalState::StoppedResumable, application->internalState());
 }
+
+TEST_F(ApplicationTests, surfaceCountPropertyUpdates)
+{
+    using namespace ::testing;
+
+    QScopedPointer<Application> application(createApplicationWithFakes());
+
+    application->setProcessState(Application::ProcessRunning);
+
+    Session *session = createSessionWithFakes();
+
+    application->setSession(session);
+
+    QSignalSpy surfaceCountChangedSpy(application.data(), &Application::surfaceCountChanged);
+
+    EXPECT_EQ(application->surfaceCount(), 0);
+    EXPECT_EQ(surfaceCountChangedSpy.count(), 0);
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    session->registerSurface(surface);
+    surface->drawFirstFrame();
+
+    EXPECT_EQ(application->surfaceCount(), 1);
+    EXPECT_EQ(surfaceCountChangedSpy.count(), 1);
+
+    FakeMirSurface *surface2 = new FakeMirSurface;
+    session->registerSurface(surface2);
+    surface2->drawFirstFrame();
+
+    EXPECT_EQ(application->surfaceCount(), 2);
+    EXPECT_EQ(surfaceCountChangedSpy.count(), 2);
+}

@@ -80,6 +80,7 @@ class ProxySurfaceListModel : public unity::shell::application::MirSurfaceListIn
 {
     Q_OBJECT
 public:
+    ProxySurfaceListModel(QObject *parent = nullptr);
     void setSourceList(MirSurfaceListModel *sourceList);
 
     Q_INVOKABLE unity::shell::application::MirSurfaceInterface *get(int index) override;

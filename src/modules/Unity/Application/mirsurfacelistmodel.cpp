@@ -60,7 +60,7 @@ void MirSurfaceListModel::prependSurface(MirSurfaceInterface *surface)
     m_surfaceList.prepend(surface);
     connectSurface(surface);
     endInsertRows();
-    Q_EMIT countChanged();
+    Q_EMIT countChanged(m_surfaceList.count());
     if (count() == 1) {
         Q_EMIT emptyChanged();
     }
@@ -79,7 +79,7 @@ void MirSurfaceListModel::removeSurface(MirSurfaceInterface *surface)
         beginRemoveRows(QModelIndex(), i, i);
         m_surfaceList.removeAt(i);
         endRemoveRows();
-        Q_EMIT countChanged();
+        Q_EMIT countChanged(m_surfaceList.count());
         if (count() == 0) {
             Q_EMIT emptyChanged();
         }
@@ -134,7 +134,7 @@ void MirSurfaceListModel::prependSurfaces(QList<MirSurfaceInterface*> &surfaceLi
                 });
     }
     endInsertRows();
-    Q_EMIT countChanged();
+    Q_EMIT countChanged(m_surfaceList.count());
     if (wasEmpty) {
         Q_EMIT emptyChanged();
     }
@@ -193,6 +193,11 @@ bool MirSurfaceListModel::isEmpty() const
 // ProxySurfaceListModel
 //////////////////////////////////////////////////////////////////////////////
 
+ProxySurfaceListModel::ProxySurfaceListModel(QObject *parent):
+    unity::shell::application::MirSurfaceListInterface(parent)
+{
+}
+
 void ProxySurfaceListModel::setSourceList(MirSurfaceListModel *sourceList)
 {
     if (m_sourceList == sourceList)
@@ -226,6 +231,7 @@ void ProxySurfaceListModel::setSourceList(MirSurfaceListModel *sourceList)
                              const QModelIndex & /*destination*/, int /*row*/)
                             {this->endMoveRows();});
         connect(m_sourceList, &QObject::destroyed, this, [this]() { this->setSourceList(nullptr); });
+        connect(m_sourceList, &MirSurfaceListModel::countChanged, this, &ProxySurfaceListModel::countChanged);
     }
 
     endResetModel();
