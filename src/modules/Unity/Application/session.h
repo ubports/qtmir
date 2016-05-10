@@ -107,6 +107,12 @@ protected:
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
     MirSurfaceListModel m_surfaceList;
+
+    // Registered surfaces that haven't yet drawn their first frames.
+    // Once they do, they get moved to m_surfaceList.
+    // So this list is just a temporary holder and most of the time it's gonna be empty.
+    QList<MirSurfaceInterface*> m_blankSurfaces;
+
     SessionModel* m_children;
     bool m_fullscreen;
     State m_state;
