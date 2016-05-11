@@ -199,8 +199,17 @@ void Session::registerSurface(MirSurfaceInterface *newSurface)
     if (newSurface->isFirstFrameDrawn()) {
         prependSurface(newSurface);
     } else {
-        connect(newSurface, &MirSurfaceInterface::firstFrameDrawn,
-                this, [this, newSurface]() { this->prependSurface(newSurface); });
+        m_blankSurfaces.append(newSurface);
+        connect(newSurface, &QObject::destroyed, this, [this, newSurface]()
+            {
+                this->m_blankSurfaces.removeAll(newSurface);
+            });
+        connect(newSurface, &MirSurfaceInterface::firstFrameDrawn, this, [this, newSurface]()
+            {
+                this->m_blankSurfaces.removeAll(newSurface);
+                newSurface->disconnect(this);
+                this->prependSurface(newSurface);
+            });
     }
 }
 
@@ -389,6 +398,18 @@ void Session::addChildSession(SessionInterface* session)
         // we assume that the top-most surface is the one that caused the prompt session to show up.
         auto promptSurfaceList = static_cast<MirSurfaceListModel*>(m_surfaceList.get(0)->promptSurfaceList());
         promptSurfaceList->addSurfaceList(session->surfaceList());
+    } else if (m_blankSurfaces.count() > 0) {
+        // Prompt session came in too early.
+        // Parent session might be blocked until the prompt session is dismissed.
+        // So we cannot wait anymore and must put that blank surface on the surface list so that the
+        // user can see the prompt surface on top of that it and interact.
+        auto blankSurface = m_blankSurfaces.takeFirst();
+
+        auto promptSurfaceList = static_cast<MirSurfaceListModel*>(blankSurface->promptSurfaceList());
+        promptSurfaceList->addSurfaceList(session->surfaceList());
+
+        blankSurface->disconnect(this);
+        prependSurface(blankSurface);
     }
 }
 

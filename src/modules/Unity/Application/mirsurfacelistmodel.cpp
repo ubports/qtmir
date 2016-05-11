@@ -28,6 +28,11 @@ MirSurfaceListModel::MirSurfaceListModel(QObject *parent) :
 {
 }
 
+MirSurfaceListModel::~MirSurfaceListModel()
+{
+    Q_EMIT destroyed(this); // Early warning, while MirSurfaceListModel methods can still be accessed.
+}
+
 int MirSurfaceListModel::rowCount(const QModelIndex &parent) const
 {
     return !parent.isValid() ? m_surfaceList.size() : 0;
