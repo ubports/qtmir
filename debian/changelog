@@ -1,3 +1,11 @@
+qtmir (0.4.8+16.04.20160511-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Session: Add a blank surface to the public list if it already has
+    child prompt surfaces (LP: #1578665)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 11 May 2016 09:08:29 +0000
+
 qtmir (0.4.8+16.04.20160429.1-0ubuntu1) xenial; urgency=medium
 
   [ Gerry Boland, Michał Sawicz, Nick Dedekind ]
