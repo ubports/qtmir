@@ -231,6 +231,8 @@ void ProxySurfaceListModel::setSourceList(MirSurfaceListModel *sourceList)
                              const QModelIndex & /*destination*/, int /*row*/)
                             {this->endMoveRows();});
         connect(m_sourceList, &QObject::destroyed, this, [this]() { this->setSourceList(nullptr); });
+        connect(m_sourceList, &unityapp::MirSurfaceListInterface::countChanged,
+                this, &unityapp::MirSurfaceListInterface::countChanged);
     }
 
     endResetModel();
