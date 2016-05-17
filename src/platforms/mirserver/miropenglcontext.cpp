@@ -26,6 +26,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
+#include <QtGui/private/qopenglcontext_p.h>
 
 // Mir
 #include <mir/graphics/display.h>
@@ -118,6 +119,23 @@ void MirOpenGLContext::swapBuffers(QPlatformSurface *surface)
     }
 }
 
+static bool needsFBOReadBackWorkaround()
+{
+    static bool set = false;
+    static bool needsWorkaround = false;
+
+    if (!set) {
+        const char *rendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+        // Keep in sync with qtubuntu
+        needsWorkaround = qstrncmp(rendererString, "Mali-400", 8) == 0
+                          || qstrncmp(rendererString, "Mali-T760", 9) == 0
+                          || qstrncmp(rendererString, "PowerVR Rogue G6200", 19) == 0;
+        set = true;
+    }
+
+    return needsWorkaround;
+}
+
 bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 {
     if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
@@ -141,6 +159,10 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
             m_logger->enableMessages();
         }
 #endif
+
+        QOpenGLContextPrivate *ctx_d = QOpenGLContextPrivate::get(context());
+        if (!ctx_d->workaround_brokenFBOReadBack && needsFBOReadBackWorkaround())
+            ctx_d->workaround_brokenFBOReadBack = true;
 
         return true;
     }
