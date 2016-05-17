@@ -109,6 +109,7 @@ public:
     QSize initialSurfaceSize() const override;
     void setInitialSurfaceSize(const QSize &size) override;
     unity::shell::application::MirSurfaceListInterface* surfaceList() override;
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
@@ -191,6 +192,7 @@ private:
     bool m_closing{false};
 
     ProxySurfaceListModel m_proxySurfaceList;
+    ProxySurfaceListModel m_proxyPromptSurfaceList;
 
     friend class ApplicationManager;
     friend class SessionManager;

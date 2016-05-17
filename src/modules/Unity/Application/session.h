@@ -51,6 +51,7 @@ public:
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
     MirSurfaceListModel* surfaceList() override;
+    MirSurfaceListModel* promptSurfaceList() override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
@@ -107,11 +108,7 @@ protected:
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
     MirSurfaceListModel m_surfaceList;
-
-    // Registered surfaces that haven't yet drawn their first frames.
-    // Once they do, they get moved to m_surfaceList.
-    // So this list is just a temporary holder and most of the time it's gonna be empty.
-    QList<MirSurfaceInterface*> m_blankSurfaces;
+    MirSurfaceListModel m_promptSurfaceList;
 
     SessionModel* m_children;
     bool m_fullscreen;

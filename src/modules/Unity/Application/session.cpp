@@ -137,6 +137,11 @@ MirSurfaceListModel* Session::surfaceList()
     return &m_surfaceList;
 }
 
+MirSurfaceListModel* Session::promptSurfaceList()
+{
+    return &m_promptSurfaceList;
+}
+
 Session::State Session::state() const
 {
     return m_state;
@@ -199,14 +204,8 @@ void Session::registerSurface(MirSurfaceInterface *newSurface)
     if (newSurface->isFirstFrameDrawn()) {
         prependSurface(newSurface);
     } else {
-        m_blankSurfaces.append(newSurface);
-        connect(newSurface, &QObject::destroyed, this, [this, newSurface]()
-            {
-                this->m_blankSurfaces.removeAll(newSurface);
-            });
         connect(newSurface, &MirSurfaceInterface::firstFrameDrawn, this, [this, newSurface]()
             {
-                this->m_blankSurfaces.removeAll(newSurface);
                 newSurface->disconnect(this);
                 this->prependSurface(newSurface);
             });
@@ -393,31 +392,18 @@ void Session::setLive(const bool live)
 void Session::addChildSession(SessionInterface* session)
 {
     insertChildSession(m_children->rowCount(), session);
-
-    if (m_surfaceList.count() > 0) {
-        // we assume that the top-most surface is the one that caused the prompt session to show up.
-        auto promptSurfaceList = static_cast<MirSurfaceListModel*>(m_surfaceList.get(0)->promptSurfaceList());
-        promptSurfaceList->addSurfaceList(session->surfaceList());
-    } else if (m_blankSurfaces.count() > 0) {
-        // Prompt session came in too early.
-        // Parent session might be blocked until the prompt session is dismissed.
-        // So we cannot wait anymore and must put that blank surface on the surface list so that the
-        // user can see the prompt surface on top of that it and interact.
-        auto blankSurface = m_blankSurfaces.takeFirst();
-
-        auto promptSurfaceList = static_cast<MirSurfaceListModel*>(blankSurface->promptSurfaceList());
-        promptSurfaceList->addSurfaceList(session->surfaceList());
-
-        blankSurface->disconnect(this);
-        prependSurface(blankSurface);
-    }
 }
 
 void Session::insertChildSession(uint index, SessionInterface* session)
 {
     qCDebug(QTMIR_SESSIONS) << "Session::insertChildSession - " << session->name() << " to " << name() << " @  " << index;
+    Q_ASSERT(!m_children->contains(session));
 
     m_children->insert(index, session);
+
+    // Flatten the list of prompt surfaces
+    m_promptSurfaceList.addSurfaceList(session->surfaceList());
+    m_promptSurfaceList.addSurfaceList(session->promptSurfaceList());
 
     connect(session, &QObject::destroyed, this, [this, session]() { this->removeChildSession(session); });
 
@@ -444,6 +430,8 @@ void Session::removeChildSession(SessionInterface* session)
 
     if (m_children->contains(session)) {
         m_children->remove(session);
+        m_promptSurfaceList.removeSurfaceList(session->surfaceList());
+        m_promptSurfaceList.removeSurfaceList(session->promptSurfaceList());
     }
 
     deleteIfZombieAndEmpty();

@@ -956,11 +956,6 @@ bool MirSurface::focused() const
     return m_focused;
 }
 
-unity::shell::application::MirSurfaceListInterface* MirSurface::promptSurfaceList()
-{
-    return &m_promptSurfaceList;
-}
-
 void MirSurface::requestFocus()
 {
     DEBUG_MSG << "()";
