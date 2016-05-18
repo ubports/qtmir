@@ -68,6 +68,9 @@ public:
     // List of surfaces in this session. Surfaces that are being forcibly closed are not present in this list
     virtual MirSurfaceListModel* surfaceList() = 0;
 
+    // List of prompt surfaces under this session (and its children)
+    virtual MirSurfaceListModel* promptSurfaceList() = 0;
+
     virtual SessionModel* childSessions() const = 0;
     virtual State state() const = 0;
     virtual bool fullscreen() const = 0;
