@@ -35,8 +35,6 @@
 // std
 #include <memory>
 
-Q_LOGGING_CATEGORY(QTMIR_SCREENS, "qtmir.screens")
-
 namespace mg = mir::graphics;
 
 

@@ -28,15 +28,10 @@
 // QPA mirserver
 #include "logging.h"
 
-// mir
-#include <mir/scene/session.h>
-#include <mir/scene/snapshot.h>
-
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
 
 namespace unityapp = unity::shell::application;
-namespace ms = mir::scene;
 
 #define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
 
