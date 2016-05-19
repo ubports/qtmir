@@ -24,6 +24,7 @@
 
 // mirserver
 #include <surfaceobserver.h>
+#include "screen.h"
 
 // Mir
 #include <mir/geometry/rectangle.h>
@@ -37,6 +38,7 @@
 
 // Qt
 #include <QQmlEngine>
+#include <QScreen>
 
 using namespace qtmir;
 
@@ -854,6 +856,15 @@ void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
     }
 }
 
+void MirSurface::setScreen(QScreen *screen)
+{
+    using namespace mir::geometry;
+    // in Mir, this means moving the surface in Mir's scene to the matching display
+    auto targetScreenTopLeftPx = screen->geometry().topLeft(); // * screen->devicePixelRatio(); GERRY?
+    DEBUG_MSG << "moved to" << targetScreenTopLeftPx << "px";
+    m_surface->move_to(Point{ X{targetScreenTopLeftPx.x()}, Y{targetScreenTopLeftPx.y()} });
+}
+
 void MirSurface::setCursor(const QCursor &cursor)
 {
     DEBUG_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
@@ -943,11 +954,6 @@ void MirSurface::setHeightIncrement(int value)
 bool MirSurface::focused() const
 {
     return m_focused;
-}
-
-unity::shell::application::MirSurfaceListInterface* MirSurface::promptSurfaceList()
-{
-    return &m_promptSurfaceList;
 }
 
 void MirSurface::requestFocus()

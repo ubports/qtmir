@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -34,7 +34,7 @@ class Screen;
 class QWindow;
 
 /*
- * ScreenController monitors the Mir display configuration and compositor status, and updates
+ * ScreensModel monitors the Mir display configuration and compositor status, and updates
  * the relevant QScreen and QWindow states accordingly.
  *
  * Primary purposes are:
@@ -53,11 +53,11 @@ class QWindow;
  * All other methods must be called on the Qt GUI thread.
  */
 
-class ScreenController : public QObject
+class ScreensModel : public QObject
 {
     Q_OBJECT
 public:
-    explicit ScreenController(QObject *parent = 0);
+    explicit ScreensModel(QObject *parent = 0);
 
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
@@ -66,6 +66,7 @@ public:
 
 Q_SIGNALS:
     void screenAdded(Screen *screen);
+    void screenRemoved(Screen *screen);
 
 public Q_SLOTS:
     void update();
@@ -85,6 +86,8 @@ protected Q_SLOTS:
 
 private:
     Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
+    bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
+    void allWindowsSetExposed(bool exposed);
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<mir::compositor::Compositor> m_compositor;

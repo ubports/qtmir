@@ -88,8 +88,6 @@ public:
 
     bool focused() const override;
 
-    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
-
     Q_INVOKABLE void requestFocus() override;
     Q_INVOKABLE void close() override;
     Q_INVOKABLE void raise() override;
@@ -147,6 +145,8 @@ public:
     Mir::ShellChrome shellChrome() const override;
 
     SessionInterface* session() override { return m_session.data(); }
+
+    void setScreen(QScreen *screen) override;
 
     ////
     // Own API
@@ -227,8 +227,6 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
-
-    MirSurfaceListModel m_promptSurfaceList;
 };
 
 } // namespace qtmir

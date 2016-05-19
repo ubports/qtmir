@@ -123,7 +123,7 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
         return nullptr;
     }
 
-    auto mirServer = nativeInterface->m_mirServer.lock();
+    auto mirServer = nativeInterface->mirServer().lock();
 
     SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));

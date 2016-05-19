@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -47,13 +47,23 @@ public:
     QRect geometry() const override { return m_geometry; }
     int depth() const override { return m_depth; }
     QImage::Format format() const override { return m_format; }
+    qreal devicePixelRatio() const override { return m_devicePixelRatio; }
     QSizeF physicalSize() const override { return m_physicalSize; }
     qreal refreshRate() const override { return m_refreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return m_nativeOrientation; }
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
     QPlatformCursor *cursor() const override;
+    QString name() const override;
 
+    float scale() const { return m_scale; }
+    MirFormFactor formFactor() const { return m_formFactor; }
+    MirPowerMode powerMode() const { return m_powerMode; }
+    mir::graphics::DisplayConfigurationOutputId outputId() const { return m_outputId; }
     mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
+    std::vector<MirPixelFormat> pixelFormats() const { return m_pixelFormats; }
+    std::vector<mir::graphics::DisplayConfigurationMode> modes() const { return m_modes; }
+    uint32_t currentModeIndex() const { return m_currentModeIndex; }
+    uint32_t preferredModeIndex() const { return m_preferredModeIndex; }
 
     ScreenWindow* window() const;
 
@@ -71,7 +81,7 @@ public Q_SLOTS:
 protected:
     void setWindow(ScreenWindow *window);
 
-    void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &);
+    void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
     void swapBuffers();
     void makeCurrent();
@@ -84,8 +94,15 @@ private:
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;
+    qreal m_devicePixelRatio;
     QSizeF m_physicalSize;
     qreal m_refreshRate;
+    float m_scale;
+    MirFormFactor m_formFactor;
+    std::vector<MirPixelFormat> m_pixelFormats;
+    std::vector<mir::graphics::DisplayConfigurationMode> m_modes;
+    uint32_t m_currentModeIndex;
+    uint32_t m_preferredModeIndex;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
@@ -103,7 +120,7 @@ private:
 
     qtmir::Cursor m_cursor;
 
-    friend class ScreenController;
+    friend class ScreensModel;
     friend class ScreenWindow;
 };
 

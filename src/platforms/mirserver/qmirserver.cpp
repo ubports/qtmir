@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,7 +23,6 @@
 #include "mirserver.h"
 #include "qmirserver.h"
 #include "qmirserver_p.h"
-#include "screencontroller.h"
 #include "screen.h"
 
 QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
@@ -32,9 +31,9 @@ QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
 {
     Q_D(QMirServer);
 
-    d->screenController = QSharedPointer<ScreenController>(new ScreenController());
+    d->screensModel = QSharedPointer<ScreensModel>(new ScreensModel());
 
-    d->server = QSharedPointer<MirServer>(new MirServer(argc, argv, d->screenController));
+    d->server = QSharedPointer<MirServer>(new MirServer(argc, argv, d->screensModel));
 
     d->serverThread = new MirServerThread(d->server);
 
@@ -57,8 +56,10 @@ bool QMirServer::start()
         qCritical() << "ERROR: QMirServer - Mir failed to start";
         return false;
     }
-    d->screenController->update();
-
+    d->screensModel->update();
+    d->screensController = QSharedPointer<ScreensController>(
+                               new ScreensController(d->screensModel, d->server->the_display(),
+                                                     d->server->the_display_configuration_controller()));
     Q_EMIT started();
     return true;
 }
@@ -68,6 +69,7 @@ void QMirServer::stop()
     Q_D(QMirServer);
 
     if (d->serverThread->isRunning()) {
+        d->screensController.clear();
         d->serverThread->stop();
         if (!d->serverThread->wait(10000)) {
             // do something to indicate fail during shutdown
@@ -89,8 +91,14 @@ QWeakPointer<MirServer> QMirServer::mirServer() const
     return d->server.toWeakRef();
 }
 
-QWeakPointer<ScreenController> QMirServer::screenController() const
+QWeakPointer<ScreensModel> QMirServer::screensModel() const
 {
     Q_D(const QMirServer);
-    return d->screenController;
+    return d->screensModel;
+}
+
+QWeakPointer<ScreensController> QMirServer::screensController() const
+{
+    Q_D(const QMirServer);
+    return d->screensController;
 }

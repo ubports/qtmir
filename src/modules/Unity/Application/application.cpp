@@ -486,6 +486,7 @@ void Application::setSession(SessionInterface *newSession)
 
     if (m_session) {
         m_proxySurfaceList.setSourceList(nullptr);
+        m_proxyPromptSurfaceList.setSourceList(nullptr);
         m_session->disconnect(this);
         m_session->surfaceList()->disconnect(this);
         m_session->setApplication(nullptr);
@@ -527,6 +528,7 @@ void Application::setSession(SessionInterface *newSession)
             Q_EMIT fullscreenChanged(fullscreen());
 
         m_proxySurfaceList.setSourceList(m_session->surfaceList());
+        m_proxyPromptSurfaceList.setSourceList(m_session->promptSurfaceList());
     } else {
         // this can only happen after the session has stopped
         Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable
@@ -827,6 +829,11 @@ void Application::setInitialSurfaceSize(const QSize &size)
 unityapp::MirSurfaceListInterface* Application::surfaceList()
 {
     return &m_proxySurfaceList;
+}
+
+unityapp::MirSurfaceListInterface* Application::promptSurfaceList()
+{
+    return &m_proxyPromptSurfaceList;
 }
 
 void Application::requestFocus()

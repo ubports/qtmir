@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -68,7 +68,7 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         MirShell *shell = static_cast<MirShell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        instance = new MirSurfaceManager(nativeInterface->m_mirServer, shell, SessionManager::singleton());
+        instance = new MirSurfaceManager(nativeInterface->mirServer(), shell, SessionManager::singleton());
 
         connectToSessionListener(instance, sessionListener);
     }
