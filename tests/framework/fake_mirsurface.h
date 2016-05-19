@@ -77,8 +77,6 @@ public:
 
     bool focused() const override { return false; }
 
-    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override { return &m_promptSurfaceList;}
-
     void requestFocus() override {
         Q_EMIT focusRequested();
     }
@@ -174,8 +172,6 @@ private:
     bool m_focused;
 
     QList<TouchEvent> m_touchesReceived;
-
-    MirSurfaceListModel m_promptSurfaceList;
 
     SessionInterface *m_session{nullptr};
 };

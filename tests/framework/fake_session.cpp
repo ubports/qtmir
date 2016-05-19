@@ -36,6 +36,8 @@ unity::shell::application::ApplicationInfoInterface *FakeSession::application() 
 
 MirSurfaceListModel* FakeSession::surfaceList() { return &m_surfaceList; }
 
+MirSurfaceListModel* FakeSession::promptSurfaceList() { return &m_promptSurfaceList; }
+
 SessionModel *FakeSession::childSessions() const { return nullptr; }
 
 SessionInterface::State FakeSession::state() const { return m_state; }

@@ -34,6 +34,7 @@ public:
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
     MirSurfaceListModel* surfaceList() override;
+    MirSurfaceListModel* promptSurfaceList() override;
     SessionModel* childSessions() const override;
     State state() const override;
     bool fullscreen() const override;
@@ -81,6 +82,7 @@ private:
     State m_state;
     std::shared_ptr<mir::scene::Session> m_session;
     MirSurfaceListModel m_surfaceList;
+    MirSurfaceListModel m_promptSurfaceList;
 };
 
 } // namespace qtmi

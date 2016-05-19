@@ -41,6 +41,7 @@ class MirSurfaceListModel : public unity::shell::application::MirSurfaceListInte
     Q_OBJECT
 public:
     explicit MirSurfaceListModel(QObject *parent = 0);
+    virtual ~MirSurfaceListModel();
 
     Q_INVOKABLE unity::shell::application::MirSurfaceInterface *get(int index) override;
     const unity::shell::application::MirSurfaceInterface *get(int index) const;
