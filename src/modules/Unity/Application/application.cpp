@@ -427,11 +427,6 @@ bool Application::fullscreen() const
     return m_session ? m_session->fullscreen() : false;
 }
 
-bool Application::canBeResumed() const
-{
-    return m_processState != ProcessUnknown;
-}
-
 pid_t Application::pid() const
 {
     return m_pid;
@@ -776,28 +771,64 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if ((m_state == InternalState::SuspendingWaitSession || m_state == InternalState::SuspendingWaitProcess)
-                && m_processState != Application::ProcessFailed) {
-            // Session stopped normally while we're waiting for suspension
+        onSessionStopped();
+    }
+}
+
+void Application::onSessionStopped()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        /* application has stopped before it managed to create a surface, we can
+           assume it crashed on startup, and thus cannot be resumed */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::Running:
+        /* application is on foreground, if Mir reports the application disconnects,
+           it either crashed or stopped itself. Either way, it must go away. */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::RunningInBackground:
+        if (m_processState == Application::ProcessFailed) {
+            /* killed by the Out-Of-Memory killer while in background. Keep it in the window list
+               as the user didn't want it to go away */
+            setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* the application closed itself while in the background. Let it go away */
+            setInternalState(InternalState::Stopped);
+        }
+        break;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+        if (m_processState == Application::ProcessFailed) {
+            /* killed by the Out-Of-Memory killer while suspended (or getting there), keep it around as the user
+               doesn't expect it to disappear */
+            setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* Session stopped normally while we're waiting for suspension */
             stop();
             setInternalState(InternalState::Stopped);
-        } else if (!canBeResumed()
-                || m_state == InternalState::Starting
-                || m_state == InternalState::Running
-                || m_state == InternalState::Closing) {
-            /*  1. application is not managed by upstart
-             *  2. application is managed by upstart, but has stopped before it managed
-             *     to create a surface, we can assume it crashed on startup, and thus
-             *     cannot be resumed
-             *  3. application is managed by upstart and is in foreground (i.e. has
-             *     Running state), if Mir reports the application disconnects, it
-             *     either crashed or stopped itself.
-             *  4. We're expecting the application to stop after a close request
-             */
-            setInternalState(InternalState::Stopped);
-        } else {
-            setInternalState(InternalState::StoppedResumable);
         }
+        break;
+    case InternalState::Suspended:
+        if (m_processState != ProcessUnknown) {
+            /* If the user explicly closed this application, we would have it resumed before doing so.
+               Since this is not the case, keep it around. */
+            setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* We're not able to respawn this application because it's not managed by upstart
+               (probably was launched via cmd line by user) */
+            setInternalState(InternalState::Stopped);
+        }
+        break;
+    case InternalState::Closing:
+        /* We're expecting the application to stop after a close request */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::StoppedResumable:
+    case InternalState::Stopped:
+        /* NOOP */
+        break;
     }
 }
 
