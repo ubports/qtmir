@@ -1,3 +1,28 @@
+qtmir (0.4.8+16.10.20160520.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce coupling to MirServer - it has  been misused as a context
+    object.
+
+  [ Daniel d'Andrada ]
+  * Also interpret the cursor names used by Mir client API (LP:
+    #1447839)
+  * Application: Don't respawn if closed while still starting up (LP:
+    #1575577)
+
+  [ Daniel d'Andrada, Michał Sawicz ]
+  * Centralize logging categories
+
+  [ Gerry Boland ]
+  * UAL can throw on creating Application if invalid appId, catch
+    instead of aborting (LP: #1578258)
+
+  [ Timo Jyrinki ]
+  * Use FindQt5PlatformSupport to find platform support, other methods
+    not available on Qt 5.6 anymore. (LP: #1554404)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 20 May 2016 08:41:51 +0000
+
 qtmir (0.4.8+16.04.20160518.1-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada ]
