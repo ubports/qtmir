@@ -30,6 +30,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir/shell/shell.h>
+#include <mir/scene/surface.h>
 #include <mir/scene/session.h>
 #include <mir_toolkit/event.h>
 

@@ -36,9 +36,12 @@
 #include "creationhints.h"
 
 // mir
-#include <mir/scene/surface.h>
+#include <mir_toolkit/common.h>
 
-namespace mir { namespace shell { class Shell; }}
+namespace mir {
+namespace shell { class Shell; }
+namespace scene {class Surface; }
+}
 
 class SurfaceObserver;
 

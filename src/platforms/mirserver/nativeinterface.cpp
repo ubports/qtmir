@@ -15,8 +15,9 @@
  */
 
 #include "nativeinterface.h"
-
 #include "mirserver.h"
+
+#include "qmirserver.h"
 #include "screen.h"
 
 NativeInterface::NativeInterface(QMirServer *server)
@@ -89,4 +90,9 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     } else {
         return returnVal;
     }
+}
+
+QWeakPointer<MirServer> NativeInterface::mirServer()
+{
+    return m_qMirServer->mirServer();
 }
