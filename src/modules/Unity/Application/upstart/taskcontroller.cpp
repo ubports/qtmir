@@ -75,7 +75,14 @@ std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shar
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::createApp could not find appId" << inputAppId;
         return {};
     }
-    return ual::Application::create(appId, registry);
+
+    try {
+        return ual::Application::create(appId, registry);
+    } catch (std::runtime_error e) {
+        qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::createApp - UAL failed to create app for appId"
+                                    << inputAppId << ":" << e.what();
+        return {};
+    }
 }
 
 } // namespace
