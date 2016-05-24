@@ -16,6 +16,8 @@
 
 #define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
 
+struct MirEvent {}; // otherwise won't compile otherwise due to incomplete type
+
 #include <gtest/gtest.h>
 
 #include <QLoggingCategory>
@@ -30,6 +32,7 @@
 // tests/framework
 #include <fake_session.h>
 #include <mock_mir_session.h>
+#include <mock_shell.h>
 #include <mock_surface.h>
 
 // tests/modules/common
@@ -41,6 +44,7 @@
 using namespace qtmir;
 
 namespace ms = mir::scene;
+using namespace testing;
 
 class MirSurfaceTest : public ::testing::Test
 {
@@ -50,12 +54,12 @@ public:
         // We don't want the logging spam cluttering the test results
         QLoggingCategory::setFilterRules(QStringLiteral("qtmir.surfaces=false"));
     }
+
+    NiceMock<mir::shell::MockShell> m_mockShell;
 };
 
 TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
 {
-    using namespace testing;
-
     int argc = 0;
     char* argv[0];
     QCoreApplication qtApp(argc, argv); // app for deleteLater event
@@ -67,7 +71,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, surfaceObserver, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, surfaceObserver, CreationHints());
     surfaceObserver->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
@@ -81,8 +85,6 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
 
 TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
 {
-    using namespace testing;
-
     int argc = 0;
     char* argv[0];
     QCoreApplication qtApp(argc, argv); // app for deleteLater event
@@ -90,7 +92,7 @@ TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -114,8 +116,6 @@ TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
 
 TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
 {
-    using namespace testing;
-
     int argc = 0;
     char* argv[0];
     QCoreApplication qtApp(argc, argv); // app for deleteLater event
@@ -123,7 +123,7 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -148,7 +148,6 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
  */
 TEST_F(MirSurfaceTest, failedSurfaceCloseEventualyDestroysSurface)
 {
-    using namespace ::testing;
     const pid_t pid = 1234;
     const char appId[] = "test-app";
 
@@ -162,7 +161,7 @@ TEST_F(MirSurfaceTest, failedSurfaceCloseEventualyDestroysSurface)
 
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, nullptr, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 

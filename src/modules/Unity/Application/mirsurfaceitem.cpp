@@ -566,10 +566,10 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
     m_surface->setViewVisibility((qintptr)this, isVisible());
 }
 
-void MirSurfaceItem::updateMirSurfaceActiveFocus(bool focused)
+void MirSurfaceItem::updateMirSurfaceActiveFocus()
 {
-    if (m_surface && m_consumesInput && m_surface->live()) {
-        m_surface->setActiveFocus(focused);
+    if (m_surface && m_surface->live()) {
+        m_surface->setViewActiveFocus(qintptr(this), m_consumesInput && hasActiveFocus());
     }
 }
 
@@ -619,6 +619,7 @@ void MirSurfaceItem::setConsumesInput(bool value)
         setAcceptHoverEvents(false);
     }
 
+    updateMirSurfaceActiveFocus();
     Q_EMIT consumesInputChanged(value);
 }
 
@@ -640,11 +641,6 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
     if (m_surface) {
         disconnect(m_surface, nullptr, this, nullptr);
-
-        if (hasActiveFocus() && m_consumesInput && m_surface->live()) {
-            m_surface->setActiveFocus(false);
-        }
-
         m_surface->unregisterView((qintptr)this);
         unsetCursor();
     }
@@ -690,9 +686,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             Q_EMIT orientationAngleChanged(m_surface->orientationAngle());
         }
 
-        if (m_consumesInput) {
-            m_surface->setActiveFocus(hasActiveFocus());
-        }
+        updateMirSurfaceActiveFocus();
     }
 
     update();

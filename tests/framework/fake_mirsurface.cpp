@@ -152,8 +152,6 @@ bool FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
 
 void FakeMirSurface::setFocused(bool focus) { m_focused = focus; }
 
-void FakeMirSurface::setActiveFocus(bool) {}
-
 void FakeMirSurface::mousePressEvent(QMouseEvent *) {}
 
 void FakeMirSurface::mouseMoveEvent(QMouseEvent *) {}
