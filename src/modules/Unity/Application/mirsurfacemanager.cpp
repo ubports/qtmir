@@ -39,8 +39,6 @@
 #include <mir/scene/surface.h>
 
 
-Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
-
 namespace ms = mir::scene;
 
 namespace qtmir {

@@ -32,8 +32,6 @@
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
 
-Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
-
 namespace ms = mir::scene;
 
 namespace qtmir {

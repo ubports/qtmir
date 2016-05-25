@@ -53,8 +53,6 @@
 
 namespace ms = mir::scene;
 
-Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
-
 namespace unityapi = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::" << __func__

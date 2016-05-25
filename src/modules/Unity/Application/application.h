@@ -56,7 +56,7 @@ public:
     Q_DECLARE_FLAGS(Stages, Stage)
 
     enum ProcessState {
-        ProcessUnknown,
+        ProcessUnknown, // not managed by upstart, so we can't respawn that application
         ProcessRunning,
         ProcessSuspended,
         ProcessFailed, // it stopped, but because it was killed or because it crashed
@@ -109,6 +109,7 @@ public:
     QSize initialSurfaceSize() const override;
     void setInitialSurfaceSize(const QSize &size) override;
     unity::shell::application::MirSurfaceListInterface* surfaceList() override;
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
@@ -117,8 +118,6 @@ public:
 
     SessionInterface* session() const;
     void setSession(SessionInterface *session);
-
-    bool canBeResumed() const;
 
     bool isValid() const;
     bool fullscreen() const;
@@ -172,6 +171,7 @@ private:
     void applyRequestedRunning();
     void applyRequestedSuspended();
     void applyClosing();
+    void onSessionStopped();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
@@ -191,6 +191,7 @@ private:
     bool m_closing{false};
 
     ProxySurfaceListModel m_proxySurfaceList;
+    ProxySurfaceListModel m_proxyPromptSurfaceList;
 
     friend class ApplicationManager;
     friend class SessionManager;

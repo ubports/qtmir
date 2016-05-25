@@ -1,5 +1,6 @@
 # Qt5PlatformSupport is not available as a cmake module.
-pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
+# And also not anymore as pkgconfig module since Qt 5.6.
+#pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
@@ -52,6 +53,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     cursor.cpp
+    logging.cpp
     mircursorimages.cpp
     mirdisplayconfigurationpolicy.cpp
     mirwindowmanager.cpp
@@ -90,6 +92,7 @@ add_library(qpa-mirserver SHARED
 
 target_link_libraries(
     qpa-mirserver
+    Qt5PlatformSupport
 
     ${MIRSERVER_LDFLAGS}
     ${MIRCLIENT_LDFLAGS}

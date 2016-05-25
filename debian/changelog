@@ -1,3 +1,47 @@
+qtmir (0.4.8+16.10.20160520.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce coupling to MirServer - it has  been misused as a context
+    object.
+
+  [ Daniel d'Andrada ]
+  * Also interpret the cursor names used by Mir client API (LP:
+    #1447839)
+  * Application: Don't respawn if closed while still starting up (LP:
+    #1575577)
+
+  [ Daniel d'Andrada, Michał Sawicz ]
+  * Centralize logging categories
+
+  [ Gerry Boland ]
+  * UAL can throw on creating Application if invalid appId, catch
+    instead of aborting (LP: #1578258)
+
+  [ Timo Jyrinki ]
+  * Use FindQt5PlatformSupport to find platform support, other methods
+    not available on Qt 5.6 anymore. (LP: #1554404)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 20 May 2016 08:41:51 +0000
+
+qtmir (0.4.8+16.04.20160518.1-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Fix ProxySurfaceListModel::countChanged signal
+
+  [ Daniel d'Andrada, Michał Sawicz ]
+  * Move prompt surfaces from MirSurface to Application and emit
+    firstChanged signal
+
+ -- Nick Dedekind <ci-train-bot@canonical.com>  Wed, 18 May 2016 11:18:33 +0000
+
+qtmir (0.4.8+16.04.20160511-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Session: Add a blank surface to the public list if it already has
+    child prompt surfaces (LP: #1578665)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 11 May 2016 09:08:29 +0000
+
 qtmir (0.4.8+16.04.20160429.1-0ubuntu1) xenial; urgency=medium
 
   [ Gerry Boland, Michał Sawicz, Nick Dedekind ]

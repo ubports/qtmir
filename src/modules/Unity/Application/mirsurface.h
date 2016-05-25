@@ -91,8 +91,6 @@ public:
 
     bool focused() const override;
 
-    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
-
     Q_INVOKABLE void requestFocus() override;
     Q_INVOKABLE void close() override;
     Q_INVOKABLE void raise() override;
@@ -232,8 +230,6 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
-
-    MirSurfaceListModel m_promptSurfaceList;
 };
 
 } // namespace qtmir

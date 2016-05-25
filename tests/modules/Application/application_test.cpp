@@ -589,3 +589,30 @@ TEST_F(ApplicationTests, stoppedWhileSuspendedTurnsIntoStoppeResumable)
 
     EXPECT_EQ(Application::InternalState::StoppedResumable, application->internalState());
 }
+
+/*
+   Regression test for bug "App respawns if manually closed while it's launching"
+   https://bugs.launchpad.net/ubuntu/+source/qtmir/+bug/1575577
+ */
+TEST_F(ApplicationTests, dontRespawnIfClosedWhileStillStartingUp)
+{
+    using namespace ::testing;
+
+    QScopedPointer<Application> application(createApplicationWithFakes());
+
+    application->setProcessState(Application::ProcessRunning);
+
+    FakeSession *session = new FakeSession;
+
+    application->setSession(session);
+
+    QSignalSpy spyStartProcess(application.data(), SIGNAL(startProcessRequested()));
+
+    // Close the application before it even gets a surface (it's still in "starting" state)
+    application->close();
+
+    session->setState(SessionInterface::Stopped);
+
+    EXPECT_EQ(Application::InternalState::Stopped, application->internalState());
+    EXPECT_EQ(0, spyStartProcess.count());
+}
