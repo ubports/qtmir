@@ -28,6 +28,7 @@ FakeSession::FakeSession()
 
 FakeSession::~FakeSession()
 {
+    delete m_childSessions;
 }
 
 QString FakeSession::name() const { return QString("foo-session"); }
@@ -38,7 +39,7 @@ MirSurfaceListModel* FakeSession::surfaceList() { return &m_surfaceList; }
 
 MirSurfaceListModel* FakeSession::promptSurfaceList() { return &m_promptSurfaceList; }
 
-SessionModel *FakeSession::childSessions() const { return nullptr; }
+SessionModel *FakeSession::childSessions() const { return m_childSessions; }
 
 SessionInterface::State FakeSession::state() const { return m_state; }
 

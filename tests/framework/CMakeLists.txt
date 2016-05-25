@@ -29,7 +29,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_surface.cpp
     mock_task_controller.cpp
     stub_input_channel.cpp
-    stub_scene_surface.cpp
+    fake_surface.h
     qtmir_test.cpp
 )
 
