@@ -1,3 +1,19 @@
+qtmir (0.4.8+16.10.20160525.2-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Drop the (unused) prototype Window Management code
+  * Remove workaround for lp:1502200 (LP: #1502200)
+
+  [ Albert Astals Cid ]
+  * Enable workaround_brokenFBOReadBack on various chipsets (LP:
+    #1581123)
+
+  [ Daniel d'Andrada ]
+  * Bump unity-api versions
+  * Fix mir::scene::Surface focus attribute updates
+
+ -- Michael Terry <michael.terry@canonical.com>  Wed, 25 May 2016 13:54:56 +0000
+
 qtmir (0.4.8+16.10.20160520.1-0ubuntu1) yakkety; urgency=medium
 
   [ Alan Griffiths ]
