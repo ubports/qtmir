@@ -84,6 +84,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
     )
 
 add_library(qpa-mirserver SHARED
