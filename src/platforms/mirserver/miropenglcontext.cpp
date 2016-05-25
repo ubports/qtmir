@@ -128,7 +128,7 @@ static bool needsFBOReadBackWorkaround()
         const char *rendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
         // Keep in sync with qtubuntu
         needsWorkaround = qstrncmp(rendererString, "Mali-400", 8) == 0
-                          || qstrncmp(rendererString, "Mali-T760", 9) == 0
+                          || qstrncmp(rendererString, "Mali-T7", 7) == 0
                           || qstrncmp(rendererString, "PowerVR Rogue G6200", 19) == 0;
         set = true;
     }
