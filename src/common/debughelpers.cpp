@@ -54,6 +54,7 @@ QString touchEventToString(const QTouchEvent *ev)
         break;
     case QEvent::TouchCancel:
         message.append("TouchCancel ");
+        break;
     default:
         message.append("TouchUNKNOWN ");
     }
