@@ -118,6 +118,8 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
 
     EXPECT_FALSE(authed);
     EXPECT_EQ(application, applicationManager.findApplication(dialer_app_id));
+
+    delete surface;
 }
 
 TEST_F(ApplicationManagerTests,application_dies_while_starting)
@@ -271,6 +273,10 @@ TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_
 
 TEST_F(ApplicationManagerTests,two_session_on_one_application)
 {
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
     using namespace ::testing;
     const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
@@ -293,10 +299,18 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application)
 
     EXPECT_EQ(true, authed);
     EXPECT_EQ(second_session, the_app->session()->session());
+
+    onSessionStopping(first_session);
+    onSessionStopping(second_session);
+    qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 {
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
     using namespace ::testing;
     const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
@@ -323,6 +337,11 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     EXPECT_EQ(true, authed);
     EXPECT_EQ(Application::Running, the_app->state());
     EXPECT_EQ(first_session, the_app->session()->session());
+
+    onSessionStopping(first_session);
+    onSessionStopping(second_session);
+    delete aSurface;
+    qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_requested)
@@ -357,6 +376,8 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 
     // now that its ready, suspend process should have begun
     EXPECT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
+
+    delete aSurface;
 }
 
 TEST_F(ApplicationManagerTests,requestFocusApplication)
@@ -746,6 +767,8 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     // Check application state is correctly set
     Application *theApp = applicationManager.findApplication(appId);
     EXPECT_EQ(theApp->state(), Application::Running);
+
+    delete surface;
 }
 
 /*
@@ -879,6 +902,8 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
     EXPECT_EQ(0, applicationManager.count());
+
+    delete surface;
 }
 
 /*
@@ -921,6 +946,8 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
+
+    delete surface;
 }
 
 /*
@@ -971,6 +998,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 
     EXPECT_EQ(0, countSpy.count());
     EXPECT_EQ(1, applicationManager.count());
+
+    delete surface;
 }
 
 /*
@@ -1023,6 +1052,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
+
+    delete surface;
 }
 
 /*
@@ -1092,6 +1123,8 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
+
+    delete surface;
 }
 
 /*
@@ -1133,6 +1166,8 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
 
     Application *app = applicationManager.findApplication(appId);
     EXPECT_EQ(nullptr, app);
+
+    delete surface;
 }
 
 /*
@@ -1187,6 +1222,8 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     EXPECT_EQ(1, applicationManager.count());
 
     EXPECT_EQ(Application::Stopped, app->state());
+
+    delete surface;
 }
 
 /*
@@ -1236,6 +1273,10 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
  */
 TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 {
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
     using namespace ::testing;
     const QString appId("webapp");
     const pid_t procId1 = 5551;
@@ -1279,6 +1320,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
+
+    delete surface;
+
+    qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 /*
@@ -1287,6 +1332,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
  */
 TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
 {
+    int argc = 0;
+    char* argv[0];
+    QCoreApplication qtApp(argc, argv); // app for deleteLater event
+
     using namespace ::testing;
     const QString appId("webapp");
     const pid_t procId1 = 5551;
@@ -1336,6 +1385,11 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     onSessionStopping(session1);
 
     EXPECT_EQ(0, countSpy.count());
+
+    delete surface1;
+    delete surface2;
+
+    qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 /*
@@ -1460,6 +1514,8 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
 
     EXPECT_EQ(Application::Running, the_app->state());
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
+
+    delete surface;
 }
 
 /*
@@ -1499,6 +1555,8 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
     EXPECT_FALSE(sharedWakelock.enabled());
     ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
+
+    delete surface;
 }
 
 /*
@@ -1628,6 +1686,8 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
 
     EXPECT_EQ(0, applicationManager.count());
     EXPECT_TRUE(dir.exists());
+
+    delete aSurface;
 }
 
 /*
@@ -1652,6 +1712,8 @@ TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
     applicationManager.stopApplication(appId);
 
     EXPECT_EQ(1, spy.count());
+
+    delete surface;
 }
 
 
@@ -1899,4 +1961,6 @@ TEST_F(ApplicationManagerTests,surfaceFocusRequestGeneratesApplicationFocusReque
     surface->requestFocus();
 
     EXPECT_EQ(1, focusRequestedSpy.count());
+
+    delete surface;
 }
