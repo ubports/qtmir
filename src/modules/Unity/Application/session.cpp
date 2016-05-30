@@ -84,7 +84,7 @@ Session::Session(const std::shared_ptr<ms::Session>& session,
 
 Session::~Session()
 {
-    qCDebug(QTMIR_SESSIONS) << "Session::~Session() " << name();
+    qDebug() << "Session::~Session() " << name();
     stopPromptSessions();
 
     QList<SessionInterface*> children(m_children->list());

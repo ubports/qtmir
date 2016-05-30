@@ -28,7 +28,6 @@ public:
     MOCK_METHOD1(getWindowForTouchPoint, QWindow*(const QPoint &point));
     MOCK_METHOD0(lastWindow, QWindow*());
     MOCK_METHOD0(focusedWindow, QWindow*());
-    MOCK_METHOD1(registerTouchDevice, void(QTouchDevice* device));
 
     // Wanted to use GMock, but MOCK_METHOD11 not implemented
     void handleExtendedKeyEvent(QWindow */*window*/, ulong /*timestamp*/, QEvent::Type /*type*/, int /*key*/,
@@ -43,6 +42,18 @@ public:
             Qt::KeyboardModifiers mods));
     MOCK_METHOD4(handleMouseEvent, void(ulong timestamp, QPointF point, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers));
     MOCK_METHOD3(handleWheelEvent, void(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods));
+
+    ~MockQtWindowSystem()
+    {
+        qDeleteAll(m_devices);
+    }
+
+    void registerTouchDevice(QTouchDevice* device)
+    {
+        m_devices << device;
+    }
+
+    QVector<QTouchDevice*> m_devices;
 };
 
 namespace testing
