@@ -31,8 +31,17 @@
 // mir
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
+#include <mir/server.h> // see frig_to_force_libmirserver_linkage
 
 namespace ms = mir::scene;
+
+namespace
+{
+// Unless we force this module to have a link dependency on libmirserver
+// we get several tests hanging during link loading.
+// I wish I understood why.    alan_g
+auto const frig_to_force_libmirserver_linkage = &mir::Server::the_display;
+}
 
 namespace qtmir {
 
