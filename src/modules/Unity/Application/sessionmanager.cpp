@@ -31,17 +31,9 @@
 // mir
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
-#include <mir/server.h> // see frig_to_force_libmirserver_linkage
+#include <mir/report_exception.h>
 
 namespace ms = mir::scene;
-
-namespace
-{
-// Unless we force this module to have a link dependency on libmirserver
-// we get several tests hanging during link loading.
-// I wish I understood why.    alan_g
-auto const frig_to_force_libmirserver_linkage = &mir::Server::the_display;
-}
 
 namespace qtmir {
 
@@ -69,8 +61,9 @@ void connectToPromptSessionListener(SessionManager * manager, PromptSessionListe
 }
 
 SessionManager* SessionManager::singleton()
+try
 {
-    if (!the_session_manager && frig_to_force_libmirserver_linkage) {
+    if (!the_session_manager) {
 
         NativeInterface *nativeInterface = dynamic_cast<NativeInterface*>(QGuiApplication::platformNativeInterface());
 
@@ -89,6 +82,14 @@ SessionManager* SessionManager::singleton()
         connectToPromptSessionListener(the_session_manager, promptSessionListener);
     }
     return the_session_manager;
+}
+catch (...)
+{
+    // We only call mir::report_exception() here to force linkage against libmirserver.
+    // Unless we force this module to have a link dependency on libmirserver we get
+    // several tests hanging during link loading. I wish I understood why.    alan_g
+    mir::report_exception();
+    throw;
 }
 
 SessionManager::SessionManager(
