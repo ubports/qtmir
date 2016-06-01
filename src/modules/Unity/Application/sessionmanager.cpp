@@ -70,7 +70,7 @@ void connectToPromptSessionListener(SessionManager * manager, PromptSessionListe
 
 SessionManager* SessionManager::singleton()
 {
-    if (!the_session_manager) {
+    if (!the_session_manager && frig_to_force_libmirserver_linkage) {
 
         NativeInterface *nativeInterface = dynamic_cast<NativeInterface*>(QGuiApplication::platformNativeInterface());
 
