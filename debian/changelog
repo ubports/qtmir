@@ -1,3 +1,9 @@
+qtmir (0.4.8+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  * rebuild for mir 0.23
+
+ -- Kevin DuBois <kdub432@gmail.com>  Thu, 02 Jun 2016 16:50:58 +0000
+
 qtmir (0.4.8+16.10.20160525.2-0ubuntu1) yakkety; urgency=medium
 
   [ Alan Griffiths ]
