@@ -150,7 +150,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
-    if (Q_LIKELY(screenWindow)) { qDebug("HI");
+    if (Q_LIKELY(screenWindow)) {
         m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
