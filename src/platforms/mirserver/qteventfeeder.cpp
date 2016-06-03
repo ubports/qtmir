@@ -35,8 +35,6 @@
 // common dir
 #include <debughelpers.h>
 
-Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
-
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
     // misc keys

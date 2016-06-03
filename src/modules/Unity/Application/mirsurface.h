@@ -25,9 +25,8 @@
 #include <QMutex>
 #include <QPointer>
 #include <QSharedPointer>
-#include <QSGTextureProvider>
 #include <QWeakPointer>
-#include <QPair>
+#include <QSet>
 
 #include "mirbuffersgtexture.h"
 #include "session.h"
@@ -36,9 +35,12 @@
 #include "creationhints.h"
 
 // mir
-#include <mir/scene/surface.h>
+#include <mir_toolkit/common.h>
 
-namespace mir { namespace shell { class Shell; }}
+namespace mir {
+namespace shell { class Shell; }
+namespace scene {class Surface; }
+}
 
 class SurfaceObserver;
 
@@ -117,7 +119,8 @@ public:
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;
-    void setActiveFocus(bool focus) override;
+
+    void setViewActiveFocus(qintptr viewId, bool value) override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -179,6 +182,7 @@ private:
     bool clientIsRunning() const;
     void updateVisibility();
     void applyKeymap();
+    void updateActiveFocus();
 
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
@@ -202,6 +206,9 @@ private:
         bool visible;
     };
     QHash<qintptr, View> m_views;
+
+    QSet<qintptr> m_activelyFocusedViews;
+    bool m_neverSetSurfaceFocus{true};
 
     std::shared_ptr<SurfaceObserver> m_surfaceObserver;
 

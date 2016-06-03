@@ -15,6 +15,7 @@
  */
 
 #include <Unity/Application/session_interface.h>
+#include <Unity/Application/sessionmodel.h>
 #include <Unity/Application/mirsurfacelistmodel.h>
 #include <QDebug>
 
@@ -83,6 +84,7 @@ private:
     std::shared_ptr<mir::scene::Session> m_session;
     MirSurfaceListModel m_surfaceList;
     MirSurfaceListModel m_promptSurfaceList;
+    SessionModel *m_childSessions{new SessionModel};
 };
 
 } // namespace qtmi

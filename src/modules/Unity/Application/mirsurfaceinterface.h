@@ -72,10 +72,11 @@ public:
     /*
         Defines the "focus" attribute of the underlying mir::scene::Surface, which is what
         the client application sees.
-        Set by a MirSurfaceItem and used to inform the client application about the actual
-        focus, pretty much a one-to-one mapping with QML's active focus concept, hence the name.
+        Set by MirSurfaceItems (aka views) and used to inform the client application about the
+        actual focus, pretty much a one-to-one mapping with QML's active focus concept, hence
+        the name.
      */
-    virtual void setActiveFocus(bool focus) = 0;
+    virtual void setViewActiveFocus(qintptr viewId, bool value) = 0;
 
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;

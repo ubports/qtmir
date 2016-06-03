@@ -30,6 +30,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/events/event_builders.h>
 #include <mir/shell/shell.h>
+#include <mir/scene/surface.h>
 #include <mir/scene/session.h>
 #include <mir_toolkit/event.h>
 
@@ -441,7 +442,18 @@ void MirSurface::setFocused(bool value)
     Q_EMIT focusedChanged(value);
 }
 
-void MirSurface::setActiveFocus(bool focus)
+void MirSurface::setViewActiveFocus(qintptr viewId, bool value)
+{
+    if (value && !m_activelyFocusedViews.contains(viewId)) {
+        m_activelyFocusedViews.insert(viewId);
+        updateActiveFocus();
+    } else if (!value && (m_activelyFocusedViews.contains(viewId) || m_neverSetSurfaceFocus)) {
+        m_activelyFocusedViews.remove(viewId);
+        updateActiveFocus();
+    }
+}
+
+void MirSurface::updateActiveFocus()
 {
     if (!m_session) {
         return;
@@ -450,17 +462,19 @@ void MirSurface::setActiveFocus(bool focus)
     // Temporary hotfix for http://pad.lv/1483752
     if (m_session->childSessions()->rowCount() > 0) {
         // has child trusted session, ignore any focus change attempts
-        DEBUG_MSG << "(" << focus << ") - has child trusted session, ignore any focus change attempts";
+        DEBUG_MSG << "() has child trusted session, ignore any focus change attempts";
         return;
     }
 
-    DEBUG_MSG << "(" << focus << ")";
-
-    if (focus) {
-        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
-    } else {
+    if (m_activelyFocusedViews.isEmpty()) {
+        DEBUG_MSG << "() unfocused";
         m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_unfocused);
+    } else {
+        DEBUG_MSG << "() focused";
+        m_shell->set_surface_attribute(m_session->session(), m_surface, mir_surface_attrib_focus, mir_surface_focused);
     }
+
+    m_neverSetSurfaceFocus = false;
 }
 
 void MirSurface::close()
@@ -739,6 +753,7 @@ void MirSurface::unregisterView(qintptr viewId)
         }
     }
     updateVisibility();
+    setViewActiveFocus(viewId, false);
 }
 
 void MirSurface::setViewVisibility(qintptr viewId, bool visible)

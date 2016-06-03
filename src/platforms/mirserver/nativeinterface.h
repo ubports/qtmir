@@ -22,7 +22,8 @@
 #include <qpa/qplatformnativeinterface.h>
 
 // local
-#include "qmirserver.h"
+class MirServer;
+class QMirServer;
 
 class NativeInterface : public QPlatformNativeInterface
 {
@@ -35,7 +36,7 @@ public:
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
 
-    QWeakPointer<MirServer> mirServer() { return m_qMirServer->mirServer(); }
+    QWeakPointer<MirServer> mirServer();
 
 private:
     QMirServer *m_qMirServer;

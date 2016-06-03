@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,23 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "qtcompositor.h"
 #include "logging.h"
 
-#include <mir/graphics/cursor.h>
-
-// Lives in a Mir thread
-void QtCompositor::start()
-{
-    qCDebug(QTMIR_SCREENS) << "QtCompositor::start";
-
-    Q_EMIT starting(); // blocks
-}
-
-void QtCompositor::stop()
-{
-    qCDebug(QTMIR_SCREENS) << "QtCompositor::stop";
-
-    Q_EMIT stopping(); // blocks
-}
-
+Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
+Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
+Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
+Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
+Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
+Q_LOGGING_CATEGORY(QTMIR_CLIPBOARD, "qtmir.clipboard")
+Q_LOGGING_CATEGORY(QTMIR_SENSOR_MESSAGES, "qtmir.sensor")
+Q_LOGGING_CATEGORY(QTMIR_SCREENS, "qtmir.screens")

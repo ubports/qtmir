@@ -10,6 +10,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${MIRSERVER_INCLUDE_DIRS}
+  ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 )
 
 add_executable(surfacemanager_test ${MIR_SURFACE_MANAGER_TEST_SOURCES})
