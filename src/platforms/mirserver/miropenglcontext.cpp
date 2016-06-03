@@ -125,7 +125,7 @@ static bool needsFBOReadBackWorkaround()
     static bool set = false;
     static bool needsWorkaround = false;
 
-    if (!set) {
+    if (Q_UNLIKELY(!set)) {
         const char *rendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
         // Keep in sync with qtubuntu
         needsWorkaround = qstrncmp(rendererString, "Mali-400", 8) == 0
@@ -150,7 +150,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
-    if (screenWindow) {
+    if (Q_LIKELY(screenWindow)) { qDebug("HI");
         m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
