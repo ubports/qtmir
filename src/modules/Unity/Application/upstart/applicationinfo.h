@@ -29,7 +29,6 @@ namespace upstart
 
 class ApplicationInfo : public qtmir::ApplicationInfo
 {
-    Q_OBJECT
 public:
     ApplicationInfo(const QString &appId, std::shared_ptr<ubuntu::app_launch::Application::Info> info);
 
