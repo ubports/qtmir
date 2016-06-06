@@ -4,7 +4,7 @@ include_directories(
 )
 
 include_directories(
-  SYSTEM
+    SYSTEM
     ${GLIB_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
