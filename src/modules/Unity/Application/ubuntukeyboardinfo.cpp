@@ -36,6 +36,8 @@ UbuntuKeyboardInfo* UbuntuKeyboardInfo::instance()
 UbuntuKeyboardInfo::UbuntuKeyboardInfo(QObject *parent)
     : QObject(parent),
     m_consecutiveAttempts(0),
+    m_lastX(0),
+    m_lastY(0),
     m_lastWidth(0),
     m_lastHeight(0)
 {
