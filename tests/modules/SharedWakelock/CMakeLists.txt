@@ -5,6 +5,10 @@ set(
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/modules
+)
+
+include_directories(
+  SYSTEM
   ${QTDBUSTEST_INCLUDE_DIRS}
   ${QTDBUSMOCK_INCLUDE_DIRS}
 )
