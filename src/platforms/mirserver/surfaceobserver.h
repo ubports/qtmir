@@ -30,7 +30,7 @@ namespace mir {
         class Surface;
     }
     namespace shell {
-        class SurfaceSpecification;
+        struct SurfaceSpecification;
     }
 }
 
@@ -90,7 +90,7 @@ private:
     QObject *m_listener;
     bool m_framesPosted;
     QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
-    static QMap<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
+    static QHash<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
 };
 
 #endif

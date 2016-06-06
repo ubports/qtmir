@@ -64,12 +64,12 @@ namespace {
 
 // FIXME: To be removed once shell has fully adopted short appIds!!
 QString toShortAppIdIfPossible(const QString &appId) {
-    QRegExp longAppIdMask("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*");
+    QRegExp longAppIdMask(QStringLiteral("[a-z0-9][a-z0-9+.-]+_[a-zA-Z0-9+.-]+_[0-9][a-zA-Z0-9.+:~-]*"));
     if (longAppIdMask.exactMatch(appId)) {
         qWarning() << "WARNING: long App ID encountered:" << appId;
         // input string a long AppId, chop the version string off the end
-        QStringList parts = appId.split("_");
-        return QString("%1_%2").arg(parts.first()).arg(parts.at(1));
+        QStringList parts = appId.split(QStringLiteral("_"));
+        return QStringLiteral("%1_%2").arg(parts.first(), parts.at(1));
     }
     return appId;
 }
@@ -183,7 +183,7 @@ ApplicationManager::ApplicationManager(
     , m_settings(settings)
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
-    setObjectName("qtmir::ApplicationManager");
+    setObjectName(QStringLiteral("qtmir::ApplicationManager"));
 
     /*
         All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
@@ -532,7 +532,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
 
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::authorizeSession - pid=" << pid;
 
-    for (Application *app : m_applications) {
+    Q_FOREACH (Application *app, m_applications) {
         if (app->state() == Application::Starting) {
             tracepoint(qtmir, appIdHasProcessId_start);
             if (m_taskController->appIdHasProcessId(app->appId(), pid)) {
@@ -572,7 +572,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     }
 
     // Guess appId from the desktop file hint
-    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(".desktop$")));
+    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(QStringLiteral(".desktop$"))));
 
     qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
 
@@ -598,7 +598,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     Application::Stage stage = Application::MainStage;
     QString stageParam = info->getParameter("--stage_hint=");
 
-    if (stageParam == "side_stage") {
+    if (stageParam == QLatin1String("side_stage")) {
         stage = Application::SideStage;
     }
 
@@ -654,7 +654,7 @@ Application* ApplicationManager::findApplicationWithSession(const ms::Session *s
     return findApplicationWithPid(session->process_id());
 }
 
-Application* ApplicationManager::findApplicationWithPid(const pid_t pid)
+Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
 {
     if (pid <= 0)
         return nullptr;
@@ -878,7 +878,7 @@ void ApplicationManager::updateFocusedApplication()
 
 Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* surface)
 {
-    for (Application *app : m_applications) {
+    Q_FOREACH (Application *app, m_applications) {
         if (app->session() == surface->session()) {
             return app;
         }

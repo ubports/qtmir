@@ -174,8 +174,8 @@ QColor Application::colorFromString(const QString &colorString, const char *colo
             color.setAlpha(255);
         } else {
             color.setRgba(qRgba(0, 0, 0, 0));
-            qCWarning(QTMIR_APPLICATIONS) << QString("Invalid %1: \"%2\"")
-                .arg(colorName).arg(colorString);
+            qCWarning(QTMIR_APPLICATIONS) << QStringLiteral("Invalid %1: \"%2\"")
+                .arg(colorName, colorString);
         }
     }
 
@@ -466,7 +466,7 @@ void Application::setPid(pid_t pid)
     m_pid = pid;
 }
 
-void Application::setArguments(const QStringList arguments)
+void Application::setArguments(const QStringList &arguments)
 {
     m_arguments = arguments;
 }
@@ -738,7 +738,7 @@ SessionInterface* Application::session() const
 
 void Application::acquireWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->acquire(this);
@@ -746,7 +746,7 @@ void Application::acquireWakelock() const
 
 void Application::releaseWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->release(this);

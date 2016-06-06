@@ -92,7 +92,7 @@ SessionManager::SessionManager(
     , m_applicationManager(applicationManager)
 {
     qCDebug(QTMIR_SESSIONS) << "SessionManager::SessionManager - this=" << this;
-    setObjectName("qtmir::SessionManager");
+    setObjectName(QStringLiteral("qtmir::SessionManager"));
 }
 
 SessionManager::~SessionManager()

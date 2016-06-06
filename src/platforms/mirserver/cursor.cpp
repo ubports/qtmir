@@ -27,28 +27,28 @@ using namespace qtmir;
 
 Cursor::Cursor()
 {
-    m_shapeToCursorName[Qt::ArrowCursor] = "left_ptr";
-    m_shapeToCursorName[Qt::UpArrowCursor] = "up_arrow";
-    m_shapeToCursorName[Qt::CrossCursor] = "cross";
-    m_shapeToCursorName[Qt::WaitCursor] = "watch";
-    m_shapeToCursorName[Qt::IBeamCursor] = "xterm";
-    m_shapeToCursorName[Qt::SizeVerCursor] = "size_ver";
-    m_shapeToCursorName[Qt::SizeHorCursor] = "size_hor";
-    m_shapeToCursorName[Qt::SizeBDiagCursor] = "size_bdiag";
-    m_shapeToCursorName[Qt::SizeFDiagCursor] = "size_fdiag";
-    m_shapeToCursorName[Qt::SizeAllCursor] = "size_all";
-    m_shapeToCursorName[Qt::BlankCursor] = "blank";
-    m_shapeToCursorName[Qt::SplitVCursor] = "split_v";
-    m_shapeToCursorName[Qt::SplitHCursor] = "split_h";
-    m_shapeToCursorName[Qt::PointingHandCursor] = "hand";
-    m_shapeToCursorName[Qt::ForbiddenCursor] = "forbidden";
-    m_shapeToCursorName[Qt::WhatsThisCursor] = "whats_this";
-    m_shapeToCursorName[Qt::BusyCursor] = "left_ptr_watch";
-    m_shapeToCursorName[Qt::OpenHandCursor] = "openhand";
-    m_shapeToCursorName[Qt::ClosedHandCursor] = "closedhand";
-    m_shapeToCursorName[Qt::DragCopyCursor] = "dnd-copy";
-    m_shapeToCursorName[Qt::DragMoveCursor] = "dnd-move";
-    m_shapeToCursorName[Qt::DragLinkCursor] = "dnd-link";
+    m_shapeToCursorName[Qt::ArrowCursor] = QStringLiteral("left_ptr");
+    m_shapeToCursorName[Qt::UpArrowCursor] = QStringLiteral("up_arrow");
+    m_shapeToCursorName[Qt::CrossCursor] = QStringLiteral("cross");
+    m_shapeToCursorName[Qt::WaitCursor] = QStringLiteral("watch");
+    m_shapeToCursorName[Qt::IBeamCursor] = QStringLiteral("xterm");
+    m_shapeToCursorName[Qt::SizeVerCursor] = QStringLiteral("size_ver");
+    m_shapeToCursorName[Qt::SizeHorCursor] = QStringLiteral("size_hor");
+    m_shapeToCursorName[Qt::SizeBDiagCursor] = QStringLiteral("size_bdiag");
+    m_shapeToCursorName[Qt::SizeFDiagCursor] = QStringLiteral("size_fdiag");
+    m_shapeToCursorName[Qt::SizeAllCursor] = QStringLiteral("size_all");
+    m_shapeToCursorName[Qt::BlankCursor] = QStringLiteral("blank");
+    m_shapeToCursorName[Qt::SplitVCursor] = QStringLiteral("split_v");
+    m_shapeToCursorName[Qt::SplitHCursor] = QStringLiteral("split_h");
+    m_shapeToCursorName[Qt::PointingHandCursor] = QStringLiteral("hand");
+    m_shapeToCursorName[Qt::ForbiddenCursor] = QStringLiteral("forbidden");
+    m_shapeToCursorName[Qt::WhatsThisCursor] = QStringLiteral("whats_this");
+    m_shapeToCursorName[Qt::BusyCursor] = QStringLiteral("left_ptr_watch");
+    m_shapeToCursorName[Qt::OpenHandCursor] = QStringLiteral("openhand");
+    m_shapeToCursorName[Qt::ClosedHandCursor] = QStringLiteral("closedhand");
+    m_shapeToCursorName[Qt::DragCopyCursor] = QStringLiteral("dnd-copy");
+    m_shapeToCursorName[Qt::DragMoveCursor] = QStringLiteral("dnd-move");
+    m_shapeToCursorName[Qt::DragLinkCursor] = QStringLiteral("dnd-link");
 
     connect(Mir::instance(), &Mir::cursorNameChanged, this, &Cursor::setMirCursorName);
 }
@@ -61,10 +61,10 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
 
     if (windowCursor) {
         if (windowCursor->pixmap().isNull()) {
-            m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QLatin1String("left_ptr"));
+            m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QStringLiteral("left_ptr"));
             m_mousePointer->setCustomCursor(QCursor());
         } else {
-            m_qtCursorName = QLatin1String("custom");
+            m_qtCursorName = QStringLiteral("custom");
             m_mousePointer->setCustomCursor(*windowCursor);
         }
     } else {
@@ -170,7 +170,7 @@ void Cursor::updateMousePointerCursorName()
 
     if (m_mirCursorName.isEmpty()) {
         if (m_qtCursorName.isEmpty()) {
-            m_mousePointer->setCursorName("left_ptr");
+            m_mousePointer->setCursorName(QStringLiteral("left_ptr"));
         } else {
             m_mousePointer->setCursorName(m_qtCursorName);
         }

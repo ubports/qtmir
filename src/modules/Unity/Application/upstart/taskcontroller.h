@@ -27,6 +27,7 @@ namespace upstart
 
 class TaskController : public qtmir::TaskController
 {
+    Q_OBJECT
 public:
     TaskController();
     ~TaskController();

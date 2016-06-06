@@ -119,7 +119,7 @@ private Q_SLOTS:
     void updateMirSurfaceActiveFocus();
     void updateMirSurfaceVisibility();
 
-    void onActualSurfaceSizeChanged(const QSize &size);
+    void onActualSurfaceSizeChanged(QSize size);
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);

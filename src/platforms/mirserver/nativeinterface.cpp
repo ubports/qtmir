@@ -56,8 +56,8 @@ QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
     auto w = static_cast<ScreenWindow*>(window);
     auto s = static_cast<Screen*>(w->screen());
     if (s) {
-        propertyMap.insert("scale", s->scale());
-        propertyMap.insert("formFactor", s->formFactor());
+        propertyMap.insert(QStringLiteral("scale"), s->scale());
+        propertyMap.insert(QStringLiteral("formFactor"), s->formFactor());
     }
     return propertyMap;
 }

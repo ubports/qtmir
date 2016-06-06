@@ -28,7 +28,7 @@
 #include <mir/geometry/size.h>
 #include <mir/shell/surface_specification.h>
 
-QMap<const mir::scene::Surface*, SurfaceObserver*> SurfaceObserver::m_surfaceToObserverMap;
+QHash<const mir::scene::Surface*, SurfaceObserver*> SurfaceObserver::m_surfaceToObserverMap;
 QMutex SurfaceObserver::mutex;
 
 SurfaceObserver::SurfaceObserver()
@@ -83,7 +83,7 @@ SurfaceObserver::SurfaceObserver()
 SurfaceObserver::~SurfaceObserver()
 {
     QMutexLocker locker(&mutex);
-    QMutableMapIterator<const mir::scene::Surface*, SurfaceObserver*> i(m_surfaceToObserverMap);
+    QMutableHashIterator<const mir::scene::Surface*, SurfaceObserver*> i(m_surfaceToObserverMap);
     while (i.hasNext()) {
         i.next();
         if (i.value() == this) {

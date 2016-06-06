@@ -33,9 +33,9 @@ DBusWindowStack::DBusWindowStack(ApplicationManager *parent) : QObject(parent)
     qDBusRegisterMetaType<WindowInfo>();
     qDBusRegisterMetaType< QList<WindowInfo> >();
 
-    QDBusConnection::sessionBus().registerService("com.canonical.Unity.WindowStack");
+    QDBusConnection::sessionBus().registerService(QStringLiteral("com.canonical.Unity.WindowStack"));
     // TODO ExportScriptableSlots shouldn't be needed but without it i don't get the methods :-/
-    QDBusConnection::sessionBus().registerObject("/com/canonical/Unity/WindowStack", this, QDBusConnection::ExportAllSignals | QDBusConnection::ExportScriptableSlots |QDBusConnection::ExportScriptableInvokables );
+    QDBusConnection::sessionBus().registerObject(QStringLiteral("/com/canonical/Unity/WindowStack"), this, QDBusConnection::ExportAllSignals | QDBusConnection::ExportScriptableSlots |QDBusConnection::ExportScriptableInvokables );
 }
 
 DBusWindowStack::~DBusWindowStack()
@@ -49,7 +49,7 @@ AppIdDesktopFile DBusWindowStack::GetAppIdFromPid(unsigned int pid)
     const Application *app = appMgr->findApplicationWithPid(pid);
     if (app) {
         res.app_id = app->appId();
-        res.desktop_file = "";
+        res.desktop_file = QString();
     }
     return res;
 }
@@ -59,6 +59,7 @@ QList<WindowInfo> DBusWindowStack::GetWindowStack()
     QList<WindowInfo> res;
     ApplicationManager *appMgr = static_cast<ApplicationManager*>(parent());
     const QList<Application*> &applications = appMgr->list();
+    res.reserve(applications.count());
     Q_FOREACH(Application* app, applications) {
         WindowInfo wi;
         wi.window_id = 0;
