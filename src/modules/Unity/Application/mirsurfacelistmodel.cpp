@@ -71,8 +71,8 @@ void MirSurfaceListModel::prependSurface(MirSurfaceInterface *surface)
     Q_EMIT countChanged(m_surfaceList.count());
     if (count() == 1) {
         Q_EMIT emptyChanged();
-        Q_EMIT firstChanged();
     }
+    Q_EMIT firstChanged();
 }
 
 void MirSurfaceListModel::connectSurface(MirSurfaceInterface *surface)
