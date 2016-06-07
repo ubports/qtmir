@@ -434,7 +434,7 @@ public:
         int i = 0;
         while (i < screens.count() && !eventHandled) {
             auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
-            eventHandled |= platformCursor->handleMouseEvent(timestamp, relative, buttons, modifiers);
+            eventHandled = platformCursor->handleMouseEvent(timestamp, relative, buttons, modifiers);
             ++i;
         }
         if (!eventHandled) {
@@ -442,7 +442,7 @@ public:
         }
     }
 
-    void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) override
+    void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta, Qt::KeyboardModifiers modifiers) override
     {
         // Send to the first screen that handles the mouse event
         // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
@@ -455,8 +455,12 @@ public:
         int i = 0;
         while (i < screens.count() && !eventHandled) {
             auto platformCursor = static_cast<qtmir::Cursor*>(screens.at(i)->cursor());
-            eventHandled |= platformCursor->handleWheelEvent(timestamp, angleDelta, mods);
+            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, modifiers);
             ++i;
+        }
+        if (!eventHandled) {
+            QWindowSystemInterface::handleWheelEvent(focusedWindow(), timestamp, absolute, absolute,
+                                                     QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         }
     }
 
@@ -583,7 +587,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         if (hDelta != 0 || vDelta != 0) {
             const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
-            mQtWindowSystem->handleWheelEvent(timestamp.count(), angleDelta, modifiers);
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), absolute, angleDelta, modifiers);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         mQtWindowSystem->handleMouseEvent(timestamp.count(), relative, absolute, buttons, modifiers);

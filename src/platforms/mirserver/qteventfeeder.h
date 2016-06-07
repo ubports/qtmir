@@ -52,7 +52,8 @@ public:
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
         virtual void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
                                       Qt::KeyboardModifiers modifiers) = 0;
-        virtual void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) = 0;
+        virtual void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta,
+                                      Qt::KeyboardModifiers modifiers) = 0;
     };
 
     QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel);
