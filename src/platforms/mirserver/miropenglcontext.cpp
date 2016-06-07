@@ -98,10 +98,10 @@ MirOpenGLContext::MirOpenGLContext(
     qDebug() << "OpenGL ES extensions:" << qPrintable(string);
     q_printEglConfig(eglDisplay, eglConfig);
 
-    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
     QObject::connect(m_logger, &QOpenGLDebugLogger::messageLogged,
                      this, &MirOpenGLContext::onGlDebugMessageLogged, Qt::DirectConnection);
 #endif // debug
+    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
 }
 
 QSurfaceFormat MirOpenGLContext::format() const
