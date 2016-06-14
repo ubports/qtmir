@@ -22,6 +22,7 @@ namespace scene
 {
 
 MockSession::MockSession()
+    : m_sessionId(-1)
 {
 }
 
