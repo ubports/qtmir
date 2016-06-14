@@ -13,6 +13,13 @@ endif()
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+find_package (ECM 1.7.0 QUIET NO_MODULE)
+if (ECM_FOUND)
+    # Provides us with -DECM_ENABLE_SANITIZERS='X'
+    # Where X can be address, thread, memory, leak, undefined
+    include("${ECM_MODULE_DIR}/ECMEnableSanitizers.cmake")
+endif()
+
 # add custom cmake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
