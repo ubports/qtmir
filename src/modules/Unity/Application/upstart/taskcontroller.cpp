@@ -127,8 +127,8 @@ TaskController::TaskController()
         TaskController::Error error;
         switch(failureType)
         {
-        case UBUNTU_APP_LAUNCH_APP_FAILED_CRASH: error = TaskController::Error::APPLICATION_CRASHED;
-        case UBUNTU_APP_LAUNCH_APP_FAILED_START_FAILURE: error = TaskController::Error::APPLICATION_FAILED_TO_START;
+        case UBUNTU_APP_LAUNCH_APP_FAILED_CRASH: error = TaskController::Error::APPLICATION_CRASHED;                    break;
+        case UBUNTU_APP_LAUNCH_APP_FAILED_START_FAILURE: error = TaskController::Error::APPLICATION_FAILED_TO_START;    break;
         }
 
         auto thiz = static_cast<TaskController*>(userData);
