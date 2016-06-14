@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -28,6 +28,7 @@
 // Unity API
 #include <unity/shell/application/ApplicationInfoInterface.h>
 
+#include "mirsurfacelistmodel.h"
 #include "session_interface.h"
 
 namespace mir {
@@ -40,25 +41,22 @@ namespace qtmir
 {
 
 class ApplicationManager;
-class DesktopFileReader;
+class ApplicationInfo;
 class Session;
 class SharedWakelock;
+class AbstractTimer;
 
 class Application : public unity::shell::application::ApplicationInfoInterface
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString desktopFile READ desktopFile CONSTANT)
-    Q_PROPERTY(QString exec READ exec CONSTANT)
     Q_PROPERTY(bool fullscreen READ fullscreen NOTIFY fullscreenChanged)
-    Q_PROPERTY(Stage stage READ stage WRITE setStage NOTIFY stageChanged)
-    Q_PROPERTY(SessionInterface* session READ session NOTIFY sessionChanged DESIGNABLE false)
 
 public:
     Q_DECLARE_FLAGS(Stages, Stage)
 
     enum ProcessState {
-        ProcessUnknown,
+        ProcessUnknown, // not managed by upstart, so we can't respawn that application
         ProcessRunning,
         ProcessSuspended,
         ProcessFailed, // it stopped, but because it was killed or because it crashed
@@ -81,9 +79,9 @@ public:
     };
 
     Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                DesktopFileReader *desktopFileReader,
-                const QStringList &arguments,
-                ApplicationManager *parent);
+                const QSharedPointer<ApplicationInfo>& appInfo,
+                const QStringList &arguments = QStringList(),
+                ApplicationManager *parent = nullptr);
     virtual ~Application();
 
     // ApplicationInfoInterface
@@ -92,6 +90,7 @@ public:
     QString comment() const override;
     QUrl icon() const override;
     Stage stage() const override;
+    void setStage(Stage stage) override;
     State state() const override;
     RequestedState requestedState() const override;
     void setRequestedState(RequestedState) override;
@@ -107,8 +106,10 @@ public:
     bool isTouchApp() const override;
     bool exemptFromLifecycle() const override;
     void setExemptFromLifecycle(bool) override;
-
-    void setStage(Stage stage);
+    QSize initialSurfaceSize() const override;
+    void setInitialSurfaceSize(const QSize &size) override;
+    unity::shell::application::MirSurfaceListInterface* surfaceList() override;
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
@@ -118,11 +119,7 @@ public:
     SessionInterface* session() const;
     void setSession(SessionInterface *session);
 
-    bool canBeResumed() const;
-
     bool isValid() const;
-    QString desktopFile() const;
-    QString exec() const;
     bool fullscreen() const;
 
     Stages supportedStages() const;
@@ -131,8 +128,14 @@ public:
 
     void close();
 
-    // for tests
+    // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }
+
+    void requestFocus();
+
+    // for tests
+    void setStopTimer(AbstractTimer *timer);
+    AbstractTimer *stopTimer() const { return m_stopTimer; }
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
@@ -144,23 +147,19 @@ Q_SIGNALS:
     void suspendProcessRequested();
     void resumeProcessRequested();
     void stopped();
+    void closing();
 
 private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
 
-protected:
-    void timerEvent(QTimerEvent *event);
-
 private:
 
-    QString longAppId() const;
     void acquireWakelock() const;
     void releaseWakelock() const;
     void setPid(pid_t pid);
     void setArguments(const QStringList arguments);
-    void setFocused(bool focus);
     void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
@@ -168,27 +167,31 @@ private:
     void stop();
     QColor colorFromString(const QString &colorString, const char *colorName) const;
     static const char* internalStateToStr(InternalState state);
-    void applyRequestedState();
+    void updateState();
     void applyRequestedRunning();
     void applyRequestedSuspended();
-    void doClose();
+    void applyClosing();
+    void onSessionStopped();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
-    DesktopFileReader* m_desktopData;
-    QString m_longAppId;
+    QSharedPointer<ApplicationInfo> m_appInfo;
     pid_t m_pid;
     Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;
-    bool m_focused;
     QStringList m_arguments;
     Qt::ScreenOrientations m_supportedOrientations;
     bool m_rotatesWindowContents;
     SessionInterface *m_session;
     RequestedState m_requestedState;
     ProcessState m_processState;
-    int m_closeTimer;
+    AbstractTimer *m_stopTimer;
     bool m_exemptFromLifecycle;
+    QSize m_initialSurfaceSize;
+    bool m_closing{false};
+
+    ProxySurfaceListModel m_proxySurfaceList;
+    ProxySurfaceListModel m_proxyPromptSurfaceList;
 
     friend class ApplicationManager;
     friend class SessionManager;

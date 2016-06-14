@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,11 +20,11 @@
 // local
 #include "application.h"
 #include "application_manager.h"
-#include "applicationscreenshotprovider.h"
+#include "mirfocuscontroller.h"
 #include "mirsurfacemanager.h"
 #include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
-#include "sessionmanager.h"
+#include "mirsurfacelistmodel.h"
 #include "ubuntukeyboardinfo.h"
 
 // platforms/mirserver
@@ -38,7 +38,8 @@
 
 using namespace qtmir;
 
-static QObject* applicationManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
+namespace {
+QObject* applicationManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
     Q_UNUSED(engine);
     Q_UNUSED(scriptEngine);
     qCDebug(QTMIR_APPLICATIONS) << "applicationManagerSingleton - engine=" << engine << "scriptEngine=" << scriptEngine;
@@ -46,7 +47,7 @@ static QObject* applicationManagerSingleton(QQmlEngine* engine, QJSEngine* scrip
     return qtmir::ApplicationManager::singleton();
 }
 
-static QObject* surfaceManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
+QObject* surfaceManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
     Q_UNUSED(engine);
     Q_UNUSED(scriptEngine);
     qCDebug(QTMIR_APPLICATIONS) << "surfaceManagerSingleton - engine=" << engine << "scriptEngine=" << scriptEngine;
@@ -54,13 +55,6 @@ static QObject* surfaceManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEng
     return qtmir::MirSurfaceManager::singleton();
 }
 
-static QObject* sessionManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return qtmir::SessionManager::singleton();
-}
-
-namespace {
 QObject* ubuntuKeyboardInfoSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
     if (!UbuntuKeyboardInfo::instance()) {
         new UbuntuKeyboardInfo;
@@ -70,6 +64,11 @@ QObject* ubuntuKeyboardInfoSingleton(QQmlEngine* /*engine*/, QJSEngine* /*script
 
 QObject* mirSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
     return qtmir::Mir::instance();
+}
+
+QObject* mirFocusControllerSingleton(QQmlEngine*, QJSEngine*)
+{
+    return MirFocusController::instance();
 }
 } // anonymous namespace
 
@@ -85,9 +84,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<qtmir::ApplicationManager*>("ApplicationManager*"); //need for queueing signals
         qRegisterMetaType<qtmir::Application*>("Application*");
         qRegisterMetaType<unity::shell::application::MirSurfaceInterface*>("MirSurfaceInterface*");
-        qRegisterMetaType<qtmir::Session*>("Session*");
-        qRegisterMetaType<qtmir::SessionInterface*>("SessionInterface*");
-        qRegisterMetaType<qtmir::SessionModel*>("SessionModel*");
+        qRegisterMetaType<unity::shell::application::MirSurfaceListInterface*>("unity::shell::application::MirSurfaceListInterface*");
         qRegisterMetaType<MirSurfaceAttrib>("MirSurfaceAttrib");
 
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
@@ -100,13 +97,10 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "ApplicationInfo", "Application can't be instantiated");
         qmlRegisterSingletonType<qtmir::MirSurfaceManager>(
                     uri, 0, 1, "SurfaceManager", surfaceManagerSingleton);
-        qmlRegisterSingletonType<qtmir::SessionManager>(
-                    uri, 0, 1, "SessionManager", sessionManagerSingleton);
+        qmlRegisterSingletonType<MirFocusController>(uri, 0, 1, "MirFocusController", mirFocusControllerSingleton);
         qmlRegisterUncreatableType<unity::shell::application::MirSurfaceInterface>(
                     uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
-        qmlRegisterUncreatableType<qtmir::Session>(
-                    uri, 0, 1, "Session", "Session can't be instantiated from QML");
         qmlRegisterSingletonType<qtmir::UbuntuKeyboardInfo>(
                 uri, 0, 1, "UbuntuKeyboardInfo", ubuntuKeyboardInfoSingleton);
         qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
@@ -115,10 +109,6 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)
     {
         QQmlExtensionPlugin::initializeEngine(engine, uri);
-
-        qtmir::ApplicationManager* appManager
-                = static_cast<qtmir::ApplicationManager*>(applicationManagerSingleton(engine, nullptr));
-        engine->addImageProvider(QLatin1String("application"), new qtmir::ApplicationScreenshotProvider(appManager));
     }
 };
 

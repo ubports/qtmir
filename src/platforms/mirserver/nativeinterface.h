@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,16 +22,24 @@
 #include <qpa/qplatformnativeinterface.h>
 
 // local
-#include "mirserver.h"
+class MirServer;
+class QMirServer;
 
 class NativeInterface : public QPlatformNativeInterface
 {
 public:
-    NativeInterface(const QWeakPointer<MirServer> &);
+    NativeInterface(QMirServer *);
 
     virtual void *nativeResourceForIntegration(const QByteArray &resource);
 
-    QWeakPointer<MirServer> m_mirServer;
+    QVariantMap windowProperties(QPlatformWindow *window) const override;
+    QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
+    QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
+
+    QWeakPointer<MirServer> mirServer();
+
+private:
+    QMirServer *m_qMirServer;
 };
 
 #endif // NATIVEINTEGRATION_H

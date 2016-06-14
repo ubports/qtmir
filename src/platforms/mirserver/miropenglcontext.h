@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,18 +19,21 @@
 
 #include <qpa/qplatformopenglcontext.h>
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
 #include <QOpenGLDebugLogger>
 #endif
 
-
-class MirServer;
+class ScreenWindow;
+namespace mir { namespace graphics { class Display; class GLConfig; }}
 
 class MirOpenGLContext : public QObject, public QPlatformOpenGLContext
 {
     Q_OBJECT
 public:
-    MirOpenGLContext(const QSharedPointer<MirServer> &, const QSurfaceFormat &);
+    MirOpenGLContext(
+        mir::graphics::Display &display,
+        mir::graphics::GLConfig &gl_config
+        , const QSurfaceFormat &);
     ~MirOpenGLContext() = default;
 
     QSurfaceFormat format() const override;
@@ -43,13 +46,14 @@ public:
 
     QFunctionPointer getProcAddress(const QByteArray &procName) override;
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
     Q_SLOT void onGlDebugMessageLogged(QOpenGLDebugMessage m) { qDebug() << m; }
 #endif
 
 private:
     QSurfaceFormat m_format;
-#ifndef QT_NO_DEBUG
+    ScreenWindow *m_currentWindow;
+#ifdef QGL_DEBUG
     QOpenGLDebugLogger *m_logger;
 #endif
 };

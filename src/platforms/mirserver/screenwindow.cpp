@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -45,12 +45,10 @@ ScreenWindow::ScreenWindow(QWindow *window)
     , m_exposed(false)
     , m_winId(newWId())
 {
-    // Register with the Screen it is associated with
-    auto myScreen = static_cast<Screen *>(screen());
-    Q_ASSERT(myScreen);
+    // Note: window->screen() is set to the primaryScreen(), if not specified explicitly.
+    const auto myScreen = static_cast<Screen *>(window->screen()->handle());
     myScreen->setWindow(this);
-
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by" << myScreen;
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by" << myScreen << "with ID" << myScreen->outputId().as_value();
 
     QRect screenGeometry(screen()->availableGeometry());
     if (window->geometry() != screenGeometry) {
@@ -73,7 +71,7 @@ bool ScreenWindow::isExposed() const
 
 void ScreenWindow::setExposed(const bool exposed)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed;
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed << screen();
     if (m_exposed == exposed)
         return;
 
@@ -89,12 +87,30 @@ void ScreenWindow::setExposed(const bool exposed)
     auto renderer = QSGRenderLoop::instance();
     if (exposed) {
         renderer->show(quickWindow);
-        QWindowSystemInterface::handleExposeEvent(window(), QRegion()); // else it won't redraw
+        QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
     } else {
         quickWindow->setPersistentOpenGLContext(false);
         quickWindow->setPersistentSceneGraph(false);
         renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
     }
+}
+
+void ScreenWindow::setScreen(QPlatformScreen *newScreen)
+{
+    // Dis-associate the old screen
+    if (screen()) {
+        static_cast<Screen *>(screen())->setWindow(nullptr);
+    }
+
+    // Associate new screen and announce to Qt
+    auto myScreen = static_cast<Screen *>(newScreen);
+    Q_ASSERT(myScreen);
+    myScreen->setWindow(this);
+
+    QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
+    setExposed(true); //GERRY - assumption setScreen only called while compositor running
+
+    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "NEWLY backed by" << myScreen;
 }
 
 void ScreenWindow::swapBuffers()

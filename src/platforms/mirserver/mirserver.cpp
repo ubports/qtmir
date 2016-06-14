@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,17 +19,18 @@
 #include "mirserver.h"
 
 // local
+#include "argvHelper.h"
 #include "mircursorimages.h"
-#include "mirwindowmanager.h"
+#include "mirdisplayconfigurationpolicy.h"
 #include "mirglconfig.h"
 #include "mirserverstatuslistener.h"
+#include "mirwindowmanager.h"
 #include "promptsessionlistener.h"
-#include "screencontroller.h"
+#include "screensmodel.h"
 #include "sessionlistener.h"
 #include "sessionauthorizer.h"
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
-#include "tileddisplayconfigurationpolicy.h"
 #include "logging.h"
 
 // std
@@ -49,20 +50,24 @@ namespace ms = mir::scene;
 
 namespace
 {
-void ignore_unparsed_arguments(int /*argc*/, char const* const/*argv*/[])
-{
-}
+void usingHiddenCursor(mir::Server& server);
 }
 
-Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
-
-MirServer::MirServer(int argc, char const* argv[],
-                     const QSharedPointer<ScreenController> &screenController, QObject* parent)
+MirServer::MirServer(int &argc, char **argv,
+                     const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
-    , m_screenController(screenController)
+    , m_screensModel(screensModel)
 {
-    set_command_line_handler(&ignore_unparsed_arguments);
-    set_command_line(argc, argv);
+    bool unknownArgsFound = false;
+    set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
+        unknownArgsFound = true;
+        // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
+        // argc as filteredArgv only defined in this scope.
+        qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
+    });
+
+    // Casting char** to be a const char** safe as Mir won't change it, nor will we
+    set_command_line(argc, const_cast<const char **>(argv));
 
     override_the_session_listener([]
         {
@@ -89,9 +94,9 @@ MirServer::MirServer(int argc, char const* argv[],
             return std::make_shared<qtmir::MirCursorImages>();
         });
 
-    override_the_input_dispatcher([&screenController]
+    override_the_input_dispatcher([&screensModel]
         {
-            return std::make_shared<QtEventFeeder>(screenController);
+            return std::make_shared<QtEventFeeder>(screensModel);
         });
 
     override_the_gl_config([]
@@ -104,17 +109,20 @@ MirServer::MirServer(int argc, char const* argv[],
             return std::make_shared<MirServerStatusListener>();
         });
 
-    override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
+    override_the_window_manager_builder([this](mir::shell::FocusController*)
         -> std::shared_ptr<mir::shell::WindowManager>
         {
-            return {MirWindowManager::create(focus_controller, the_shell_display_layout())};
+            auto windowManager = MirWindowManager::create(the_shell_display_layout(),
+                    std::static_pointer_cast<::SessionListener>(the_session_listener()));
+            m_windowManager = windowManager;
+            return windowManager;
         });
 
     wrap_display_configuration_policy(
         [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
             -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<TiledDisplayConfigurationPolicy>(wrapped);
+            return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
         });
 
     set_terminator([](int)
@@ -123,29 +131,32 @@ MirServer::MirServer(int argc, char const* argv[],
             QCoreApplication::quit();
         });
 
-    add_init_callback([this, &screenController] {
-        screenController->init(the_display(), the_compositor());
+    add_init_callback([this, &screensModel] {
+        screensModel->init(the_display(), the_compositor());
     });
 
-    apply_settings();
+    usingHiddenCursor(*this);
 
-    // We will draw our own cursor.
-    // FIXME: Call override_the_cusor() instead once this method becomes available in a
-    //        future version of Mir.
-    add_init_callback([this]() {
-        the_cursor()->hide();
-        // Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
-        static_cast<QtCompositor*>(the_compositor().get())->setCursor(the_cursor());
-    });
+    try {
+        apply_settings();
+    } catch (const std::exception &ex) {
+        qCritical() << ex.what();
+        exit(1);
+    }
+
+    if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
+        argc = 1;
+    }
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
+    qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
 }
 
-// Override default implementation to ensure we terminate the ScreenController first.
+// Override default implementation to ensure we terminate the ScreensModel first.
 // Code path followed when Qt tries to shutdown the server.
 void MirServer::stop()
 {
-    m_screenController->terminate();
+    m_screensModel->terminate();
     mir::Server::stop();
 }
 
@@ -188,8 +199,36 @@ PromptSessionListener *MirServer::promptSessionListener()
     return static_cast<PromptSessionListener*>(sharedPtr.get());
 }
 
-MirShell *MirServer::shell()
+mir::shell::Shell *MirServer::shell()
 {
-    std::weak_ptr<MirShell> m_shell = the_shell();
+    std::weak_ptr<mir::shell::Shell> m_shell = the_shell();
     return m_shell.lock().get();
+}
+
+MirWindowManager *MirServer::windowManager()
+{
+    return m_windowManager.lock().get();
+}
+
+namespace
+{
+struct HiddenCursorWrapper : mg::Cursor
+{
+    HiddenCursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) :
+        wrapped{wrapped} { wrapped->hide(); }
+    void show() override { }
+    void show(mg::CursorImage const&) override { }
+    void hide() override { wrapped->hide(); }
+
+    void move_to(mir::geometry::Point position) override { wrapped->move_to(position); }
+
+private:
+    std::shared_ptr<mg::Cursor> const wrapped;
+};
+
+void usingHiddenCursor(mir::Server& server)
+{
+    server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
+        { return std::make_shared<HiddenCursorWrapper>(wrapped); });
+};
 }

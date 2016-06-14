@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,6 +18,7 @@
 #include "application.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
+#include "mirfocuscontroller.h"
 #include "logging.h"
 #include "ubuntukeyboardinfo.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -107,9 +108,17 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     m_updateMirSurfaceSizeTimer.setInterval(1);
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
-    connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceFocus);
+    connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceActiveFocus);
     connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
+}
+
+void MirSurfaceItem::componentComplete()
+{
+    QQuickItem::componentComplete();
+    if (window()) {
+        updateScreen(window()->screen());
+    }
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -177,6 +186,11 @@ QString MirSurfaceItem::name() const
 bool MirSurfaceItem::live() const
 {
     return m_surface && m_surface->live();
+}
+
+Mir::ShellChrome MirSurfaceItem::shellChrome() const
+{
+    return m_surface ? m_surface->shellChrome() : Mir::NormalChrome;
 }
 
 // Called from the rendering (scene graph) thread
@@ -552,10 +566,10 @@ void MirSurfaceItem::updateMirSurfaceVisibility()
     m_surface->setViewVisibility((qintptr)this, isVisible());
 }
 
-void MirSurfaceItem::updateMirSurfaceFocus(bool focused)
+void MirSurfaceItem::updateMirSurfaceActiveFocus()
 {
-    if (m_surface && m_consumesInput && m_surface->live()) {
-        m_surface->setFocus(focused);
+    if (m_surface && m_surface->live()) {
+        m_surface->setViewActiveFocus(qintptr(this), m_consumesInput && hasActiveFocus());
     }
 }
 
@@ -605,6 +619,7 @@ void MirSurfaceItem::setConsumesInput(bool value)
         setAcceptHoverEvents(false);
     }
 
+    updateMirSurfaceActiveFocus();
     Q_EMIT consumesInputChanged(value);
 }
 
@@ -626,11 +641,6 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
     if (m_surface) {
         disconnect(m_surface, nullptr, this, nullptr);
-
-        if (hasActiveFocus() && m_consumesInput && m_surface->live()) {
-            m_surface->setFocus(false);
-        }
-
         m_surface->unregisterView((qintptr)this);
         unsetCursor();
     }
@@ -648,6 +658,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::liveChanged, this, &MirSurfaceItem::liveChanged);
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
         connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::setCursor);
+        connect(m_surface, &MirSurfaceInterface::shellChromeChanged, this, &MirSurfaceItem::shellChromeChanged);
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
@@ -656,6 +667,9 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
+        if (window()) {
+            updateScreen(window()->screen());
+        }
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
@@ -672,9 +686,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             Q_EMIT orientationAngleChanged(m_surface->orientationAngle());
         }
 
-        if (m_consumesInput) {
-            m_surface->setFocus(hasActiveFocus());
-        }
+        updateMirSurfaceActiveFocus();
     }
 
     update();
@@ -697,7 +709,17 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     m_window = window;
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
-            Qt::DirectConnection);
+                Qt::DirectConnection);
+
+        updateScreen(m_window->screen());
+        connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::updateScreen);
+    }
+}
+
+void MirSurfaceItem::updateScreen(QScreen *screen)
+{
+    if (screen && m_surface) {
+        m_surface->setScreen(screen);
     }
 }
 

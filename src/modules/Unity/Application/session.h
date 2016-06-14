@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,11 +22,11 @@
 
 // local
 #include "session_interface.h"
+#include "mirsurfacelistmodel.h"
+#include "timer.h"
 
 // Qt
 #include <QObject>
-#include <QTimer>
-
 
 namespace mir {
     namespace scene {
@@ -47,14 +47,11 @@ public:
                      QObject *parent = 0);
     virtual ~Session();
 
-    Q_INVOKABLE void release() override;
-
     //getters
     QString name() const override;
     unity::shell::application::ApplicationInfoInterface* application() const override;
-    MirSurfaceInterface* lastSurface() const override;
-    const ObjectListModel<MirSurfaceInterface>* surfaces() const override;
-    SessionInterface* parentSession() const override;
+    MirSurfaceListModel* surfaceList() override;
+    MirSurfaceListModel* promptSurfaceList() override;
     State state() const override;
     bool fullscreen() const override;
     bool live() const override;
@@ -62,12 +59,13 @@ public:
     void setApplication(unity::shell::application::ApplicationInfoInterface* item) override;
 
     void registerSurface(MirSurfaceInterface* surface) override;
-    void removeSurface(MirSurfaceInterface* surface) override;
 
     void suspend() override;
     void resume() override;
     void close() override;
     void stop() override;
+    bool hadSurface() const override;
+    bool hasClosingSurfaces() const override;
 
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;
@@ -86,34 +84,41 @@ public:
     void appendPromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) override;
     void removePromptSession(const std::shared_ptr<mir::scene::PromptSession>& session) override;
 
+    // useful for tests
+    void setSuspendTimer(AbstractTimer *timer);
+    AbstractTimer *suspendTimer() const { return m_suspendTimer; }
+
 public Q_SLOTS:
     // it's public to ease testing
     void doSuspend();
 
 private Q_SLOTS:
     void updateFullscreenProperty();
+    void deleteIfZombieAndEmpty();
 
-private:
-    void setParentSession(Session* session);
+protected:
     void setState(State state);
     void doResume();
+    void removeSurface(MirSurfaceInterface* surface);
 
     void stopPromptSessions();
 
-    void appendSurface(MirSurfaceInterface* surface);
+    void prependSurface(MirSurfaceInterface* surface);
 
     std::shared_ptr<mir::scene::Session> m_session;
     Application* m_application;
-    ObjectListModel<MirSurfaceInterface> m_surfaces;
-    SessionInterface* m_parentSession;
+    MirSurfaceListModel m_surfaceList;
+    MirSurfaceListModel m_promptSurfaceList;
+
     SessionModel* m_children;
     bool m_fullscreen;
     State m_state;
     bool m_live;
-    bool m_released;
-    QTimer* m_suspendTimer;
+    AbstractTimer* m_suspendTimer{nullptr};
     QList<std::shared_ptr<mir::scene::PromptSession>> m_promptSessions;
     std::shared_ptr<mir::scene::PromptSessionManager> const m_promptSessionManager;
+    QList<MirSurfaceInterface*> m_closingSurfaces;
+    bool m_hadSurface{false};
 };
 
 } // namespace qtmir

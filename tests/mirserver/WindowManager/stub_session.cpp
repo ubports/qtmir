@@ -27,7 +27,7 @@ std::string StubSession::name() const
     return {};
 }
 
-void StubSession::force_requests_to_complete()
+void StubSession::drop_outstanding_requests()
 {
 }
 
@@ -125,5 +125,9 @@ void StubSession::destroy_buffer_stream(mir::frontend::BufferStreamId /*stream*/
 void StubSession::configure_streams(
     mir::scene::Surface& /*surface*/,
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
+{
+}
+
+void StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
 {
 }

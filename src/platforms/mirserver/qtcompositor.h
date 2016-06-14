@@ -41,14 +41,9 @@ public:
     void start();
     void stop();
 
-    void setCursor(std::shared_ptr<mir::graphics::Cursor>);
-
 Q_SIGNALS:
     void starting();
     void stopping();
-
-private:
-    std::shared_ptr<mir::graphics::Cursor> m_cursor;
 };
 
 #endif // QTCOMPOSITOR_H

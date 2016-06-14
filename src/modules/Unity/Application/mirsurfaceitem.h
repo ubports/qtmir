@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -49,6 +49,7 @@ public:
     Mir::Type type() const override;
     QString name() const override;
     bool live() const override;
+    Mir::ShellChrome shellChrome() const override;
 
     Mir::State surfaceState() const override;
     void setSurfaceState(Mir::State) override;
@@ -108,19 +109,21 @@ protected:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
+    void componentComplete() override;
     void releaseResources() override;
 
 private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
 
-    void updateMirSurfaceFocus(bool focused);
+    void updateMirSurfaceActiveFocus();
     void updateMirSurfaceVisibility();
 
     void onActualSurfaceSizeChanged(const QSize &size);
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
+    void updateScreen(QScreen *screen);
 
 private:
     void ensureTextureProvider();

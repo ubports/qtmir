@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -29,7 +29,7 @@
 
 // local
 #include "application.h"
-#include "desktopfilereader.h"
+#include "taskcontroller.h"
 
 namespace mir {
     namespace scene {
@@ -39,7 +39,13 @@ namespace mir {
     }
 }
 
-class MirServer;
+namespace unity {
+    namespace shell {
+        namespace application {
+            class MirSurfaceInterface;
+        }
+    }
+}
 
 namespace qtmir {
 
@@ -47,14 +53,11 @@ class DBusWindowStack;
 class MirSurfaceManager;
 class ProcInfo;
 class SharedWakelock;
-class TaskController;
 class SettingsInterface;
 
 class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
 {
     Q_OBJECT
-    Q_ENUMS(MoreRoles)
-    Q_FLAGS(ExecFlags)
 
     // TODO: Move to unity::shell::application::ApplicationManagerInterface
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
@@ -66,26 +69,11 @@ public:
         ApplicationManager* create();
     };
 
-    // FIXME: these roles should be added to unity-api and removed from here
-    enum MoreRoles {
-        RoleSession = RoleExemptFromLifecycle+1,
-        RoleFullscreen,
-    };
-
-    // Mapping enums to Ubuntu Platform API enums.
-    enum Flag {
-        NoFlag = 0x0,
-        ForceMainStage = 0x1,
-    };
-    Q_DECLARE_FLAGS(ExecFlags, Flag)
-
     static ApplicationManager* singleton();
 
     explicit ApplicationManager(
-            const QSharedPointer<MirServer> &mirServer,
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
-            const QSharedPointer<DesktopFileReader::Factory> &desktopFileReaderFactory,
             const QSharedPointer<ProcInfo> &processInfo,
             const QSharedPointer<SettingsInterface> &settings,
             QObject *parent = 0);
@@ -96,17 +84,13 @@ public:
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
-    Q_INVOKABLE bool focusApplication(const QString &appId) override;
-    Q_INVOKABLE void unfocusCurrentApplication() override;
-    Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments) override;
+    Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments = QStringList()) override;
     Q_INVOKABLE bool stopApplication(const QString &appId) override;
 
     // QAbstractListModel
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
     QVariant data(const QModelIndex & index, int role) const override;
 
-    Q_INVOKABLE qtmir::Application *startApplication(const QString &appId, ExecFlags flags,
-                                              const QStringList &arguments = QStringList());
     Q_INVOKABLE void move(int from, int to);
 
     bool isEmpty() const { return rowCount() == 0; }
@@ -121,22 +105,23 @@ public Q_SLOTS:
     void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
 
     void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
-    void onSessionDestroyingSurface(mir::scene::Session const* session,
-                                    std::shared_ptr<mir::scene::Surface> const& surface);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
     void onProcessSuspended(const QString& appId);
-    void onProcessFailed(const QString& appId, const bool duringStartup);
+    void onProcessFailed(const QString& appId, TaskController::Error error);
     void onFocusRequested(const QString& appId);
     void onResumeRequested(const QString& appId);
 
 Q_SIGNALS:
-    void focusRequested(const QString &appId);
     void emptyChanged();
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
+    void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
+                                       int type, QSize &size);
+    void onApplicationClosing(Application *application);
+    void updateFocusedApplication();
 
 private:
     void setFocused(Application *application);
@@ -150,19 +135,17 @@ private:
 
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
-
-    QSharedPointer<MirServer> m_mirServer;
+    Application *findApplication(MirSurfaceInterface* surface);
 
     QList<Application*> m_applications;
-    Application* m_focusedApplication;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
-    QSharedPointer<DesktopFileReader::Factory> m_desktopFileReaderFactory;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<SettingsInterface> m_settings;
     QList<Application*> m_closingApplications;
     QList<QString> m_queuedStartApplications;
+    bool m_modelUnderChange{false};
     static ApplicationManager* the_application_manager;
 
     friend class Application;

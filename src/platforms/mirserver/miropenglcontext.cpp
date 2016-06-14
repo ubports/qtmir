@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,7 +18,6 @@
 
 #include "offscreensurface.h"
 #include "mirglconfig.h"
-#include "mirserver.h"
 #include "screenwindow.h"
 
 #include <QDebug>
@@ -26,6 +25,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
+#include <QtGui/private/qopenglcontext_p.h>
 
 // Mir
 #include <mir/graphics/display.h>
@@ -35,15 +35,17 @@
 // The Mir "Display" generates a shared GL context for all DisplayBuffers
 // (i.e. individual display output buffers) to use as a common base context.
 
-MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, const QSurfaceFormat &format)
-#ifndef QT_NO_DEBUG
-    : m_logger(new QOpenGLDebugLogger(this))
+MirOpenGLContext::MirOpenGLContext(
+    mir::graphics::Display &display,
+    mir::graphics::GLConfig &gl_config,
+    const QSurfaceFormat &format)
+    : m_currentWindow(nullptr)
+#ifdef QGL_DEBUG
+      , m_logger(new QOpenGLDebugLogger(this))
 #endif
 {
-    auto display = server->the_display();
-
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
-    std::unique_ptr<mir::graphics::GLContext> mirContext = display->create_gl_context();
+    std::unique_ptr<mir::graphics::GLContext> mirContext = display.create_gl_context();
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -79,11 +81,11 @@ MirOpenGLContext::MirOpenGLContext(const QSharedPointer<MirServer> &server, cons
 
     // FIXME: the temporary gl context created by Mir does not have the attributes we specified
     // in the GLConfig, so need to set explicitly for now
-    m_format.setDepthBufferSize(server->the_gl_config()->depth_buffer_bits());
-    m_format.setStencilBufferSize(server->the_gl_config()->stencil_buffer_bits());
+    m_format.setDepthBufferSize(gl_config.depth_buffer_bits());
+    m_format.setStencilBufferSize(gl_config.stencil_buffer_bits());
     m_format.setSamples(-1);
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
     const char* string = (const char*) glGetString(GL_VENDOR);
     qDebug() << "OpenGL ES vendor: " << qPrintable(string);
     string = (const char*) glGetString(GL_RENDERER);
@@ -117,6 +119,23 @@ void MirOpenGLContext::swapBuffers(QPlatformSurface *surface)
     }
 }
 
+static bool needsFBOReadBackWorkaround()
+{
+    static bool set = false;
+    static bool needsWorkaround = false;
+
+    if (!set) {
+        const char *rendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+        // Keep in sync with qtubuntu
+        needsWorkaround = qstrncmp(rendererString, "Mali-400", 8) == 0
+                          || qstrncmp(rendererString, "Mali-T7", 7) == 0
+                          || qstrncmp(rendererString, "PowerVR Rogue G6200", 19) == 0;
+        set = true;
+    }
+
+    return needsWorkaround;
+}
+
 bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 {
     if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
@@ -131,14 +150,19 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
     if (screenWindow) {
+        m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
-#ifndef QT_NO_DEBUG
+#ifdef QGL_DEBUG
         if (!m_logger->isLogging() && m_logger->initialize()) {
             m_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
             m_logger->enableMessages();
         }
 #endif
+
+        QOpenGLContextPrivate *ctx_d = QOpenGLContextPrivate::get(context());
+        if (!ctx_d->workaround_brokenFBOReadBack && needsFBOReadBackWorkaround())
+            ctx_d->workaround_brokenFBOReadBack = true;
 
         return true;
     }
@@ -148,7 +172,10 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
 void MirOpenGLContext::doneCurrent()
 {
-    // FIXME: create a temporary GL context just to release? Would be better to get existing one.
+    if (m_currentWindow) {
+        m_currentWindow->doneCurrent();
+        m_currentWindow = nullptr;
+    }
 }
 
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)

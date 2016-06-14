@@ -27,33 +27,38 @@ set(QMLMIRPLUGIN_SRC
     application.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
-    desktopfilereader.cpp
     plugin.cpp
-    applicationscreenshotprovider.cpp
     dbuswindowstack.cpp
-    taskcontroller.cpp
     mirsurfacemanager.cpp
     ubuntukeyboardinfo.cpp
+    mirfocuscontroller.cpp
     mirsurface.cpp
     mirsurfaceinterface.h
     mirsurfaceitem.cpp
+    mirsurfacelistmodel.cpp
     mirbuffersgtexture.cpp
     proc_info.cpp
     session.cpp
     sessionmanager.cpp
     sharedwakelock.cpp
-    upstart/applicationcontroller.cpp
+    upstart/applicationinfo.cpp
+    upstart/taskcontroller.cpp
+    timer.cpp
+    timesource.cpp
     tracepoints.c
     settings.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirFocusControllerInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceItemInterface.h
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceListInterface.h
 # Feed the automoc monster
     session_interface.h
-    applicationcontroller.h
+    applicationinfo.h
+    taskcontroller.h
     settings_interface.h
     )
 

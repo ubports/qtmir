@@ -1,12 +1,14 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Quick_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     )
 
 set(SCREENSPLUGIN_SRC
     plugin.cpp
     screens.cpp
+    qquickscreenwindow.cpp
     )
 
 add_library(unityscreensplugin SHARED
@@ -16,8 +18,11 @@ add_library(unityscreensplugin SHARED
 target_link_libraries(
     unityscreensplugin
 
+    qpa-mirserver
+
     Qt5::Gui
     Qt5::Qml
+    Qt5::Quick
 )
 
 # install

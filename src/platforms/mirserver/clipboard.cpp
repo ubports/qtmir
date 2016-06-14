@@ -24,8 +24,6 @@
 #include <QDBusError>
 #include <QMimeData>
 
-Q_LOGGING_CATEGORY(QTMIR_CLIPBOARD, "qtmir.clipboard")
-
 // FIXME(loicm) The clipboard data format is not defined by Ubuntu Platform API
 //     which makes it impossible to have non-Qt applications communicate with Qt
 //     applications through the clipboard API. The solution would be to have

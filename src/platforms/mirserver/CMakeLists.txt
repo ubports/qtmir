@@ -1,9 +1,15 @@
 # Qt5PlatformSupport is not available as a cmake module.
-pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
+# And also not anymore as pkgconfig module since Qt 5.6.
+#pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
 add_definitions(-DQ_FONTCONFIGDATABASE)
+
+if (QGL_DEBUG)
+    message(STATUS "Qt's OpenGL debug logging enabled.")
+    add_definitions(-DQGL_DEBUG)
+endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
@@ -45,7 +51,9 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     cursor.cpp
+    logging.cpp
     mircursorimages.cpp
+    mirdisplayconfigurationpolicy.cpp
     mirwindowmanager.cpp
     mirsingleton.cpp
     qteventfeeder.cpp
@@ -59,8 +67,9 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     mirserver.cpp
     mirserverstatuslistener.cpp
     screen.cpp
-    screencontroller.cpp
     screenwindow.cpp
+    screenscontroller.cpp
+    screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     nativeinterface.cpp
@@ -69,7 +78,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     services.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    tileddisplayconfigurationpolicy.cpp
+    creationhints.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
@@ -81,6 +90,7 @@ add_library(qpa-mirserver SHARED
 
 target_link_libraries(
     qpa-mirserver
+    Qt5PlatformSupport
 
     ${MIRSERVER_LDFLAGS}
     ${MIRCLIENT_LDFLAGS}
@@ -95,6 +105,7 @@ target_link_libraries(
     -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
+    ${XKBCOMMON_LIBRARIES}
 
     Qt5::Core
     Qt5::DBus

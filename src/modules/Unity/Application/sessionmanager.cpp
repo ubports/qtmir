@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -32,8 +32,6 @@
 // mir
 #include <mir/scene/prompt_session.h>
 #include <mir/scene/prompt_session_manager.h>
-
-Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
 
 namespace ms = mir::scene;
 
@@ -77,7 +75,7 @@ SessionManager* SessionManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         PromptSessionListener *promptSessionListener = static_cast<PromptSessionListener*>(nativeInterface->nativeResourceForIntegration("PromptSessionListener"));
 
-        the_session_manager = new SessionManager(nativeInterface->m_mirServer, ApplicationManager::singleton());
+        the_session_manager = new SessionManager(nativeInterface->mirServer(), ApplicationManager::singleton());
 
         connectToSessionListener(the_session_manager, sessionListener);
         connectToPromptSessionListener(the_session_manager, promptSessionListener);

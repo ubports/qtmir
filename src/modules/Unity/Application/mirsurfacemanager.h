@@ -29,6 +29,8 @@
 // Mir
 #include <mir_toolkit/common.h>
 
+// mirserver qpa
+#include <creationhints.h>
 
 namespace mir {
     namespace scene {
@@ -39,7 +41,6 @@ namespace mir {
     namespace shell { class Shell; }
 }
 
-class MirServer;
 class SurfaceObserver;
 
 namespace qtmir {
@@ -52,26 +53,29 @@ class SessionManager;
 class MirSurfaceManager : public QObject
 {
     Q_OBJECT
-
+    Q_PROPERTY(MirSurfaceInterface* inputMethodSurface READ inputMethodSurface NOTIFY inputMethodSurfaceChanged)
 public:
     explicit MirSurfaceManager(
-        const QSharedPointer<MirServer>& mirServer,
-        mir::shell::Shell *shell,
+        mir::shell::Shell* shell,
         SessionManager* sessionManager,
-        QObject *parent = 0
+        QObject* parent = nullptr
     );
     ~MirSurfaceManager();
 
     static MirSurfaceManager* singleton();
 
+    MirSurfaceInterface* inputMethodSurface() const;
+
 Q_SIGNALS:
+    void inputMethodSurfaceChanged();
     void surfaceCreated(MirSurfaceInterface* surface);
     void surfaceDestroyed(MirSurfaceInterface* surface);
 
 public Q_SLOTS:
     void onSessionCreatedSurface(const mir::scene::Session *,
                                  const std::shared_ptr<mir::scene::Surface> &,
-                                 std::shared_ptr<SurfaceObserver> const&);
+                                 std::shared_ptr<SurfaceObserver> const&,
+                                 qtmir::CreationHints);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:
@@ -79,10 +83,10 @@ protected:
     QMutex m_mutex;
 
 private:
-    QSharedPointer<MirServer> m_mirServer;
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
     static MirSurfaceManager *instance;
+    MirSurfaceInterface* m_inputMethodSurface = nullptr;
 };
 
 } // namespace qtmir

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,22 +20,20 @@
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 #include "screen.h" // NEEDED?
-#include "screencontroller.h"
+#include "screensmodel.h"
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
 #include <QGuiApplication>
 #include <private/qguiapplication_p.h>
+#include <QTextCodec>
+#include <QDebug>
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-#include <QDebug>
-
 // common dir
 #include <debughelpers.h>
-
-Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
 
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
@@ -352,20 +350,26 @@ static const uint32_t KeyTable[] = {
     0,                          0
 };
 
-static uint32_t translateKeysym(uint32_t sym, char *string, size_t size) {
-    Q_UNUSED(size);
-    string[0] = '\0';
+static uint32_t translateKeysym(uint32_t sym, const QString &text) {
+    int code = 0;
 
-    if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35)
+    QTextCodec *systemCodec = QTextCodec::codecForLocale();
+    if (sym < 128 || (sym < 256 && systemCodec->mibEnum() == 4)) {
+        // upper-case key, if known
+        code = isprint((int)sym) ? toupper((int)sym) : 0;
+    } else if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F35) {
         return Qt::Key_F1 + (int(sym) - XKB_KEY_F1);
+    } else if (text.length() == 1 && text.unicode()->unicode() > 0x1f
+               && text.unicode()->unicode() != 0x7f
+               && !(sym >= XKB_KEY_dead_grave && sym <= XKB_KEY_dead_currency)) {
+        code = text.unicode()->toUpper().unicode();
+    } else {
+        for (int i = 0; KeyTable[i]; i += 2)
+            if (sym == KeyTable[i])
+                code = KeyTable[i + 1];
+    }
 
-    for (int i = 0; KeyTable[i]; i += 2)
-        if (sym == KeyTable[i])
-            return KeyTable[i + 1];
-
-    string[0] = sym;
-    string[1] = '\0';
-    return toupper(sym);
+    return code;
 }
 
 namespace {
@@ -380,9 +384,9 @@ public:
         qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
-    void setScreenController(const QSharedPointer<ScreenController> &sc) override
+    void setScreensModel(const QSharedPointer<ScreensModel> &sc) override
     {
-        m_screenController = sc;
+        m_screensModel = sc;
     }
 
     virtual QWindow* focusedWindow() override
@@ -392,7 +396,7 @@ public:
 
     QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
-        return m_screenController->getWindowForPoint(point);
+        return m_screensModel->getWindowForPoint(point);
     }
 
     void registerTouchDevice(QTouchDevice *device) override
@@ -425,7 +429,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screenController->screens();
+        QList<Screen*> screens = m_screensModel->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
@@ -443,7 +447,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screenController->screens();
+        QList<Screen*> screens = m_screensModel->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
@@ -454,17 +458,17 @@ public:
     }
 
 private:
-    QSharedPointer<ScreenController> m_screenController;
+    QSharedPointer<ScreensModel> m_screensModel;
 };
 
 } // anonymous namespace
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController)
-    : QtEventFeeder(screenController, new QtWindowSystem)
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel)
+    : QtEventFeeder(screensModel, new QtWindowSystem)
 {
 }
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenController,
+QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
                              QtEventFeeder::QtWindowSystemInterface *windowSystem)
     : mQtWindowSystem(windowSystem)
 {
@@ -477,7 +481,7 @@ QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreenController> &screenContr
     mTouchDevice->setCapabilities(
             QTouchDevice::Position | QTouchDevice::Area | QTouchDevice::Pressure |
             QTouchDevice::NormalizedPosition);
-    mQtWindowSystem->setScreenController(screenController);
+    mQtWindowSystem->setScreensModel(screensModel);
     mQtWindowSystem->registerTouchDevice(mTouchDevice);
 }
 
@@ -527,6 +531,9 @@ Qt::KeyboardModifiers getQtModifiersFromMir(MirInputEventModifiers modifiers)
     }
     if (modifiers & mir_input_event_modifier_meta) {
         qtModifiers |= Qt::MetaModifier;
+    }
+    if (modifiers & mir_input_event_modifier_alt_right) {
+        qtModifiers |= Qt::GroupSwitchModifier;
     }
     return qtModifiers;
 }
@@ -611,9 +618,16 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     }
 
     // Key event propagation.
-    char s[2];
-    int keyCode = translateKeysym(xk_sym, s, sizeof(s));
-    QString text = QString::fromLatin1(s);
+    QString text;
+    QVarLengthArray<char, 32> chars(32);
+    {
+        int result = xkb_keysym_to_utf8(xk_sym, chars.data(), chars.size());
+
+        if (result > 0) {
+            text = QString::fromUtf8(chars.constData());
+        }
+    }
+    int keyCode = translateKeysym(xk_sym, text);
 
     QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
     if (context) {
@@ -636,8 +650,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
         timestamp.count(), keyType, keyCode, modifiers,
-        mir_keyboard_event_scan_code(kev),
-        mir_keyboard_event_key_code(kev),
+        mir_keyboard_event_scan_code(kev), xk_sym,
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
 }
 

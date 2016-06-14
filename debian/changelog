@@ -1,3 +1,218 @@
+qtmir (0.4.8+16.10.20160602-0ubuntu1) yakkety; urgency=medium
+
+  * rebuild for mir 0.23
+
+ -- Kevin DuBois <kdub432@gmail.com>  Thu, 02 Jun 2016 16:50:58 +0000
+
+qtmir (0.4.8+16.10.20160525.2-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Drop the (unused) prototype Window Management code
+  * Remove workaround for lp:1502200 (LP: #1502200)
+
+  [ Albert Astals Cid ]
+  * Enable workaround_brokenFBOReadBack on various chipsets (LP:
+    #1581123)
+
+  [ Daniel d'Andrada ]
+  * Bump unity-api versions
+  * Fix mir::scene::Surface focus attribute updates
+
+ -- Michael Terry <michael.terry@canonical.com>  Wed, 25 May 2016 13:54:56 +0000
+
+qtmir (0.4.8+16.10.20160520.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce coupling to MirServer - it has  been misused as a context
+    object.
+
+  [ Daniel d'Andrada ]
+  * Also interpret the cursor names used by Mir client API (LP:
+    #1447839)
+  * Application: Don't respawn if closed while still starting up (LP:
+    #1575577)
+
+  [ Daniel d'Andrada, Michał Sawicz ]
+  * Centralize logging categories
+
+  [ Gerry Boland ]
+  * UAL can throw on creating Application if invalid appId, catch
+    instead of aborting (LP: #1578258)
+
+  [ Timo Jyrinki ]
+  * Use FindQt5PlatformSupport to find platform support, other methods
+    not available on Qt 5.6 anymore. (LP: #1554404)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 20 May 2016 08:41:51 +0000
+
+qtmir (0.4.8+16.04.20160518.1-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Fix ProxySurfaceListModel::countChanged signal
+
+  [ Daniel d'Andrada, Michał Sawicz ]
+  * Move prompt surfaces from MirSurface to Application and emit
+    firstChanged signal
+
+ -- Nick Dedekind <ci-train-bot@canonical.com>  Wed, 18 May 2016 11:18:33 +0000
+
+qtmir (0.4.8+16.04.20160511-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Session: Add a blank surface to the public list if it already has
+    child prompt surfaces (LP: #1578665)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 11 May 2016 09:08:29 +0000
+
+qtmir (0.4.8+16.04.20160429.1-0ubuntu1) xenial; urgency=medium
+
+  [ Gerry Boland, Michał Sawicz, Nick Dedekind ]
+  * Enhance ScreenController & the DisplayConfigurationPolicy to
+    implement dynamic grid units. (LP: #1573532)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 29 Apr 2016 20:04:55 +0000
+
+qtmir (0.4.8+16.04.20160428-0ubuntu1) xenial; urgency=medium
+
+  [ Lukáš Tinkl ]
+  * Regression fix: restore window title handling (LP: #1563522)
+
+  [ Michael Terry ]
+  * Use latest UbuntuAppLaunch API which supports libertine apps.
+
+ -- Michael Terry <michael.terry@canonical.com>  Thu, 28 Apr 2016 12:48:51 +0000
+
+qtmir (0.4.8+16.04.20160426-0ubuntu1) xenial; urgency=medium
+
+  * Mir 0.22 compatibility
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 26 Apr 2016 07:20:39 +0000
+
+qtmir (0.4.8+16.04.20160413-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Application: improve debug logging
+  * Logging of Qt's OpenGL debug messages now must be enabled via CMake
+    option
+  * MirSurface: replace keymapLayout and keymapVariant with keymap
+  * Remove application screenshot provider
+  * Surface-based window management
+
+  [ Michał Sawicz, Robert Bruce Park ]
+  * Inline -gles packaging.
+
+ -- Gerry Boland <ci-train-bot@canonical.com>  Wed, 13 Apr 2016 18:38:59 +0000
+
+qtmir (0.4.8+16.04.20160330-0ubuntu1) xenial; urgency=medium
+
+  * Drop leftover Xs-Testsuite header
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 30 Mar 2016 22:53:20 +0000
+
+qtmir (0.4.8+16.04.20160329.1-0ubuntu1) xenial; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Don't use preferred_mode_index. Some devices like TVs don't provide
+    a preferred mode, so preferred_mode_index may be out of range (a
+    clumsy way to represent 'none'). Instead use the resolution of the
+    current display mode, which should always be in range. (LP:
+    #1560497)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 29 Mar 2016 19:24:13 +0000
+
+qtmir (0.4.8+16.04.20160322.1-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added Application::setStage
+
+  [ Lukáš Tinkl, Michał Sawicz ]
+  * Support for switching keyboard layouts (LP: #1524400, #1491340)
+
+  [ Lukáš Tinkl, Michał Sawicz, Nick Dedekind ]
+  * Add support for low shell chrome. (LP: #1535397)
+
+ -- Michael Zanetti <michael.zanetti@canonical.com>  Tue, 22 Mar 2016 16:18:06 +0000
+
+qtmir (0.4.7+16.04.20160310.1-0ubuntu1) xenial; urgency=medium
+
+  [ Alan Griffiths ]
+  * Copy the Window Management work-in-progress from Mir examples.
+
+  [ Alberto Aguirre ]
+  * Hook MirOpenGLContext::doneCurrent to Screen::doneCurrent
+
+  [ Daniel d'Andrada ]
+  * Ensure QmlEngine doesn't delete our MirSurfaces
+
+  [ Gerry Boland ]
+  * Allow Mir remove command line arguments it understands, before
+    letting Qt process them.
+  * Ensure ScreenWindow geometry correctly set and used after moving
+    Screen (LP: #1545286)
+  * Screen: only enable orientation sensor for internal display. (LP:
+    #1545286)
+
+  [ Michael Terry ]
+  * Fix some mocks to use more realistic code paths.
+
+  [ Michael Zanetti ]
+  * Add a dedicated property for the inputMethodSurface (LP: #1545286)
+
+  [ Michał Sawicz ]
+  * Drop dummy autopkgtest
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 10 Mar 2016 09:29:49 +0000
+
+qtmir (0.4.7+16.04.20160219-0ubuntu1) xenial; urgency=medium
+
+  * Mir 0.20 Release
+
+ -- Alan Griffiths <ci-train-bot@canonical.com>  Fri, 19 Feb 2016 10:41:19 +0000
+
+qtmir (0.4.7+16.04.20160212-0ubuntu1) xenial; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Provide branch prediction information to the if in compressTimestamp
+  * Reset start time if the timestamp travels to the past (LP: #1524488)
+
+  [ Daniel d'Andrada ]
+  * Let shell decide the initial surface size (LP: #1532974)
+  * Remove the useless TaskController
+  * Surface Size Hints
+  * Update mir version requirement
+
+  [ Michał Sawicz ]
+  * Bump unity-api dependencies
+  * Use QStandardPaths to determine QML cache location
+
+  [ Nick Dedekind ]
+  * Moved test framework into a static library for quicker
+    recompilation.
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 12 Feb 2016 00:07:26 +0000
+
+qtmir (0.4.7+16.04.20160208-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Added fix and test for closing app during the StoppedResumable
+    state. (LP: #1541388)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 08 Feb 2016 09:36:17 +0000
+
+qtmir (0.4.7+16.04.20160127.1-0ubuntu1) xenial; urgency=medium
+
+  * Changes for mir 0.19.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Wed, 27 Jan 2016 21:42:31 +0000
+
+qtmir (0.4.7+16.04.20160122-0ubuntu1) xenial; urgency=medium
+
+  [ Nick Dedekind ]
+  * Fixed issue where stopping the session while suspending was causing
+    app close to stall. (LP: #1536133)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 22 Jan 2016 16:54:39 +0000
+
 qtmir (0.4.7+16.04.20160104-0ubuntu1) xenial; urgency=medium
 
   [ Daniel d'Andrada ]

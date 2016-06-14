@@ -15,14 +15,16 @@
  *
  */
 
+#include <QSignalSpy>
+
 #include "mirwindowmanager.h"
 #include "stub_surface.h"
 #include "stub_session.h"
+#include "surfaceobserver.h"
 
 #include <mir/events/event_builders.h>
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
-#include <mir/shell/focus_controller.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -48,6 +50,7 @@ struct MockDisplayLayout : msh::DisplayLayout
 struct MockSurface : StubSurface
 {
     MOCK_METHOD2(configure, int (MirSurfaceAttrib attrib, int value));
+    MOCK_METHOD1(rename, void (std::string const& title));
 };
 
 struct MockSession : StubSession
@@ -55,34 +58,15 @@ struct MockSession : StubSession
     MOCK_CONST_METHOD1(surface, std::shared_ptr<ms::Surface> (mir::frontend::SurfaceId surface));
 };
 
-struct StubFocusController : msh::FocusController
-{
-public:
-    void focus_next_session() override {}
-
-    std::shared_ptr<ms::Session> focused_session() const override { return {}; }
-
-    void set_focus_to(
-        std::shared_ptr<ms::Session> const& /*focus_session*/,
-        std::shared_ptr<ms::Surface> const& /*focus_surface*/) override {}
-
-    std::shared_ptr<ms::Surface> focused_surface() const override { return {}; }
-
-    std::shared_ptr<ms::Surface> surface_at(Point /*cursor*/) const override { return {}; }
-
-    void raise(msh::SurfaceSet const& /*surfaces*/) override {}
-};
-
-
 struct WindowManager : Test
 {
     const std::shared_ptr<MockDisplayLayout> mock_display_layout =
         std::make_shared<NiceMock<MockDisplayLayout>>();
 
-    StubFocusController focus_controller;
+    std::shared_ptr<SessionListener> sessionListener = std::make_shared<SessionListener>();
 
-    const std::unique_ptr<MirWindowManager> window_manager =
-        MirWindowManager::create(&focus_controller, mock_display_layout);
+    const std::shared_ptr<MirWindowManager> window_manager =
+        MirWindowManager::create(mock_display_layout, sessionListener);
 
     const Rectangle arbitrary_display{{0, 0}, {97, 101}};
     const std::shared_ptr<MockSession> arbitrary_session = std::make_shared<NiceMock<MockSession>>();
@@ -118,7 +102,7 @@ struct WindowManager : Test
                 });
     }
 
-    static constexpr uint64_t arbitrary_mac = __LINE__;
+    std::vector<uint8_t> const arbitrary_cookie;
 };
 }
 
@@ -236,15 +220,38 @@ TEST_F(WindowManager, HandlesRemoveDisplay)
 
 TEST_F(WindowManager, HandlesModifySurface)
 {
+    const auto surface = std::make_shared<MockSurface>();
+    EXPECT_CALL(*arbitrary_session, surface(_)).Times(AnyNumber()).WillRepeatedly(Return(surface));
     add_surface();
+    std::string title = "TestSurface";
 
-    msh::SurfaceSpecification spec;
+    SurfaceObserver surfaceObserver;
+    SurfaceObserver::registerObserverForSurface(&surfaceObserver, surface.get());
 
-    EXPECT_NO_THROW(
-        window_manager->modify_surface(arbitrary_session, arbitrary_surface, spec);
-    );
+    mir::shell::SurfaceSpecification modifications;
+    modifications.min_width = mir::geometry::Width(100);
+    modifications.min_height = mir::geometry::Height(101);
+    modifications.max_width = mir::geometry::Width(102);
+    modifications.max_height = mir::geometry::Height(103);
+    modifications.shell_chrome = mir_shell_chrome_low;
+    modifications.name = title;
 
-    window_manager->remove_surface(arbitrary_session, arbitrary_surface);
+    QSignalSpy spyMinimumWidthChanged(&surfaceObserver, SIGNAL(minimumWidthChanged(int)));
+    QSignalSpy spyMinimumHeightChanged(&surfaceObserver, SIGNAL(minimumHeightChanged(int)));
+    QSignalSpy spyMaximumWidthChanged(&surfaceObserver, SIGNAL(maximumWidthChanged(int)));
+    QSignalSpy spyMaximumHeightChanged(&surfaceObserver, SIGNAL(maximumHeightChanged(int)));
+    QSignalSpy spyShellChromeChanged(&surfaceObserver, SIGNAL(shellChromeChanged(MirShellChrome)));
+    EXPECT_CALL(*surface, rename(title));
+
+    window_manager->modify_surface(arbitrary_session, surface, modifications);
+
+    EXPECT_EQ(100, spyMinimumWidthChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(101, spyMinimumHeightChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(102, spyMaximumWidthChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(103, spyMaximumHeightChanged.takeFirst().at(0).toInt());
+    EXPECT_EQ(mir_shell_chrome_low, spyShellChromeChanged.takeFirst().at(0).toInt());
+
+    window_manager->remove_surface(arbitrary_session, surface);
 }
 
 TEST_F(WindowManager, HandlesKeyboardEvent)
@@ -259,7 +266,7 @@ TEST_F(WindowManager, HandlesKeyboardEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_action,
         arbitrary_key_code,
         arbitrary_scan_code,
@@ -280,7 +287,7 @@ TEST_F(WindowManager, HandlesTouchEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_event_modifiers);
 
     const auto input_event = mir_event_get_input_event(generic_event.get());
@@ -306,7 +313,7 @@ TEST_F(WindowManager, HandlesPointerEvent)
     const auto generic_event = make_event(
         arbitrary_device,
         arbitrary_timestamp,
-        arbitrary_mac,
+        arbitrary_cookie,
         arbitrary_event_modifiers,
         arbitrary_pointer_action,
         arbitrary_pointer_buttons,

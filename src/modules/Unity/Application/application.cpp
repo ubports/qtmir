@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -16,11 +16,11 @@
 
 // local
 #include "application.h"
+#include "applicationinfo.h"
 #include "application_manager.h"
-#include "desktopfilereader.h"
 #include "session.h"
 #include "sharedwakelock.h"
-#include "taskcontroller.h"
+#include "timer.h"
 
 // common
 #include <debughelpers.h>
@@ -28,49 +28,49 @@
 // QPA mirserver
 #include "logging.h"
 
-// mir
-#include <mir/scene/session.h>
-#include <mir/scene/snapshot.h>
+// Unity API
+#include <unity/shell/application/MirSurfaceInterface.h>
 
-namespace ms = mir::scene;
+namespace unityapp = unity::shell::application;
+
+#define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
 
 namespace qtmir
 {
 
 Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
-                         DesktopFileReader *desktopFileReader,
+                         const QSharedPointer<ApplicationInfo>& appInfo,
                          const QStringList &arguments,
                          ApplicationManager *parent)
-    : ApplicationInfoInterface(desktopFileReader->appId(), parent)
+    : ApplicationInfoInterface(appInfo->appId(), parent)
     , m_sharedWakelock(sharedWakelock)
-    , m_desktopData(desktopFileReader)
+    , m_appInfo(appInfo)
     , m_pid(0)
-    , m_stage((desktopFileReader->stageHint() == "SideStage") ? Application::SideStage : Application::MainStage)
+    , m_stage(Application::MainStage)
+    , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
-    , m_focused(false)
     , m_arguments(arguments)
     , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
-    , m_closeTimer(0)
+    , m_stopTimer(nullptr)
     , m_exemptFromLifecycle(false)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::Application - appId=" << desktopFileReader->appId();
+    DEBUG_MSG << "()";
 
     // Because m_state is InternalState::Starting
     acquireWakelock();
 
-    // FIXME(greyback) need to save long appId internally until ubuntu-app-launch can hide it from us
-    m_longAppId = desktopFileReader->file().remove(QRegExp(".desktop$")).split('/').last();
+    m_supportedOrientations = m_appInfo->supportedOrientations();
 
-    m_supportedOrientations = m_desktopData->supportedOrientations();
+    m_rotatesWindowContents = m_appInfo->rotatesWindowContents();
 
-    m_rotatesWindowContents = m_desktopData->rotatesWindowContents();
+    setStopTimer(new Timer);
 }
 
 Application::~Application()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::~Application";
+    DEBUG_MSG << "()";
 
     // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
     if (m_processState == Application::ProcessUnknown) {
@@ -100,13 +100,13 @@ Application::~Application()
         m_session->setApplication(nullptr);
         delete m_session;
     }
-    delete m_desktopData;
+    delete m_stopTimer;
 }
 
 
 void Application::wipeQMLCache()
 {
-    QString path(QDir::homePath() + QStringLiteral("/.cache/QML/Apps/"));
+    QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/QML/Apps/"));
     QDir dir(path);
     QStringList apps = dir.entryList();
     for (int i = 0; i < apps.size(); i++) {
@@ -121,64 +121,37 @@ void Application::wipeQMLCache()
 
 bool Application::isValid() const
 {
-    return m_desktopData->loaded();
-}
-
-QString Application::desktopFile() const
-{
-    return m_desktopData->file();
+    return !appId().isEmpty();
 }
 
 QString Application::appId() const
 {
-    return m_desktopData->appId();
+    return m_appInfo->appId();
 }
 
 QString Application::name() const
 {
-    return m_desktopData->name();
+    return m_appInfo->name();
 }
 
 QString Application::comment() const
 {
-    return m_desktopData->comment();
+    return m_appInfo->comment();
 }
 
 QUrl Application::icon() const
 {
-    QString iconString = m_desktopData->icon();
-    QString pathString = m_desktopData->path();
-
-    if (QFileInfo(iconString).exists()) {
-        return QUrl(iconString);
-    } else if (QFileInfo(pathString + '/' + iconString).exists()) {
-        return QUrl(pathString + '/' + iconString);
-    } else {
-        return QUrl("image://theme/" + iconString);
-    }
+    return m_appInfo->icon();
 }
 
 QString Application::splashTitle() const
 {
-    return m_desktopData->splashTitle();
+    return m_appInfo->splashTitle();
 }
 
 QUrl Application::splashImage() const
 {
-    if (m_desktopData->splashImage().isEmpty()) {
-        return QUrl();
-    } else {
-        QFileInfo imageFileInfo(m_desktopData->path(), m_desktopData->splashImage());
-        if (imageFileInfo.exists()) {
-            return QUrl::fromLocalFile(imageFileInfo.canonicalFilePath());
-        } else {
-            qCWarning(QTMIR_APPLICATIONS)
-                << QString("Application(%1).splashImage file does not exist: \"%2\". Ignoring it.")
-                    .arg(appId()).arg(imageFileInfo.absoluteFilePath());
-
-            return QUrl();
-        }
-    }
+    return m_appInfo->splashImage();
 }
 
 QColor Application::colorFromString(const QString &colorString, const char *colorName) const
@@ -233,35 +206,25 @@ const char* Application::internalStateToStr(InternalState state)
 
 bool Application::splashShowHeader() const
 {
-    QString showHeader = m_desktopData->splashShowHeader();
-    if (showHeader.toLower() == "true") {
-        return true;
-    } else {
-        return false;
-    }
+    return m_appInfo->splashShowHeader();
 }
 
 QColor Application::splashColor() const
 {
-    QString colorStr = m_desktopData->splashColor();
+    QString colorStr = m_appInfo->splashColor();
     return colorFromString(colorStr, "splashColor");
 }
 
 QColor Application::splashColorHeader() const
 {
-    QString colorStr = m_desktopData->splashColorHeader();
+    QString colorStr = m_appInfo->splashColorHeader();
     return colorFromString(colorStr, "splashColorHeader");
 }
 
 QColor Application::splashColorFooter() const
 {
-    QString colorStr = m_desktopData->splashColorFooter();
+    QString colorStr = m_appInfo->splashColorFooter();
     return colorFromString(colorStr, "splashColorFooter");
-}
-
-QString Application::exec() const
-{
-    return m_desktopData->exec();
 }
 
 Application::Stage Application::stage() const
@@ -283,12 +246,13 @@ Application::State Application::state() const
         return Starting;
     case InternalState::Running:
     case InternalState::RunningInBackground:
-    case InternalState::SuspendingWaitSession:
-    case InternalState::SuspendingWaitProcess:
     case InternalState::Closing:
         return Running;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         return Suspended;
+    case InternalState::StoppedResumable:
     case InternalState::Stopped:
     default:
         return Stopped;
@@ -307,25 +271,79 @@ void Application::setRequestedState(RequestedState value)
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setRequestedState - appId=" << appId()
-                                << "requestedState=" << applicationStateToStr(value);
+    DEBUG_MSG << "(requestedState=" << applicationStateToStr(value) << ")";
+
     m_requestedState = value;
     Q_EMIT requestedStateChanged(m_requestedState);
 
-    applyRequestedState();
+    updateState();
 }
 
-void Application::applyRequestedState()
+void Application::updateState()
 {
-    if (m_requestedState == RequestedRunning) {
+    if ((!m_session && m_state != InternalState::Starting && m_state != InternalState::StoppedResumable)
+        ||
+        (m_session && m_session->surfaceList()->isEmpty() && m_session->hasClosingSurfaces())) {
+        // As we might not be able to go to Closing state right now (eg, SuspendingWaitProcess),
+        // store the intent in a separate variable.
+        m_closing = true;
+    }
+
+    bool lostAllSurfaces = m_session && m_session->surfaceList()->isEmpty() && m_session->hadSurface()
+            && !m_session->hasClosingSurfaces();
+
+    if (m_closing || (lostAllSurfaces && m_state != InternalState::StoppedResumable)) {
+        applyClosing();
+    } else if (m_requestedState == RequestedRunning || (m_session && m_session->hasClosingSurfaces())) {
         applyRequestedRunning();
     } else {
         applyRequestedSuspended();
     }
 }
 
+void Application::applyClosing()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        // can't be
+        Q_ASSERT(false);
+        break;
+    case InternalState::Running:
+    case InternalState::RunningInBackground:
+        if (!m_stopTimer->isRunning()) {
+            m_stopTimer->start();
+        }
+        if (m_closing) {
+            setInternalState(InternalState::Closing);
+        }
+        break;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::Suspended:
+        resume();
+        break;
+    case InternalState::SuspendingWaitProcess:
+        // should leave the app alone until it reaches Suspended state
+        break;
+    case InternalState::Closing:
+        // leave it alone
+        Q_ASSERT(m_closing);
+        Q_ASSERT(m_stopTimer->isRunning());
+        break;
+    case InternalState::StoppedResumable:
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::Stopped:
+        break;
+    }
+}
+
 void Application::applyRequestedRunning()
 {
+    // We might be coming back from having lost all surfaces
+    if (m_stopTimer->isRunning()) {
+        m_stopTimer->stop();
+    }
+
     switch (m_state) {
     case InternalState::Starting:
         // should leave the app alone until it reaches Running state
@@ -342,6 +360,8 @@ void Application::applyRequestedRunning()
         // should leave the app alone until it reaches Suspended state
         break;
     case InternalState::Closing:
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
         respawn();
@@ -354,6 +374,11 @@ void Application::applyRequestedRunning()
 
 void Application::applyRequestedSuspended()
 {
+    // We might be coming back from having lost all surfaces
+    if (m_stopTimer->isRunning()) {
+        m_stopTimer->stop();
+    }
+
     switch (m_state) {
     case InternalState::Starting:
         // should leave the app alone until it reaches Running state
@@ -373,7 +398,8 @@ void Application::applyRequestedSuspended()
         // it's already going where we it's wanted
         break;
     case InternalState::Closing:
-        // don't suspend while it is closing
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:
@@ -384,17 +410,16 @@ void Application::applyRequestedSuspended()
 
 bool Application::focused() const
 {
-    return m_focused;
+    bool someSurfaceHasFocus = false; // to be proven wrong
+    for (int i = 0; i < m_proxySurfaceList.rowCount() && !someSurfaceHasFocus; ++i) {
+        someSurfaceHasFocus |= m_proxySurfaceList.get(i)->focused();
+    }
+    return someSurfaceHasFocus;
 }
 
 bool Application::fullscreen() const
 {
     return m_session ? m_session->fullscreen() : false;
-}
-
-bool Application::canBeResumed() const
-{
-    return m_processState != ProcessUnknown;
 }
 
 pid_t Application::pid() const
@@ -404,41 +429,32 @@ pid_t Application::pid() const
 
 void Application::close()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::close - appId=" << appId();
+    DEBUG_MSG << "()";
 
     switch (m_state) {
     case InternalState::Starting:
         stop();
+        // Don't wait for a confirmation.
+        setInternalState(InternalState::Stopped);
         break;
     case InternalState::Running:
-        doClose();
-        break;
     case InternalState::RunningInBackground:
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
-        setRequestedState(RequestedRunning);
-        doClose();
+        m_session->close();
         break;
     case InternalState::Closing:
         // already on the way
         break;
     case InternalState::StoppedResumable:
+        // session stopped while suspended. Stop it for good now.
+        setInternalState(InternalState::Stopped);
+        break;
     case InternalState::Stopped:
         // too late
         break;
     }
-
-}
-
-void Application::doClose()
-{
-    Q_ASSERT(m_closeTimer == 0);
-    Q_ASSERT(m_session != nullptr);
-
-    m_session->close();
-    m_closeTimer = startTimer(3000);
-    setInternalState(InternalState::Closing);
 }
 
 void Application::setPid(pid_t pid)
@@ -453,13 +469,16 @@ void Application::setArguments(const QStringList arguments)
 
 void Application::setSession(SessionInterface *newSession)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setSession - appId=" << appId() << "session=" << newSession;
+    DEBUG_MSG << "(session=" << newSession << ")";
 
     if (newSession == m_session)
         return;
 
     if (m_session) {
+        m_proxySurfaceList.setSourceList(nullptr);
+        m_proxyPromptSurfaceList.setSourceList(nullptr);
         m_session->disconnect(this);
+        m_session->surfaceList()->disconnect(this);
         m_session->setApplication(nullptr);
         m_session->setParent(nullptr);
     }
@@ -491,12 +510,19 @@ void Application::setSession(SessionInterface *newSession)
 
         connect(m_session, &SessionInterface::stateChanged, this, &Application::onSessionStateChanged);
         connect(m_session, &SessionInterface::fullscreenChanged, this, &Application::fullscreenChanged);
+        connect(m_session, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
+        connect(m_session, &SessionInterface::focusRequested, this, &Application::focusRequested);
+        connect(m_session->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
 
         if (oldFullscreen != fullscreen())
             Q_EMIT fullscreenChanged(fullscreen());
+
+        m_proxySurfaceList.setSourceList(m_session->surfaceList());
+        m_proxyPromptSurfaceList.setSourceList(m_session->promptSurfaceList());
     } else {
-        // this can only happen after the session has stopped and QML code called Session::release()
-        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable);
+        // this can only happen after the session has stopped
+        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable
+                || m_state == InternalState::Closing);
     }
 
     Q_EMIT sessionChanged(m_session);
@@ -504,12 +530,11 @@ void Application::setSession(SessionInterface *newSession)
 
 void Application::setStage(Application::Stage stage)
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setStage - appId=" << appId() << "stage=" << stage;
-
     if (m_stage != stage) {
-        if (stage | m_supportedStages) {
+        if ((stage | m_supportedStages) == 0) {
             return;
         }
+        DEBUG_MSG << "(stage=" << stage << ")";
 
         m_stage = stage;
         Q_EMIT stageChanged(stage);
@@ -522,8 +547,7 @@ void Application::setInternalState(Application::InternalState state)
         return;
     }
 
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setInternalState - appId=" << appId()
-        << "state=" << internalStateToStr(state);
+    DEBUG_MSG << "(state=" << internalStateToStr(state) << ")";
 
     auto oldPublicState = this->state();
     m_state = state;
@@ -538,6 +562,7 @@ void Application::setInternalState(Application::InternalState state)
             releaseWakelock();
             break;
         case InternalState::Closing:
+            Q_EMIT closing();
             acquireWakelock();
             break;
         case InternalState::StoppedResumable:
@@ -558,17 +583,7 @@ void Application::setInternalState(Application::InternalState state)
         Q_EMIT stateChanged(this->state());
     }
 
-    applyRequestedState();
-}
-
-void Application::setFocused(bool focused)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "Application::setFocused - appId=" << appId() << "focused=" << focused;
-
-    if (m_focused != focused) {
-        m_focused = focused;
-        Q_EMIT focusedChanged(focused);
-    }
+    updateState();
 }
 
 void Application::setProcessState(ProcessState newProcessState)
@@ -622,12 +637,12 @@ void Application::setProcessState(ProcessState newProcessState)
         break;
     }
 
-    applyRequestedState();
+    updateState();
 }
 
 void Application::suspend()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::suspend - appId=" << appId();
+    DEBUG_MSG << "()";
 
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
@@ -645,15 +660,17 @@ void Application::suspend()
 
 void Application::resume()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::resume - appId=" << appId();
+    DEBUG_MSG << "()";
 
-    if (m_state == InternalState::Suspended) {
-        setInternalState(InternalState::Running);
+    if (m_state == InternalState::Suspended || m_state == InternalState::SuspendingWaitProcess) {
         Q_EMIT resumeProcessRequested();
+        setInternalState(InternalState::Running);
         if (m_processState == ProcessSuspended) {
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?
         }
-        m_session->resume();
+        if (m_session) {
+            m_session->resume();
+        }
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setInternalState(InternalState::Running);
         m_session->resume();
@@ -664,7 +681,7 @@ void Application::resume()
 
 void Application::respawn()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::respawn - appId=" << appId();
+    DEBUG_MSG << "()";
 
     setInternalState(InternalState::Starting);
 
@@ -673,22 +690,14 @@ void Application::respawn()
 
 void Application::stop()
 {
-    qCDebug(QTMIR_APPLICATIONS) << "Application::stop - appId=" << appId();
+    DEBUG_MSG << "()";
 
     Q_EMIT stopProcessRequested();
 }
 
-void Application::timerEvent(QTimerEvent *event)
-{
-    if (event->timerId() == m_closeTimer) {
-        m_closeTimer = 0;
-        stop();
-    }
-}
-
 bool Application::isTouchApp() const
 {
-    return m_desktopData->isTouchApp();
+    return m_appInfo->isTouchApp();
 }
 
 bool Application::exemptFromLifecycle() const
@@ -700,16 +709,12 @@ void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
 {
     if (m_exemptFromLifecycle != exemptFromLifecycle)
     {
+        DEBUG_MSG << "(" << exemptFromLifecycle << ")";
         // We don't adjust current suspension state, we only care about exempt
         // status going into a suspend.
         m_exemptFromLifecycle = exemptFromLifecycle;
         Q_EMIT exemptFromLifecycleChanged(m_exemptFromLifecycle);
     }
-}
-
-QString Application::longAppId() const
-{
-    return m_longAppId;
 }
 
 Qt::ScreenOrientations Application::supportedOrientations() const
@@ -761,23 +766,110 @@ void Application::onSessionStateChanged(Session::State sessionState)
         Q_EMIT suspendProcessRequested();
         break;
     case Session::Stopped:
-        if (!canBeResumed()
-                || m_state == InternalState::Starting
-                || m_state == InternalState::Running
-                || m_state == InternalState::Closing) {
-            /*  1. application is not managed by upstart
-             *  2. application is managed by upstart, but has stopped before it managed
-             *     to create a surface, we can assume it crashed on startup, and thus
-             *     cannot be resumed
-             *  3. application is managed by upstart and is in foreground (i.e. has
-             *     Running state), if Mir reports the application disconnects, it
-             *     either crashed or stopped itself.
-             *  4. We're expecting the application to stop after a close request
-             */
-            setInternalState(InternalState::Stopped);
-        } else {
+        onSessionStopped();
+    }
+}
+
+void Application::onSessionStopped()
+{
+    switch (m_state) {
+    case InternalState::Starting:
+        /* application has stopped before it managed to create a surface, we can
+           assume it crashed on startup, and thus cannot be resumed */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::Running:
+        /* application is on foreground, if Mir reports the application disconnects,
+           it either crashed or stopped itself. Either way, it must go away. */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::RunningInBackground:
+        if (m_processState == Application::ProcessFailed) {
+            /* killed by the Out-Of-Memory killer while in background. Keep it in the window list
+               as the user didn't want it to go away */
             setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* the application closed itself while in the background. Let it go away */
+            setInternalState(InternalState::Stopped);
         }
+        break;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+        if (m_processState == Application::ProcessFailed) {
+            /* killed by the Out-Of-Memory killer while suspended (or getting there), keep it around as the user
+               doesn't expect it to disappear */
+            setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* Session stopped normally while we're waiting for suspension */
+            stop();
+            setInternalState(InternalState::Stopped);
+        }
+        break;
+    case InternalState::Suspended:
+        if (m_processState != ProcessUnknown) {
+            /* If the user explicly closed this application, we would have it resumed before doing so.
+               Since this is not the case, keep it around. */
+            setInternalState(InternalState::StoppedResumable);
+        } else {
+            /* We're not able to respawn this application because it's not managed by upstart
+               (probably was launched via cmd line by user) */
+            setInternalState(InternalState::Stopped);
+        }
+        break;
+    case InternalState::Closing:
+        /* We're expecting the application to stop after a close request */
+        setInternalState(InternalState::Stopped);
+        break;
+    case InternalState::StoppedResumable:
+    case InternalState::Stopped:
+        /* NOOP */
+        break;
+    }
+}
+
+void Application::setStopTimer(AbstractTimer *timer)
+{
+    delete m_stopTimer;
+
+    m_stopTimer = timer;
+    m_stopTimer->setInterval(1000);
+    m_stopTimer->setSingleShot(true);
+    connect(m_stopTimer, &Timer::timeout, this, &Application::stop);
+}
+
+QSize Application::initialSurfaceSize() const
+{
+    return m_initialSurfaceSize;
+}
+
+void Application::setInitialSurfaceSize(const QSize &size)
+{
+    DEBUG_MSG << "(size=" << size << ")";
+
+    if (size != m_initialSurfaceSize) {
+        m_initialSurfaceSize = size;
+        Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
+    }
+}
+
+unityapp::MirSurfaceListInterface* Application::surfaceList()
+{
+    return &m_proxySurfaceList;
+}
+
+unityapp::MirSurfaceListInterface* Application::promptSurfaceList()
+{
+    return &m_proxyPromptSurfaceList;
+}
+
+void Application::requestFocus()
+{
+    if (m_proxySurfaceList.rowCount() > 0) {
+        DEBUG_MSG << "() - Requesting focus for most recent app surface";
+        m_proxySurfaceList.get(0)->requestFocus();
+    } else {
+        DEBUG_MSG << "() - emitting focusRequested()";
+        Q_EMIT focusRequested();
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -15,9 +15,13 @@
  */
 
 #include "nativeinterface.h"
+#include "mirserver.h"
 
-NativeInterface::NativeInterface(const QWeakPointer<MirServer> &server)
-    : m_mirServer(server)
+#include "qmirserver.h"
+#include "screen.h"
+
+NativeInterface::NativeInterface(QMirServer *server)
+    : m_qMirServer(server)
 {
 }
 
@@ -25,7 +29,7 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 {
     void *result = nullptr;
 
-    auto const server = m_mirServer.lock();
+    auto const server = m_qMirServer->mirServer().lock();
 
     if (server) {
         if (resource == "SessionAuthorizer")
@@ -36,6 +40,59 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
             result = server->sessionListener();
         else if (resource == "PromptSessionListener")
             result = server->promptSessionListener();
+        else if (resource == "WindowManager")
+            result = server->windowManager();
+        else if (resource == "ScreensController")
+            result = m_qMirServer->screensController().data();
     }
     return result;
+}
+
+// Changes to these properties are emitted via the UbuntuNativeInterface::windowPropertyChanged
+// signal fired via UbuntuScreen. Connect to this signal for these properties updates.
+QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
+{
+    QVariantMap propertyMap;
+    auto w = static_cast<ScreenWindow*>(window);
+    auto s = static_cast<Screen*>(w->screen());
+    if (s) {
+        propertyMap.insert("scale", s->scale());
+        propertyMap.insert("formFactor", s->formFactor());
+    }
+    return propertyMap;
+}
+
+QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString &name) const
+{
+    if (!window || name.isNull()) {
+        return QVariant();
+    }
+    auto w = static_cast<ScreenWindow*>(window);
+    auto s = static_cast<Screen*>(w->screen());
+    if (!s) {
+        return QVariant();
+    }
+
+    if (name == QStringLiteral("scale")) {
+        return s->scale();
+    } else if (name == QStringLiteral("formFactor")) {
+        return static_cast<int>(s->formFactor()); // naughty, should add enum to Qt's Type system
+    } else {
+        return QVariant();
+    }
+}
+
+QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const
+{
+    QVariant returnVal = windowProperty(window, name);
+    if (!returnVal.isValid()) {
+        return defaultValue;
+    } else {
+        return returnVal;
+    }
+}
+
+QWeakPointer<MirServer> NativeInterface::mirServer()
+{
+    return m_qMirServer->mirServer();
 }
