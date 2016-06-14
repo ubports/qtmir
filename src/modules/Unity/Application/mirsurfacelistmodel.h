@@ -95,4 +95,6 @@ private:
 
 } // namespace qtmir
 
+QDebug operator<<(QDebug, const unity::shell::application::MirSurfaceListInterface &);
+
 #endif // QTMIR_MIRSURFACELISTMODEL_H

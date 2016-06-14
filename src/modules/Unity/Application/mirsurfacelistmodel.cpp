@@ -20,6 +20,9 @@
 
 #include <paths.h>
 
+#include <QDebug>
+#include <QDebugStateSaver>
+
 namespace unityapp = unity::shell::application;
 using namespace qtmir;
 
@@ -288,4 +291,22 @@ QVariant ProxySurfaceListModel::data(const QModelIndex& index, int role) const
     }
 
     return m_sourceList->data(index, role);
+}
+
+QDebug operator<<(QDebug dbg, const unityapp::MirSurfaceListInterface &surfaceListConst)
+{
+    auto surfaceList = const_cast<unityapp::MirSurfaceListInterface*>(&surfaceListConst);
+
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "MirSurfaceList(";
+    for (int i = 0; i < surfaceList->count(); ++i) {
+        if (i > 0) {
+            dbg << ", ";
+        }
+        auto surface = surfaceList->get(i);
+        dbg << (void*)surface;
+    }
+    dbg << ')';
+    return dbg;
 }
