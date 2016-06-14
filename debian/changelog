@@ -1,3 +1,32 @@
+qtmir (0.4.8+16.10.20160614-0ubuntu1) yakkety; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Add support for compiler sanitizers via ECM
+  * Compile with -fsanitize=undefined
+  * Fix leak in ScreensModelTest (LP: #1585502)
+  * Fix leak in SessionManager test (LP: #1585498)
+  * Remove unused m_sessions member
+  * Add missing breaks
+  * Initialize m_lastX and m_lastY
+  * Initialize m_sessionId
+  * Give the locker a name
+  * Fix memory leak in QtEventFeederTest (LP: #1585503)
+  * Fix leaks in application_manager_test (LP: #1585501)
+
+  [ Daniel d'Andrada ]
+  * Improve Session debug logging
+  * MirSurfaceListModel: prepending a surface always causes
+    firstChanged() emission
+
+  [ Gerry Boland ]
+  * Release temporary GL context ASAP, fixes QtMir on X11. Add some
+    hotpath branching hints (LP: #1588921)
+
+  [ Michael Zanetti ]
+  * Adding ApplicationInfo::surfaceCount property
+
+ -- Albert Astals Cid <albert.astals@canonical.com>  Tue, 14 Jun 2016 08:38:00 +0000
+
 qtmir (0.4.8+16.10.20160602-0ubuntu1) yakkety; urgency=medium
 
   * rebuild for mir 0.23
