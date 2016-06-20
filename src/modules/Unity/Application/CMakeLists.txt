@@ -30,7 +30,6 @@ set(QMLMIRPLUGIN_SRC
     plugin.cpp
     dbuswindowstack.cpp
     mirsurfacemanager.cpp
-    ubuntukeyboardinfo.cpp
     mirfocuscontroller.cpp
     mirsurface.cpp
     mirsurfaceinterface.h
