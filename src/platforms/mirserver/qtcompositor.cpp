@@ -24,12 +24,6 @@ void QtCompositor::start()
 {
     qCDebug(QTMIR_SCREENS) << "QtCompositor::start";
 
-    // FIXME: Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
-    //        See the FIXME in mirserver.cpp
-    if (m_cursor) {
-        m_cursor->hide();
-    }
-
     Q_EMIT starting(); // blocks
 }
 
@@ -40,7 +34,3 @@ void QtCompositor::stop()
     Q_EMIT stopping(); // blocks
 }
 
-void QtCompositor::setCursor(std::shared_ptr<mir::graphics::Cursor> cursor)
-{
-    m_cursor = cursor;
-}

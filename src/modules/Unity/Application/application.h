@@ -108,8 +108,9 @@ public:
     void setExemptFromLifecycle(bool) override;
     QSize initialSurfaceSize() const override;
     void setInitialSurfaceSize(const QSize &size) override;
-    unity::shell::application::MirSurfaceListInterface* surfaceList() override;
-    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() override;
+    unity::shell::application::MirSurfaceListInterface* surfaceList() const override;
+    unity::shell::application::MirSurfaceListInterface* promptSurfaceList() const override;
+    int surfaceCount() const override { return surfaceList()->count(); }
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
@@ -190,8 +191,8 @@ private:
     QSize m_initialSurfaceSize;
     bool m_closing{false};
 
-    ProxySurfaceListModel m_proxySurfaceList;
-    ProxySurfaceListModel m_proxyPromptSurfaceList;
+    ProxySurfaceListModel *m_proxySurfaceList;
+    ProxySurfaceListModel *m_proxyPromptSurfaceList;
 
     friend class ApplicationManager;
     friend class SessionManager;

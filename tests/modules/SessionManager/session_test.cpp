@@ -20,13 +20,10 @@
 #include <Unity/Application/application.h>
 #include <Unity/Application/mirsurfaceitem.h>
 
-#include "stub_scene_surface.h"
-
 using namespace qtmir;
 using mir::scene::MockSession;
 
 namespace ms = mir::scene;
-namespace mtd = mir::test::doubles;
 
 class SessionTests : public ::testing::QtMirTest
 {

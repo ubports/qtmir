@@ -48,6 +48,11 @@ namespace mo  = mir::options;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
+namespace
+{
+void usingHiddenCursor(mir::Server& server);
+}
+
 MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
@@ -130,6 +135,8 @@ MirServer::MirServer(int &argc, char **argv,
         screensModel->init(the_display(), the_compositor());
     });
 
+    usingHiddenCursor(*this);
+
     try {
         apply_settings();
     } catch (const std::exception &ex) {
@@ -140,15 +147,6 @@ MirServer::MirServer(int &argc, char **argv,
     if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
         argc = 1;
     }
-
-    // We will draw our own cursor.
-    // FIXME: Call override_the_cusor() instead once this method becomes available in a
-    //        future version of Mir.
-    add_init_callback([this]() {
-        the_cursor()->hide();
-        // Hack to work around https://bugs.launchpad.net/mir/+bug/1502200
-        static_cast<QtCompositor*>(the_compositor().get())->setCursor(the_cursor());
-    });
 
     qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
     qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
@@ -210,4 +208,27 @@ mir::shell::Shell *MirServer::shell()
 MirWindowManager *MirServer::windowManager()
 {
     return m_windowManager.lock().get();
+}
+
+namespace
+{
+struct HiddenCursorWrapper : mg::Cursor
+{
+    HiddenCursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) :
+        wrapped{wrapped} { wrapped->hide(); }
+    void show() override { }
+    void show(mg::CursorImage const&) override { }
+    void hide() override { wrapped->hide(); }
+
+    void move_to(mir::geometry::Point position) override { wrapped->move_to(position); }
+
+private:
+    std::shared_ptr<mg::Cursor> const wrapped;
+};
+
+void usingHiddenCursor(mir::Server& server)
+{
+    server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
+        { return std::make_shared<HiddenCursorWrapper>(wrapped); });
+};
 }

@@ -116,7 +116,7 @@ private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
 
-    void updateMirSurfaceActiveFocus(bool focused);
+    void updateMirSurfaceActiveFocus();
     void updateMirSurfaceVisibility();
 
     void onActualSurfaceSizeChanged(const QSize &size);

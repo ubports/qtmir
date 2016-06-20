@@ -42,8 +42,6 @@ include_directories(
     ${APPLICATION_API_INCLUDE_DIRS}
 )
 
-add_subdirectory(wm-wip)
-
 # We have to remove -pedantic for tracepoints.c
 string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # Needed to compile tracepoints in C99 mode.
@@ -84,6 +82,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
     )
 
 add_library(qpa-mirserver SHARED

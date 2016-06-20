@@ -110,7 +110,8 @@ public:
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;
-    void setActiveFocus(bool focus) override;
+
+    void setViewActiveFocus(qintptr, bool) override {};
 
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;

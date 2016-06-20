@@ -55,6 +55,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_processState(ProcessUnknown)
     , m_stopTimer(nullptr)
     , m_exemptFromLifecycle(false)
+    , m_proxySurfaceList(new ProxySurfaceListModel(this))
+    , m_proxyPromptSurfaceList(new ProxySurfaceListModel(this))
 {
     DEBUG_MSG << "()";
 
@@ -66,6 +68,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     m_rotatesWindowContents = m_appInfo->rotatesWindowContents();
 
     setStopTimer(new Timer);
+
+    connect(m_proxySurfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
 }
 
 Application::~Application()
@@ -411,8 +415,8 @@ void Application::applyRequestedSuspended()
 bool Application::focused() const
 {
     bool someSurfaceHasFocus = false; // to be proven wrong
-    for (int i = 0; i < m_proxySurfaceList.rowCount() && !someSurfaceHasFocus; ++i) {
-        someSurfaceHasFocus |= m_proxySurfaceList.get(i)->focused();
+    for (int i = 0; i < m_proxySurfaceList->rowCount() && !someSurfaceHasFocus; ++i) {
+        someSurfaceHasFocus |= m_proxySurfaceList->get(i)->focused();
     }
     return someSurfaceHasFocus;
 }
@@ -475,8 +479,8 @@ void Application::setSession(SessionInterface *newSession)
         return;
 
     if (m_session) {
-        m_proxySurfaceList.setSourceList(nullptr);
-        m_proxyPromptSurfaceList.setSourceList(nullptr);
+        m_proxySurfaceList->setSourceList(nullptr);
+        m_proxyPromptSurfaceList->setSourceList(nullptr);
         m_session->disconnect(this);
         m_session->surfaceList()->disconnect(this);
         m_session->setApplication(nullptr);
@@ -517,8 +521,8 @@ void Application::setSession(SessionInterface *newSession)
         if (oldFullscreen != fullscreen())
             Q_EMIT fullscreenChanged(fullscreen());
 
-        m_proxySurfaceList.setSourceList(m_session->surfaceList());
-        m_proxyPromptSurfaceList.setSourceList(m_session->promptSurfaceList());
+        m_proxySurfaceList->setSourceList(m_session->surfaceList());
+        m_proxyPromptSurfaceList->setSourceList(m_session->promptSurfaceList());
     } else {
         // this can only happen after the session has stopped
         Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable
@@ -852,21 +856,21 @@ void Application::setInitialSurfaceSize(const QSize &size)
     }
 }
 
-unityapp::MirSurfaceListInterface* Application::surfaceList()
+unityapp::MirSurfaceListInterface* Application::surfaceList() const
 {
-    return &m_proxySurfaceList;
+    return m_proxySurfaceList;
 }
 
-unityapp::MirSurfaceListInterface* Application::promptSurfaceList()
+unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
 {
-    return &m_proxyPromptSurfaceList;
+    return m_proxyPromptSurfaceList;
 }
 
 void Application::requestFocus()
 {
-    if (m_proxySurfaceList.rowCount() > 0) {
+    if (m_proxySurfaceList->rowCount() > 0) {
         DEBUG_MSG << "() - Requesting focus for most recent app surface";
-        m_proxySurfaceList.get(0)->requestFocus();
+        m_proxySurfaceList->get(0)->requestFocus();
     } else {
         DEBUG_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();

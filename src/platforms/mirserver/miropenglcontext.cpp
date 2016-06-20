@@ -25,6 +25,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
+#include <QtGui/private/qopenglcontext_p.h>
 
 // Mir
 #include <mir/graphics/display.h>
@@ -100,6 +101,7 @@ MirOpenGLContext::MirOpenGLContext(
     QObject::connect(m_logger, &QOpenGLDebugLogger::messageLogged,
                      this, &MirOpenGLContext::onGlDebugMessageLogged, Qt::DirectConnection);
 #endif // debug
+    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
 }
 
 QSurfaceFormat MirOpenGLContext::format() const
@@ -118,6 +120,23 @@ void MirOpenGLContext::swapBuffers(QPlatformSurface *surface)
     }
 }
 
+static bool needsFBOReadBackWorkaround()
+{
+    static bool set = false;
+    static bool needsWorkaround = false;
+
+    if (Q_UNLIKELY(!set)) {
+        const char *rendererString = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+        // Keep in sync with qtubuntu
+        needsWorkaround = qstrncmp(rendererString, "Mali-400", 8) == 0
+                          || qstrncmp(rendererString, "Mali-T7", 7) == 0
+                          || qstrncmp(rendererString, "PowerVR Rogue G6200", 19) == 0;
+        set = true;
+    }
+
+    return needsWorkaround;
+}
+
 bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 {
     if (surface->surface()->surfaceClass() == QSurface::Offscreen) {
@@ -131,7 +150,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
 
     // ultimately calls Mir's DisplayBuffer::make_current()
     ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
-    if (screenWindow) {
+    if (Q_LIKELY(screenWindow)) {
         m_currentWindow = screenWindow;
         screenWindow->makeCurrent();
 
@@ -141,6 +160,10 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
             m_logger->enableMessages();
         }
 #endif
+
+        QOpenGLContextPrivate *ctx_d = QOpenGLContextPrivate::get(context());
+        if (!ctx_d->workaround_brokenFBOReadBack && needsFBOReadBackWorkaround())
+            ctx_d->workaround_brokenFBOReadBack = true;
 
         return true;
     }
