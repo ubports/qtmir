@@ -1286,9 +1286,9 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     applicationManager.authorizeSession(procId2, authed);
     onSessionStarting(session2);
     EXPECT_EQ(authed, true);
-    FakeMirSurface surface;
-    onSessionCreatedSurface(session2.get(), &surface);
-    surface.drawFirstFrame();
+    FakeMirSurface *surface = new FakeMirSurface;
+    onSessionCreatedSurface(session2.get(), surface);
+    surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -1298,6 +1298,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
+
+    delete surface;
 
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
@@ -1345,12 +1347,12 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     EXPECT_EQ(true, authed);
 
     // both sessions create surfaces, then get them all suspended
-    FakeMirSurface surface1;
-    onSessionCreatedSurface(session1.get(), &surface1);
-    surface1.drawFirstFrame();
-    FakeMirSurface surface2;
-    onSessionCreatedSurface(session2.get(), &surface2);
-    surface2.drawFirstFrame();
+    FakeMirSurface *surface1 = new FakeMirSurface;
+    onSessionCreatedSurface(session1.get(), surface1);
+    surface1->drawFirstFrame();
+    FakeMirSurface *surface2 = new FakeMirSurface;
+    onSessionCreatedSurface(session2.get(), surface2);
+    surface2->drawFirstFrame();
     suspend(app);
     EXPECT_EQ(Application::Suspended, app->state());
 
@@ -1361,6 +1363,9 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     onSessionStopping(session1);
 
     EXPECT_EQ(0, countSpy.count());
+
+    delete surface1;
+    delete surface2;
 
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
