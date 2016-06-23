@@ -18,6 +18,7 @@
 #include "application_manager.h"
 #include "application.h"
 #include "applicationinfo.h"
+#include "dbusfocusinfo.h"
 #include "dbuswindowstack.h"
 #include "mirfocuscontroller.h"
 #include "session.h"
@@ -176,6 +177,7 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
+    , m_dbusFocusInfo(new DBusFocusInfo(&m_applications))
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_procInfo(procInfo)
@@ -200,6 +202,7 @@ ApplicationManager::ApplicationManager(
 ApplicationManager::~ApplicationManager()
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::~ApplicationManager";
+    delete m_dbusFocusInfo;
 }
 
 int ApplicationManager::rowCount(const QModelIndex &parent) const

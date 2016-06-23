@@ -18,6 +18,7 @@
 #include "application.h"
 #include "applicationinfo.h"
 #include "application_manager.h"
+#include "mirsurfaceinterface.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "timer.h"
@@ -875,6 +876,23 @@ void Application::requestFocus()
         DEBUG_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();
     }
+}
+
+bool Application::activeFocus() const
+{
+    if (!m_session) {
+        return false;
+    }
+
+    auto surfaceList = m_session->surfaceList();
+    for (int i = 0; i < surfaceList->count(); ++i) {
+        auto surface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+        if (surface->activeFocus()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 } // namespace qtmir

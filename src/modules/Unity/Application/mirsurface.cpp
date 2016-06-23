@@ -453,6 +453,11 @@ void MirSurface::setViewActiveFocus(qintptr viewId, bool value)
     }
 }
 
+bool MirSurface::activeFocus() const
+{
+    return !m_activelyFocusedViews.empty();
+}
+
 void MirSurface::updateActiveFocus()
 {
     if (!m_session) {
