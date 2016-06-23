@@ -20,6 +20,9 @@
 
 #include <paths.h>
 
+#include <QDebug>
+#include <QDebugStateSaver>
+
 namespace unityapp = unity::shell::application;
 using namespace qtmir;
 
@@ -65,11 +68,11 @@ void MirSurfaceListModel::prependSurface(MirSurfaceInterface *surface)
     m_surfaceList.prepend(surface);
     connectSurface(surface);
     endInsertRows();
-    Q_EMIT countChanged();
+    Q_EMIT countChanged(m_surfaceList.count());
     if (count() == 1) {
         Q_EMIT emptyChanged();
-        Q_EMIT firstChanged();
     }
+    Q_EMIT firstChanged();
 }
 
 void MirSurfaceListModel::connectSurface(MirSurfaceInterface *surface)
@@ -85,7 +88,7 @@ void MirSurfaceListModel::removeSurface(MirSurfaceInterface *surface)
         beginRemoveRows(QModelIndex(), i, i);
         m_surfaceList.removeAt(i);
         endRemoveRows();
-        Q_EMIT countChanged();
+        Q_EMIT countChanged(m_surfaceList.count());
         if (count() == 0) {
             Q_EMIT emptyChanged();
         }
@@ -147,7 +150,7 @@ void MirSurfaceListModel::prependSurfaces(QList<MirSurfaceInterface*> &surfaceLi
                 });
     }
     endInsertRows();
-    Q_EMIT countChanged();
+    Q_EMIT countChanged(m_surfaceList.count());
     if (wasEmpty) {
         Q_EMIT emptyChanged();
     }
@@ -206,6 +209,11 @@ bool MirSurfaceListModel::isEmpty() const
 ///////////////////////////////////////////////////////////////////////////////
 // ProxySurfaceListModel
 //////////////////////////////////////////////////////////////////////////////
+
+ProxySurfaceListModel::ProxySurfaceListModel(QObject *parent):
+    unity::shell::application::MirSurfaceListInterface(parent)
+{
+}
 
 void ProxySurfaceListModel::setSourceList(MirSurfaceListModel *sourceList)
 {
@@ -283,4 +291,22 @@ QVariant ProxySurfaceListModel::data(const QModelIndex& index, int role) const
     }
 
     return m_sourceList->data(index, role);
+}
+
+QDebug operator<<(QDebug dbg, const unityapp::MirSurfaceListInterface &surfaceListConst)
+{
+    auto surfaceList = const_cast<unityapp::MirSurfaceListInterface*>(&surfaceListConst);
+
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "MirSurfaceList(";
+    for (int i = 0; i < surfaceList->count(); ++i) {
+        if (i > 0) {
+            dbg << ", ";
+        }
+        auto surface = surfaceList->get(i);
+        dbg << (void*)surface;
+    }
+    dbg << ')';
+    return dbg;
 }

@@ -62,6 +62,8 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
 
     surface->drawFirstFrame();
     EXPECT_EQ(Session::Running, session->state());
+
+    delete surface;
 }
 
 TEST_F(SessionTests, AddChildSession)
@@ -220,6 +222,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
         surface->drawFirstFrame();
+        delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
 
@@ -251,6 +254,7 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
         surface->drawFirstFrame();
+        delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
 
@@ -296,6 +300,7 @@ TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
         surface->drawFirstFrame();
+        delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
 

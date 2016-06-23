@@ -78,11 +78,11 @@ void QtEventFeederTest::SetUp()
     mockWindowSystem = new MockQtWindowSystem;
     auto screens = QSharedPointer<ScreensModel>();
 
-    EXPECT_CALL(*mockWindowSystem, registerTouchDevice(_));
+    ASSERT_TRUE(mockWindowSystem->m_devices.count() == 0);
 
     qtEventFeeder = new QtEventFeeder(screens, mockWindowSystem);
 
-    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+    ASSERT_TRUE(mockWindowSystem->m_devices.count() == 1);
 
     int argc = 0;
     char **argv = nullptr;

@@ -64,6 +64,7 @@ void ScreensModelTest::SetUp()
 void ScreensModelTest::TearDown()
 {
     delete screensModel;
+    delete app;
 }
 
 TEST_F(ScreensModelTest, SingleScreenFound)
