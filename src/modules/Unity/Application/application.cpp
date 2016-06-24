@@ -878,21 +878,4 @@ void Application::requestFocus()
     }
 }
 
-bool Application::activeFocus() const
-{
-    if (!m_session) {
-        return false;
-    }
-
-    auto surfaceList = m_session->surfaceList();
-    for (int i = 0; i < surfaceList->count(); ++i) {
-        auto surface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
-        if (surface->activeFocus()) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 } // namespace qtmir

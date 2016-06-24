@@ -134,10 +134,6 @@ public:
 
     void requestFocus();
 
-    // Whether any of its MirSurfaces has activeFocus()
-    // See qtmir::MirSurfaceInterface::activeFocus
-    bool activeFocus() const;
-
     // for tests
     void setStopTimer(AbstractTimer *timer);
     AbstractTimer *stopTimer() const { return m_stopTimer; }

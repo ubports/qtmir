@@ -34,12 +34,28 @@ bool DBusFocusInfo::isPidFocused(unsigned int pid)
         // Don't bother checking if it has a QML with activeFocus() which is not a MirSurfaceItem.
         return true;
     } else {
-        Q_FOREACH (Application* application, *m_applications) {
-            if ((pid_t)pid == application->pid()) {
-                return application->activeFocus();
+        SessionInterface *session = findSessionWithPid(pid);
+        return session ? session->activeFocus() : false;
+    }
+}
+
+SessionInterface* DBusFocusInfo::findSessionWithPid(unsigned int uintPid)
+{
+    pid_t pid = (pid_t)uintPid;
+    Q_FOREACH (Application* application, *m_applications) {
+        auto session = application->session();
+        if (session->pid() == pid) {
+            return session;
+        }
+        SessionInterface *chosenChildSession = nullptr;
+        session->foreachChildSession([&](SessionInterface* childSession) {
+            if (childSession->pid() == pid) {
+                chosenChildSession = childSession;
             }
+        });
+        if (chosenChildSession) {
+            return chosenChildSession;
         }
     }
-
-    return false;
+    return nullptr;
 }

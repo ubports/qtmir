@@ -40,6 +40,8 @@ public Q_SLOTS:
     Q_SCRIPTABLE bool isPidFocused(unsigned int pid);
 
 private:
+    SessionInterface* findSessionWithPid(unsigned int uintPid);
+
     QList<Application*> *m_applications;
 };
 
