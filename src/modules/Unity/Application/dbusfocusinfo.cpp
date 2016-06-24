@@ -20,7 +20,7 @@
 
 using namespace qtmir;
 
-DBusFocusInfo::DBusFocusInfo(QList<Application*> *applications)
+DBusFocusInfo::DBusFocusInfo(const QList<Application*> &applications)
     : m_applications(applications)
 {
     QDBusConnection::sessionBus().registerService("com.canonical.Unity.FocusInfo");
@@ -42,7 +42,7 @@ bool DBusFocusInfo::isPidFocused(unsigned int pid)
 SessionInterface* DBusFocusInfo::findSessionWithPid(unsigned int uintPid)
 {
     pid_t pid = (pid_t)uintPid;
-    Q_FOREACH (Application* application, *m_applications) {
+    Q_FOREACH (Application* application, m_applications) {
         auto session = application->session();
         if (session->pid() == pid) {
             return session;

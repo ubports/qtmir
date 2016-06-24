@@ -177,7 +177,7 @@ ApplicationManager::ApplicationManager(
         const QSharedPointer<SettingsInterface>& settings,
         QObject *parent)
     : ApplicationManagerInterface(parent)
-    , m_dbusFocusInfo(new DBusFocusInfo(&m_applications))
+    , m_dbusFocusInfo(new DBusFocusInfo(m_applications))
     , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_procInfo(procInfo)

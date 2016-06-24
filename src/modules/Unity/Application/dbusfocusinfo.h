@@ -29,7 +29,7 @@ class DBusFocusInfo : public QObject
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "com.canonical.Unity.FocusInfo")
 public:
-    explicit DBusFocusInfo(QList<Application*> *applications);
+    explicit DBusFocusInfo(const QList<Application*> &applications);
     virtual ~DBusFocusInfo() {}
 
 public Q_SLOTS:
@@ -42,7 +42,7 @@ public Q_SLOTS:
 private:
     SessionInterface* findSessionWithPid(unsigned int uintPid);
 
-    QList<Application*> *m_applications;
+    const QList<Application*> &m_applications;
 };
 
 } // namespace qtmir
