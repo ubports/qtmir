@@ -44,6 +44,7 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QDir>
+#include <QMetaObject>
 
 // std
 #include <csignal>
@@ -367,9 +368,16 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
 
 void ApplicationManager::onProcessStarting(const QString &appId)
 {
+    // Keep this method as short as possible, as it blocks Ubuntu-App-Launch before it executes the process!
     tracepoint(qtmir, onProcessStarting);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - appId=" << appId;
+    // This will push an event on the event queue before the (blocking) event for authorizeSession is pushed
+    // on the same queue - so the application's processState will be up-to-date when authorizeSession is called.
+    QMetaObject::invokeMethod(this, "doProcessStarting", Qt::QueuedConnection, Q_ARG(QString, appId));
+}
 
+void ApplicationManager::doProcessStarting(const QString &appId)
+{
     Application *application = findApplication(appId);
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
         auto appInfo = m_taskController->getInfoForApp(appId);

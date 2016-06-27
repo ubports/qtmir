@@ -123,6 +123,8 @@ private Q_SLOTS:
     void onApplicationClosing(Application *application);
     void updateFocusedApplication();
 
+    void doProcessStarting(const QString &appId);
+
 private:
     void setFocused(Application *application);
     void add(Application *application);
