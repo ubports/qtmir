@@ -29,9 +29,11 @@ class QQuickScreenWindow : public QQuickWindow
     Q_PROPERTY(QScreen *screen READ screen WRITE setScreen NOTIFY screenChanged)
     Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
     Q_PROPERTY(Screens::FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
+    Q_PROPERTY(int winId READ winId CONSTANT)
 
 public:
     explicit QQuickScreenWindow(QQuickWindow *parent = 0);
+    ~QQuickScreenWindow();
 
     QScreen *screen() const;
     void setScreen(QScreen *screen);

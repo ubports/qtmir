@@ -38,6 +38,10 @@
 
 namespace mg = mir::geometry;
 
+#define DEBUG_MSG_SCREENS qCDebug(QTMIR_SCREENS).nospace() << "Screen[" << (void*)this <<"]::" << __func__
+#define DEBUG_MSG_SENSORS qCDebug(QTMIR_SENSOR_MESSAGES).nospace() << "Screen[" << (void*)this <<"]::" << __func__
+#define WARNING_MSG_SENSORS qCWarning(QTMIR_SENSOR_MESSAGES).nospace() << "Screen[" << (void*)this <<"]::" << __func__
+
 namespace {
 bool isLittleEndian() {
     unsigned int i = 1;
@@ -150,6 +154,7 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     , m_unityScreen(nullptr)
 {
     setMirDisplayConfiguration(screen, false);
+    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value() << ", geometry=" << m_geometry << ")";
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
@@ -248,6 +253,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         if (notify) {
             QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
         }
+
         if (m_screenWindow) { // resize corresponding window immediately
             m_screenWindow->setGeometry(m_geometry);
         }
@@ -285,7 +291,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
 void Screen::toggleSensors(const bool enable) const
 {
-    qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::toggleSensors - enable=" << enable;
+    DEBUG_MSG_SENSORS << "(enable=" << enable << ")";
     if (enable) {
         m_orientationSensor->start();
     } else {
@@ -318,7 +324,7 @@ void Screen::customEvent(QEvent* event)
             break;
         }
         default: {
-            qWarning("Unknown orientation.");
+            WARNING_MSG_SENSORS << "() - unknown orientation.";
             event->accept();
             return;
         }
@@ -327,12 +333,12 @@ void Screen::customEvent(QEvent* event)
     // Raise the event signal so that client apps know the orientation changed
     QWindowSystemInterface::handleScreenOrientationChange(screen(), m_currentOrientation);
     event->accept();
-    qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::customEvent - new orientation" << m_currentOrientation << "handled";
+    DEBUG_MSG_SENSORS << "() - new orientation=" << m_currentOrientation;
 }
 
 void Screen::onOrientationReadingChanged()
 {
-    qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::onOrientationReadingChanged";
+    DEBUG_MSG_SENSORS << "()";
 
     // Make sure to switch to the main Qt thread context
     QCoreApplication::postEvent(this, new OrientationReadingEvent(
@@ -358,9 +364,7 @@ ScreenWindow *Screen::window() const
 
 void Screen::setWindow(ScreenWindow *window)
 {
-    if (window && m_screenWindow) {
-        qCDebug(QTMIR_SCREENS) << "Screen::setWindow - overwriting existing ScreenWindow";
-    }
+    DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
     m_screenWindow = window;
 
     if (m_screenWindow) {
@@ -368,16 +372,13 @@ void Screen::setWindow(ScreenWindow *window)
         Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
         Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
 
-        if (m_screenWindow->geometry() != geometry()) {
-            qCDebug(QTMIR_SCREENS) << "Screen::setWindow - new geometry for shell surface" << window->window() << geometry();
-            m_screenWindow->setGeometry(geometry());
-        }
+        m_screenWindow->setGeometry(geometry());
     }
 }
 
 void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
 {
-    qCDebug(QTMIR_SCREENS) << "Screen::setMirDisplayBuffer" << this << as_render_target(buffer) << group;
+    DEBUG_MSG_SCREENS << "(renderTarget=" << as_render_target(buffer) << ", displayGroup=" << group << ")";
     // This operation should only be performed while rendering is stopped
     m_renderTarget = as_render_target(buffer);
     m_displayGroup = group;

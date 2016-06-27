@@ -29,6 +29,8 @@ public:
     explicit ScreenWindow(QWindow *window);
     virtual ~ScreenWindow();
 
+    void setGeometry(const QRect &rect) override;
+
     bool isExposed() const override;
     void setExposed(const bool exposed);
 

@@ -37,12 +37,13 @@
 
 namespace mg = mir::graphics;
 
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreensModel[" << this <<"]::" << __func__
 
 ScreensModel::ScreensModel(QObject *parent)
     : QObject(parent)
     , m_compositing(false)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreensModel::ScreensModel";
+    DEBUG_MSG << "()";
 }
 
 // init only after MirServer has initialized - runs on MirServerThread!!!
@@ -72,7 +73,7 @@ void ScreensModel::terminate()
 
 void ScreensModel::onCompositorStarting()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStarting";
+    DEBUG_MSG << "()";
     m_compositing = true;
 
     update();
@@ -83,7 +84,7 @@ void ScreensModel::onCompositorStarting()
 
 void ScreensModel::onCompositorStopping()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStopping";
+    DEBUG_MSG << "()";
     m_compositing = false;
 
     // Stop Qt's render threads by setting all its windows it obscured. Must
@@ -95,7 +96,7 @@ void ScreensModel::onCompositorStopping()
 
 void ScreensModel::update()
 {
-    qCDebug(QTMIR_SCREENS) << "ScreensModel::update";
+    DEBUG_MSG << "()";
     auto display = m_display.lock();
     if (!display)
         return;
@@ -122,8 +123,7 @@ void ScreensModel::update()
                         // no, need to delete it and re-create with new config
                         auto newScreen = createScreen(output);
                         newScreenList.append(newScreen);
-                        qCDebug(QTMIR_SCREENS) << "Need to delete & re-create Screen with id" << output.id.as_value()
-                                               << "and geometry" << screen->geometry();
+                        DEBUG_MSG << "() - recreating screen for output=" << output.id.as_value();
 
                         // if Window on this Screen, arrange to move it to the new Screen
                         if (screen->window()) {
@@ -135,8 +135,7 @@ void ScreensModel::update()
                     // new display, so create Screen for it
                     screen = createScreen(output);
                     newScreenList.append(screen);
-                    qCDebug(QTMIR_SCREENS) << "Added Screen with id" << output.id.as_value()
-                                           << "and geometry" << screen->geometry();
+                    DEBUG_MSG << "() - new screen for output=" << output.id.as_value();
                     m_screenList.append(screen);
                 }
             }
@@ -151,22 +150,22 @@ void ScreensModel::update()
     // Move Windows from about-to-be-deleted Screens to new Screen
     auto i = windowMoveList.constBegin();
     while (i != windowMoveList.constEnd()) {
-        qCDebug(QTMIR_SCREENS) << "Moving ScreenWindow" << i.key() << "from" << static_cast<Screen*>(i.key()->screen()) << "to" << i.value();
+        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<Screen*>(i.key()->screen()) << " to " << i.value();
         i.key()->setScreen(i.value());
         i++;
     }
 
     // Delete any old & unused Screens
     for (auto screen: oldScreenList) {
-        qCDebug(QTMIR_SCREENS) << "Removed Screen with id" << screen->m_outputId.as_value()
-                               << "and geometry" << screen->geometry();
+        DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
+                               << " and geometry " << screen->geometry();
         auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window() && window->isExposed()) {
             window->window()->hide();
         }
         bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
         if (!ok) {
-            qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
+            DEBUG_MSG << "() - failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }
         Q_EMIT screenRemoved(screen); // should delete the backing Screen
     }

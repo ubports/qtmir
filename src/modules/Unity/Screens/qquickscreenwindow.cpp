@@ -19,6 +19,7 @@
 // mirserver
 #include "screen.h"
 #include "screenscontroller.h"
+#include "logging.h"
 
 // Qt
 #include <QGuiApplication>
@@ -27,6 +28,8 @@
 #include <QDebug>
 
 using namespace qtmir;
+
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "QQuickScreenWindow[" << (void*)this <<"]::" << __func__
 
 /*
  * QQuickScreenWindow - wrapper of QQuickWindow to enable QML to specify destination screen
@@ -50,6 +53,8 @@ QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     , m_scale(-1.0) // start with invalid initial state, fetch correct value on first invokation
     , m_formFactor(Screens::FormFactorUnknown)
 {
+    DEBUG_MSG << "()";
+
     if (qGuiApp->platformName() == "mirserver") {
         connect(qGuiApp->platformNativeInterface(), &QPlatformNativeInterface::windowPropertyChanged,
                 this, &QQuickScreenWindow::nativePropertyChanged);
@@ -60,6 +65,11 @@ QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     }
 }
 
+QQuickScreenWindow::~QQuickScreenWindow()
+{
+    DEBUG_MSG << "()";
+}
+
 QScreen *QQuickScreenWindow::screen() const
 {
     return QQuickWindow::screen();
@@ -67,6 +77,7 @@ QScreen *QQuickScreenWindow::screen() const
 
 void QQuickScreenWindow::setScreen(QScreen *screen)
 {
+    DEBUG_MSG << "(screen=" << screen << ")";
     QQuickWindow::setScreen(screen);
 
     float scale = getScaleNativeProperty();

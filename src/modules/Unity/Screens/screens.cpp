@@ -18,12 +18,15 @@
 
 // mirserver
 #include "screen.h"
+#include "logging.h"
 
 // Qt
 #include <QGuiApplication>
 #include <QScreen>
 
 Q_DECLARE_METATYPE(QScreen*)
+
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "Screens[" << (void*)this <<"]::" << __func__
 
 namespace qtmir {
 
@@ -38,6 +41,7 @@ Screens::Screens(QObject *parent) :
     connect(app, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
 
     m_screenList = QGuiApplication::screens();
+    DEBUG_MSG << "(" << m_screenList << ")";
 }
 
 QHash<int, QByteArray> Screens::roleNames() const
@@ -102,6 +106,7 @@ void Screens::onScreenAdded(QScreen *screen)
 {
     if (m_screenList.contains(screen))
         return;
+    DEBUG_MSG << "(screen=" << screen << ")";
 
     beginInsertRows(QModelIndex(), count(), count());
     m_screenList.push_back(screen);
@@ -115,6 +120,7 @@ void Screens::onScreenRemoved(QScreen *screen)
     int index = m_screenList.indexOf(screen);
     if (index < 0)
         return;
+    DEBUG_MSG << "(screen=" << screen << ")";
 
     beginRemoveRows(QModelIndex(), index, index);
     m_screenList.removeAt(index);

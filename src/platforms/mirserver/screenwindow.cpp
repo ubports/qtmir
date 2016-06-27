@@ -30,6 +30,8 @@
 
 #include "logging.h"
 
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreenWindow[" << this <<"]::" << __func__
+
 static WId newWId()
 {
     static WId id = 0;
@@ -45,23 +47,31 @@ ScreenWindow::ScreenWindow(QWindow *window)
     , m_exposed(false)
     , m_winId(newWId())
 {
-    // Note: window->screen() is set to the primaryScreen(), if not specified explicitly.
-    const auto myScreen = static_cast<Screen *>(window->screen()->handle());
-    myScreen->setWindow(this);
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "backed by" << myScreen << "with ID" << myScreen->outputId().as_value();
+    const auto platformScreen = static_cast<Screen *>(screen());
+    QRect screenGeometry(platformScreen->availableGeometry());
 
-    QRect screenGeometry(screen()->availableGeometry());
-    if (window->geometry() != screenGeometry) {
-        setGeometry(screenGeometry);
-        window->setGeometry(screenGeometry);
-    }
+    // Note: screen() is set to the primaryScreen(), if not specified explicitly.
+    DEBUG_MSG << "(window=" << window
+              << ") - windowId=" << uint(m_winId)
+              << ", on screen=" << platformScreen
+              << ", outputId=" << platformScreen->outputId().as_value()
+              << ", geometry=" << screenGeometry;
+
+    platformScreen->setWindow(this);
     window->setSurfaceType(QSurface::OpenGLSurface);
 }
 
 ScreenWindow::~ScreenWindow()
 {
-    qCDebug(QTMIR_SCREENS) << "Destroying ScreenWindow" << this;
+    DEBUG_MSG << "()";
     static_cast<Screen *>(screen())->setWindow(nullptr);
+}
+
+void ScreenWindow::setGeometry(const QRect &rect)
+{
+    DEBUG_MSG << "(" << rect << ")";
+    QWindowSystemInterface::handleGeometryChange(window(), rect);
+    QPlatformWindow::setGeometry(rect);
 }
 
 bool ScreenWindow::isExposed() const
@@ -71,7 +81,7 @@ bool ScreenWindow::isExposed() const
 
 void ScreenWindow::setExposed(const bool exposed)
 {
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow::setExposed" << this << exposed << screen();
+    DEBUG_MSG << "(exposed=" << (exposed ? "true" : "false") << ")";
     if (m_exposed == exposed)
         return;
 
@@ -97,20 +107,19 @@ void ScreenWindow::setExposed(const bool exposed)
 
 void ScreenWindow::setScreen(QPlatformScreen *newScreen)
 {
+    auto platformScreen = static_cast<Screen *>(newScreen);
+    Q_ASSERT(platformScreen);
+    DEBUG_MSG << "(screen=" << platformScreen << ", outputId=" << platformScreen->outputId().as_value() << ")";
+
     // Dis-associate the old screen
     if (screen()) {
         static_cast<Screen *>(screen())->setWindow(nullptr);
     }
-
     // Associate new screen and announce to Qt
-    auto myScreen = static_cast<Screen *>(newScreen);
-    Q_ASSERT(myScreen);
-    myScreen->setWindow(this);
+    platformScreen->setWindow(this);
 
-    QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
+    QWindowSystemInterface::handleWindowScreenChanged(window(), platformScreen->screen());
     setExposed(true); //GERRY - assumption setScreen only called while compositor running
-
-    qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "NEWLY backed by" << myScreen;
 }
 
 void ScreenWindow::swapBuffers()

@@ -114,10 +114,6 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
     if (screens->compositing()) {
         platformWindow->setExposed(true);
     }
-
-    qCDebug(QTMIR_SCREENS) << "QWindow" << window << "with geom" << window->geometry()
-                           << "is backed by a" << static_cast<Screen *>(window->screen()->handle())
-                           << "with geometry" << window->screen()->geometry();
     return platformWindow;
 }
 
