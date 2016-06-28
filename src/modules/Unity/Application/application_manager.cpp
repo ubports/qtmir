@@ -44,7 +44,6 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QDir>
-#include <QMetaObject>
 
 // std
 #include <csignal>
@@ -93,8 +92,13 @@ void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *
 
 void connectToTaskController(ApplicationManager *manager, TaskController *controller)
 {
+    // TaskController::processStarting blocks Ubuntu-App-Launch from executing the process, have it return
+    // as fast as possible! Using a Queued connection will push an event on the event queue before the
+    // (blocking) event for authorizeSession is pushed on the same queue - so the application's processState
+    // will be up-to-date when authorizeSession is called.
     QObject::connect(controller, &TaskController::processStarting,
-                     manager, &ApplicationManager::onProcessStarting);
+                     manager, &ApplicationManager::onProcessStarting, Qt::QueuedConnection);
+
     QObject::connect(controller, &TaskController::processStopped,
                      manager, &ApplicationManager::onProcessStopped);
     QObject::connect(controller, &TaskController::processSuspended,
@@ -368,16 +372,9 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
 
 void ApplicationManager::onProcessStarting(const QString &appId)
 {
-    // Keep this method as short as possible, as it blocks Ubuntu-App-Launch before it executes the process!
     tracepoint(qtmir, onProcessStarting);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onProcessStarting - appId=" << appId;
-    // This will push an event on the event queue before the (blocking) event for authorizeSession is pushed
-    // on the same queue - so the application's processState will be up-to-date when authorizeSession is called.
-    QMetaObject::invokeMethod(this, "doProcessStarting", Qt::QueuedConnection, Q_ARG(QString, appId));
-}
 
-void ApplicationManager::doProcessStarting(const QString &appId)
-{
     Application *application = findApplication(appId);
     if (!application) { // then shell did not start this application, so ubuntu-app-launch must have - add to list
         auto appInfo = m_taskController->getInfoForApp(appId);
