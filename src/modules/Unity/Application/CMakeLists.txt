@@ -10,6 +10,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/common
     ${GSETTINGS_QT_INCLUDE_DIRS}
+    ${CGMANAGER_INCLUDE_DIRS}
 
     ${LTTNG_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
@@ -25,6 +26,7 @@ add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 set(QMLMIRPLUGIN_SRC
     application_manager.cpp
     application.cpp
+    cgmanager.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp

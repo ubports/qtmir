@@ -15,10 +15,13 @@
  */
 
 #include <QList>
+#include <QSet>
 
 #include "application.h"
 
 namespace qtmir {
+
+class CGManager;
 
 /*
   FIXME: This is a hack to provide OSK with needed info for avoiding input snooping.
@@ -40,9 +43,12 @@ public Q_SLOTS:
     Q_SCRIPTABLE bool isPidFocused(unsigned int pid);
 
 private:
-    SessionInterface* findSessionWithPid(unsigned int uintPid);
+    QSet<pid_t> fetchAssociatedPids(pid_t pid);
+    SessionInterface* findSessionWithPid(const QSet<pid_t> &pidSet);
 
     const QList<Application*> &m_applications;
+
+    CGManager *m_cgManager;
 };
 
 } // namespace qtmir

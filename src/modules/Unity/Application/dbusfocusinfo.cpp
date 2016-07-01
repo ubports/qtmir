@@ -16,6 +16,12 @@
 
 #include "dbusfocusinfo.h"
 
+// local
+#include "cgmanager.h"
+
+// QPA mirserver
+#include <logging.h>
+
 #include <QDBusConnection>
 
 using namespace qtmir;
@@ -25,6 +31,8 @@ DBusFocusInfo::DBusFocusInfo(const QList<Application*> &applications)
 {
     QDBusConnection::sessionBus().registerService("com.canonical.Unity.FocusInfo");
     QDBusConnection::sessionBus().registerObject("/", this, QDBusConnection::ExportScriptableSlots);
+
+    m_cgManager = new CGManager(this);
 }
 
 bool DBusFocusInfo::isPidFocused(unsigned int pid)
@@ -34,22 +42,42 @@ bool DBusFocusInfo::isPidFocused(unsigned int pid)
         // Don't bother checking if it has a QML with activeFocus() which is not a MirSurfaceItem.
         return true;
     } else {
-        SessionInterface *session = findSessionWithPid(pid);
+        auto pidSet = fetchAssociatedPids((pid_t)pid);
+        SessionInterface *session = findSessionWithPid(pidSet);
         return session ? session->activeFocus() : false;
     }
 }
 
-SessionInterface* DBusFocusInfo::findSessionWithPid(unsigned int uintPid)
+QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 {
-    pid_t pid = (pid_t)uintPid;
+    QString cgroup = m_cgManager->getCGroupOfPid("freezer", pid);
+
+    // If a cgroup has a format like this:
+    // /user.slice/user-32011.slice/session-c3.scope/upstart/application-legacy-puritine_gedit_0.0-
+    // All PIds in it are associated with a single application.
+    if (cgroup.split("/").contains("upstart")) {
+        QSet<pid_t> pidSet = m_cgManager->getTasks("freezer", cgroup);
+        qCDebug(QTMIR_DBUS) << "DBusFocusInfo: pid" << pid << "is in cgroup" << cgroup << "along with:" << pidSet;
+        if (pidSet.isEmpty()) {
+            pidSet << pid;
+        }
+        return pidSet;
+    } else {
+        qCDebug(QTMIR_DBUS) << "DBusFocusInfo: pid" << pid << "is in cgroup" << cgroup << "which is not app-specific";
+        return QSet<pid_t>({pid});
+    }
+}
+
+SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
+{
     Q_FOREACH (Application* application, m_applications) {
         auto session = application->session();
-        if (session->pid() == pid) {
+        if (pidSet.contains(session->pid())) {
             return session;
         }
         SessionInterface *chosenChildSession = nullptr;
         session->foreachChildSession([&](SessionInterface* childSession) {
-            if (childSession->pid() == pid) {
+            if (pidSet.contains(childSession->pid())) {
                 chosenChildSession = childSession;
             }
         });
