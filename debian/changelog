@@ -1,3 +1,11 @@
+qtmir (0.4.8+16.10.20160704.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * com.canonical.Unity.FocusInfo D-Bus service for providing focus
+    information
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Mon, 04 Jul 2016 13:58:19 +0000
+
 qtmir (0.4.8+16.10.20160614-0ubuntu1) yakkety; urgency=medium
 
   [ Albert Astals Cid ]
