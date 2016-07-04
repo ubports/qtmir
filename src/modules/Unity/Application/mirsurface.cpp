@@ -886,7 +886,20 @@ void MirSurface::setScreen(QScreen *screen)
 
 bool MirSurface::inputAreaContains(const QPoint &point) const
 {
-    return m_surface->input_area_contains(mir::geometry::Point(point.x(), point.y()));
+    bool result;
+
+
+    // Can't use it due to https://bugs.launchpad.net/mir/+bug/1598936
+    // FIXME: Use the line below instead of m_inputBounds once this bug gets fixed.
+    //result = m_surface->input_area_contains(mir::geometry::Point(point.x(), point.y()));
+
+    if (m_inputBounds.isNull()) {
+        result = true;
+    } else {
+        result = m_inputBounds.contains(point);
+    }
+
+    return result;
 }
 
 void MirSurface::setCursor(const QCursor &cursor)
