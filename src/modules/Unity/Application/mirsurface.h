@@ -121,6 +121,7 @@ public:
     void setFocused(bool focus) override;
 
     void setViewActiveFocus(qintptr viewId, bool value) override;
+    bool activeFocus() const override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
