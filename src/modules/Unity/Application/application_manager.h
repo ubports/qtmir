@@ -49,6 +49,7 @@ namespace unity {
 
 namespace qtmir {
 
+class DBusFocusInfo;
 class DBusWindowStack;
 class MirSurfaceManager;
 class ProcInfo;
@@ -138,6 +139,7 @@ private:
     Application *findApplication(MirSurfaceInterface* surface);
 
     QList<Application*> m_applications;
+    DBusFocusInfo *m_dbusFocusInfo;
     DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;

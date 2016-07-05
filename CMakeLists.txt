@@ -84,8 +84,7 @@ pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=19)
-
-include_directories(${APPLICATION_API_INCLUDE_DIRS})
+pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
