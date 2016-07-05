@@ -1,3 +1,10 @@
+qtmir (0.4.8+16.10.20160705.2-0ubuntu1) yakkety; urgency=medium
+
+  [ Michał Sawicz ]
+  * Don't use root dbus path (LP: #1599145)
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Tue, 05 Jul 2016 19:29:43 +0000
+
 qtmir (0.4.8+16.10.20160704.1-0ubuntu1) yakkety; urgency=medium
 
   [ Daniel d'Andrada ]
