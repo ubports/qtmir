@@ -131,3 +131,17 @@ void StubSession::configure_streams(
 void StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
 {
 }
+
+mir::graphics::BufferID StubSession::create_buffer(mir::graphics::BufferProperties const&)
+{
+    return {};
+}
+
+void StubSession::destroy_buffer(mir::graphics::BufferID)
+{
+}
+
+std::shared_ptr<mir::graphics::Buffer> StubSession::get_buffer(mir::graphics::BufferID)
+{
+    return nullptr;
+}

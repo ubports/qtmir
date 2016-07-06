@@ -197,3 +197,12 @@ void StubSurface::set_keymap(MirInputDeviceId /*id*/, std::string const& /*model
 void StubSurface::rename(std::string const& /*title*/)
 {
 }
+
+void StubSurface::set_confine_pointer_state(MirPointerConfinementState)
+{
+}
+
+MirPointerConfinementState StubSurface::confine_pointer_state() const
+{
+    return mir_pointer_unconfined;
+}
