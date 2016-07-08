@@ -30,7 +30,7 @@ DBusFocusInfo::DBusFocusInfo(const QList<Application*> &applications)
     : m_applications(applications)
 {
     QDBusConnection::sessionBus().registerService("com.canonical.Unity.FocusInfo");
-    QDBusConnection::sessionBus().registerObject("/", this, QDBusConnection::ExportScriptableSlots);
+    QDBusConnection::sessionBus().registerObject("/com/canonical/Unity/FocusInfo", this, QDBusConnection::ExportScriptableSlots);
 
     m_cgManager = new CGManager(this);
 }
