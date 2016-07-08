@@ -42,10 +42,10 @@ static WId newWId()
     return ++id;
 }
 
-ScreenWindow::ScreenWindow(QWindow *window)
+ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
     : QObject(nullptr)
     , QPlatformWindow(window)
-    , m_exposed(false)
+    , m_exposed(exposed)
     , m_primary(false)
     , m_winId(newWId())
 {
@@ -67,6 +67,9 @@ ScreenWindow::ScreenWindow(QWindow *window)
     });
 
     window->setSurfaceType(QSurface::OpenGLSurface);
+
+    // Nick - changing screen will create a new platform surface for the window, and require re-exposure.
+    connect(window, &QWindow::screenChanged, this, &ScreenWindow::updateExpose);
 }
 
 ScreenWindow::~ScreenWindow()
@@ -74,11 +77,19 @@ ScreenWindow::~ScreenWindow()
     DEBUG_MSG << "()";
     disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
     static_cast<Screen *>(screen())->removeWindow(this);
+
+    disconnect(window(), &QWindow::screenChanged, this, &ScreenWindow::updateExpose);
+}
+
+void ScreenWindow::setVisible(bool visible)
+{
+    DEBUG_MSG << "(visible=" << visible << ")";
+    QPlatformWindow::setVisible(visible);
 }
 
 void ScreenWindow::setGeometry(const QRect &rect)
 {
-    DEBUG_MSG << "(" << rect << ")";
+    DEBUG_MSG << "(rect=" << rect << ")";
     QWindowSystemInterface::handleGeometryChange(window(), rect);
     QPlatformWindow::setGeometry(rect);
 }
@@ -110,7 +121,7 @@ void ScreenWindow::updateExpose()
 {
     if (!window())
         return;
-    DEBUG_MSG << "(exposed=" << (m_exposed ? "true" : "false") << ", primary=" << (m_primary ? "true" : "false") << ")";
+    DEBUG_MSG << "(exposed=" << (m_exposed ? "true" : "false") << ", primary=" << (m_primary ? "true" : "false") << ")" << window();
 
     // If backing a QQuickWindow, need to stop/start its renderer immediately
     auto quickWindow = static_cast<QQuickWindow *>(window());
@@ -153,8 +164,6 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
 
 void ScreenWindow::swapBuffers()
 {
-    qDebug() << "swap buffers" << this;
-
     auto scrn = static_cast<Screen *>(screen());
     if (scrn) scrn->swapBuffers();
 }

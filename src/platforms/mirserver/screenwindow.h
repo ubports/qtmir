@@ -28,9 +28,10 @@ class ScreenWindow : public QObject,
 {
     Q_OBJECT
 public:
-    explicit ScreenWindow(QWindow *window);
+    explicit ScreenWindow(QWindow *window, bool exposed);
     virtual ~ScreenWindow();
 
+    void setVisible(bool visible) override;
     void setGeometry(const QRect &rect) override;
 
     bool isExposed() const override;
@@ -44,9 +45,11 @@ public:
     void makeCurrent();
     void doneCurrent();
 
+private Q_SLOTS:
+    void updateExpose();
+
 private:
     void setPrimary(const bool primary);
-    void updateExpose();
 
     bool m_exposed;
     bool m_primary;

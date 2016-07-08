@@ -110,11 +110,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
         return nullptr;
     }
 
-    auto platformWindow = new ScreenWindow(window);
-    if (screens->compositing()) {
-        platformWindow->setExposed(true);
-    }
-    return platformWindow;
+    return new ScreenWindow(window, screens->compositing());
 }
 
 QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow */*window*/) const
