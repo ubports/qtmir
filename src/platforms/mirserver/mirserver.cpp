@@ -57,6 +57,7 @@ MirServer::MirServer(int &argc, char **argv,
                      const QSharedPointer<ScreensModel> &screensModel, QObject* parent)
     : QObject(parent)
     , m_screensModel(screensModel)
+    , m_eventFeeder(std::make_shared<QtEventFeeder>(screensModel))
 {
     bool unknownArgsFound = false;
     set_command_line_handler([&argc, &argv, &unknownArgsFound](int filteredCount, const char* const filteredArgv[]) {
@@ -94,9 +95,9 @@ MirServer::MirServer(int &argc, char **argv,
             return std::make_shared<qtmir::MirCursorImages>();
         });
 
-    override_the_input_dispatcher([&screensModel]
+    override_the_input_dispatcher([this]
         {
-            return std::make_shared<QtEventFeeder>(screensModel);
+            return m_eventFeeder;
         });
 
     override_the_gl_config([]
@@ -203,6 +204,11 @@ mir::shell::Shell *MirServer::shell()
 {
     std::weak_ptr<mir::shell::Shell> m_shell = the_shell();
     return m_shell.lock().get();
+}
+
+QtEventFeeder *MirServer::inputDispatcher()
+{
+    return m_eventFeeder.get();
 }
 
 MirWindowManager *MirServer::windowManager()

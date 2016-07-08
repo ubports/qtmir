@@ -28,7 +28,8 @@ class ScreensModel;
 /*
   Fills Qt's event loop with input events from Mir
  */
-class QtEventFeeder : public mir::input::InputDispatcher
+class QtEventFeeder : public QObject,
+                      public mir::input::InputDispatcher
 {
 public:
     // Interface between QtEventFeeder and the actual QWindowSystemInterface functions
@@ -50,9 +51,6 @@ public:
         virtual void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
-        virtual void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
-                                      Qt::KeyboardModifiers modifiers) = 0;
-        virtual void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) = 0;
     };
 
     QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel);
@@ -67,6 +65,8 @@ public:
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
+
+    bool event(QEvent *event) Q_DECL_OVERRIDE;
 
 private:
     void dispatchKey(MirInputEvent const* event);
@@ -83,6 +83,7 @@ private:
 
     // Maps the id of an active touch to its last known state
     QHash<int, QWindowSystemInterface::TouchPoint> mActiveTouches;
+    Qt::MouseButtons m_buttons;
 };
 
 #endif // MIR_QT_EVENT_FEEDER_H

@@ -44,6 +44,8 @@ void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
             result = server->windowManager();
         else if (resource == "ScreensController")
             result = m_qMirServer->screensController().data();
+        else if (resource == "InputDispatcher")
+            result = server->inputDispatcher();
     }
     return result;
 }

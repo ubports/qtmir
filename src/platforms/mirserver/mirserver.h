@@ -61,10 +61,12 @@ public:
     PromptSessionListener *promptSessionListener();
     MirWindowManager *windowManager();
     mir::shell::Shell *shell();
+    QtEventFeeder *inputDispatcher();
 
 private:
     std::weak_ptr<MirWindowManager> m_windowManager;
     const QSharedPointer<ScreensModel> m_screensModel;
+    std::shared_ptr<QtEventFeeder> m_eventFeeder;
 };
 
 #endif // MIRSERVER_H
