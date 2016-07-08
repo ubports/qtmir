@@ -23,8 +23,10 @@
 // QtMir enforces one Window per Screen, so Window and Screen are tightly coupled.
 // All Mir specifics live in the associated Screen object.
 
-class ScreenWindow : public QPlatformWindow
+class ScreenWindow : public QObject,
+                     public QPlatformWindow
 {
+    Q_OBJECT
 public:
     explicit ScreenWindow(QWindow *window);
     virtual ~ScreenWindow();
@@ -43,7 +45,11 @@ public:
     void doneCurrent();
 
 private:
+    void setPrimary(const bool primary);
+    void updateExpose();
+
     bool m_exposed;
+    bool m_primary;
     WId m_winId;
 };
 

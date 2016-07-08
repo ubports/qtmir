@@ -30,7 +30,7 @@
 
 #include "logging.h"
 
-#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreenWindow[" << this <<"]::" << __func__
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreenWindow[" << (void*)this <<"]::" << __func__
 
 static WId newWId()
 {
@@ -43,8 +43,10 @@ static WId newWId()
 }
 
 ScreenWindow::ScreenWindow(QWindow *window)
-    : QPlatformWindow(window)
+    : QObject(nullptr)
+    , QPlatformWindow(window)
     , m_exposed(false)
+    , m_primary(false)
     , m_winId(newWId())
 {
     const auto platformScreen = static_cast<Screen *>(screen());
@@ -57,14 +59,21 @@ ScreenWindow::ScreenWindow(QWindow *window)
               << ", outputId=" << platformScreen->outputId().as_value()
               << ", geometry=" << screenGeometry;
 
-    platformScreen->setWindow(this);
+    platformScreen->addWindow(this);
+
+    m_primary = platformScreen->primaryWindow() == this;
+    connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
+        setPrimary(primaryWindow == this);
+    });
+
     window->setSurfaceType(QSurface::OpenGLSurface);
 }
 
 ScreenWindow::~ScreenWindow()
 {
     DEBUG_MSG << "()";
-    static_cast<Screen *>(screen())->setWindow(nullptr);
+    disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
+    static_cast<Screen *>(screen())->removeWindow(this);
 }
 
 void ScreenWindow::setGeometry(const QRect &rect)
@@ -76,18 +85,32 @@ void ScreenWindow::setGeometry(const QRect &rect)
 
 bool ScreenWindow::isExposed() const
 {
-    return m_exposed;
+    return m_exposed && m_primary;
 }
 
 void ScreenWindow::setExposed(const bool exposed)
 {
-    DEBUG_MSG << "(exposed=" << (exposed ? "true" : "false") << ")";
     if (m_exposed == exposed)
         return;
 
     m_exposed = exposed;
+    updateExpose();
+}
+
+void ScreenWindow::setPrimary(const bool primary)
+{
+    if (m_primary == primary)
+        return;
+
+    m_primary = primary;
+    updateExpose();
+}
+
+void ScreenWindow::updateExpose()
+{
     if (!window())
         return;
+    DEBUG_MSG << "(exposed=" << (m_exposed ? "true" : "false") << ", primary=" << (m_primary ? "true" : "false") << ")";
 
     // If backing a QQuickWindow, need to stop/start its renderer immediately
     auto quickWindow = static_cast<QQuickWindow *>(window());
@@ -95,10 +118,11 @@ void ScreenWindow::setExposed(const bool exposed)
         return;
 
     auto renderer = QSGRenderLoop::instance();
-    if (exposed) {
+    if (isExposed()) {
         renderer->show(quickWindow);
         QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
     } else {
+        // set to non-persistent so we re-create when exposed. // NICK - why?
         quickWindow->setPersistentOpenGLContext(false);
         quickWindow->setPersistentSceneGraph(false);
         renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
@@ -113,26 +137,36 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
 
     // Dis-associate the old screen
     if (screen()) {
-        static_cast<Screen *>(screen())->setWindow(nullptr);
+        disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
+        static_cast<Screen *>(screen())->removeWindow(this);
     }
     // Associate new screen and announce to Qt
-    platformScreen->setWindow(this);
+    platformScreen->addWindow(this);
+    setPrimary(platformScreen->primaryWindow() == this);
+
+    connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
+        setPrimary(primaryWindow == this);
+    });
 
     QWindowSystemInterface::handleWindowScreenChanged(window(), platformScreen->screen());
-    setExposed(true); //GERRY - assumption setScreen only called while compositor running
 }
 
 void ScreenWindow::swapBuffers()
 {
-    static_cast<Screen *>(screen())->swapBuffers();
+    qDebug() << "swap buffers" << this;
+
+    auto scrn = static_cast<Screen *>(screen());
+    if (scrn) scrn->swapBuffers();
 }
 
 void ScreenWindow::makeCurrent()
 {
-    static_cast<Screen *>(screen())->makeCurrent();
+    auto scrn = static_cast<Screen *>(screen());
+    if (scrn) scrn->makeCurrent();
 }
 
 void ScreenWindow::doneCurrent()
 {
-    static_cast<Screen *>(screen())->doneCurrent();
+    auto scrn = static_cast<Screen *>(screen());
+    if (scrn) scrn->doneCurrent();
 }

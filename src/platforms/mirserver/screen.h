@@ -54,6 +54,7 @@ public:
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
     QPlatformCursor *cursor() const override;
     QString name() const override;
+    QWindow *topLevelAt(const QPoint &point) const;
 
     float scale() const { return m_scale; }
     MirFormFactor formFactor() const { return m_formFactor; }
@@ -65,7 +66,8 @@ public:
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
     uint32_t preferredModeIndex() const { return m_preferredModeIndex; }
 
-    ScreenWindow* window() const;
+    const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
+    ScreenWindow* primaryWindow() const;
 
     // QObject methods.
     void customEvent(QEvent* event) override;
@@ -74,12 +76,16 @@ public:
     static bool skipDBusRegistration;
     bool orientationSensorEnabled();
 
+Q_SIGNALS:
+    void primaryWindowChanged(ScreenWindow* window);
+
 public Q_SLOTS:
    void onDisplayPowerStateChanged(int, int);
    void onOrientationReadingChanged();
 
 protected:
-    void setWindow(ScreenWindow *window);
+    void addWindow(ScreenWindow *window);
+    void removeWindow(ScreenWindow *window);
 
     void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
@@ -115,7 +121,7 @@ private:
     Qt::ScreenOrientation m_currentOrientation;
     QOrientationSensor *m_orientationSensor;
 
-    ScreenWindow *m_screenWindow;
+    QVector<ScreenWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
 
     qtmir::Cursor m_cursor;

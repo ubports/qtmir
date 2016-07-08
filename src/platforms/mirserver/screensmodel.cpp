@@ -121,21 +121,22 @@ void ScreensModel::update()
                         m_screenList.append(screen);
                     } else {
                         // no, need to delete it and re-create with new config
-                        auto newScreen = createScreen(output);
-                        newScreenList.append(newScreen);
                         DEBUG_MSG << "() - recreating screen for output=" << output.id.as_value();
 
+                        auto newScreen = createScreen(output);
+                        newScreenList.append(newScreen);
+
                         // if Window on this Screen, arrange to move it to the new Screen
-                        if (screen->window()) {
-                            windowMoveList.insert(screen->window(), newScreen);
+                        Q_FOREACH (ScreenWindow* window, screen->windows()) {
+                            windowMoveList.insert(window, newScreen);
                         }
                         m_screenList.append(newScreen);
                     }
                 } else {
+                    DEBUG_MSG << "() - new screen for output=" << output.id.as_value();
                     // new display, so create Screen for it
                     screen = createScreen(output);
                     newScreenList.append(screen);
-                    DEBUG_MSG << "() - new screen for output=" << output.id.as_value();
                     m_screenList.append(screen);
                 }
             }
@@ -159,9 +160,11 @@ void ScreensModel::update()
     for (auto screen: oldScreenList) {
         DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
                                << " and geometry " << screen->geometry();
-        auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window() && window->isExposed()) {
-            window->window()->hide();
+
+        Q_FOREACH (ScreenWindow* window, screen->windows()) {
+            if (window->window() && window->isExposed()) {
+                window->window()->hide();
+            }
         }
         bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
         if (!ok) {
@@ -192,7 +195,7 @@ void ScreensModel::update()
     for (auto screen: m_screenList) {
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
-                               << "window:" << screen->window()
+                               << "window:" << screen->primaryWindow()
                                << "type:" << screen->name()
                                << "scale:" << screen->scale();
     }
@@ -217,8 +220,7 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
     for (const auto screen : m_screenList) {
-        const auto window = static_cast<ScreenWindow *>(screen->window());
-        if (window && window->window()) {
+        Q_FOREACH (ScreenWindow* window, screen->windows()) {
             window->setExposed(exposed);
         }
     }
@@ -243,13 +245,14 @@ QWindow* ScreensModel::getWindowForPoint(const QPoint &point) //FIXME - not thre
 {
     // This is a part optimization, and a part work-around for AP generated input events occasionally
     // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
-    if (m_screenList.length() == 1 && m_screenList.first()->window()) {
-        return m_screenList.first()->window()->window();
+    if (m_screenList.length() == 1) {
+        auto primaryWindow = m_screenList.first()->primaryWindow();
+        if (primaryWindow) return primaryWindow->window();
     }
 
     for (Screen *screen : m_screenList) {
-        if (screen->window() && screen->geometry().contains(point)) {
-            return screen->window()->window();
+        if (screen->primaryWindow() && screen->geometry().contains(point)) {
+            return screen->primaryWindow()->window();
         }
     }
     return nullptr;

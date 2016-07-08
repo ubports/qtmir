@@ -150,7 +150,6 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
-    , m_screenWindow(nullptr)
     , m_unityScreen(nullptr)
 {
     setMirDisplayConfiguration(screen, false);
@@ -191,8 +190,8 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
 Screen::~Screen()
 {
     //if a ScreenWindow associated with this screen, kill it
-    if (m_screenWindow) {
-        m_screenWindow->window()->destroy(); // ends up destroying m_ScreenWindow
+    Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+        window->window()->destroy(); // ends up destroying window
     }
 }
 
@@ -254,8 +253,8 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
             QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
         }
 
-        if (m_screenWindow) { // resize corresponding window immediately
-            m_screenWindow->setGeometry(m_geometry);
+        Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+            window->setGeometry(m_geometry);
         }
     }
 
@@ -272,19 +271,22 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // as there is no convenient way to emit signals for those custom properties on a QScreen
     m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
-    auto w = window(); // usually there is no Window associated with this Screen at this time.
     auto nativeInterface = qGuiApp->platformNativeInterface();
     if (screen.form_factor != m_formFactor) {
         m_formFactor = screen.form_factor;
-        if (w && notify) {
-            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("formFactor"));
+        if (notify) {
+            Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+                Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("formFactor"));
+            }
         }
     }
 
     if (!qFuzzyCompare(screen.scale, m_scale)) {
         m_scale = screen.scale;
-        if (w && notify) {
-            Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("scale"));
+        if (notify) {
+            Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+                Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("scale"));
+            }
         }
     }
 }
@@ -357,22 +359,54 @@ QString Screen::name() const
     return displayTypeToString(m_type);
 }
 
-ScreenWindow *Screen::window() const
+QWindow *Screen::topLevelAt(const QPoint &point) const
 {
-    return m_screenWindow;
+    QVector<ScreenWindow*>::const_iterator screen = m_screenWindows.constBegin();
+    QVector<ScreenWindow*>::const_iterator end = m_screenWindows.constEnd();
+
+    while (screen != end) {
+        QWindow* window = (*screen)->window();
+        if (window) {
+            if (window->geometry().contains(point)) return window;
+        }
+        screen++;
+    }
+    return nullptr;
 }
 
-void Screen::setWindow(ScreenWindow *window)
+ScreenWindow *Screen::primaryWindow() const
 {
+    return m_screenWindows.value(0, nullptr);
+}
+
+void Screen::addWindow(ScreenWindow *window)
+{
+    if (!window || m_screenWindows.contains(window)) return;
     DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
-    m_screenWindow = window;
+    m_screenWindows.push_back(window);
 
-    if (m_screenWindow) {
-        auto nativeInterface = qGuiApp->platformNativeInterface();
-        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("formFactor"));
-        Q_EMIT nativeInterface->windowPropertyChanged(m_screenWindow, QStringLiteral("scale"));
+    auto nativeInterface = qGuiApp->platformNativeInterface();
+    Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("formFactor"));
+    Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("scale"));
 
-        m_screenWindow->setGeometry(geometry());
+    window->setGeometry(geometry());
+
+    if (m_screenWindows.count() > 1) {
+        DEBUG_MSG_SCREENS << "() - secondary window added to screen.";
+    } else {
+        primaryWindowChanged(m_screenWindows.at(0));
+    }
+}
+
+void Screen::removeWindow(ScreenWindow *window)
+{
+    int index = m_screenWindows.indexOf(window);
+    if (index >= 0) {
+        DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
+        m_screenWindows.remove(index);
+        if (index == 0) {
+            Q_EMIT primaryWindowChanged(m_screenWindows.value(0, nullptr));
+        }
     }
 }
 
