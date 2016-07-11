@@ -207,8 +207,11 @@ void MirSurfaceItem::ensureTextureProvider()
         return;
     }
 
+    const qintptr userId = (qintptr)window();
+    if (!userId) return;
+
     if (!m_textureProvider) {
-        m_textureProvider = new MirTextureProvider(m_surface->texture());
+        m_textureProvider = new MirTextureProvider(m_surface->texture(userId));
 
     // Check that the item is indeed using the texture from the MirSurface it currently holds
     // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
@@ -217,8 +220,8 @@ void MirSurfaceItem::ensureTextureProvider()
     //
     // Also note that m_surface->weakTexture() will return null if m_surface->texture() was never
     // called before.
-    } else if (!m_textureProvider->texture() || m_textureProvider->texture() != m_surface->weakTexture()) {
-        m_textureProvider->setTexture(m_surface->texture());
+    } else if (!m_textureProvider->texture() || m_textureProvider->texture() != m_surface->weakTexture(userId)) {
+        m_textureProvider->setTexture(m_surface->texture(userId));
     }
 }
 
@@ -236,12 +239,14 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     ensureTextureProvider();
 
-    if (!m_textureProvider->texture() || !m_surface->updateTexture()) {
+    const qintptr userId = (qintptr)window();
+
+    if (!userId || !m_textureProvider->texture() || !m_surface->updateTexture(userId)) {
         delete oldNode;
         return 0;
     }
 
-    if (m_surface->numBuffersReadyForCompositor() > 0) {
+    if (m_surface->numBuffersReadyForCompositor(userId) > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
     }
 
@@ -254,7 +259,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
     } else {
-        if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber())) {
+        if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber(userId))) {
             node->markDirty(QSGNode::DirtyMaterial);
         }
     }
@@ -288,7 +293,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (!m_lastFrameNumberRendered) {
         m_lastFrameNumberRendered = new unsigned int;
     }
-    *m_lastFrameNumberRendered = m_surface->currentFrameNumber();
+    *m_lastFrameNumberRendered = m_surface->currentFrameNumber(userId);
 
     return node;
 }

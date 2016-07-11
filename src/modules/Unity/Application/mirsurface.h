@@ -111,11 +111,11 @@ public:
     void setViewVisibility(qintptr viewId, bool visible) override;
 
     // methods called from the rendering (scene graph) thread:
-    QSharedPointer<QSGTexture> texture() override;
-    QSGTexture *weakTexture() const override { return m_texture.data(); }
-    bool updateTexture() override;
-    unsigned int currentFrameNumber() const override;
-    bool numBuffersReadyForCompositor() override;
+    QSharedPointer<QSGTexture> texture(qintptr userId) override;
+    QSGTexture *weakTexture(qintptr userId) const override;
+    bool updateTexture(qintptr userId) override;
+    unsigned int currentFrameNumber(qintptr userId) const override;
+    bool numBuffersReadyForCompositor(qintptr userId) override;
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;
@@ -196,10 +196,17 @@ private:
 
     mutable QMutex m_mutex;
 
-    // Lives in the rendering (scene graph) thread
-    QWeakPointer<QSGTexture> m_texture;
-    bool m_textureUpdated;
-    unsigned int m_currentFrameNumber;
+    struct WindowTexture {
+        WindowTexture(): textureUpdated(false),currentFrameNumber(0) {}
+        // Lives in the rendering (scene graph) thread
+        QWeakPointer<QSGTexture> texture;
+        bool textureUpdated;
+        unsigned int currentFrameNumber;
+    };
+    QHash<qintptr, WindowTexture*> m_textures;
+
+//    QWeakPointer<QSGTexture> m_texture;
+//    bool m_textureUpdated;
 
     bool m_live;
     struct View {
