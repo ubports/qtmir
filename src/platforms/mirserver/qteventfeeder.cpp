@@ -395,7 +395,7 @@ public:
         return QGuiApplication::focusWindow();
     }
 
-    QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
+    QWindow* getWindowForPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
         return m_screensModel->getWindowForPoint(point);
     }
@@ -554,7 +554,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         auto type = action == mir_pointer_action_motion ? QEvent::MouseMove
                                                         : action == mir_pointer_action_button_up ? QEvent::MouseButtonRelease
-                                                                                                 : QEvent::MouseButtonRelease;
+                                                                                                 : QEvent::MouseButtonPress;
 
         Qt::MouseButtons stateChange = m_buttons ^ buttons;
         Qt::MouseButton button = Qt::NoButton;
@@ -660,7 +660,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     QWindow *window = nullptr;
 
     if (kPointerCount > 0) {
-        window = mQtWindowSystem->getWindowForTouchPoint(
+        window = mQtWindowSystem->getWindowForPoint(
                     QPoint(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                            mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
 
@@ -738,24 +738,58 @@ bool QtEventFeeder::event(QEvent *e)
         QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
 
         QWheelEvent* we = static_cast<QWheelEvent*>(e);
-        QWindowSystemInterface::handleWheelEvent(nullptr, we->timestamp(), we->pos(), we->globalPos(),
-                we->pixelDelta(), we->angleDelta(), we->modifiers(), Qt::ScrollUpdate);
+        QWindowSystemInterface::handleWheelEvent(nullptr, // let app handle window resolution
+                                                 we->timestamp(),
+                                                 we->pos(),
+                                                 we->globalPos(),
+                                                 we->pixelDelta(),
+                                                 we->angleDelta(),
+                                                 we->modifiers(),
+                                                 Qt::ScrollUpdate);
 
         QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
         return true;
     } break;
+
     case QEvent::MouseMove:
-    case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
     {
         QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
 
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
-        QWindowSystemInterface::handleMouseEvent(nullptr, me->timestamp(), me->localPos(), me->globalPos(), me->buttons(), me->modifiers());
+        QWindowSystemInterface::handleMouseEvent(nullptr, // let app handle window resolution
+                                                 me->timestamp(),
+                                                 me->localPos(),
+                                                 me->globalPos(),
+                                                 me->buttons(),
+                                                 me->modifiers());
 
         QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
         return true;
     } break;
+
+    case QEvent::MouseButtonPress:
+    {
+        QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
+
+        QMouseEvent* me = static_cast<QMouseEvent*>(e);
+
+        // need to activate the window first.
+        QWindow *window = mQtWindowSystem->getWindowForPoint(me->globalPos());
+        if (window && !window->isActive() && !window->flags().testFlag(Qt::WindowDoesNotAcceptFocus)) {
+            window->requestActivate();
+        }
+
+        QWindowSystemInterface::handleMouseEvent(nullptr, // let app handle window resolution
+                                                 me->timestamp(),
+                                                 me->localPos(),
+                                                 me->globalPos(),
+                                                 me->buttons(),
+                                                 me->modifiers());
+
+        QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
+        break;
+    }
     default:
         break;
     }
