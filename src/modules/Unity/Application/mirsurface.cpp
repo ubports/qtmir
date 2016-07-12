@@ -41,10 +41,10 @@
 #include <QQmlEngine>
 #include <QScreen>
 
-using namespace qtmir;
-
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
 #define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
+
+namespace qtmir {
 
 namespace {
 
@@ -177,6 +177,33 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 }
 
 } // namespace {
+
+class CompositorTexture
+{
+public:
+    CompositorTexture()
+        : m_currentFrameNumber(0)
+        , m_textureUpdated(false)
+    {
+    }
+
+    const QWeakPointer<QSGTexture>& texture() const { return m_texture; }
+    void setTexture(const QWeakPointer<QSGTexture>& texture) {
+        m_texture = texture;
+    }
+
+    int curentFrame() const { return m_currentFrameNumber; }
+    void incrementFrame() { m_currentFrameNumber++; }
+
+    bool isUpToDate() const { return m_textureUpdated; }
+    void setUpToDate(bool updated) { m_textureUpdated = updated; }
+
+private:
+    QWeakPointer<QSGTexture> m_texture;
+    int m_currentFrameNumber;
+    bool m_textureUpdated;
+};
+
 
 MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         SessionInterface* session,
@@ -332,14 +359,13 @@ void MirSurface::dropPendingBuffer()
     auto end = m_textures.constEnd();
     for (auto iter = m_textures.constBegin(); iter != end; ++iter) {
         const qintptr userId = iter.key();
-        WindowTexture* windowTexture = iter.value();
+        CompositorTexture* compositorTexture = iter.value();
 
         int framesPending = m_surface->buffers_ready_for_compositor((void*)userId);
         if (framesPending > 0) {
-            windowTexture->textureUpdated = false;
+            compositorTexture->setUpToDate(false);
 
-            locker.unlock();
-            if (updateTexture(userId)) {
+            if (updateTextureLocked(userId, compositorTexture)) {
                 allStop &= false;
                 DEBUG_MSG << "() dropped=1 left=" << framesPending-1;
             } else {
@@ -380,63 +406,35 @@ QSharedPointer<QSGTexture> MirSurface::texture(qintptr userId)
 {
     QMutexLocker locker(&m_mutex);
 
-    if (!m_textures.contains(userId) || !m_textures.value(userId)->texture) {
+    CompositorTexture* compositorTexture = compositorTextureForId(userId);
+    if (!compositorTexture || !compositorTexture->texture()) {
         QSharedPointer<QSGTexture> texture(new MirBufferSGTexture);
-        WindowTexture* windowTexture(new WindowTexture);
-        windowTexture->texture = texture.toWeakRef();
-        m_textures[userId] = windowTexture;
+        if (!compositorTexture) {
+            compositorTexture = new CompositorTexture();
+            m_textures[userId] = compositorTexture;
+        }
+        compositorTexture->setTexture(texture);
         return texture;
     } else {
-        return m_textures.value(userId)->texture.toStrongRef();
+        return compositorTexture->texture();
     }
 }
 
 QSGTexture *MirSurface::weakTexture(qintptr userId) const
 {
     QMutexLocker locker(&m_mutex);
-    if (!m_textures.contains(userId)) return nullptr;
-    return m_textures.value(userId)->texture.data();
+    auto compositorTexure = compositorTextureForId(userId);
+    return compositorTexure ? compositorTexure->texture().data() : nullptr;
 }
 
 bool MirSurface::updateTexture(qintptr userId)
 {
     QMutexLocker locker(&m_mutex);
 
-    if (!m_textures.contains(userId)) return false;
-    WindowTexture* windowTexture = m_textures.value(userId);
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(windowTexture->texture.data());
-    if (!texture) return false;
+    auto compositorTexure = compositorTextureForId(userId);
+    if (!compositorTexure) return false;
 
-    if (windowTexture->textureUpdated) {
-        return texture->hasBuffer();
-    }
-
-    auto renderables = m_surface->generate_renderables((void*)userId);
-
-    if (renderables.size() > 0 &&
-            (m_surface->buffers_ready_for_compositor((void*)userId) > 0 || !texture->hasBuffer())
-        ) {
-        // Avoid holding two buffers for the compositor at the same time. Thus free the current
-        // before acquiring the next
-        texture->freeBuffer();
-        texture->setBuffer(renderables[0]->buffer());
-        windowTexture->currentFrameNumber++;
-
-        if (texture->textureSize() != m_size) {
-            m_size = texture->textureSize();
-            QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
-        }
-
-        windowTexture->textureUpdated = true;
-    }
-
-    if (m_surface->buffers_ready_for_compositor((void*)userId) > 0) {
-        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
-        // queued since the timer lives in a different thread
-        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
-    }
-
-    return texture->hasBuffer();
+    return updateTextureLocked(userId, compositorTexure);
 }
 
 bool MirSurface::numBuffersReadyForCompositor(qintptr userId)
@@ -450,7 +448,7 @@ void MirSurface::onCompositorSwappedBuffers()
     QMutexLocker locker(&m_mutex);
 
     Q_FOREACH(auto windowTexture, m_textures) {
-        windowTexture->textureUpdated = false;
+        windowTexture->setUpToDate(false);
     }
 }
 
@@ -496,6 +494,48 @@ void MirSurface::updateActiveFocus()
     }
 
     m_neverSetSurfaceFocus = false;
+}
+
+CompositorTexture *MirSurface::compositorTextureForId(qintptr userId) const
+{
+    return m_textures.value(userId, nullptr);
+}
+
+bool MirSurface::updateTextureLocked(qintptr userId, CompositorTexture *compositorTexture)
+{    
+    auto texture = qWeakPointerCast<MirBufferSGTexture, QSGTexture>(compositorTexture->texture()).lock();
+    if (!texture) return false;
+
+    if (compositorTexture->isUpToDate()) {
+        return texture->hasBuffer();
+    }
+
+    auto renderables = m_surface->generate_renderables((void*)userId);
+
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor((void*)userId) > 0 || !texture->hasBuffer())
+        ) {
+        // Avoid holding two buffers for the compositor at the same time. Thus free the current
+        // before acquiring the next
+        texture->freeBuffer();
+        texture->setBuffer(renderables[0]->buffer());
+        compositorTexture->incrementFrame();
+
+        if (texture->textureSize() != m_size) {
+            m_size = texture->textureSize();
+            QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+        }
+
+        compositorTexture->setUpToDate(true);
+    }
+
+    if (m_surface->buffers_ready_for_compositor((void*)userId) > 0) {
+        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+        // queued since the timer lives in a different thread
+        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+    }
+
+    return texture->hasBuffer();
 }
 
 void MirSurface::close()
@@ -808,8 +848,8 @@ void MirSurface::updateVisibility()
 unsigned int MirSurface::currentFrameNumber(qintptr userId) const
 {
     QMutexLocker locker(&m_mutex);
-    if (!m_textures.contains(userId)) return 0;
-    return m_textures.value(userId)->currentFrameNumber;
+    auto compositorTexure = compositorTextureForId(userId);
+    return compositorTexure ? compositorTexure->curentFrame() : 0;
 }
 
 void MirSurface::onSessionDestroyed()
@@ -1034,3 +1074,5 @@ void MirSurface::setCloseTimer(AbstractTimer *timer)
         m_closeTimer->start();
     }
 }
+
+} // namespace qtmir

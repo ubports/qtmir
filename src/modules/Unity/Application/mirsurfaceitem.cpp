@@ -37,7 +37,6 @@
 #include <private/qsgdefaultimagenode_p.h>
 #include <QTimer>
 #include <QSGTextureProvider>
-
 #include <QRunnable>
 
 namespace qtmir {
@@ -61,14 +60,15 @@ class MirTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    MirTextureProvider(QSharedPointer<QSGTexture> texture) : t(texture) {}
-    QSGTexture *texture() const {
-        if (t)
-            t->setFiltering(smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+    MirTextureProvider(QQuickItem* item, QSharedPointer<QSGTexture> texture)
+        : t(texture)
+        , m_item(item)
+    {
+        connect(item, &QQuickItem::smoothChanged, this, &MirTextureProvider::updateSmooth);
+    }
+    QSGTexture *texture() const override {
         return t.data();
     }
-
-    bool smooth{false};
 
     void releaseTexture() {
         t.reset();
@@ -76,10 +76,19 @@ public:
 
     void setTexture(QSharedPointer<QSGTexture> newTexture) {
         t = newTexture;
+        updateSmooth();
+    }
+
+private Q_SLOTS:
+    void updateSmooth() {
+        if (m_item && t) {
+            t->setFiltering(m_item->smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
+        }
     }
 
 private:
     QSharedPointer<QSGTexture> t;
+    QPointer<QQuickItem> m_item;
 };
 
 MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
@@ -211,7 +220,7 @@ void MirSurfaceItem::ensureTextureProvider()
     if (!userId) return;
 
     if (!m_textureProvider) {
-        m_textureProvider = new MirTextureProvider(m_surface->texture(userId));
+        m_textureProvider = new MirTextureProvider(this, m_surface->texture(userId));
 
     // Check that the item is indeed using the texture from the MirSurface it currently holds
     // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
@@ -234,7 +243,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             m_textureProvider->releaseTexture();
         }
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     ensureTextureProvider();
@@ -243,14 +252,12 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     if (!userId || !m_textureProvider->texture() || !m_surface->updateTexture(userId)) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     if (m_surface->numBuffersReadyForCompositor(userId) > 0) {
         QTimer::singleShot(0, this, SLOT(update()));
     }
-
-    m_textureProvider->smooth = smooth();
 
     QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
     if (!node) {
@@ -263,10 +270,11 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
             node->markDirty(QSGNode::DirtyMaterial);
         }
     }
-    node->setTexture(m_textureProvider->texture());
+    auto texture = m_textureProvider->texture();
+    node->setTexture(texture);
 
     if (m_fillMode == PadOrCrop) {
-        const QSize &textureSize = m_textureProvider->texture()->textureSize();
+        const QSize &textureSize = texture->textureSize();
 
         QRectF targetRect;
         targetRect.setWidth(qMin(width(), static_cast<qreal>(textureSize.width())));
@@ -476,7 +484,6 @@ bool MirSurfaceItem::processTouchEvent(
         const QList<QTouchEvent::TouchPoint> &touchPoints,
         Qt::TouchPointStates touchPointStates)
 {
-
     if (!m_consumesInput || !m_surface || !m_surface->live()) {
         return false;
     }

@@ -47,6 +47,7 @@ class SurfaceObserver;
 namespace qtmir {
 
 class AbstractTimer;
+class CompositorTexture;
 
 class MirSurface : public MirSurfaceInterface
 {
@@ -184,6 +185,9 @@ private:
     void applyKeymap();
     void updateActiveFocus();
 
+    CompositorTexture* compositorTextureForId(qintptr userId) const;
+    bool updateTextureLocked(qintptr userId, CompositorTexture* compositorTexture);
+
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
     mir::shell::Shell *const m_shell;
@@ -196,14 +200,7 @@ private:
 
     mutable QMutex m_mutex;
 
-    struct WindowTexture {
-        WindowTexture(): textureUpdated(false),currentFrameNumber(0) {}
-        // Lives in the rendering (scene graph) thread
-        QWeakPointer<QSGTexture> texture;
-        bool textureUpdated;
-        unsigned int currentFrameNumber;
-    };
-    QHash<qintptr, WindowTexture*> m_textures;
+    QHash<qintptr, CompositorTexture*> m_textures;
 
 //    QWeakPointer<QSGTexture> m_texture;
 //    bool m_textureUpdated;
