@@ -76,6 +76,7 @@ public:
     Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
 
     bool focused() const override { return false; }
+    QRect inputBounds() const override { return QRect(0,0,10,10); }
 
     void requestFocus() override {
         Q_EMIT focusRequested();
@@ -84,8 +85,6 @@ public:
     void close() override {
         Q_EMIT closeRequested();
     }
-
-    void setScreen(QScreen *) override {}
 
     void raise() override {}
 
@@ -133,7 +132,11 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
+    void setScreen(QScreen *) override {}
+
     SessionInterface* session() override { return m_session; }
+
+    bool inputAreaContains(const QPoint &) const override { return true; }
 
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
