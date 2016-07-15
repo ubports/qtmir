@@ -514,6 +514,23 @@ bool Session::hadSurface() const
     return m_hadSurface;
 }
 
+bool Session::activeFocus() const
+{
+    for (int i = 0; i < m_surfaceList.count(); ++i) {
+        auto surface = static_cast<const MirSurfaceInterface*>(m_surfaceList.get(i));
+        if (surface->activeFocus()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+pid_t Session::pid() const
+{
+    return m_session->process_id();
+}
+
 void Session::setSuspendTimer(AbstractTimer *timer)
 {
     bool timerWasRunning = false;

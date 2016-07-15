@@ -18,6 +18,7 @@
 #include "application.h"
 #include "applicationinfo.h"
 #include "application_manager.h"
+#include "mirsurfaceinterface.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "timer.h"

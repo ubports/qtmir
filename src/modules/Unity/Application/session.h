@@ -67,6 +67,10 @@ public:
     bool hadSurface() const override;
     bool hasClosingSurfaces() const override;
 
+    bool activeFocus() const override;
+
+    pid_t pid() const override;
+
     void addChildSession(SessionInterface* session) override;
     void insertChildSession(uint index, SessionInterface* session) override;
     void removeChildSession(SessionInterface* session) override;
