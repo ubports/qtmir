@@ -58,6 +58,10 @@ public:
 
     void close() override;
 
+    bool activeFocus() const override { return false; }
+
+    pid_t pid() const override { return 0; }
+
     // For SessionManager use
 
     void addChildSession(SessionInterface*) override;
