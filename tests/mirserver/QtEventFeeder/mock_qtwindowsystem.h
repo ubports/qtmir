@@ -25,7 +25,7 @@ class MockQtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
 public:
     MOCK_CONST_METHOD0(ready, bool());
     MOCK_METHOD1(setScreensModel, void(const QSharedPointer<ScreensModel> &));
-    MOCK_METHOD1(getWindowForTouchPoint, QWindow*(const QPoint &point));
+    MOCK_METHOD1(getWindowForPoint, QWindow*(const QPoint &point));
     MOCK_METHOD0(lastWindow, QWindow*());
     MOCK_METHOD0(focusedWindow, QWindow*());
 
