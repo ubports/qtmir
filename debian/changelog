@@ -1,3 +1,10 @@
+qtmir (0.4.8+16.10.20160712-0ubuntu1) yakkety; urgency=medium
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Build the qtmir-android package for arm64 as well.
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Tue, 12 Jul 2016 13:39:51 +0000
+
 qtmir (0.4.8+16.10.20160705.2-0ubuntu1) yakkety; urgency=medium
 
   [ Michał Sawicz ]
