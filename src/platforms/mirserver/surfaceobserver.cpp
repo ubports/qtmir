@@ -131,6 +131,11 @@ void SurfaceObserver::resized_to(mir::geometry::Size const&size)
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
 }
 
+void SurfaceObserver::moved_to(mir::geometry::Point const &top_left)
+{
+    Q_EMIT moved(QPoint(top_left.x.as_int(), top_left.y.as_int()));
+}
+
 void SurfaceObserver::notifySurfaceModifications(const mir::shell::SurfaceSpecification &modifications)
 {
     if (modifications.min_width.is_set()) {

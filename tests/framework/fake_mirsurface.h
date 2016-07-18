@@ -53,6 +53,9 @@ public:
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override;
     QString name() const override;
+    QPoint topLeft() const override;
+    void moveTo(int x, int y) override;
+    void moveTo(const QPoint &topLeft) override;
     QSize size() const override;
     void resize(int width, int height) override;
     void resize(const QSize &size) override;
@@ -102,11 +105,11 @@ public:
     void unregisterView(qintptr viewId) override;
 
     // methods called from the rendering (scene graph) thread:
-    QSharedPointer<QSGTexture> texture() override;
-    QSGTexture *weakTexture() const override;
-    bool updateTexture() override;
-    unsigned int currentFrameNumber() const override;
-    bool numBuffersReadyForCompositor() override;
+    QSharedPointer<QSGTexture> texture(qintptr) override;
+    QSGTexture *weakTexture(qintptr) const override;
+    bool updateTexture(qintptr) override;
+    unsigned int currentFrameNumber(qintptr) const override;
+    bool numBuffersReadyForCompositor(qintptr) override;
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;
@@ -144,6 +147,7 @@ public Q_SLOTS:
     void setWidthIncrement(int) {}
     void setHeightIncrement(int) {}
     void setShellChrome(Mir::ShellChrome) override {}
+    void setTopLeft(const QPoint&) override {}
 
     ////
     // Test API from now on
@@ -168,6 +172,7 @@ private:
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
     bool m_visible;
+    QPoint m_topLeft;
     QSize m_size;
     QHash<int, bool> m_views;
     bool m_focused;

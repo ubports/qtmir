@@ -244,6 +244,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
         connect(observer.get(), &SurfaceObserver::shellChromeChanged, this, [&](MirShellChrome shell_chrome) {
             setShellChrome(static_cast<Mir::ShellChrome>(shell_chrome));
         });
+        connect(observer.get(), &SurfaceObserver::moved, this, &MirSurface::setTopLeft);
         observer->setListener(this);
     }
 
@@ -552,6 +553,26 @@ void MirSurface::close()
 
     if (m_surface) {
         m_surface->request_client_surface_close();
+    }
+}
+
+QPoint MirSurface::topLeft() const
+{
+    return m_topLeft;
+}
+
+void MirSurface::moveTo(int x, int y)
+{
+    int mirX = m_surface->top_left().x.as_int();
+    int mirY = m_surface->top_left().y.as_int();
+
+    bool mirPosIsDifferent = x != mirX || y != mirY;
+
+    if (clientIsRunning() && mirPosIsDifferent) {
+        mir::geometry::Point newMirPos(x, y);
+        DEBUG_MSG << " old (" << mirX << "," << mirY << ")"
+                  << ", new (" << x << "," << y << ")";
+        m_surface->move_to(newMirPos);
     }
 }
 
@@ -930,6 +951,15 @@ void MirSurface::setShellChrome(Mir::ShellChrome shellChrome)
         m_shellChrome = shellChrome;
 
         Q_EMIT shellChromeChanged(shellChrome);
+    }
+}
+
+void MirSurface::setTopLeft(const QPoint &topLeft)
+{
+    if (m_topLeft != topLeft) {
+        m_topLeft = topLeft;
+
+        Q_EMIT topLeftChanged(topLeft);
     }
 }
 

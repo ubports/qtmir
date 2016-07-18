@@ -54,6 +54,19 @@ Mir::Type FakeMirSurface::type() const { return Mir::NormalType; }
 
 QString FakeMirSurface::name() const { return QString("Fake MirSurface"); }
 
+QPoint FakeMirSurface::topLeft() const { return m_topLeft; }
+
+void FakeMirSurface::moveTo(int x, int y)
+{
+    if (m_topLeft.x() != x || m_topLeft.y() != y) {
+        m_topLeft.setX(x);
+        m_topLeft.setY(y);
+        Q_EMIT topLeftChanged(m_topLeft);
+    }
+}
+
+void FakeMirSurface::moveTo(const QPoint &topLeft) { moveTo(topLeft.x(), topLeft.y()); }
+
 QSize FakeMirSurface::size() const { return m_size; }
 
 void FakeMirSurface::resize(int width, int height)
@@ -140,15 +153,15 @@ void FakeMirSurface::unregisterView(qintptr viewId)
     updateVisibility();
 }
 
-QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
+QSharedPointer<QSGTexture> FakeMirSurface::texture(qintptr) { return QSharedPointer<QSGTexture>(); }
 
-QSGTexture *FakeMirSurface::weakTexture() const { return nullptr; }
+QSGTexture *FakeMirSurface::weakTexture(qintptr) const { return nullptr; }
 
-bool FakeMirSurface::updateTexture() { return true; }
+bool FakeMirSurface::updateTexture(qintptr) { return true; }
 
-unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
+unsigned int FakeMirSurface::currentFrameNumber(qintptr) const { return 0; }
 
-bool FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
+bool FakeMirSurface::numBuffersReadyForCompositor(qintptr) { return 0; }
 
 void FakeMirSurface::setFocused(bool focus) { m_focused = focus; }
 

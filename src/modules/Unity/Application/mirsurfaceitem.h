@@ -69,6 +69,9 @@ public:
     int surfaceHeight() const override;
     void setSurfaceHeight(int value) override;
 
+    QPoint surfaceTopLeft() const override;
+    void setSurfaceTopLeft(const QPoint &value) override;
+
     FillMode fillMode() const override;
     void setFillMode(FillMode value) override;
 
@@ -115,6 +118,7 @@ protected:
 private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
+    void updateMirSurfacePosition();
 
     void updateMirSurfaceActiveFocus();
     void updateMirSurfaceVisibility();
@@ -171,9 +175,11 @@ private:
 
     int m_surfaceWidth;
     int m_surfaceHeight;
+    QPoint m_topLeft;
     Mir::OrientationAngle *m_orientationAngle;
 
     bool m_consumesInput;
+    bool m_positionSet;
 
     FillMode m_fillMode;
 };

@@ -46,7 +46,7 @@ public:
 
     void attrib_changed(MirSurfaceAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
-    void moved_to(mir::geometry::Point const&) override {}
+    void moved_to(mir::geometry::Point const&) override;
     void hidden_set_to(bool) override {}
 
     // Get new frame notifications from Mir, called from a Mir thread.
@@ -73,6 +73,7 @@ Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
     void resized(const QSize &size);
+    void moved(const QPoint &topLeft);
     void keymapChanged(const QString &rules, const QString &variant);
     void nameChanged(const QString &name);
     void cursorChanged(const QCursor &cursor);

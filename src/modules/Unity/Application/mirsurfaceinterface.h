@@ -112,6 +112,7 @@ public Q_SLOTS:
     virtual void setWidthIncrement(int) = 0;
     virtual void setHeightIncrement(int) = 0;
     virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
+    virtual void setTopLeft(const QPoint& topLeft) = 0;
 
 Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);

@@ -68,6 +68,10 @@ public:
 
     QString name() const override;
 
+    virtual QPoint topLeft() const override;
+    virtual void moveTo(int x, int y) override;
+    virtual void moveTo(const QPoint &pos) override { moveTo(pos.x(), pos.y()); }
+
     QSize size() const override;
     void resize(int width, int height) override;
     void resize(const QSize &size) override { resize(size.width(), size.height()); }
@@ -168,6 +172,7 @@ public Q_SLOTS:
     void setWidthIncrement(int) override;
     void setHeightIncrement(int) override;
     void setShellChrome(Mir::ShellChrome shellChrome) override;
+    void setTopLeft(const QPoint& topLeft) override;
 
 private Q_SLOTS:
     void dropPendingBuffer();
@@ -228,6 +233,7 @@ private:
     int m_maximumHeight{0};
     int m_widthIncrement{0};
     int m_heightIncrement{0};
+    QPoint m_topLeft;
 
     bool m_focused{false};
 

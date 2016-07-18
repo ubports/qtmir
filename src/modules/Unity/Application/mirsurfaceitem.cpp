@@ -102,6 +102,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     , m_surfaceHeight(0)
     , m_orientationAngle(nullptr)
     , m_consumesInput(false)
+    , m_positionSet(false)
     , m_fillMode(Stretch)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::MirSurfaceItem";
@@ -569,6 +570,17 @@ void MirSurfaceItem::updateMirSurfaceSize()
     m_surface->resize(width, height);
 }
 
+void MirSurfaceItem::updateMirSurfacePosition()
+{
+    if (!m_positionSet) return;
+
+    if (m_surface) {
+        m_surface->moveTo(m_topLeft);
+    } else {
+        Q_EMIT surfaceTopLeftChanged(m_topLeft);
+    }
+}
+
 void MirSurfaceItem::updateMirSurfaceVisibility()
 {
     if (!m_surface || !m_surface->live()) {
@@ -671,11 +683,13 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
         connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::setCursor);
         connect(m_surface, &MirSurfaceInterface::shellChromeChanged, this, &MirSurfaceItem::shellChromeChanged);
+        connect(m_surface, &MirSurfaceInterface::topLeftChanged, this, &MirSurfaceItem::surfaceTopLeftChanged);
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
         Q_EMIT surfaceStateChanged(m_surface->state());
 
+        updateMirSurfacePosition();
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
@@ -777,6 +791,20 @@ void MirSurfaceItem::setSurfaceHeight(int value)
         m_surfaceHeight = value;
         scheduleMirSurfaceSizeUpdate();
         Q_EMIT surfaceHeightChanged(value);
+    }
+}
+
+QPoint MirSurfaceItem::surfaceTopLeft() const
+{
+    return m_surface ? m_surface->topLeft() : m_topLeft;
+}
+
+void MirSurfaceItem::setSurfaceTopLeft(const QPoint &value)
+{
+    m_positionSet = true;
+    if (m_topLeft != value) {
+        m_topLeft = value;
+        updateMirSurfacePosition();
     }
 }
 
