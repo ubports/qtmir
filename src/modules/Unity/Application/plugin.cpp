@@ -25,7 +25,6 @@
 #include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
 #include "mirsurfacelistmodel.h"
-#include "ubuntukeyboardinfo.h"
 
 // platforms/mirserver
 #include <mirsingleton.h>
@@ -53,13 +52,6 @@ QObject* surfaceManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
     qCDebug(QTMIR_APPLICATIONS) << "surfaceManagerSingleton - engine=" << engine << "scriptEngine=" << scriptEngine;
 
     return qtmir::MirSurfaceManager::singleton();
-}
-
-QObject* ubuntuKeyboardInfoSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
-    if (!UbuntuKeyboardInfo::instance()) {
-        new UbuntuKeyboardInfo;
-    }
-    return UbuntuKeyboardInfo::instance();
 }
 
 QObject* mirSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
@@ -101,8 +93,6 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qmlRegisterUncreatableType<unity::shell::application::MirSurfaceInterface>(
                     uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
-        qmlRegisterSingletonType<qtmir::UbuntuKeyboardInfo>(
-                uri, 0, 1, "UbuntuKeyboardInfo", ubuntuKeyboardInfoSingleton);
         qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
     }
 

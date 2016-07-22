@@ -1,3 +1,10 @@
+qtmir (0.4.8+16.10.20160714-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Implement MirSurface::inputBounds and make use of mir's input region
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 14 Jul 2016 07:08:37 +0000
+
 qtmir (0.4.8+16.10.20160712-0ubuntu1) yakkety; urgency=medium
 
   [ Łukasz 'sil2100' Zemczak ]

@@ -106,6 +106,8 @@ public:
 
     virtual SessionInterface* session() = 0;
 
+    virtual bool inputAreaContains(const QPoint &) const = 0;
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
