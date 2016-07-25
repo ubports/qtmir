@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -91,7 +91,7 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     QByteArray cmdLine( "/usr/bin/dialer-app --desktop_file_hint=dialer-app");
     QByteArray secondcmdLine( "/usr/bin/dialer-app");
 
-    FakeMirSurface *surface = new FakeMirSurface;
+    FakeMirSurface surface;
 
     EXPECT_CALL(procInfo,command_line(firstProcId))
         .Times(1)
@@ -106,8 +106,8 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     applicationManager.authorizeSession(firstProcId, authed);
     ASSERT_EQ(true, authed);
     onSessionStarting(mirSession);
-    onSessionCreatedSurface(mirSession.get(), surface);
-    surface->drawFirstFrame();
+    onSessionCreatedSurface(mirSession.get(), &surface);
+    surface.drawFirstFrame();
     Application * application = applicationManager.findApplication(dialer_app_id);
     ASSERT_NE(nullptr,application);
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
@@ -118,8 +118,6 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
 
     EXPECT_FALSE(authed);
     EXPECT_EQ(application, applicationManager.findApplication(dialer_app_id));
-
-    delete surface;
 }
 
 TEST_F(ApplicationManagerTests,application_dies_while_starting)
@@ -315,7 +313,7 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     const pid_t a_procId = 5921;
     const char an_app_id[] = "some_app";
     QByteArray a_cmd( "/usr/bin/app1 --desktop_file_hint=some_app");
-    FakeMirSurface *aSurface = new FakeMirSurface;
+    FakeMirSurface aSurface;
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
@@ -328,8 +326,8 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     applicationManager.authorizeSession(a_procId, authed);
 
     onSessionStarting(first_session);
-    onSessionCreatedSurface(first_session.get(), aSurface);
-    aSurface->drawFirstFrame();
+    onSessionCreatedSurface(first_session.get(), &aSurface);
+    aSurface.drawFirstFrame();
     onSessionStarting(second_session);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
@@ -340,7 +338,6 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 
     onSessionStopping(first_session);
     onSessionStopping(second_session);
-    delete aSurface;
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
@@ -348,7 +345,7 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 {
     using namespace ::testing;
     const pid_t procId = 5921;
-    FakeMirSurface *aSurface = new FakeMirSurface;
+    FakeMirSurface aSurface;
     QByteArray cmdLine( "/usr/bin/app --desktop_file_hint=app");
 
     EXPECT_CALL(procInfo,command_line(procId))
@@ -371,13 +368,11 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 
     // Signal app is ready now
     applicationManager.onProcessStarting("app");
-    onSessionCreatedSurface(session.get(), aSurface);
-    aSurface->drawFirstFrame();
+    onSessionCreatedSurface(session.get(), &aSurface);
+    aSurface.drawFirstFrame();
 
     // now that its ready, suspend process should have begun
     EXPECT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
-
-    delete aSurface;
 }
 
 TEST_F(ApplicationManagerTests,requestFocusApplication)
@@ -759,16 +754,14 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
+    FakeMirSurface surface;
 
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     // Check application state is correctly set
     Application *theApp = applicationManager.findApplication(appId);
     EXPECT_EQ(theApp->state(), Application::Running);
-
-    delete surface;
 }
 
 /*
@@ -837,13 +830,13 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
+    QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
+    onSessionCreatedSurface(session.get(), surface.data());
     surface->drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
-    QSignalSpy closeRequestedSpy(surface, SIGNAL(closeRequested()));
+    QSignalSpy closeRequestedSpy(surface.data(), SIGNAL(closeRequested()));
 
     // Stop app
     applicationManager.stopApplication(appId);
@@ -853,8 +846,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     EXPECT_EQ(1, closeRequestedSpy.count());
 
     // comply
-    delete surface;
-    surface = nullptr;
+    surface.reset();
 
     // now it's the turn of the application process itself to go away, since its last surface has gone
     EXPECT_EQ(Application::InternalState::Closing, app->internalState());
@@ -890,9 +882,9 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -902,8 +894,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 
     EXPECT_EQ(2, countSpy.count()); //FIXME(greyback)
     EXPECT_EQ(0, applicationManager.count());
-
-    delete surface;
 }
 
 /*
@@ -930,9 +920,9 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -946,8 +936,6 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-
-    delete surface;
 }
 
 /*
@@ -976,9 +964,9 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     suspend(app);
 
@@ -998,8 +986,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
 
     EXPECT_EQ(0, countSpy.count());
     EXPECT_EQ(1, applicationManager.count());
-
-    delete surface;
 }
 
 /*
@@ -1030,9 +1016,9 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     suspend(app);
 
@@ -1052,8 +1038,6 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
 
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
-
-    delete surface;
 }
 
 /*
@@ -1112,9 +1096,9 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -1123,8 +1107,6 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
-
-    delete surface;
 }
 
 /*
@@ -1152,9 +1134,9 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     onSessionStarting(session);
 
     // Associate a surface so AppMan considers app Running, check focused
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -1166,8 +1148,6 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
 
     Application *app = applicationManager.findApplication(appId);
     EXPECT_EQ(nullptr, app);
-
-    delete surface;
 }
 
 /*
@@ -1201,9 +1181,9 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     ASSERT_EQ(Application::InternalState::Starting, app->internalState());
 
     // Associate a surface so AppMan considers app Running
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     ASSERT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
 
@@ -1222,8 +1202,6 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     EXPECT_EQ(1, applicationManager.count());
 
     EXPECT_EQ(Application::Stopped, app->state());
-
-    delete surface;
 }
 
 /*
@@ -1424,8 +1402,8 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     onSessionStarting(session);
 
     // App creates surface, puts it in background, then is OOM killed.
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
+    QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
+    onSessionCreatedSurface(session.get(), surface.data());
     surface->drawFirstFrame();
     suspend(app);
 
@@ -1436,7 +1414,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
 
     EXPECT_EQ(Application::Stopped, app->state());
 
-    delete surface; surface = nullptr;
+    surface.reset();
 
     // Session should have called deleteLater() on itself, as it's zombie and doesn't hold any surface
     // But DeferredDelete is special: likes to be called out specifically or it won't come out
@@ -1477,9 +1455,9 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
     onSessionStarting(session);
 
     // App creates surface, focuses it so state is running
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     // Test normal lifecycle management as a control group
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
@@ -1514,8 +1492,6 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
 
     EXPECT_EQ(Application::Running, the_app->state());
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
-
-    delete surface;
 }
 
 /*
@@ -1543,9 +1519,9 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
     onSessionStarting(session);
 
     // App creates surface, focuses it so state is running
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     // Mark app as exempt
     application->setExemptFromLifecycle(true);
@@ -1555,8 +1531,6 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
     EXPECT_FALSE(sharedWakelock.enabled());
     ASSERT_EQ(Application::InternalState::RunningInBackground, application->internalState());
     EXPECT_EQ(Application::Running, application->state());
-
-    delete surface;
 }
 
 /*
@@ -1668,9 +1642,9 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
     onSessionStarting(session);
 
     // Have app in fully Running state
-    FakeMirSurface *aSurface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), aSurface);
-    aSurface->drawFirstFrame();
+    FakeMirSurface aSurface;
+    onSessionCreatedSurface(session.get(), &aSurface);
+    aSurface.drawFirstFrame();
     ASSERT_EQ(Application::InternalState::Running, the_app->internalState());
 
     // Create fake QML cache for this app
@@ -1686,8 +1660,6 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
 
     EXPECT_EQ(0, applicationManager.count());
     EXPECT_TRUE(dir.exists());
-
-    delete aSurface;
 }
 
 /*
@@ -1702,18 +1674,16 @@ TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
     Application* app = startApplication(procId, appId);
     std::shared_ptr<mir::scene::Session> session = app->session()->session();
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
-    QSignalSpy spy(surface, SIGNAL(closeRequested()));
+    QSignalSpy spy(&surface, SIGNAL(closeRequested()));
 
     // Stop app
     applicationManager.stopApplication(appId);
 
     EXPECT_EQ(1, spy.count());
-
-    delete surface;
 }
 
 
@@ -1794,8 +1764,8 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
+    QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
+    onSessionCreatedSurface(session.get(), surface.data());
     surface->drawFirstFrame();
 
     EXPECT_EQ(Application::InternalState::Running, app->internalState());
@@ -1808,7 +1778,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
         .Times(1)
         .WillOnce(Return(true));
 
-    QSignalSpy closeRequestedSpy(surface, SIGNAL(closeRequested()));
+    QSignalSpy closeRequestedSpy(surface.data(), SIGNAL(closeRequested()));
 
     applicationManager.stopApplication(appId);
 
@@ -1817,8 +1787,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     EXPECT_EQ(1, closeRequestedSpy.count());
 
     // comply
-    delete surface;
-    surface = nullptr;
+    surface.reset();
 
     // now it's the turn of the application process itself to go away, since its last surface has gone
     EXPECT_EQ(Application::InternalState::Closing, app->internalState());
@@ -1871,17 +1840,17 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     applicationManager.authorizeSession(procId1, authed);
     onSessionStarting(session1);
 
-    FakeMirSurface *surface1 = new FakeMirSurface;
-    surface1->setSession(app1->session());
-    onSessionCreatedSurface(session1.get(), surface1);
-    surface1->drawFirstFrame();
+    FakeMirSurface surface1;
+    surface1.setSession(app1->session());
+    onSessionCreatedSurface(session1.get(), &surface1);
+    surface1.drawFirstFrame();
 
     EXPECT_EQ(Application::InternalState::Running, app1->internalState());
 
     QSignalSpy focusedApplicationIdChangedSpy(&applicationManager,
             &unityapi::ApplicationManagerInterface::focusedApplicationIdChanged);
 
-    MirFocusController::instance()->setFocusedSurface(surface1);
+    MirFocusController::instance()->setFocusedSurface(&surface1);
     qtApp.processEvents(); // process queued signal-slot connections
 
     EXPECT_EQ(1, focusedApplicationIdChangedSpy.count());
@@ -1898,28 +1867,24 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     applicationManager.authorizeSession(procId2, authed);
     onSessionStarting(session2);
 
-    FakeMirSurface *surface2 = new FakeMirSurface;
-    surface2->setSession(app2->session());
-    onSessionCreatedSurface(session2.get(), surface2);
-    surface2->drawFirstFrame();
+    FakeMirSurface surface2;
+    surface2.setSession(app2->session());
+    onSessionCreatedSurface(session2.get(), &surface2);
+    surface2.drawFirstFrame();
 
     EXPECT_EQ(Application::InternalState::Running, app2->internalState());
 
-    MirFocusController::instance()->setFocusedSurface(surface2);
+    MirFocusController::instance()->setFocusedSurface(&surface2);
     qtApp.processEvents(); // process queued signal-slot connections
 
     EXPECT_EQ(2, focusedApplicationIdChangedSpy.count());
     EXPECT_EQ(appId2, applicationManager.focusedApplicationId());
 
-    MirFocusController::instance()->setFocusedSurface(surface1);
+    MirFocusController::instance()->setFocusedSurface(&surface1);
     qtApp.processEvents(); // process queued signal-slot connections
 
     EXPECT_EQ(3, focusedApplicationIdChangedSpy.count());
     EXPECT_EQ(appId1, applicationManager.focusedApplicationId());
-
-    // clean up
-    delete surface1;
-    delete surface2;
 }
 
 /*
@@ -1949,18 +1914,16 @@ TEST_F(ApplicationManagerTests,surfaceFocusRequestGeneratesApplicationFocusReque
     applicationManager.authorizeSession(procId, authed);
     onSessionStarting(session);
 
-    FakeMirSurface *surface = new FakeMirSurface;
-    onSessionCreatedSurface(session.get(), surface);
-    surface->drawFirstFrame();
+    FakeMirSurface surface;
+    onSessionCreatedSurface(session.get(), &surface);
+    surface.drawFirstFrame();
 
     EXPECT_EQ(Application::InternalState::Running, app->internalState());
 
     QSignalSpy focusRequestedSpy(&applicationManager,
             &unityapi::ApplicationManagerInterface::focusRequested);
 
-    surface->requestFocus();
+    surface.requestFocus();
 
     EXPECT_EQ(1, focusRequestedSpy.count());
-
-    delete surface;
 }
