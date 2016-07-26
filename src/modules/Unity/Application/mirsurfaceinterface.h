@@ -98,8 +98,6 @@ public:
 
     virtual QCursor cursor() const = 0;
 
-    virtual void setScreen(QScreen *screen) = 0;
-
     virtual SessionInterface* session() = 0;
 
 public Q_SLOTS:

@@ -123,14 +123,6 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
 }
 
-void MirSurfaceItem::componentComplete()
-{
-    QQuickItem::componentComplete();
-    if (window()) {
-        updateScreen(window()->screen());
-    }
-}
-
 MirSurfaceItem::~MirSurfaceItem()
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceItem::~MirSurfaceItem - this=" << this;
@@ -693,9 +685,6 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
         updateMirSurfaceVisibility();
-        if (window()) {
-            updateScreen(window()->screen());
-        }
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
@@ -736,16 +725,6 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
                 Qt::DirectConnection);
-
-        updateScreen(m_window->screen());
-        connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::updateScreen);
-    }
-}
-
-void MirSurfaceItem::updateScreen(QScreen *screen)
-{
-    if (screen && m_surface) {
-        m_surface->setScreen(screen);
     }
 }
 

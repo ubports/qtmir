@@ -963,15 +963,6 @@ void MirSurface::setTopLeft(const QPoint &topLeft)
     }
 }
 
-void MirSurface::setScreen(QScreen *screen)
-{
-    using namespace mir::geometry;
-    // in Mir, this means moving the surface in Mir's scene to the matching display
-    auto targetScreenTopLeftPx = screen->geometry().topLeft(); // * screen->devicePixelRatio(); GERRY?
-    DEBUG_MSG << "moved to" << targetScreenTopLeftPx << "px";
-    m_surface->move_to(Point{ X{targetScreenTopLeftPx.x()}, Y{targetScreenTopLeftPx.y()} });
-}
-
 void MirSurface::setCursor(const QCursor &cursor)
 {
     DEBUG_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";

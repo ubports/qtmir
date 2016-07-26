@@ -154,8 +154,6 @@ public:
 
     SessionInterface* session() override { return m_session.data(); }
 
-    void setScreen(QScreen *screen) override;
-
     ////
     // Own API
 
