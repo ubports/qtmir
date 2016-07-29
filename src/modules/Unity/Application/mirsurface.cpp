@@ -109,9 +109,12 @@ mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
+    QPointF mir_scroll(qtEvent->angleDelta());
+    mir_scroll /= QWheelEvent::DefaultDeltasPerStep;
+
     return mir::events::make_event(0 /*DeviceID */, timestamp, std::vector<uint8_t>{} /* cookie */, modifiers, mir_pointer_action_motion,
                                    buttons, qtEvent->x(), qtEvent->y(),
-                                   qtEvent->angleDelta().x(), qtEvent->angleDelta().y(),
+                                   mir_scroll.x(), mir_scroll.y(),
                                    0, 0);
 }
 
