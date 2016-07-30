@@ -140,9 +140,7 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
-    if (!m_mirServer->start()) {
-        exit(2);
-    }
+    m_mirServer->start();
 
     auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
