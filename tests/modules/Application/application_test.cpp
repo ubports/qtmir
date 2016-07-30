@@ -620,6 +620,8 @@ TEST_F(ApplicationTests, surfaceCountPropertyUpdates)
     EXPECT_EQ(application->surfaceCount(), 2);
     EXPECT_EQ(surfaceCountChangedSpy.count(), 2);
 
+    delete surface;
+    delete surface2;
 }
 
 /*
