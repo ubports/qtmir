@@ -1,5 +1,9 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+)
+
+include_directories(
+    SYSTEM
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${Qt5Quick_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}

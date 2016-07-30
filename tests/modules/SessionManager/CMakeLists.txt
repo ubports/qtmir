@@ -6,10 +6,14 @@ set(
 )
 
 include_directories(
-  ${APPLICATION_API_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/framework
+)
+
+include_directories(
+  SYSTEM
+  ${APPLICATION_API_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
