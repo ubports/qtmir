@@ -109,13 +109,13 @@ mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent)
     auto modifiers = getMirModifiersFromQt(qtEvent->modifiers());
     auto buttons = getMirButtonsFromQt(qtEvent->buttons());
 
-    QPointF mir_scroll(qtEvent->angleDelta());
-    // QWheelEvent::DefaultDeltasPerStep = 120 but doesn't exist on vivid
-    mir_scroll /= 120.0f;
+    QPointF mirScroll(qtEvent->angleDelta());
+    // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
+    mirScroll /= 120.0f;
 
     return mir::events::make_event(0 /*DeviceID */, timestamp, std::vector<uint8_t>{} /* cookie */, modifiers, mir_pointer_action_motion,
                                    buttons, qtEvent->x(), qtEvent->y(),
-                                   mir_scroll.x(), mir_scroll.y(),
+                                   mirScroll.x(), mirScroll.y(),
                                    0, 0);
 }
 
