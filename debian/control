@@ -46,7 +46,7 @@ Vcs-Bzr: lp:qtmir
 Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
 
 Package: qtmir-android
-Architecture: armhf
+Architecture: armhf arm64
 Multi-Arch: same
 Conflicts: libqtmir,
            qtmir-desktop,

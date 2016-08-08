@@ -37,7 +37,7 @@ Index: inline-gles-quilt/debian/control
  Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
  
  Package: qtmir-android
--Architecture: armhf
+-Architecture: armhf arm64
 +Architecture: amd64 i386
  Multi-Arch: same
  Conflicts: libqtmir,

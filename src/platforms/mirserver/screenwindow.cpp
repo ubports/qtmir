@@ -88,6 +88,7 @@ void ScreenWindow::setExposed(const bool exposed)
     if (exposed) {
         renderer->show(quickWindow);
         QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
+        QWindowSystemInterface::handleWindowActivated(window(), Qt::ActiveWindowFocusReason);
     } else {
         quickWindow->setPersistentOpenGLContext(false);
         quickWindow->setPersistentSceneGraph(false);
