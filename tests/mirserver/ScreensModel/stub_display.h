@@ -58,7 +58,7 @@ public:
     {
         f(*buffer);
     }
-    std::chrono::milliseconds recommended_sleep() const
+    std::chrono::milliseconds recommended_sleep() const override
     {
         std::chrono::milliseconds one{1};
         return one;

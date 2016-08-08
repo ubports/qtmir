@@ -27,6 +27,7 @@
 // let's subclass that and avoid the blocking scenario.
 class AsyncDBusInterface : public QDBusAbstractInterface
 {
+    Q_OBJECT
 public:
     AsyncDBusInterface(const QString &service, const QString &path,
                        const QString &interface, const QDBusConnection &connection,
@@ -94,3 +95,5 @@ bool AbstractDBusServiceMonitor::serviceAvailable() const
 {
     return m_dbusInterface != nullptr;
 }
+
+#include "abstractdbusservicemonitor.moc"

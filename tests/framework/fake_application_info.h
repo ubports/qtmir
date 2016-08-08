@@ -23,6 +23,7 @@ namespace qtmir {
 
 class FakeApplicationInfo : public ApplicationInfo
 {
+    Q_OBJECT
 public:
     FakeApplicationInfo(const QString &appId);
     FakeApplicationInfo();
