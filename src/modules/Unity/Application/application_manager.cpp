@@ -592,7 +592,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     Application::Stage stage = Application::MainStage;
     QString stageParam = info->getParameter("--stage_hint=");
 
-    if (stageParam == QLatin1String("side_stage")) {
+    if (stageParam == "side_stage") {
         stage = Application::SideStage;
     }
 
