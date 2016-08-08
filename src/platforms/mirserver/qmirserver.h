@@ -34,7 +34,7 @@ public:
     QMirServer(int &argc, char **argv, QObject* parent=0);
     virtual ~QMirServer();
 
-    bool start();
+    void start();
     Q_SLOT void stop();
     bool isRunning() const;
 

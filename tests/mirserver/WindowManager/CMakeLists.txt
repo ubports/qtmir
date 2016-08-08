@@ -1,5 +1,9 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+)
+
+include_directories(
+  SYSTEM
   ${MIRSERVER_INCLUDE_DIRS}
 )
 

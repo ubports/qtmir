@@ -26,6 +26,10 @@ endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
 
+)
+
+include_directories(
+  SYSTEM
     ${MIRCOMMON_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}

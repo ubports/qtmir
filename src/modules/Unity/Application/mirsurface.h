@@ -24,6 +24,7 @@
 #include <QCursor>
 #include <QMutex>
 #include <QPointer>
+#include <QRect>
 #include <QSharedPointer>
 #include <QWeakPointer>
 #include <QSet>
@@ -89,6 +90,7 @@ public:
     int heightIncrement() const override;
 
     bool focused() const override;
+    QRect inputBounds() const override;
 
     Q_INVOKABLE void requestFocus() override;
     Q_INVOKABLE void close() override;
@@ -121,6 +123,7 @@ public:
     void setFocused(bool focus) override;
 
     void setViewActiveFocus(qintptr viewId, bool value) override;
+    bool activeFocus() const override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -147,9 +150,11 @@ public:
 
     Mir::ShellChrome shellChrome() const override;
 
+    void setScreen(QScreen *screen) override;
+
     SessionInterface* session() override { return m_session.data(); }
 
-    void setScreen(QScreen *screen) override;
+    bool inputAreaContains(const QPoint &) const override;
 
     ////
     // Own API
@@ -176,6 +181,7 @@ private Q_SLOTS:
     void emitSizeChanged();
     void setCursor(const QCursor &cursor);
     void onCloseTimedOut();
+    void setInputBounds(const QRect &rect);
 
 private:
     void syncSurfaceSizeWithItemSize();
@@ -224,6 +230,8 @@ private:
     int m_maximumHeight{0};
     int m_widthIncrement{0};
     int m_heightIncrement{0};
+
+    QRect m_inputBounds;
 
     bool m_focused{false};
 

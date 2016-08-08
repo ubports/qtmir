@@ -45,23 +45,20 @@ QMirServer::~QMirServer()
     stop();
 }
 
-bool QMirServer::start()
+void QMirServer::start()
 {
     Q_D(QMirServer);
 
     d->serverThread->start(QThread::TimeCriticalPriority);
 
-    if (!d->serverThread->waitForMirStartup())
-    {
-        qCritical() << "ERROR: QMirServer - Mir failed to start";
-        return false;
+    if (!d->serverThread->waitForMirStartup()) {
+        qFatal("ERROR: QMirServer - Mir failed to start"); // will core dump
     }
     d->screensModel->update();
     d->screensController = QSharedPointer<ScreensController>(
                                new ScreensController(d->screensModel, d->server->the_display(),
                                                      d->server->the_display_configuration_controller()));
     Q_EMIT started();
-    return true;
 }
 
 void QMirServer::stop()

@@ -92,6 +92,12 @@ public:
     virtual bool hadSurface() const = 0; // whether this session ever had any surface (currently or in the past)
     virtual bool hasClosingSurfaces() const = 0; // whether it has surfaces being forcibly closed
 
+    // Whether any of its MirSurfaces has activeFocus()
+    // See qtmir::MirSurfaceInterface::activeFocus
+    virtual bool activeFocus() const = 0;
+
+    virtual pid_t pid() const = 0;
+
     // For SessionManager use
 
     virtual void addChildSession(SessionInterface* session) = 0;

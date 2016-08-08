@@ -197,13 +197,18 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
                                           const mir::shell::SurfaceSpecification& modifications)
 {
     QMutexLocker locker(&SurfaceObserver::mutex);
-    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
-    if (observer) {
-        observer->notifySurfaceModifications(modifications);
-    }
 
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
+    }
+
+    if (modifications.input_shape.is_set()) {
+        surface->set_input_region(modifications.input_shape.value());
+    }
+
+    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
+    if (observer) {
+        observer->notifySurfaceModifications(modifications);
     }
 }
 
