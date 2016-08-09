@@ -86,19 +86,20 @@ pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=19)
 pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 
+include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
+
+
 add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 # Use the fast string builder
 add_definitions(-DQT_USE_QSTRINGBUILDER)
-
-include_directories( ${APPLICATION_API_INCLUDE_DIRS} )
 
 # We expect this to be set via debian/rules for GLES builds
 if ("${USE_OPENGLES}" STREQUAL 1)
     message(STATUS "Qt5 determined to be compiled with GLES support")
     pkg_check_modules(GLESv2 glesv2)
     add_definitions(-DQT_USING_GLES)
-    include_directories (${GLESv2_INCLUDE_DIRS})
+    include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
     set (GL_LIBRARIES "${GLESv2_LIBRARIES}")
 # Because qt/gl and qt/gles are not parallel installable we have a difficulty
 # building qtmir-desktop on armhf. We would like to link against opengl and bind the
@@ -109,13 +110,13 @@ elseif("${USE_OPENGL_BUT_LINK_AGAINST_OPENGLES}")
     message(STATUS "Linking against OpenGL ES but binding OpenGL API")
     pkg_check_modules(GLESv2 glesv2)
     add_definitions(-DQT_USING_GL)
-    include_directories (${GLESv2_INCLUDE_DIRS})
+    include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
     set (GL_LIBRARIES "${GLESv2_LIBRARIES}")
 else()
     message(STATUS "Qt5 determined to be compiled with OpenGL support")
     pkg_check_modules(GL gl)
     add_definitions(-DQT_USING_OPENGL)
-    include_directories (${GL_INCLUDE_DIRS})
+    include_directories (SYSTEM ${GL_INCLUDE_DIRS})
 endif()
 
 # Standard install paths

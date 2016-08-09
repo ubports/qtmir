@@ -19,7 +19,6 @@
 #include "application.h"
 #include "applicationinfo.h"
 #include "dbusfocusinfo.h"
-#include "dbuswindowstack.h"
 #include "mirfocuscontroller.h"
 #include "session.h"
 #include "sharedwakelock.h"
@@ -75,16 +74,6 @@ QString toShortAppIdIfPossible(const QString &appId) {
     return appId;
 }
 
-void connectToSessionListener(ApplicationManager *manager, SessionListener *listener)
-{
-    QObject::connect(listener, &SessionListener::sessionStarting,
-                     manager, &ApplicationManager::onSessionStarting);
-    QObject::connect(listener, &SessionListener::sessionStopping,
-                     manager, &ApplicationManager::onSessionStopping);
-    QObject::connect(listener, &SessionListener::sessionCreatedSurface,
-                     manager, &ApplicationManager::onSessionCreatedSurface);
-}
-
 void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
 {
     QObject::connect(authorizer, &SessionAuthorizer::requestAuthorizationForSession,
@@ -93,8 +82,13 @@ void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *
 
 void connectToTaskController(ApplicationManager *manager, TaskController *controller)
 {
+    // TaskController::processStarting blocks Ubuntu-App-Launch from executing the process, have it return
+    // as fast as possible! Using a Queued connection will push an event on the event queue before the
+    // (blocking) event for authorizeSession is pushed on the same queue - so the application's processState
+    // will be up-to-date when authorizeSession is called.
     QObject::connect(controller, &TaskController::processStarting,
-                     manager, &ApplicationManager::onProcessStarting);
+                     manager, &ApplicationManager::onProcessStarting, Qt::QueuedConnection);
+
     QObject::connect(controller, &TaskController::processStopped,
                      manager, &ApplicationManager::onProcessStopped);
     QObject::connect(controller, &TaskController::processSuspended,
@@ -120,7 +114,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
     }
 
     MirWindowManager *windowManager =  static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
-    SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
     QSharedPointer<TaskController> taskController(new upstart::TaskController());
@@ -140,7 +133,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
                                              settings
                                          );
 
-    connectToSessionListener(appManager, sessionListener);
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
     connect(windowManager, &MirWindowManager::sessionAboutToCreateSurface,
@@ -178,7 +170,6 @@ ApplicationManager::ApplicationManager(
         QObject *parent)
     : ApplicationManagerInterface(parent)
     , m_dbusFocusInfo(new DBusFocusInfo(m_applications))
-    , m_dbusWindowStack(new DBusWindowStack(this))
     , m_taskController(taskController)
     , m_procInfo(procInfo)
     , m_sharedWakelock(sharedWakelock)
@@ -618,31 +609,6 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     application->setStage(stage);
     add(application);
     authorized = true;
-}
-
-void ApplicationManager::onSessionStarting(std::shared_ptr<ms::Session> const& session)
-{
-    Q_UNUSED(session);
-}
-
-void ApplicationManager::onSessionStopping(std::shared_ptr<ms::Session> const& session)
-{
-    Application* application = findApplicationWithSession(session);
-    if (application) {
-        m_dbusWindowStack->WindowDestroyed(0, application->appId());
-    }
-}
-
-void ApplicationManager::onSessionCreatedSurface(ms::Session const* session,
-                                               std::shared_ptr<ms::Surface> const& surface)
-{
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::onSessionCreatedSurface - sessionName=" << session->name().c_str();
-    Q_UNUSED(surface);
-
-    Application* application = findApplicationWithSession(session);
-    if (application) {
-        m_dbusWindowStack->WindowCreated(0, application->appId());
-    }
 }
 
 Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)

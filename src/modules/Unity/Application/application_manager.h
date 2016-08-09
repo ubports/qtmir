@@ -102,11 +102,6 @@ public:
 public Q_SLOTS:
     void authorizeSession(const pid_t pid, bool &authorized);
 
-    void onSessionStarting(std::shared_ptr<mir::scene::Session> const& session);
-    void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
-
-    void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
-
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
     void onProcessSuspended(const QString& appId);
@@ -140,7 +135,6 @@ private:
 
     QList<Application*> m_applications;
     DBusFocusInfo *m_dbusFocusInfo;
-    DBusWindowStack* m_dbusWindowStack;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;

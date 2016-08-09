@@ -64,7 +64,12 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
             m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QLatin1String("left_ptr"));
             m_mousePointer->setCustomCursor(QCursor());
         } else {
-            m_qtCursorName = QLatin1String("custom");
+            // Ensure we get different names for consecutive custom cursors.
+            // The name doesn't have to be unique (ie, different from all custom cursor names generated so far),
+            // just different from the previous custom cursor name, which is enough to trigger a change in the cursor
+            // source image URL in the QML side which on is turn makes QML request the new cursor image.
+            static quint8 serialNumber = 1;
+            m_qtCursorName = QString("custom%1").arg(serialNumber++);
             m_mousePointer->setCustomCursor(*windowCursor);
         }
     } else {

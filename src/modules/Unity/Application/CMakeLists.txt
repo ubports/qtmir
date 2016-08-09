@@ -1,4 +1,10 @@
 include_directories(
+    ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+    ${CMAKE_SOURCE_DIR}/src/common
+)
+
+include_directories(
+    SYSTEM
     ${GLIB_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
@@ -7,8 +13,6 @@ include_directories(
     ${PROCESS_CPP_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_API_INCLUDE_DIRS}
     ${UBUNTU_APP_LAUNCH_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
-    ${CMAKE_SOURCE_DIR}/src/common
     ${GSETTINGS_QT_INCLUDE_DIRS}
     ${CGMANAGER_INCLUDE_DIRS}
 
@@ -31,7 +35,6 @@ set(QMLMIRPLUGIN_SRC
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp
     plugin.cpp
-    dbuswindowstack.cpp
     mirsurfacemanager.cpp
     mirfocuscontroller.cpp
     mirsurface.cpp
