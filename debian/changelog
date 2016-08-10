@@ -1,3 +1,22 @@
+qtmir (0.4.8+16.10.20160810-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce MirServer to an implementation detail of QMirServer (nothing
+    else needs to touch it).
+
+  [ Albert Astals Cid ]
+  * Improvements from running clazy over the code
+  * Compile with clang
+
+  [ Daniel d'Andrada ]
+  * Remove Application.stage and RoleStage from ApplicationManager
+
+  [ Daniel van Vugt ]
+  * Fix incorrect mouse wheel/touchpad scrolling scale (LP: #1607240)
+    (LP: #1607223, #1607240)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 10 Aug 2016 06:53:16 +0000
+
 qtmir (0.4.8+16.10.20160730-0ubuntu1) yakkety; urgency=medium
 
   [ Albert Astals Cid ]
