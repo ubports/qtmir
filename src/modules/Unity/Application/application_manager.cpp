@@ -214,8 +214,6 @@ QVariant ApplicationManager::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(application->comment());
             case RoleIcon:
                 return QVariant::fromValue(application->icon());
-            case RoleStage:
-                return QVariant::fromValue((int)application->stage());
             case RoleState:
                 return QVariant::fromValue((int)application->state());
             case RoleFocused:
@@ -543,7 +541,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
      * Hack: Allow applications to be launched without being managed by upstart, where AppManager
      * itself manages processes executed with a "--desktop_file_hint=/path/to/desktopFile.desktop"
      * parameter attached. This exists until ubuntu-app-launch can notify shell any application is
-     * and so shell should allow it. Also reads the --stage parameter to determine the desired stage
+     * and so shell should allow it.
      */
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
     if (!info) {
@@ -588,14 +586,6 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         return;
     }
 
-    // if stage supplied in CLI, fetch that
-    Application::Stage stage = Application::MainStage;
-    QString stageParam = info->getParameter("--stage_hint=");
-
-    if (stageParam == "side_stage") {
-        stage = Application::SideStage;
-    }
-
     qCDebug(QTMIR_APPLICATIONS) << "New process with pid" << pid << "appeared, adding new application to the"
                                 << "application list with appId:" << appInfo->appId();
 
@@ -606,7 +596,6 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         arguments,
         this);
     application->setPid(pid);
-    application->setStage(stage);
     add(application);
     authorized = true;
 }
@@ -651,7 +640,6 @@ void ApplicationManager::add(Application* application)
 
     connect(application, &Application::focusedChanged, this, [this](bool) { onAppDataChanged(RoleFocused); });
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
-    connect(application, &Application::stageChanged, this, [this](Application::Stage) { onAppDataChanged(RoleStage); });
     connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
     connect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, [this, application]() {
         Q_EMIT focusRequested(application->appId());
@@ -726,7 +714,6 @@ void ApplicationManager::remove(Application *application)
     disconnect(application, &Application::fullscreenChanged, this, 0);
     disconnect(application, &Application::focusedChanged, this, 0);
     disconnect(application, &Application::stateChanged, this, 0);
-    disconnect(application, &Application::stageChanged, this, 0);
     disconnect(application, &Application::closing, this, 0);
     disconnect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, 0);
 

@@ -47,7 +47,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_appInfo(appInfo)
     , m_pid(0)
-    , m_stage(Application::MainStage)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
@@ -230,11 +229,6 @@ QColor Application::splashColorFooter() const
 {
     QString colorStr = m_appInfo->splashColorFooter();
     return colorFromString(colorStr, "splashColorFooter");
-}
-
-Application::Stage Application::stage() const
-{
-    return m_stage;
 }
 
 Application::Stages Application::supportedStages() const
@@ -531,19 +525,6 @@ void Application::setSession(SessionInterface *newSession)
     }
 
     Q_EMIT sessionChanged(m_session);
-}
-
-void Application::setStage(Application::Stage stage)
-{
-    if (m_stage != stage) {
-        if ((stage | m_supportedStages) == 0) {
-            return;
-        }
-        DEBUG_MSG << "(stage=" << stage << ")";
-
-        m_stage = stage;
-        Q_EMIT stageChanged(stage);
-    }
 }
 
 void Application::setInternalState(Application::InternalState state)
