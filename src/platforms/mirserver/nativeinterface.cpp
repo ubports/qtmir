@@ -15,7 +15,6 @@
  */
 
 #include "nativeinterface.h"
-#include "mirserver.h"
 
 #include "qmirserver.h"
 #include "screen.h"
@@ -27,25 +26,7 @@ NativeInterface::NativeInterface(QMirServer *server)
 
 void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 {
-    void *result = nullptr;
-
-    auto const server = m_qMirServer->mirServer().lock();
-
-    if (server) {
-        if (resource == "SessionAuthorizer")
-            result = server->sessionAuthorizer();
-        else if (resource == "Shell")
-            result = server->shell();
-        else if (resource == "SessionListener")
-            result = server->sessionListener();
-        else if (resource == "PromptSessionListener")
-            result = server->promptSessionListener();
-        else if (resource == "WindowManager")
-            result = server->windowManager();
-        else if (resource == "ScreensController")
-            result = m_qMirServer->screensController().data();
-    }
-    return result;
+    return m_qMirServer->nativeResourceForIntegration(resource);
 }
 
 // Changes to these properties are emitted via the UbuntuNativeInterface::windowPropertyChanged
@@ -92,7 +73,7 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     }
 }
 
-QWeakPointer<MirServer> NativeInterface::mirServer()
+std::shared_ptr<mir::scene::PromptSessionManager> NativeInterface::thePromptSessionManager() const
 {
-    return m_qMirServer->mirServer();
+    return m_qMirServer->thePromptSessionManager();
 }
