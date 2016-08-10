@@ -85,7 +85,7 @@ MirSurfaceManager::MirSurfaceManager(
     , m_sessionManager(sessionManager)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::MirSurfaceManager - this=" << this;
-    setObjectName("qtmir::SurfaceManager");
+    setObjectName(QStringLiteral("qtmir::SurfaceManager"));
 }
 
 MirSurfaceManager::~MirSurfaceManager()
@@ -98,7 +98,7 @@ MirSurfaceManager::~MirSurfaceManager()
 void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSession,
                                                 const std::shared_ptr<mir::scene::Surface> &surface,
                                                 const std::shared_ptr<SurfaceObserver> &observer,
-                                                qtmir::CreationHints creationHints)
+                                                const qtmir::CreationHints &creationHints)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::onSessionCreatedSurface - mirSession=" << mirSession
                             << "surface=" << surface.get() << "surface.name=" << surface->name().c_str()

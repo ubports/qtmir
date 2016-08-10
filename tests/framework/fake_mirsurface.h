@@ -141,12 +141,12 @@ public:
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
-    void setMinimumWidth(int) {}
-    void setMinimumHeight(int) {}
-    void setMaximumWidth(int) {}
-    void setMaximumHeight(int) {}
-    void setWidthIncrement(int) {}
-    void setHeightIncrement(int) {}
+    void setMinimumWidth(int) override {}
+    void setMinimumHeight(int) override {}
+    void setMaximumWidth(int) override {}
+    void setMaximumHeight(int) override {}
+    void setWidthIncrement(int) override {}
+    void setHeightIncrement(int) override {}
     void setShellChrome(Mir::ShellChrome) override {}
 
     ////

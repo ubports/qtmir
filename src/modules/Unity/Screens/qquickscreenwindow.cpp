@@ -50,7 +50,7 @@ QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     , m_scale(-1.0) // start with invalid initial state, fetch correct value on first invokation
     , m_formFactor(Screens::FormFactorUnknown)
 {
-    if (qGuiApp->platformName() == "mirserver") {
+    if (qGuiApp->platformName() == QLatin1String("mirserver")) {
         connect(qGuiApp->platformNativeInterface(), &QPlatformNativeInterface::windowPropertyChanged,
                 this, &QQuickScreenWindow::nativePropertyChanged);
         //m_scale = getScaleNativeProperty(); DO NOT CALL HERE - see note above

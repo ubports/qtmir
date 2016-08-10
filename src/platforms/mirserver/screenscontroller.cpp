@@ -54,13 +54,13 @@ CustomScreenConfigurationList ScreensController::configuration()
     return list;
 }
 
-bool ScreensController::setConfiguration(CustomScreenConfigurationList newConfig)
+bool ScreensController::setConfiguration(const CustomScreenConfigurationList &newConfig)
 {
     using namespace mir::geometry;
 
     auto displayConfiguration = m_display->configuration();
 
-    Q_FOREACH (auto config, newConfig) {
+    Q_FOREACH (const auto &config, newConfig) {
         displayConfiguration->for_each_output(
             [&config](mg::UserDisplayConfigurationOutput &outputConfig)
             {

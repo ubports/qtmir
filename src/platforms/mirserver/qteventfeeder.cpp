@@ -852,7 +852,7 @@ QString QtEventFeeder::touchesToString(const QList<struct QWindowSystemInterface
             result.append(",");
         }
         const struct QWindowSystemInterface::TouchPoint &point = points.at(i);
-        result.append(QString("(id=%1,state=%2,normalPosition=(%3,%4))")
+        result.append(QStringLiteral("(id=%1,state=%2,normalPosition=(%3,%4))")
             .arg(point.id)
             .arg(touchPointStateToString(point.state))
             .arg(point.normalPosition.x())

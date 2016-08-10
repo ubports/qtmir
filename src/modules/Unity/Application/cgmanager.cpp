@@ -71,7 +71,7 @@ QString CGManager::getCGroupOfPid(const QString &controller, pid_t pid)
     QDBusMessage reply = connection.call(message);
 
     if (reply.type() == QDBusMessage::ReplyMessage) {
-        return reply.arguments()[0].toString();
+        return reply.arguments().at(0).toString();
     } else {
         Q_ASSERT(reply.type() == QDBusMessage::ErrorMessage);
         qCWarning(QTMIR_DBUS) << "CGManager::getCGroupOfPid failed." << reply.errorMessage();
@@ -103,7 +103,7 @@ QSet<pid_t> CGManager::getTasks(const QString &controller, const QString &cgroup
 
     Q_ASSERT(reply.type() == QDBusMessage::ReplyMessage);
 
-    auto arg = reply.arguments()[0].value<QDBusArgument>();
+    auto arg = reply.arguments().at(0).value<QDBusArgument>();
     Q_ASSERT(arg.currentType() == QDBusArgument::ArrayType);
 
     auto pidList = qdbus_cast<QList<int>>(arg);

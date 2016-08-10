@@ -51,7 +51,7 @@ void MirBufferSGTexture::freeBuffer()
     m_height = 0;
 }
 
-void MirBufferSGTexture::setBuffer(std::shared_ptr<mir::graphics::Buffer> buffer)
+void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>& buffer)
 {
     m_mirBuffer = buffer;
     mg::Size size = buffer->size();

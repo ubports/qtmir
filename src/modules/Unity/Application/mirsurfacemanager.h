@@ -75,7 +75,7 @@ public Q_SLOTS:
     void onSessionCreatedSurface(const mir::scene::Session *,
                                  const std::shared_ptr<mir::scene::Surface> &,
                                  std::shared_ptr<SurfaceObserver> const&,
-                                 qtmir::CreationHints);
+                                 const qtmir::CreationHints &);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:

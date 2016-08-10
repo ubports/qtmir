@@ -31,10 +31,11 @@ namespace mir { namespace scene { class PromptSessionManager; }}
 
 class NativeInterface : public QPlatformNativeInterface
 {
+    Q_OBJECT
 public:
     NativeInterface(QMirServer *);
 
-    virtual void *nativeResourceForIntegration(const QByteArray &resource);
+    void *nativeResourceForIntegration(const QByteArray &resource) override;
 
     QVariantMap windowProperties(QPlatformWindow *window) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;

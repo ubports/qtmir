@@ -160,7 +160,7 @@ private:
     void acquireWakelock() const;
     void releaseWakelock() const;
     void setPid(pid_t pid);
-    void setArguments(const QStringList arguments);
+    void setArguments(const QStringList &arguments);
     void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();

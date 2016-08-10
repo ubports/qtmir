@@ -841,7 +841,7 @@ QString MirSurface::keymap() const
 
 void MirSurface::applyKeymap()
 {
-    QStringList stringList = m_keymap.split("+", QString::SkipEmptyParts);
+    QStringList stringList = m_keymap.split('+', QString::SkipEmptyParts);
 
     QString layout = stringList[0];
     QString variant;
