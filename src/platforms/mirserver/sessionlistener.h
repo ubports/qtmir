@@ -42,7 +42,7 @@ public:
     void surface_created(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override;
     void destroying_surface(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override;
 
-    void surfaceAboutToBeCreated(mir::scene::Session&, qtmir::CreationHints creationHints);
+    void surfaceAboutToBeCreated(mir::scene::Session&, const qtmir::CreationHints &creationHints);
 
 Q_SIGNALS:
     void sessionStarting(std::shared_ptr<mir::scene::Session> const& session);

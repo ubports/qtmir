@@ -38,8 +38,6 @@ namespace mir {
     }
 }
 
-class MirServer;
-
 namespace qtmir {
 
 class Application;
@@ -51,7 +49,7 @@ class SessionManager : public SessionModel
 
 public:
     explicit SessionManager(
-        const QSharedPointer<MirServer>& mirServer,
+        const std::shared_ptr<mir::scene::PromptSessionManager>& promptSessionManager,
         ApplicationManager* applicationManager,
         QObject *parent = 0
     );
@@ -77,7 +75,7 @@ public Q_SLOTS:
 protected:
 
 private:
-    QSharedPointer<MirServer> m_mirServer;
+    const std::shared_ptr<mir::scene::PromptSessionManager> m_promptSessionManager;
     ApplicationManager* m_applicationManager;
     static SessionManager *the_session_manager;
 

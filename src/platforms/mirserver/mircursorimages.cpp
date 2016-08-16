@@ -20,7 +20,7 @@
 using namespace qtmir;
 
 std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::string &cursor_name,
-        const mir::geometry::Size&)
+        const mir::geometry::Size &)
 {
     // We are not responsible for loading cursors. This is left for shell to do as it's drawing its own QML cursor.
     // So here we work around Mir API by storing just the cursor name in the CursorImage.

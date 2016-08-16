@@ -33,7 +33,7 @@ void StubSession::drop_outstanding_requests()
 
 pid_t StubSession::process_id() const
 {
-    return {0};
+    return 0;
 }
 
 void StubSession::take_snapshot(

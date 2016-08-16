@@ -30,7 +30,6 @@
 #include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/proc_info.h>
-#include <mirserver.h>
 
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
@@ -69,7 +68,6 @@ public:
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
     std::shared_ptr<StubPromptSessionManager> promptSessionManager;
-    QSharedPointer<MirServer> mirServer;
 
     mir::shell::Shell *mirShell{nullptr};
     ApplicationManager applicationManager;

@@ -15,7 +15,6 @@
  */
 
 #include "mirserverintegration.h"
-#include "mirserver.h"
 
 #include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
@@ -29,7 +28,6 @@
 
 #include <QGuiApplication>
 #include <QStringList>
-#include <QOpenGLContext>
 #include <QDebug>
 
 // Mir
@@ -128,8 +126,7 @@ QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow 
 
 QPlatformOpenGLContext *MirServerIntegration::createPlatformOpenGLContext(QOpenGLContext *context) const
 {
-    auto server = m_mirServer->mirServer().lock();
-    return new MirOpenGLContext(*server->the_display(), *server->the_gl_config(), context->format());
+    return m_mirServer->createPlatformOpenGLContext(context);
 }
 
 QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const

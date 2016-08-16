@@ -20,7 +20,7 @@ MockMainLoop::MockMainLoop()
 {
 }
 
-MockMainLoop::~MockMainLoop()
+MockMainLoop::~MockMainLoop() noexcept
 {
 }
 
