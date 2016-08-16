@@ -68,8 +68,9 @@ struct MockSession : public Session
     void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;;
 
     MOCK_METHOD1(send_input_device_change, void(std::vector<std::shared_ptr<mir::input::Device>> const&));
-    //void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
-
+    MOCK_METHOD1(create_buffer, mir::graphics::BufferID(mir::graphics::BufferProperties const&));
+    MOCK_METHOD1(destroy_buffer, void(mir::graphics::BufferID));
+    MOCK_METHOD1(get_buffer, std::shared_ptr<mir::graphics::Buffer>(mir::graphics::BufferID));
 
 private:
     std::string m_sessionName;

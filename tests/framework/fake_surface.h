@@ -100,6 +100,11 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) override {}
     void rename(std::string const&) override {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+    void set_confine_pointer_state(MirPointerConfinementState) {}
+    MirPointerConfinementState confine_pointer_state() const
+    {
+        return mir_pointer_unconfined;
+    }
 };
 
 } // namespace scene
