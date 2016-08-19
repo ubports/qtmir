@@ -1,3 +1,9 @@
+qtmir (0.4.8+16.10.20160816.1-0ubuntu1) yakkety; urgency=medium
+
+  * compatibility changes for mir 0.24.0
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 16 Aug 2016 11:41:40 +0000
+
 qtmir (0.4.8+16.10.20160810-0ubuntu1) yakkety; urgency=medium
 
   [ Alan Griffiths ]
