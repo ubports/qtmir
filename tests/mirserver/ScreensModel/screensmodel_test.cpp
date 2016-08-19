@@ -30,6 +30,7 @@
 #include "screenwindow.h"
 
 #include <QGuiApplication>
+#include <QLoggingCategory>
 
 using namespace ::testing;
 
@@ -53,6 +54,9 @@ void ScreensModelTest::SetUp()
 {
     setenv("QT_QPA_PLATFORM", "minimal", 1);
     Screen::skipDBusRegistration = true;
+
+    // We don't want the logging spam cluttering the test results
+    QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));
 
     screensModel = new TestableScreensModel;
     display = std::make_shared<StubDisplay>();
