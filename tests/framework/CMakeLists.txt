@@ -8,6 +8,7 @@ include_directories(
     ${APPLICATION_API_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
+    ${MIRTEST_INCLUDE_DIRS}
 
     ${Qt5Quick_INCLUDE_DIRS}
     ${Qt5DBus_INCLUDE_DIRS}
@@ -19,7 +20,6 @@ set(QTMIR_TEST_PRIVATE_SRC
     fake_session.cpp
     mock_application_info.cpp
     mock_display.cpp
-    mock_display_configuration.cpp
     mock_gl_display_buffer.cpp
     mock_main_loop.cpp
     mock_mir_session.cpp

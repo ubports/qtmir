@@ -19,8 +19,11 @@
 
 #include "stub_display.h"
 #include "mock_main_loop.h"
+#include "mock_gl_display_buffer.h"
 #include "qtcompositor.h"
 #include "fake_displayconfigurationoutput.h"
+
+#include <mir/test/doubles/stub_display_buffer.h>
 
 #include "testable_screensmodel.h"
 #include "screen.h"
@@ -32,6 +35,8 @@ using namespace ::testing;
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+
+using StubDisplayBuffer = mir::test::doubles::StubDisplayBuffer;
 
 class ScreensModelTest : public ::testing::Test {
 protected:
@@ -71,8 +76,7 @@ TEST_F(ScreensModelTest, SingleScreenFound)
 {
     // Set up display state
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1};
-    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     screensModel->update();
 
@@ -84,8 +88,7 @@ TEST_F(ScreensModelTest, SingleScreenFound)
 TEST_F(ScreensModelTest, MultipleScreenFound)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1, fakeOutput2};
-    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     screensModel->update();
 
@@ -97,13 +100,12 @@ TEST_F(ScreensModelTest, MultipleScreenFound)
 TEST_F(ScreensModelTest, ScreenAdded)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1};
-    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     screensModel->update();
 
     config.push_back(fakeOutput2);
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     ASSERT_EQ(1, screensModel->screens().count());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(0)->geometry());
@@ -118,13 +120,12 @@ TEST_F(ScreensModelTest, ScreenAdded)
 TEST_F(ScreensModelTest, ScreenRemoved)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput2, fakeOutput1};
-    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     screensModel->update();
 
     config.pop_back();
-    display->setFakeConfiguration(config, bufferConfig);
+    display->setFakeConfiguration(config);
 
     ASSERT_EQ(2, screensModel->screens().count());
     EXPECT_EQ(QRect(500, 600, 1500, 2000), screensModel->screens().at(0)->geometry());
