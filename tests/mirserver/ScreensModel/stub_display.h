@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -79,11 +79,6 @@ public:
             StubDisplaySyncGroup b(reinterpret_cast<mg::DisplayBuffer *>(displayBuffer));
             f(b);
         }
-    }
-
-    void setFakeConfiguration(std::vector<mg::DisplayConfigurationOutput> &config)
-    {
-        m_config = config;
     }
 
     void setFakeConfiguration(std::vector<mg::DisplayConfigurationOutput> &config,
