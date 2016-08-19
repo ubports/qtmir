@@ -1,3 +1,9 @@
+qtmir (0.4.8+16.10.20160819-0ubuntu1) yakkety; urgency=medium
+
+  * No change rebuild for UAL ABI change
+
+ -- Ted Gould <ted@gould.cx>  Fri, 19 Aug 2016 14:38:12 +0000
+
 qtmir (0.4.8+16.10.20160816.1-0ubuntu1) yakkety; urgency=medium
 
   * compatibility changes for mir 0.24.0
