@@ -80,7 +80,8 @@ TEST_F(ScreensModelTest, SingleScreenFound)
 {
     // Set up display state
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1};
-    display->setFakeConfiguration(config, {});
+    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
+    display->setFakeConfiguration(config, bufferConfig);
 
     screensModel->update();
 
@@ -92,7 +93,8 @@ TEST_F(ScreensModelTest, SingleScreenFound)
 TEST_F(ScreensModelTest, MultipleScreenFound)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1, fakeOutput2};
-    display->setFakeConfiguration(config, {});
+    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
+    display->setFakeConfiguration(config, bufferConfig);
 
     screensModel->update();
 
@@ -104,12 +106,13 @@ TEST_F(ScreensModelTest, MultipleScreenFound)
 TEST_F(ScreensModelTest, ScreenAdded)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput1};
-    display->setFakeConfiguration(config, {});
+    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
+    display->setFakeConfiguration(config, bufferConfig);
 
     screensModel->update();
 
     config.push_back(fakeOutput2);
-    display->setFakeConfiguration(config, {});
+    display->setFakeConfiguration(config, bufferConfig);
 
     ASSERT_EQ(1, screensModel->screens().count());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(0)->geometry());
@@ -124,12 +127,13 @@ TEST_F(ScreensModelTest, ScreenAdded)
 TEST_F(ScreensModelTest, ScreenRemoved)
 {
     std::vector<mg::DisplayConfigurationOutput> config{fakeOutput2, fakeOutput1};
-    display->setFakeConfiguration(config, {});
+    std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
+    display->setFakeConfiguration(config, bufferConfig);
 
     screensModel->update();
 
     config.pop_back();
-    display->setFakeConfiguration(config, {});
+    display->setFakeConfiguration(config, bufferConfig);
 
     ASSERT_EQ(2, screensModel->screens().count());
     EXPECT_EQ(QRect(500, 600, 1500, 2000), screensModel->screens().at(0)->geometry());
