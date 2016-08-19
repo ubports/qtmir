@@ -19,7 +19,6 @@ set(QTMIR_TEST_PRIVATE_SRC
     fake_mirsurface.cpp
     fake_session.cpp
     mock_application_info.cpp
-    mock_display.cpp
     mock_main_loop.cpp
     mock_mir_session.cpp
     mock_proc_info.cpp
