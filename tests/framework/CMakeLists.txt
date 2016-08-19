@@ -20,7 +20,6 @@ set(QTMIR_TEST_PRIVATE_SRC
     fake_session.cpp
     mock_application_info.cpp
     mock_display.cpp
-    mock_gl_display_buffer.cpp
     mock_main_loop.cpp
     mock_mir_session.cpp
     mock_proc_info.cpp

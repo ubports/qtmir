@@ -17,24 +17,16 @@
 #ifndef MOCK_GL_DISPLAY_BUFFER_H
 #define MOCK_GL_DISPLAY_BUFFER_H
 
-#include <mir/graphics/display_buffer.h>
+#include <mir/test/doubles/null_display_buffer.h>
 #include <mir/renderer/gl/render_target.h>
 
 #include <gmock/gmock.h>
 
-class MockGLDisplayBuffer : public mir::graphics::DisplayBuffer,
-                            public mir::renderer::gl::RenderTarget,
-                            public mir::graphics::NativeDisplayBuffer
+class MockGLDisplayBuffer : public mir::test::doubles::NullDisplayBuffer,
+                            public mir::renderer::gl::RenderTarget
 {
 public:
-    MockGLDisplayBuffer();
-    virtual ~MockGLDisplayBuffer();
-
     MOCK_CONST_METHOD0(view_area, mir::geometry::Rectangle());
-    MOCK_METHOD1(post_renderables_if_optimizable, bool(mir::graphics::RenderableList const&));
-    MOCK_CONST_METHOD0(orientation, MirOrientation());
-    MOCK_CONST_METHOD0(mirror_mode, MirMirrorMode());
-    MOCK_METHOD0(native_display_buffer, mir::graphics::NativeDisplayBuffer*());
 
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(bind, void());
