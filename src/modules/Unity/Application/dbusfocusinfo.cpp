@@ -70,7 +70,7 @@ QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 
 SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
 {
-    for (Application* application : m_applications) {
+    Q_FOREACH (Application* application, m_applications) {
         SessionInterface *sessionWithPid = findSessionWithPid(application->session(), pidSet);
         if (sessionWithPid) {
             return sessionWithPid;
