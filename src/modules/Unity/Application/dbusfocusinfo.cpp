@@ -81,15 +81,15 @@ SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
 
 SessionInterface* DBusFocusInfo::findSessionWithPid(SessionInterface* session, const QSet<pid_t> &pidSet)
 {
-        if (pidSet.contains(session->pid())) {
-            return session;
-        }
+    if (pidSet.contains(session->pid())) {
+        return session;
+    }
 
-        SessionInterface *sessionWithPid = nullptr;
-        session->foreachChildSession([&](SessionInterface* childSession) {
-            if (!sessionWithPid) {
-                sessionWithPid = findSessionWithPid(childSession, pidSet);
-            }
-        });
-        return sessionWithPid;
+    SessionInterface *sessionWithPid = nullptr;
+    session->foreachChildSession([&](SessionInterface* childSession) {
+        if (!sessionWithPid) {
+            sessionWithPid = findSessionWithPid(childSession, pidSet);
+        }
+    });
+    return sessionWithPid;
 }
