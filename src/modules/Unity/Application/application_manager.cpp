@@ -82,8 +82,15 @@ void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *
 
 void connectToTaskController(ApplicationManager *manager, TaskController *controller)
 {
+    // TaskController::processStarting blocks Ubuntu-App-Launch from executing the process, have it return
+    // as fast as possible! Using a Queued connection will push an event on the event queue before the
+    // (blocking) event for authorizeSession is pushed on the same queue - so the application's processState
+    // will be up-to-date when authorizeSession is called.
+    //
+    // TODO: Unfortunately making this queued unearths a crash (likely in Qt) (LP: #1616842).
     QObject::connect(controller, &TaskController::processStarting,
                      manager, &ApplicationManager::onProcessStarting);
+
     QObject::connect(controller, &TaskController::processStopped,
                      manager, &ApplicationManager::onProcessStopped);
     QObject::connect(controller, &TaskController::processSuspended,
