@@ -1,3 +1,15 @@
+qtmir (0.4.8+16.10.20160826.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * DBusFocusInfo.isPidFocused: search sessions recursively (LP:
+    #1612166)
+
+  [ Michał Sawicz ]
+  * Revert r538 that's causing a unity8 crash when launching emergency
+    dialer over greeter (LP: #1616842)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 26 Aug 2016 10:43:18 +0000
+
 qtmir (0.4.8+16.10.20160819-0ubuntu1) yakkety; urgency=medium
 
   * No change rebuild for UAL ABI change
