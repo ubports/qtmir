@@ -25,6 +25,7 @@
 
 // mir
 namespace mir { namespace scene { class PromptSessionManager; }}
+namespace mir { namespace shell { class PersistentSurfaceStore; }}
 
 class QMirServerPrivate;
 class ScreensController;
@@ -49,6 +50,7 @@ public:
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
     void *nativeResourceForIntegration(const QByteArray &resource) const;
     std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
+    std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
 
 Q_SIGNALS:
     void started();

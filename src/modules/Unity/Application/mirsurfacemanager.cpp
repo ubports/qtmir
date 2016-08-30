@@ -73,10 +73,9 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         mir::shell::Shell *shell = static_cast<mir::shell::Shell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
 
-        QSharedPointer<MirServer> mirServer = nativeInterface->mirServer().lock();
         instance = new MirSurfaceManager(shell,
                                          SessionManager::singleton(),
-                                         mirServer ? mirServer->the_persistent_surface_store() : nullptr);
+                                         nativeInterface->thePersistentSurfaceStore());
 
         connectToSessionListener(instance, sessionListener);
     }
