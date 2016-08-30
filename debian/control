@@ -37,6 +37,8 @@ Build-Depends: cmake,
                qtdeclarative5-dev,
                qtdeclarative5-private-dev,
                quilt,
+# libmirserver-dev should have brought this dep. Bug lp:1617435
+               uuid-dev,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/qtmir
 # if you don't have have commit access to this branch but would like to upload
