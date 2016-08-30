@@ -1,3 +1,11 @@
+qtmir (0.4.8+16.10.20160826.1-0ubuntu3) xenial; urgency=medium
+
+  [ Vicamo Yang  ]
+  * Build qtmir-android on arm64 for the need of valid libqpa-mirserver.so for
+    ubuntu phone xenial arm64 porting.
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Tue, 30 Aug 2016 09:44:35 +0200
+
 qtmir (0.4.8+16.10.20160826.1-0ubuntu1) yakkety; urgency=medium
 
   [ Daniel d'Andrada ]
