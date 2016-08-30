@@ -71,7 +71,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, surfaceObserver, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &m_mockShell, surfaceObserver, CreationHints());
     surfaceObserver->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(surface, SIGNAL(frameDropped()));
@@ -92,7 +92,7 @@ TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -123,7 +123,7 @@ TEST_F(MirSurfaceTest, DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
     auto fakeSession = new FakeSession();
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
@@ -161,7 +161,7 @@ TEST_F(MirSurfaceTest, failedSurfaceCloseEventualyDestroysSurface)
 
     auto mockSurface = std::make_shared<NiceMock<ms::MockSurface>>();
 
-    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &m_mockShell, nullptr, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &m_mockShell, nullptr, CreationHints());
     bool surfaceDeleted = false;
     QObject::connect(surface, &QObject::destroyed, surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 

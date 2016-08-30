@@ -32,6 +32,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_shared_wakelock.cpp
     mock_surface.cpp
     mock_task_controller.cpp
+    mock_persistent_surface_store.cpp
     stub_input_channel.cpp
     fake_surface.h
     qtmir_test.cpp
