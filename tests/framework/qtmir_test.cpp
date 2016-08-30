@@ -84,12 +84,13 @@ namespace testing
 
 QtMirTest::QtMirTest()
     : promptSessionManager(std::make_shared<StubPromptSessionManager>())
+    , persistentSurfaceStore(std::make_shared<StubPersistentSurfaceStore>())
     , applicationManager(taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
     , sessionManager(promptSessionManager, &applicationManager)
-    , surfaceManager(mirShell, &sessionManager)
+    , surfaceManager(mirShell, &sessionManager, persistentSurfaceStore)
 {
 }
 

@@ -83,7 +83,7 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=20)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=21)
 pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
