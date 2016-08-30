@@ -56,7 +56,6 @@ MirServerIntegration::MirServerIntegration(int &argc, char **argv)
     , m_services(new Services)
     , m_mirServer(new QMirServer(argc, argv))
     , m_nativeInterface(nullptr)
-    , m_clipboard(new Clipboard)
 {
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the
     // UBUNTU_PLATFORM_API_BACKEND variable to decide if to load a valid sensor backend or not.
@@ -159,8 +158,6 @@ void MirServerIntegration::initialize()
     }
 
     m_nativeInterface = new NativeInterface(m_mirServer.data());
-
-    m_clipboard->setupDBusService();
 }
 
 QPlatformAccessibility *MirServerIntegration::accessibility() const
@@ -196,7 +193,11 @@ QPlatformNativeInterface *MirServerIntegration::nativeInterface() const
 
 QPlatformClipboard *MirServerIntegration::clipboard() const
 {
-    return m_clipboard.data();
+    static QPlatformClipboard *clipboard = nullptr;
+    if (!clipboard) {
+        clipboard = new Clipboard;
+    }
+    return clipboard;
 }
 
 QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
