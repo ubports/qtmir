@@ -22,10 +22,11 @@
 namespace qtmir {
 
 class CGManager;
+class MirSurfaceInterface;
 
 /*
-  FIXME: This is a hack to provide OSK with needed info for avoiding input snooping.
-         Remove when possible
+   Enables other processes to check what is the currently focused application or surface,
+   normally for security purposes.
  */
 class DBusFocusInfo : public QObject
 {
@@ -39,13 +40,22 @@ public Q_SLOTS:
 
     /*
         Returns true if the application with the given PID has input focus
+
+        FIXME: Identifying an app through its PID is deemed racy.
+               isSurfaceFocused() is the preferred method.
      */
     Q_SCRIPTABLE bool isPidFocused(unsigned int pid);
+
+    /*
+        Returns true if the surface with the given id has input focus
+     */
+    Q_SCRIPTABLE bool isSurfaceFocused(const QString &surfaceId);
 
 private:
     QSet<pid_t> fetchAssociatedPids(pid_t pid);
     SessionInterface* findSessionWithPid(const QSet<pid_t> &pidSet);
     SessionInterface* findSessionWithPid(SessionInterface* session, const QSet<pid_t> &pidSet);
+    MirSurfaceInterface *findQmlSurface(const QString &serializedId);
 
     const QList<Application*> &m_applications;
 

@@ -55,6 +55,7 @@ class MirSurface : public MirSurfaceInterface
 
 public:
     MirSurface(std::shared_ptr<mir::scene::Surface> surface,
+            const QString& persistentId,
             SessionInterface* session,
             mir::shell::Shell *shell,
             std::shared_ptr<SurfaceObserver> observer,
@@ -67,6 +68,8 @@ public:
     Mir::Type type() const override;
 
     QString name() const override;
+
+    QString persistentId() const override;
 
     QSize size() const override;
     void resize(int width, int height) override;
@@ -193,6 +196,7 @@ private:
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
     mir::shell::Shell *const m_shell;
+    QString m_persistentId;
     bool m_firstFrameDrawn;
 
     //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)

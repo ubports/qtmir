@@ -38,7 +38,10 @@ namespace mir {
         class Session;
         class PromptSession;
     }
-    namespace shell { class Shell; }
+    namespace shell {
+        class Shell;
+        class PersistentSurfaceStore;
+    }
 }
 
 class SurfaceObserver;
@@ -58,6 +61,7 @@ public:
     explicit MirSurfaceManager(
         mir::shell::Shell* shell,
         SessionManager* sessionManager,
+        std::shared_ptr<mir::shell::PersistentSurfaceStore> surfaceStore,
         QObject* parent = nullptr
     );
     ~MirSurfaceManager();
@@ -85,6 +89,7 @@ protected:
 private:
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
+    std::shared_ptr<mir::shell::PersistentSurfaceStore> m_surfaceStore;
     static MirSurfaceManager *instance;
     MirSurfaceInterface* m_inputMethodSurface = nullptr;
 };

@@ -54,6 +54,8 @@ Mir::Type FakeMirSurface::type() const { return Mir::NormalType; }
 
 QString FakeMirSurface::name() const { return QString("Fake MirSurface"); }
 
+QString FakeMirSurface::persistentId() const { return QString("FakeSurfaceId"); }
+
 QSize FakeMirSurface::size() const { return m_size; }
 
 void FakeMirSurface::resize(int width, int height)

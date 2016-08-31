@@ -77,3 +77,8 @@ std::shared_ptr<mir::scene::PromptSessionManager> NativeInterface::thePromptSess
 {
     return m_qMirServer->thePromptSessionManager();
 }
+
+std::shared_ptr<mir::shell::PersistentSurfaceStore> NativeInterface::thePersistentSurfaceStore() const
+{
+    return m_qMirServer->thePersistentSurfaceStore();
+}

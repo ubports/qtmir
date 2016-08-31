@@ -34,12 +34,15 @@
 #include "sessionlistener.h"
 #include "logging.h"
 #include "creationhints.h"
+#include "mirserver.h"
 
 // mir
 #include <mir/scene/surface.h>
+#include <mir/shell/persistent_surface_store.h>
 
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 
 namespace qtmir {
 
@@ -69,7 +72,10 @@ MirSurfaceManager* MirSurfaceManager::singleton()
         SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
         mir::shell::Shell *shell = static_cast<mir::shell::Shell*>(nativeInterface->nativeResourceForIntegration("Shell"));
 
-        instance = new MirSurfaceManager(shell, SessionManager::singleton());
+
+        instance = new MirSurfaceManager(shell,
+                                         SessionManager::singleton(),
+                                         nativeInterface->thePersistentSurfaceStore());
 
         connectToSessionListener(instance, sessionListener);
     }
@@ -79,10 +85,12 @@ MirSurfaceManager* MirSurfaceManager::singleton()
 MirSurfaceManager::MirSurfaceManager(
         mir::shell::Shell* shell,
         SessionManager* sessionManager,
+        std::shared_ptr<msh::PersistentSurfaceStore> surfaceStore,
         QObject* parent)
     : QObject(parent)
     , m_shell(shell)
     , m_sessionManager(sessionManager)
+    , m_surfaceStore(surfaceStore)
 {
     qCDebug(QTMIR_SURFACES) << "MirSurfaceManager::MirSurfaceManager - this=" << this;
     setObjectName(QStringLiteral("qtmir::SurfaceManager"));
@@ -105,7 +113,12 @@ void MirSurfaceManager::onSessionCreatedSurface(const mir::scene::Session *mirSe
                             << "creationHints=" << creationHints.toString();
 
     SessionInterface* session = m_sessionManager->findSession(mirSession);
-    auto qmlSurface = new MirSurface(surface, session, m_shell, observer, creationHints);
+    auto qmlSurface = new MirSurface(surface,
+                                     QString::fromStdString(m_surfaceStore->id_for_surface(surface).serialize_to_string()),
+                                     session,
+                                     m_shell,
+                                     observer,
+                                     creationHints);
     {
         QMutexLocker lock(&m_mutex);
         m_mirSurfaceToQmlSurfaceHash.insert(surface.get(), qmlSurface);

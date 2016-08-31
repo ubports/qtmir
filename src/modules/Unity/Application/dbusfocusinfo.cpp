@@ -18,6 +18,9 @@
 
 // local
 #include "cgmanager.h"
+#include "mirsurfacelistmodel.h"
+#include "mirsurfaceinterface.h"
+#include "session_interface.h"
 
 // QPA mirserver
 #include <logging.h>
@@ -92,4 +95,36 @@ SessionInterface* DBusFocusInfo::findSessionWithPid(SessionInterface* session, c
         }
     });
     return sessionWithPid;
+}
+
+bool DBusFocusInfo::isSurfaceFocused(const QString &serializedId)
+{
+    MirSurfaceInterface *qmlSurface = findQmlSurface(serializedId);
+    bool result = qmlSurface ? qmlSurface->activeFocus() : false;
+    qCDebug(QTMIR_DBUS).nospace() << "DBusFocusInfo: isSurfaceFocused("<<serializedId<<") -> " << result;
+    return result;
+}
+
+MirSurfaceInterface *DBusFocusInfo::findQmlSurface(const QString &serializedId)
+{
+    for (Application* application : m_applications) {
+        auto session = application->session();
+
+        auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
+        for (int i = 0; i < surfaceList->count(); ++i) {
+            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+            if (qmlSurface->persistentId() == serializedId) {
+                return qmlSurface;
+            }
+        }
+
+        surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
+        for (int i = 0; i < surfaceList->count(); ++i) {
+            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+            if (qmlSurface->persistentId() == serializedId) {
+                return qmlSurface;
+            }
+        }
+    }
+    return nullptr;
 }
