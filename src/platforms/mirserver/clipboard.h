@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,68 +18,51 @@
 #define QTMIR_CLIPBOARD_H
 
 #include <qpa/qplatformclipboard.h>
-#include <QObject>
+
+#include <QMimeData>
+#include <QScopedPointer>
+
+namespace com {
+    namespace ubuntu {
+        namespace content {
+            class Hub;
+        }
+    }
+}
+
+class QDBusPendingCallWatcher;
 
 namespace qtmir {
-
-class DBusClipboard : public QObject {
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "com.canonical.QtMir.Clipboard")
-public:
-    DBusClipboard(QObject *parent = nullptr);
-    virtual ~DBusClipboard() {}
-
-    void setContents(QByteArray contents);
-    const QByteArray &contents() const { return m_contents; }
-
-    static const int maxContentsSize = 4 * 1024 * 1024;  // 4 Mb
-
-    // To make it testable
-    static bool skipDBusRegistration;
-
-Q_SIGNALS:
-    Q_SCRIPTABLE void ContentsChanged(const QByteArray &contents);
-    void contentsChangedRemotely();
-
-public Q_SLOTS:
-    Q_SCRIPTABLE QByteArray GetContents() const;
-    Q_SCRIPTABLE void SetContents(QByteArray contents);
-
-private:
-    void performDBusRegistration();
-    bool setContentsHelper(QByteArray newContents);
-
-    // Contains a serialized QMimeData
-    // Serialization and deserialization is done by the QPlatformClipboard
-    // implementation.
-    QByteArray m_contents;
-};
 
 class Clipboard : public QObject, public QPlatformClipboard
 {
     Q_OBJECT
 public:
-    Clipboard(QObject *parent = nullptr);
-    virtual ~Clipboard() {}
+    Clipboard();
+    virtual ~Clipboard();
 
-    QMimeData *mimeData(QClipboard::Mode mode = QClipboard::Clipboard) override;
-    void setMimeData(QMimeData *data, QClipboard::Mode mode) override;
-
-    void setupDBusService();
-
-private Q_SLOTS:
-    void setMimeDataWithDBusClibpboardContents();
+    // QPlatformClipboard methods.
+    QMimeData* mimeData(QClipboard::Mode mode = QClipboard::Clipboard) override;
+    void setMimeData(QMimeData* data, QClipboard::Mode mode = QClipboard::Clipboard) override;
+    bool supportsMode(QClipboard::Mode mode) const override;
+    bool ownsMode(QClipboard::Mode mode) const override;
 
 private:
+    void updateMimeData();
+    void requestMimeData();
 
-    DBusClipboard *m_dbusClipboard;
+    QScopedPointer<QMimeData> m_mimeData;
+
+    enum {
+        OutdatedClipboard, // Our mimeData is outdated, need to fetch latest from ContentHub
+        SyncingClipboard, // Our mimeData is outdated and we are waiting for ContentHub to reply with the latest paste
+        SyncedClipboard // Our mimeData is in sync with what ContentHub has
+    } m_clipboardState{OutdatedClipboard};
+
+    com::ubuntu::content::Hub *m_contentHub;
+
+    QDBusPendingCallWatcher *m_pasteReply{nullptr};
 };
-
-// NB: Copied from qtubuntu. Must be kept in sync with the original version!
-// Best thing would be to share this code somehow, but not bothering with it right now
-// as the clipboard will move to content-hub at some point.
-QByteArray serializeMimeData(QMimeData *mimeData);
-QMimeData *deserializeMimeData(const QByteArray &serializedMimeData);
 
 } // namespace qtmir
 

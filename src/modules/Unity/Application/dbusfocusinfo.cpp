@@ -24,6 +24,7 @@
 
 // QPA mirserver
 #include <logging.h>
+#include <shelluuid.h>
 
 #include <QDBusConnection>
 
@@ -99,8 +100,16 @@ SessionInterface* DBusFocusInfo::findSessionWithPid(SessionInterface* session, c
 
 bool DBusFocusInfo::isSurfaceFocused(const QString &serializedId)
 {
-    MirSurfaceInterface *qmlSurface = findQmlSurface(serializedId);
-    bool result = qmlSurface ? qmlSurface->activeFocus() : false;
+    // TODO: Implement a penalty for negative queries, such as stalling for some time before answering
+    //       further queries. That's in order to avoid brute-force approaches to find a valid surface id.
+    //       That's particularly important for shell's own surface id as it's always valid.
+    bool result = false;
+    if (serializedId == ShellUuId::toString()) {
+        result = true;
+    } else {
+        MirSurfaceInterface *qmlSurface = findQmlSurface(serializedId);
+        result = qmlSurface ? qmlSurface->activeFocus() : false;
+    }
     qCDebug(QTMIR_DBUS).nospace() << "DBusFocusInfo: isSurfaceFocused("<<serializedId<<") -> " << result;
     return result;
 }

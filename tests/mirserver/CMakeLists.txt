@@ -1,6 +1,5 @@
 add_subdirectory(ArgvHelper)
 add_subdirectory(QtEventFeeder)
-add_subdirectory(Clipboard)
 add_subdirectory(Screen)
 add_subdirectory(ScreensModel)
 add_subdirectory(WindowManager)
