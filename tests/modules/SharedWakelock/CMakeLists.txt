@@ -18,7 +18,7 @@ add_executable(sharedwakelock_test ${SHARED_WAKELOCK_TEST_SOURCES})
 target_link_libraries(
   sharedwakelock_test
 
-  unityapplicationplugin
+  unityapplicationplugin-nolttng
 
   Qt5::Test
 

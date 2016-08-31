@@ -20,7 +20,7 @@ add_executable(ScreenTest ${SCREEN_TEST_SOURCES})
 
 target_link_libraries(
   ScreenTest
-  qpa-mirserver
+  qpa-mirserver-nolttng
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
