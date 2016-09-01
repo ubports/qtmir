@@ -90,7 +90,7 @@ void SessionListener::destroying_surface(ms::Session& session, std::shared_ptr<m
     Q_EMIT sessionDestroyingSurface(&session, surface);
 }
 
-void SessionListener::surfaceAboutToBeCreated(mir::scene::Session& session, qtmir::CreationHints creationHints)
+void SessionListener::surfaceAboutToBeCreated(mir::scene::Session& session, const qtmir::CreationHints &creationHints)
 {
     m_creationHintsForNewSurface[&session] = creationHints;
 }

@@ -21,22 +21,27 @@
 #include <QSharedPointer>
 #include <qpa/qplatformnativeinterface.h>
 
+#include <memory>
+
 // local
-class MirServer;
 class QMirServer;
+
+// mir
+namespace mir { namespace scene { class PromptSessionManager; }}
 
 class NativeInterface : public QPlatformNativeInterface
 {
+    Q_OBJECT
 public:
     NativeInterface(QMirServer *);
 
-    virtual void *nativeResourceForIntegration(const QByteArray &resource);
+    void *nativeResourceForIntegration(const QByteArray &resource) override;
 
     QVariantMap windowProperties(QPlatformWindow *window) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
 
-    QWeakPointer<MirServer> mirServer();
+    std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
 
 private:
     QMirServer *m_qMirServer;

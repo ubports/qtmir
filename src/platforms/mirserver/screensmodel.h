@@ -62,7 +62,7 @@ public:
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
 
-    QWindow* getWindowForPoint(const QPoint &point);
+    QWindow* getWindowForPoint(QPoint point);
 
 Q_SIGNALS:
     void screenAdded(Screen *screen);

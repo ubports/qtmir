@@ -586,7 +586,8 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
         if (hDelta != 0 || vDelta != 0) {
-            const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
+            // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
+            const QPoint angleDelta(120 * hDelta, 120 * vDelta);
             mQtWindowSystem->handleWheelEvent(timestamp.count(), absolute, angleDelta, modifiers);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
@@ -861,7 +862,7 @@ QString QtEventFeeder::touchesToString(const QList<struct QWindowSystemInterface
             result.append(",");
         }
         const struct QWindowSystemInterface::TouchPoint &point = points.at(i);
-        result.append(QString("(id=%1,state=%2,normalPosition=(%3,%4))")
+        result.append(QStringLiteral("(id=%1,state=%2,normalPosition=(%3,%4))")
             .arg(point.id)
             .arg(touchPointStateToString(point.state))
             .arg(point.normalPosition.x())

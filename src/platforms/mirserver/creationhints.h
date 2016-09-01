@@ -24,7 +24,7 @@
 
 namespace mir {
     namespace scene {
-        class SurfaceCreationParameters;
+        struct SurfaceCreationParameters;
     }
 }
 

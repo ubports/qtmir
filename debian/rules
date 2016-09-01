@@ -12,7 +12,7 @@ TMP2_DIR = $(CURDIR)/debian/tmp2
 
 # We only want to build qtmir-android on arches using Qt built with OpenGL ES2.0
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
-gles2_architectures = armhf
+gles2_architectures = armhf arm64
 
 USES_GLES2 = $(findstring $(DEB_HOST_ARCH), $(gles2_architectures))
 

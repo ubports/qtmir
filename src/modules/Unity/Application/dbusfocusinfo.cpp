@@ -71,19 +71,25 @@ QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
 {
     Q_FOREACH (Application* application, m_applications) {
-        auto session = application->session();
-        if (pidSet.contains(session->pid())) {
-            return session;
-        }
-        SessionInterface *chosenChildSession = nullptr;
-        session->foreachChildSession([&](SessionInterface* childSession) {
-            if (pidSet.contains(childSession->pid())) {
-                chosenChildSession = childSession;
-            }
-        });
-        if (chosenChildSession) {
-            return chosenChildSession;
+        SessionInterface *sessionWithPid = findSessionWithPid(application->session(), pidSet);
+        if (sessionWithPid) {
+            return sessionWithPid;
         }
     }
     return nullptr;
+}
+
+SessionInterface* DBusFocusInfo::findSessionWithPid(SessionInterface* session, const QSet<pid_t> &pidSet)
+{
+    if (pidSet.contains(session->pid())) {
+        return session;
+    }
+
+    SessionInterface *sessionWithPid = nullptr;
+    session->foreachChildSession([&](SessionInterface* childSession) {
+        if (!sessionWithPid) {
+            sessionWithPid = findSessionWithPid(childSession, pidSet);
+        }
+    });
+    return sessionWithPid;
 }

@@ -37,7 +37,7 @@ class Wakelock : public AbstractDBusServiceMonitor
     Q_OBJECT
 public:
     Wakelock(const QDBusConnection &connection) noexcept
-        : AbstractDBusServiceMonitor("com.canonical.powerd", "/com/canonical/powerd", "com.canonical.powerd", connection)
+        : AbstractDBusServiceMonitor(QStringLiteral("com.canonical.powerd"), QStringLiteral("/com/canonical/powerd"), QStringLiteral("com.canonical.powerd"), connection)
         , m_wakelockEnabled(false)
     {
         // (re-)acquire wake lock when powerd (re-)appears on the bus
@@ -90,7 +90,7 @@ public:
         }
 
         if (!m_cookie.isEmpty()) {
-            dbusInterface()->asyncCall("clearSysState", QString(m_cookie));
+            dbusInterface()->asyncCall(QStringLiteral("clearSysState"), QString(m_cookie));
             qCDebug(QTMIR_SESSIONS) << "Wakelock released" << m_cookie;
             m_cookie.clear();
         }
@@ -132,7 +132,7 @@ private Q_SLOTS:
 
         if (!m_wakelockEnabled || !m_cookie.isEmpty()) {
             // notified wakelock was created, but we either don't want it, or already have one - release it immediately
-            dbusInterface()->asyncCall("clearSysState", QString(cookie));
+            dbusInterface()->asyncCall(QStringLiteral("clearSysState"), QString(cookie));
             return;
         }
 
@@ -155,7 +155,7 @@ private:
             return;
         }
 
-        QDBusPendingCall pcall = dbusInterface()->asyncCall("requestSysState", "active", POWERD_SYS_STATE_ACTIVE);
+        QDBusPendingCall pcall = dbusInterface()->asyncCall(QStringLiteral("requestSysState"), "active", POWERD_SYS_STATE_ACTIVE);
 
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pcall, this);
         QObject::connect(watcher, &QDBusPendingCallWatcher::finished,

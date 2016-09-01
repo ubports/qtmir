@@ -33,6 +33,7 @@ namespace
 {
 class MirWindowManagerImpl : public MirWindowManager
 {
+    Q_OBJECT
 public:
 
     MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
@@ -218,3 +219,5 @@ std::shared_ptr<MirWindowManager> MirWindowManager::create(
 {
     return std::make_shared<MirWindowManagerImpl>(displayLayout, sessionListener);
 }
+
+#include "mirwindowmanager.moc"

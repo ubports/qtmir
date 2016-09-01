@@ -56,7 +56,7 @@ CreationHints::CreationHints(const mir::scene::SurfaceCreationParameters &params
 
 QString CreationHints::toString() const
 {
-    return QString("CreationHints(minW=%1,minH=%2,maxW=%3,maxH=%4,wIncr=%5,hInc=%6,shellChrome=%7)")
+    return QStringLiteral("CreationHints(minW=%1,minH=%2,maxW=%3,maxH=%4,wIncr=%5,hInc=%6,shellChrome=%7)")
         .arg(minWidth)
         .arg(minHeight)
         .arg(maxWidth)

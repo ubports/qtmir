@@ -60,7 +60,7 @@ class MirTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    MirTextureProvider(QSharedPointer<QSGTexture> texture) : t(texture) {}
+    MirTextureProvider(const QSharedPointer<QSGTexture>& texture) : t(texture) {}
     QSGTexture *texture() const {
         if (t)
             t->setFiltering(smooth ? QSGTexture::Linear : QSGTexture::Nearest);
@@ -73,7 +73,7 @@ public:
         t.reset();
     }
 
-    void setTexture(QSharedPointer<QSGTexture> newTexture) {
+    void setTexture(const QSharedPointer<QSGTexture>& newTexture) {
         t = newTexture;
     }
 
@@ -237,7 +237,7 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
-        QTimer::singleShot(0, this, SLOT(update()));
+        QTimer::singleShot(0, this, &MirSurfaceItem::update);
     }
 
     m_textureProvider->smooth = smooth();
@@ -375,7 +375,7 @@ QString MirSurfaceItem::appId() const
     if (m_surface) {
         return m_surface->appId();
     } else {
-        return QString("-");
+        return QStringLiteral("-");
     }
 }
 
@@ -420,7 +420,7 @@ void MirSurfaceItem::validateAndDeliverTouchEvent(int eventType,
             Qt::TouchPointStates touchPointStates)
 {
     if (eventType == QEvent::TouchBegin && m_lastTouchEvent && m_lastTouchEvent->type != QEvent::TouchEnd) {
-        qCWarning(QTMIR_SURFACES) << qPrintable(QString("MirSurfaceItem(%1) - Got a QEvent::TouchBegin while "
+        qCWarning(QTMIR_SURFACES) << qPrintable(QStringLiteral("MirSurfaceItem(%1) - Got a QEvent::TouchBegin while "
             "there's still an active/unfinished touch sequence.").arg(appId()));
         // Qt forgot to end the last touch sequence. Let's do it ourselves.
         endCurrentTouchSequence(timestamp);
@@ -711,7 +711,7 @@ void MirSurfaceItem::setSurfaceWidth(int value)
     }
 }
 
-void MirSurfaceItem::onActualSurfaceSizeChanged(const QSize &size)
+void MirSurfaceItem::onActualSurfaceSizeChanged(QSize size)
 {
     setImplicitSize(size.width(), size.height());
 }
