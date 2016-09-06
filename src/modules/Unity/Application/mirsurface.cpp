@@ -251,6 +251,11 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 
     setCloseTimer(new Timer);
+
+    QTimer::singleShot(m_minimumAgeForOcclusion, this, [this]() {
+        m_oldEnoughToBeOccluded = true;
+        updateVisibility();
+    });
 }
 
 MirSurface::~MirSurface()
@@ -787,10 +792,17 @@ void MirSurface::setViewVisibility(qintptr viewId, bool visible)
 void MirSurface::updateVisibility()
 {
     bool newVisible = false;
-    QHashIterator<qintptr, View> i(m_views);
-    while (i.hasNext()) {
-        i.next();
-        newVisible |= i.value().visible;
+
+    if (m_oldEnoughToBeOccluded) {
+        QHashIterator<qintptr, View> i(m_views);
+        while (i.hasNext()) {
+            i.next();
+            newVisible |= i.value().visible;
+        }
+    } else {
+        // Surface is too young to get occluded. Let it remain exposed for a bit to ensure that it displays
+        // a properly formed UI on start up.
+        newVisible = true;
     }
 
     if (newVisible != visible()) {

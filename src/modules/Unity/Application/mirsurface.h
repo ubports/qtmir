@@ -22,6 +22,7 @@
 
 // Qt
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QMutex>
 #include <QPointer>
 #include <QRect>
@@ -246,6 +247,11 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
+
+    // TODO: Make it configurable, exposing it as a QML property to shell.
+    // In milliseconds.
+    const int m_minimumAgeForOcclusion{10000};
+    bool m_oldEnoughToBeOccluded{false};
 };
 
 } // namespace qtmir
