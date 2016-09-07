@@ -53,6 +53,7 @@ public:
     // unity.shell.application.MirSurfaceInterface
     Mir::Type type() const override;
     QString name() const override;
+    QString persistentId() const override;
     QSize size() const override;
     void resize(int width, int height) override;
     void resize(const QSize &size) override;

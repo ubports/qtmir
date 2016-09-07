@@ -1,3 +1,38 @@
+qtmir (0.4.8+16.10.20160831-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * DBusFocusInfo: added isSurfaceFocused(serializedId)
+  * Use content-hub for clipboard services (LP: #1471998)
+  * Don't link tests against LTTng
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Wed, 31 Aug 2016 01:52:12 +0000
+
+qtmir (0.4.8+16.10.20160826.1-0ubuntu3) xenial; urgency=medium
+
+  [ Vicamo Yang  ]
+  * Build qtmir-android on arm64 for the need of valid libqpa-mirserver.so for
+    ubuntu phone xenial arm64 porting.
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Tue, 30 Aug 2016 09:44:35 +0200
+
+qtmir (0.4.8+16.10.20160826.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * DBusFocusInfo.isPidFocused: search sessions recursively (LP:
+    #1612166)
+
+  [ Michał Sawicz ]
+  * Revert r538 that's causing a unity8 crash when launching emergency
+    dialer over greeter (LP: #1616842)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 26 Aug 2016 10:43:18 +0000
+
+qtmir (0.4.8+16.10.20160819-0ubuntu1) yakkety; urgency=medium
+
+  * No change rebuild for UAL ABI change
+
+ -- Ted Gould <ted@gould.cx>  Fri, 19 Aug 2016 14:38:12 +0000
+
 qtmir (0.4.8+16.10.20160816.1-0ubuntu1) yakkety; urgency=medium
 
   * compatibility changes for mir 0.24.0

@@ -18,9 +18,13 @@
 
 // local
 #include "cgmanager.h"
+#include "mirsurfacelistmodel.h"
+#include "mirsurfaceinterface.h"
+#include "session_interface.h"
 
 // QPA mirserver
 #include <logging.h>
+#include <shelluuid.h>
 
 #include <QDBusConnection>
 
@@ -71,18 +75,64 @@ QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
 {
     Q_FOREACH (Application* application, m_applications) {
-        auto session = application->session();
-        if (pidSet.contains(session->pid())) {
-            return session;
+        SessionInterface *sessionWithPid = findSessionWithPid(application->session(), pidSet);
+        if (sessionWithPid) {
+            return sessionWithPid;
         }
-        SessionInterface *chosenChildSession = nullptr;
-        session->foreachChildSession([&](SessionInterface* childSession) {
-            if (pidSet.contains(childSession->pid())) {
-                chosenChildSession = childSession;
+    }
+    return nullptr;
+}
+
+SessionInterface* DBusFocusInfo::findSessionWithPid(SessionInterface* session, const QSet<pid_t> &pidSet)
+{
+    if (pidSet.contains(session->pid())) {
+        return session;
+    }
+
+    SessionInterface *sessionWithPid = nullptr;
+    session->foreachChildSession([&](SessionInterface* childSession) {
+        if (!sessionWithPid) {
+            sessionWithPid = findSessionWithPid(childSession, pidSet);
+        }
+    });
+    return sessionWithPid;
+}
+
+bool DBusFocusInfo::isSurfaceFocused(const QString &serializedId)
+{
+    // TODO: Implement a penalty for negative queries, such as stalling for some time before answering
+    //       further queries. That's in order to avoid brute-force approaches to find a valid surface id.
+    //       That's particularly important for shell's own surface id as it's always valid.
+    bool result = false;
+    if (serializedId == ShellUuId::toString()) {
+        result = true;
+    } else {
+        MirSurfaceInterface *qmlSurface = findQmlSurface(serializedId);
+        result = qmlSurface ? qmlSurface->activeFocus() : false;
+    }
+    qCDebug(QTMIR_DBUS).nospace() << "DBusFocusInfo: isSurfaceFocused("<<serializedId<<") -> " << result;
+    return result;
+}
+
+MirSurfaceInterface *DBusFocusInfo::findQmlSurface(const QString &serializedId)
+{
+    for (Application* application : m_applications) {
+        auto session = application->session();
+
+        auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
+        for (int i = 0; i < surfaceList->count(); ++i) {
+            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+            if (qmlSurface->persistentId() == serializedId) {
+                return qmlSurface;
             }
-        });
-        if (chosenChildSession) {
-            return chosenChildSession;
+        }
+
+        surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
+        for (int i = 0; i < surfaceList->count(); ++i) {
+            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+            if (qmlSurface->persistentId() == serializedId) {
+                return qmlSurface;
+            }
         }
     }
     return nullptr;

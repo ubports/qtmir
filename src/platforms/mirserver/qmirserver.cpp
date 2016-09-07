@@ -130,3 +130,10 @@ std::shared_ptr<mir::scene::PromptSessionManager> QMirServer::thePromptSessionMa
 
     return d->server->the_prompt_session_manager();
 }
+
+std::shared_ptr<mir::shell::PersistentSurfaceStore> QMirServer::thePersistentSurfaceStore() const
+{
+    Q_D(const QMirServer);
+
+    return d->server->the_persistent_surface_store();
+}

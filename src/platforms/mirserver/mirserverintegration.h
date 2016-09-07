@@ -24,10 +24,6 @@
 class NativeInterface;
 class QMirServer;
 
-namespace qtmir {
-    class Clipboard;
-}
-
 class MirServerIntegration : public QPlatformIntegration
 {
 public:
@@ -67,7 +63,6 @@ private:
 
     NativeInterface *m_nativeInterface;
     QPlatformInputContext* m_inputContext;
-    QScopedPointer<qtmir::Clipboard> m_clipboard;
 };
 
 #endif // MIRSERVERINTEGRATION_H

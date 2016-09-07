@@ -43,8 +43,8 @@
 
 using namespace qtmir;
 
-#define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
-#define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() <<"]::" << __func__
+#define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
+#define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 
 namespace {
 
@@ -183,6 +183,7 @@ mir::EventUPtr makeMirEvent(Qt::KeyboardModifiers qmods,
 } // namespace {
 
 MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
+        const QString& persistentId,
         SessionInterface* session,
         mir::shell::Shell* shell,
         std::shared_ptr<SurfaceObserver> observer,
@@ -191,6 +192,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     , m_surface(surface)
     , m_session(session)
     , m_shell(shell)
+    , m_persistentId(persistentId)
     , m_firstFrameDrawn(false)
     , m_orientationAngle(Mir::Angle0)
     , m_textureUpdated(false)
@@ -253,7 +255,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
 
 MirSurface::~MirSurface()
 {
-    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "]::~MirSurface() viewCount=" << m_views.count();
+    DEBUG_MSG << "() viewCount=" << m_views.count();
 
     Q_ASSERT(m_views.isEmpty());
 
@@ -594,6 +596,11 @@ void MirSurface::setOrientationAngle(Mir::OrientationAngle angle)
 QString MirSurface::name() const
 {
     return QString::fromStdString(m_surface->name());
+}
+
+QString MirSurface::persistentId() const
+{
+    return m_persistentId;
 }
 
 void MirSurface::setState(Mir::State qmlState)

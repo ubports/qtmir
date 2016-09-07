@@ -26,8 +26,8 @@ target_link_libraries(
   application_test
 
   Qt5::Test
-  
-  unityapplicationplugin
+
+  unityapplicationplugin-nolttng
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

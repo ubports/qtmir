@@ -25,7 +25,7 @@ add_executable(ScreensModelTest ${SCREENCONTROLLER_TEST_SOURCES})
 
 target_link_libraries(
   ScreensModelTest
-  qpa-mirserver
+  qpa-mirserver-nolttng
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

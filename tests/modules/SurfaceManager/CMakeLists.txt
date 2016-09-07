@@ -22,7 +22,7 @@ add_executable(surfacemanager_test ${MIR_SURFACE_MANAGER_TEST_SOURCES})
 target_link_libraries(
   surfacemanager_test
 
-  unityapplicationplugin
+  unityapplicationplugin-nolttng
 
   Qt5::Test
 
