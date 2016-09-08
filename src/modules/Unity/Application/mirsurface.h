@@ -96,6 +96,8 @@ public:
     bool focused() const override;
     QRect inputBounds() const override;
 
+    bool confinesMousePointer() const override;
+
     Q_INVOKABLE void requestFocus() override;
     Q_INVOKABLE void close() override;
     Q_INVOKABLE void raise() override;

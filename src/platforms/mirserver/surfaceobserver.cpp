@@ -175,6 +175,9 @@ void SurfaceObserver::notifySurfaceModifications(const mir::shell::SurfaceSpecif
         QRect qRect = calculateBoundingRect(modifications.input_shape.value());
         Q_EMIT inputBoundsChanged(qRect);
     }
+    if (modifications.confine_pointer.is_set()) {
+        Q_EMIT confinesMousePointerChanged(modifications.confine_pointer.value() == mir_pointer_confined_to_surface);
+    }
 }
 
 SurfaceObserver *SurfaceObserver::observerForSurface(const mir::scene::Surface *surface)

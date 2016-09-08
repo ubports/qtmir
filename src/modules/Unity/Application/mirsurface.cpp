@@ -91,6 +91,7 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
             setShellChrome(static_cast<Mir::ShellChrome>(shell_chrome));
         });
         connect(observer.get(), &SurfaceObserver::inputBoundsChanged, this, &MirSurface::setInputBounds);
+        connect(observer.get(), &SurfaceObserver::confinesMousePointerChanged, this, &MirSurface::confinesMousePointerChanged);
         observer->setListener(this);
     }
 
@@ -886,6 +887,11 @@ bool MirSurface::focused() const
 QRect MirSurface::inputBounds() const
 {
     return m_inputBounds;
+}
+
+bool MirSurface::confinesMousePointer() const
+{
+    return m_surface->confine_pointer_state() == mir_pointer_confined_to_surface;
 }
 
 void MirSurface::requestFocus()
