@@ -16,6 +16,7 @@
 
 #include "qteventfeeder.h"
 #include "cursor.h"
+#include "eventbuilder.h"
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -34,6 +35,8 @@
 
 // common dir
 #include <debughelpers.h>
+
+using namespace qtmir;
 
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
@@ -573,6 +576,8 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     case mir_pointer_action_button_down:
     case mir_pointer_action_motion:
     {
+        EventBuilder::instance()->store(pev, timestamp.count());
+
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
