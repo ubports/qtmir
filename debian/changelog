@@ -1,3 +1,15 @@
+qtmir (0.4.8+16.10.20160909-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Send relative pointer movement to Mir clients (LP: #1597205)
+  * Implement cursor confinement (LP: #1590099)
+
+  [ Gerry Boland ]
+  * Deliver mouse event manually if no cursor exists to deliver it
+  * [tests] refactor ScreensModel test to use mocks from mirtest-dev
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 09 Sep 2016 14:40:56 +0000
+
 qtmir (0.4.8+16.10.20160906-0ubuntu1) yakkety; urgency=medium
 
   [ Daniel d'Andrada ]
