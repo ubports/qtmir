@@ -420,7 +420,7 @@ public:
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
     }
 
-    void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
+    void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
                           Qt::KeyboardModifiers modifiers) override
     {
         // Send to the first screen that handles the mouse event
@@ -434,12 +434,15 @@ public:
         int i = 0;
         while (i < screens.count() && !eventHandled) {
             auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
-            eventHandled = platformCursor->handleMouseEvent(timestamp, movement, buttons, modifiers);
+            eventHandled = platformCursor->handleMouseEvent(timestamp, relative, buttons, modifiers);
             ++i;
+        }
+        if (!eventHandled) {
+            QWindowSystemInterface::handleMouseEvent(focusedWindow(), timestamp, absolute, absolute, buttons, modifiers);
         }
     }
 
-    void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) override
+    void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta, Qt::KeyboardModifiers modifiers) override
     {
         // Send to the first screen that handles the mouse event
         // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
@@ -452,8 +455,12 @@ public:
         int i = 0;
         while (i < screens.count() && !eventHandled) {
             auto platformCursor = static_cast<qtmir::Cursor*>(screens.at(i)->cursor());
-            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, mods);
+            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, modifiers);
             ++i;
+        }
+        if (!eventHandled) {
+            QWindowSystemInterface::handleWheelEvent(focusedWindow(), timestamp, absolute, absolute,
+                                                     QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         }
     }
 
@@ -565,8 +572,10 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
 
-    auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+    auto relative = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
+    auto absolute = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+                            mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
     switch (action) {
     case mir_pointer_action_button_up:
@@ -579,10 +588,10 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         if (hDelta != 0 || vDelta != 0) {
             // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
             const QPoint angleDelta(120 * hDelta, 120 * vDelta);
-            mQtWindowSystem->handleWheelEvent(timestamp.count(), angleDelta, modifiers);
+            mQtWindowSystem->handleWheelEvent(timestamp.count(), absolute, angleDelta, modifiers);
         }
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
-        mQtWindowSystem->handleMouseEvent(timestamp.count(), movement, buttons, modifiers);
+        mQtWindowSystem->handleMouseEvent(timestamp.count(), relative, absolute, buttons, modifiers);
         break;
     }
     default:
@@ -646,7 +655,7 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
         }
     }
 
-    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received" << qPrintable(mirKeyboardEventToString(kev))
+    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received " << qPrintable(mirKeyboardEventToString(kev))
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
