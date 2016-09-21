@@ -341,7 +341,7 @@ void Session::close()
 
     if (m_state == Stopped) return;
 
-    for (int i = 0; i < m_surfaceList.count(); ++i) {
+    for (int i = m_surfaceList.count()-1; i >= 0; --i) {
         auto surface = static_cast<MirSurfaceInterface*>(m_surfaceList.get(i));
         surface->close();
     }
