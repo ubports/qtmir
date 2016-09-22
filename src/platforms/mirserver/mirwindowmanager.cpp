@@ -207,6 +207,10 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
         surface->set_input_region(modifications.input_shape.value());
     }
 
+    if (modifications.confine_pointer.is_set()) {
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
+    }
+
     SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
     if (observer) {
         observer->notifySurfaceModifications(modifications);

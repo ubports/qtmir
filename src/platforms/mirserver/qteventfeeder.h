@@ -50,9 +50,10 @@ public:
         virtual void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
-        virtual void handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
+        virtual void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
                                       Qt::KeyboardModifiers modifiers) = 0;
-        virtual void handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods) = 0;
+        virtual void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta,
+                                      Qt::KeyboardModifiers modifiers) = 0;
     };
 
     QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel);

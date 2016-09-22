@@ -19,19 +19,25 @@
 
 #include "stub_display.h"
 #include "mock_main_loop.h"
+#include "mock_gl_display_buffer.h"
 #include "qtcompositor.h"
 #include "fake_displayconfigurationoutput.h"
+
+#include <mir/test/doubles/stub_display_buffer.h>
 
 #include "testable_screensmodel.h"
 #include "screen.h"
 #include "screenwindow.h"
 
 #include <QGuiApplication>
+#include <QLoggingCategory>
 
 using namespace ::testing;
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+
+using StubDisplayBuffer = mir::test::doubles::StubDisplayBuffer;
 
 class ScreensModelTest : public ::testing::Test {
 protected:
@@ -48,6 +54,9 @@ void ScreensModelTest::SetUp()
 {
     setenv("QT_QPA_PLATFORM", "minimal", 1);
     Screen::skipDBusRegistration = true;
+
+    // We don't want the logging spam cluttering the test results
+    QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));
 
     screensModel = new TestableScreensModel;
     display = std::make_shared<StubDisplay>();
