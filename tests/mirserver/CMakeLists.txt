@@ -1,4 +1,5 @@
 add_subdirectory(ArgvHelper)
+add_subdirectory(EventBuilder)
 add_subdirectory(QtEventFeeder)
 add_subdirectory(Screen)
 add_subdirectory(ScreensModel)
@@ -79,6 +80,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver/ubuntutheme.cpp
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver/clipboard.cpp
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver/creationhints.cpp
+    ${CMAKE_SOURCE_DIR}/src/platforms/mirserver/eventbuilder.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h

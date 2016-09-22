@@ -78,6 +78,7 @@ public:
 
     bool focused() const override { return false; }
     QRect inputBounds() const override { return QRect(0,0,10,10); }
+    bool confinesMousePointer() const override { return false; }
 
     void requestFocus() override {
         Q_EMIT focusRequested();
