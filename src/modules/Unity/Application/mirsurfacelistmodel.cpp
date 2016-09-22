@@ -136,12 +136,12 @@ const unityapp::MirSurfaceInterface *MirSurfaceListModel::get(int index) const
     }
 }
 
-void MirSurfaceListModel::prependSurfaces(QList<MirSurfaceInterface*> &surfaceList, int prependFirst, int prependLast)
+void MirSurfaceListModel::prependSurfaces(const QList<MirSurfaceInterface*> &surfaceList, int prependFirst, int prependLast)
 {
     bool wasEmpty = isEmpty();
     beginInsertRows(QModelIndex(), 0/*first*/, 0 + (prependLast - prependFirst)/*last*/);
     for (int i = prependLast; i >= prependFirst; --i) {
-        auto surface = surfaceList[i];
+        auto surface = surfaceList.at(i);
         m_surfaceList.prepend(surface);
         connect(surface, &MirSurfaceInterface::raiseRequested, this,
                 [this, surface]()
@@ -203,7 +203,7 @@ void MirSurfaceListModel::removeSurfaceList(MirSurfaceListModel *surfaceListMode
 
 bool MirSurfaceListModel::isEmpty() const
 {
-    return m_surfaceList.count() == 0;
+    return m_surfaceList.isEmpty();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -155,7 +155,7 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
 {
     switch (attribute) {
     case mir_surface_attrib_type:
-        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(state());
+        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(type());
         Q_EMIT typeChanged(type());
         break;
     case mir_surface_attrib_state:
@@ -703,6 +703,8 @@ QString MirSurface::appId() const
 
     if (m_session && m_session->application()) {
         appId = m_session->application()->appId();
+    } else if (m_session) {
+        appId = m_session->name();
     } else {
         appId.append("-");
     }

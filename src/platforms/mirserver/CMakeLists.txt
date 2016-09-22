@@ -87,6 +87,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ubuntutheme.cpp
     clipboard.cpp
     creationhints.cpp
+    inputdeviceobserver.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h

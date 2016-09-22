@@ -32,6 +32,8 @@
 #include "qtcompositor.h"
 #include "qteventfeeder.h"
 #include "logging.h"
+#include "inputdeviceobserver.h"
+#include "mirsingleton.h"
 
 // std
 #include <memory>
@@ -42,6 +44,7 @@
 
 // mir
 #include <mir/graphics/cursor.h>
+#include <mir/input/input_device_hub.h>
 
 namespace mg = mir::graphics;
 namespace mo  = mir::options;
@@ -144,6 +147,8 @@ MirServer::MirServer(int &argc, char **argv,
         exit(1);
     }
 
+    the_input_device_hub()->add_observer(std::make_shared<MirInputDeviceObserver>(qtmir::Mir::instance()->currentKeymap(), the_input_device_hub(), this));
+
     if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
         argc = 1;
     }
@@ -230,5 +235,5 @@ void usingHiddenCursor(mir::Server& server)
 {
     server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
         { return std::make_shared<HiddenCursorWrapper>(wrapped); });
-};
+}
 }

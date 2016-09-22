@@ -52,6 +52,7 @@ public:
     using mir::Server::the_main_loop;
     using mir::Server::the_prompt_session_manager;
     using mir::Server::the_persistent_surface_store;
+    using mir::Server::the_input_device_hub;
 
     void stop();
 

@@ -128,6 +128,10 @@ const char *mirSurfaceTypeToStr(int value)
         return "popover";
     case mir_surface_type_inputmethod:
         return "inputmethod";
+    case mir_surface_type_satellite:
+        return "satellite";
+    case mir_surface_type_tip:
+        return "tip";
     default:
         return "???";
     }
@@ -146,8 +150,12 @@ const char *mirSurfaceStateToStr(int value)
         return "maximized";
     case mir_surface_state_vertmaximized:
         return "vertmaximized";
+    case mir_surface_state_horizmaximized:
+        return "horizmaximized";
     case mir_surface_state_fullscreen:
         return "fullscreen";
+    case mir_surface_state_hidden:
+        return "hidden";
     default:
         return "???";
     }
