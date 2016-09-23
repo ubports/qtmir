@@ -24,8 +24,6 @@
 #include <QString>
 #include <QVector>
 
-namespace mir { namespace input { class Device; class InputDeviceObserver; }}
-
 class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObserver
 {
     Q_OBJECT

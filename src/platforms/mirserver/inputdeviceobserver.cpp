@@ -30,14 +30,6 @@ MirInputDeviceObserver::MirInputDeviceObserver(const QString &keymap, const std:
 {
     qDebug() << "!!! INIT, keymap:" << m_keymap;
 
-    m_hub->for_each_input_device([this](const mir::input::Device &device){
-        qDebug() << "!!! Probing device" << device.id();
-        auto newDevice = std::shared_ptr<mir::input::Device>(const_cast<mir::input::Device *>(&device));
-        device_added(newDevice);
-    });
-
-    qDebug() << "!!! INIT COMPLETE, devices:" << m_devices.count();
-
     bool result = connect(qtmir::Mir::instance(), &qtmir::Mir::currentKeymapChanged,
                           this, &MirInputDeviceObserver::setKeymap);
 
