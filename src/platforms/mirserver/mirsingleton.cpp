@@ -62,6 +62,4 @@ void qtmir::Mir::setCurrentKeymap(const QString &currentKeymap)
 
     m_currentKeymap = currentKeymap;
     Q_EMIT currentKeymapChanged(m_currentKeymap);
-
-    qDebug() << "!!! Current keymap changed to:" << m_currentKeymap;
 }
