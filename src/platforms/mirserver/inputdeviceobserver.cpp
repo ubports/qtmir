@@ -24,16 +24,17 @@
 
 #include "inputdeviceobserver.h"
 #include "mirsingleton.h"
+#include "logging.h"
 
 MirInputDeviceObserver::MirInputDeviceObserver(const QString &keymap, const std::shared_ptr<mir::input::InputDeviceHub> &hub, QObject * parent):
     QObject(parent), m_keymap(keymap), m_hub(hub)
 {
-    qDebug() << "!!! INIT, keymap:" << m_keymap;
+    qCDebug(QTMIR_MIR_INPUT) << "INIT, keymap:" << m_keymap;
 
     bool result = connect(qtmir::Mir::instance(), &qtmir::Mir::currentKeymapChanged,
                           this, &MirInputDeviceObserver::setKeymap);
 
-    qDebug() << "!!! Input device observer created and connected with status:" << result;
+    qCDebug(QTMIR_MIR_INPUT) << "Input device observer created and connected with status:" << result;
 }
 
 MirInputDeviceObserver::~MirInputDeviceObserver()
@@ -43,7 +44,7 @@ MirInputDeviceObserver::~MirInputDeviceObserver()
 
 void MirInputDeviceObserver::setKeymap(const QString &keymap)
 {
-    qDebug() << "!!! SET KEYMAP" << keymap;
+    qCDebug(QTMIR_MIR_INPUT) << "SET KEYMAP" << keymap;
     m_keymap = keymap;
     applyKeymap();
 }
@@ -59,7 +60,7 @@ void MirInputDeviceObserver::device_added(const std::shared_ptr<mir::input::Devi
 {
     if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard) &&
             mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric)) {
-        qDebug() << "!!! Device added" << device->id();
+        qCDebug(QTMIR_MIR_INPUT) << "Device added" << device->id();
         m_devices.append(device);
         applyKeymap(device);
     }
@@ -68,7 +69,7 @@ void MirInputDeviceObserver::device_added(const std::shared_ptr<mir::input::Devi
 void MirInputDeviceObserver::device_removed(const std::shared_ptr<mir::input::Device> &device)
 {
     if (device && m_devices.contains(device)) {
-        qDebug() << "!!! Device removed" << device->id();
+        qCDebug(QTMIR_MIR_INPUT) << "Device removed" << device->id();
         m_devices.removeAll(device);
     }
 }
@@ -85,7 +86,7 @@ void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mir::input::Devic
             variant = stringList.at(1);
         }
 
-        qDebug() << "!!! Applying keymap" <<  layout << variant << "on" << device->id() << QString::fromStdString(device->name());
+        qCDebug(QTMIR_MIR_INPUT) << "Applying keymap" <<  layout << variant << "on" << device->id() << QString::fromStdString(device->name());
         mir::input::KeyboardConfiguration oldConfig;
         mir::input::Keymap keymap;
         if (device->keyboard_configuration().is_set()) { // preserve the model and options
@@ -97,6 +98,6 @@ void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mir::input::Devic
         keymap.variant = variant.toStdString();
 
         device->apply_keyboard_configuration(std::move(keymap));
-        qDebug() << "!!! Keymap applied";
+        qCDebug(QTMIR_MIR_INPUT) << "Keymap applied";
     }
 }
