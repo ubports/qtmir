@@ -40,8 +40,8 @@ public:
     MOCK_METHOD5(handleTouchEvent, void(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points,
             Qt::KeyboardModifiers mods));
-    MOCK_METHOD4(handleMouseEvent, void(ulong timestamp, QPointF point, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers));
-    MOCK_METHOD3(handleWheelEvent, void(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods));
+    MOCK_METHOD5(handleMouseEvent, void(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers));
+    MOCK_METHOD4(handleWheelEvent, void(ulong timestamp, QPointF absolute, QPoint angleDelta, Qt::KeyboardModifiers modifiers));
 
     ~MockQtWindowSystem()
     {
