@@ -27,15 +27,10 @@
 
 using namespace qtmir;
 
-MirInputDeviceObserver::MirInputDeviceObserver(const QString &keymap, QObject * parent):
-    QObject(parent), m_keymap(keymap)
+MirInputDeviceObserver::MirInputDeviceObserver(const std::shared_ptr<mir::input::InputDeviceHub> &hub, QObject * parent):
+    QObject(parent), m_hub(hub)
 {
-    qCDebug(QTMIR_MIR_KEYMAP) << "INIT, keymap:" << m_keymap;
-
-    bool result = connect(qtmir::Mir::instance(), &qtmir::Mir::currentKeymapChanged,
-                          this, &MirInputDeviceObserver::setKeymap);
-
-    qCDebug(QTMIR_MIR_KEYMAP) << "Input device observer created and connected with status:" << result;
+    connect(Mir::instance(), &Mir::currentKeymapChanged, this, &MirInputDeviceObserver::setKeymap);
 }
 
 MirInputDeviceObserver::~MirInputDeviceObserver()

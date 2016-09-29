@@ -147,7 +147,7 @@ MirServer::MirServer(int &argc, char **argv,
         exit(1);
     }
 
-    the_input_device_hub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>(qtmir::Mir::instance()->currentKeymap(), this));
+    the_input_device_hub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>(the_input_device_hub(), this));
 
     if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
         argc = 1;
