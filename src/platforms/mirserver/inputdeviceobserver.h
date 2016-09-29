@@ -18,23 +18,26 @@
 #define INPUTDEVICEOBSERVER_H
 
 #include <mir/input/input_device_observer.h>
-#include <mir/input/input_device_hub.h>
 
 #include <QObject>
 #include <QString>
 #include <QVector>
 
-class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObserver
+namespace mi = mir::input;
+
+namespace qtmir {
+
+class MirInputDeviceObserver: public QObject, public mi::InputDeviceObserver
 {
     Q_OBJECT
 public:
-    MirInputDeviceObserver(const QString &keymap, const std::shared_ptr<mir::input::InputDeviceHub> &hub , QObject * parent = nullptr);
+    MirInputDeviceObserver(const QString &keymap, QObject * parent = nullptr);
     ~MirInputDeviceObserver();
 
 protected:
-    void device_added(std::shared_ptr<mir::input::Device> const& device) override;
-    void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
-    void device_removed(std::shared_ptr<mir::input::Device> const& device) override;
+    void device_added(std::shared_ptr<mi::Device> const& device) override;
+    void device_changed(std::shared_ptr<mi::Device> const& /*device*/) override {}
+    void device_removed(std::shared_ptr<mi::Device> const& device) override;
     void changes_complete() override {}
 
 private Q_SLOTS:
@@ -42,10 +45,11 @@ private Q_SLOTS:
 
 private:
     void applyKeymap();
-    void applyKeymap(const std::shared_ptr<mir::input::Device> &device);
+    void applyKeymap(const std::shared_ptr<mi::Device> &device);
     QString m_keymap;
-    QVector<std::shared_ptr<mir::input::Device>> m_devices;
-    std::shared_ptr<mir::input::InputDeviceHub> m_hub;
+    QVector<std::shared_ptr<mi::Device>> m_devices;
 };
+
+} // namespace qtmir
 
 #endif
