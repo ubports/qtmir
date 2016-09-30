@@ -26,8 +26,9 @@
 #include "logging.h"
 
 using namespace qtmir;
+namespace mi = mir::input;
 
-MirInputDeviceObserver::MirInputDeviceObserver(const std::shared_ptr<mir::input::InputDeviceHub> &hub, QObject * parent):
+MirInputDeviceObserver::MirInputDeviceObserver(const std::shared_ptr<mi::InputDeviceHub> &hub, QObject * parent):
     QObject(parent), m_hub(hub)
 {
     connect(Mir::instance(), &Mir::currentKeymapChanged, this, &MirInputDeviceObserver::setKeymap);
