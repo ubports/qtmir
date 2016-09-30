@@ -25,7 +25,6 @@ namespace qtmir {
 class Mir : public ::Mir
 {
     Q_OBJECT
-    Q_PROPERTY(QString currentKeymap READ currentKeymap WRITE setCurrentKeymap NOTIFY currentKeymapChanged)
 public:
     virtual ~Mir();
 
@@ -34,11 +33,8 @@ public:
     void setCursorName(const QString &cursorName) override;
     QString cursorName() const override;
 
-    QString currentKeymap() const;
-    void setCurrentKeymap(const QString &currentKeymap);
-
-Q_SIGNALS:
-    void currentKeymapChanged(const QString &currentKeymap);
+    QString currentKeymap() const override;
+    void setCurrentKeymap(const QString &currentKeymap) override;
 
 private:
     Mir();
