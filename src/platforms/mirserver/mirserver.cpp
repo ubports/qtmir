@@ -33,7 +33,6 @@
 #include "qteventfeeder.h"
 #include "logging.h"
 #include "inputdeviceobserver.h"
-#include "mirsingleton.h"
 
 // std
 #include <memory>
