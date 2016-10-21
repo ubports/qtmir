@@ -49,7 +49,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
 
     // On Starting as it has no surface.
     EXPECT_EQ(Session::Starting, session->state());
@@ -75,10 +75,10 @@ TEST_F(SessionTests, AddChildSession)
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    Session session(mirSession, mirServer->the_prompt_session_manager());
-    Session session1(mirSession, mirServer->the_prompt_session_manager());
-    Session session2(mirSession, mirServer->the_prompt_session_manager());
-    Session session3(mirSession, mirServer->the_prompt_session_manager());
+    Session session(mirSession, promptSessionManager);
+    Session session1(mirSession, promptSessionManager);
+    Session session2(mirSession, promptSessionManager);
+    Session session3(mirSession, promptSessionManager);
 
     // add surfaces
     session.addChildSession(&session1);
@@ -100,10 +100,10 @@ TEST_F(SessionTests, InsertChildSession)
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    Session session(mirSession, mirServer->the_prompt_session_manager());
-    Session session1(mirSession, mirServer->the_prompt_session_manager());
-    Session session2(mirSession, mirServer->the_prompt_session_manager());
-    Session session3(mirSession, mirServer->the_prompt_session_manager());
+    Session session(mirSession, promptSessionManager);
+    Session session1(mirSession, promptSessionManager);
+    Session session2(mirSession, promptSessionManager);
+    Session session3(mirSession, promptSessionManager);
 
     // add surfaces
     session.insertChildSession(100, &session1); // test overflow
@@ -125,10 +125,10 @@ TEST_F(SessionTests, RemoveChildSession)
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    Session session(mirSession, mirServer->the_prompt_session_manager());
-    Session session1(mirSession, mirServer->the_prompt_session_manager());
-    Session session2(mirSession, mirServer->the_prompt_session_manager());
-    Session session3(mirSession, mirServer->the_prompt_session_manager());
+    Session session(mirSession, promptSessionManager);
+    Session session1(mirSession, promptSessionManager);
+    Session session2(mirSession, promptSessionManager);
+    Session session3(mirSession, promptSessionManager);
 
     // add surfaces
     session.addChildSession(&session1);
@@ -155,10 +155,10 @@ TEST_F(SessionTests, DeleteChildSessionRemovesFromApplication)
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    Session session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session1 = new Session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session2 = new Session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session3 = new Session(mirSession, mirServer->the_prompt_session_manager());
+    Session session(mirSession, promptSessionManager);
+    Session* session1 = new Session(mirSession, promptSessionManager);
+    Session* session2 = new Session(mirSession, promptSessionManager);
+    Session* session3 = new Session(mirSession, promptSessionManager);
 
     // add surfaces
     session.addChildSession(session1);
@@ -187,10 +187,10 @@ TEST_F(SessionTests, DeleteSessionDeletesChildSessions)
 
     std::shared_ptr<ms::Session> mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    Session* session = new Session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session1 = new Session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session2 = new Session(mirSession, mirServer->the_prompt_session_manager());
-    Session* session3 = new Session(mirSession, mirServer->the_prompt_session_manager());
+    Session* session = new Session(mirSession, promptSessionManager);
+    Session* session1 = new Session(mirSession, promptSessionManager);
+    Session* session2 = new Session(mirSession, promptSessionManager);
+    Session* session3 = new Session(mirSession, promptSessionManager);
 
     // add children
     session->addChildSession(session1);
@@ -217,7 +217,7 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    auto session = std::make_shared<qtmir::Session>(mirSession, mirServer->the_prompt_session_manager());
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
@@ -295,7 +295,7 @@ TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
 
     auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
 
-    auto session = std::make_shared<SessionTestClass>(mirSession, mirServer->the_prompt_session_manager());
+    auto session = std::make_shared<SessionTestClass>(mirSession, promptSessionManager);
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);

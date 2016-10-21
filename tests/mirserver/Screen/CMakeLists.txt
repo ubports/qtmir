@@ -8,6 +8,10 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common
+)
+
+include_directories(
+  SYSTEM
   ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
 )
@@ -16,7 +20,7 @@ add_executable(ScreenTest ${SCREEN_TEST_SOURCES})
 
 target_link_libraries(
   ScreenTest
-  qpa-mirserver
+  qpa-mirserver-nolttng
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

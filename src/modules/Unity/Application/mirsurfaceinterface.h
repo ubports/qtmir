@@ -77,6 +77,10 @@ public:
         the name.
      */
     virtual void setViewActiveFocus(qintptr viewId, bool value) = 0;
+    /*
+        Whether any view of this surface currently has QML active focus
+     */
+    virtual bool activeFocus() const = 0;
 
     virtual void mousePressEvent(QMouseEvent *event) = 0;
     virtual void mouseMoveEvent(QMouseEvent *event) = 0;
@@ -99,6 +103,8 @@ public:
     virtual QCursor cursor() const = 0;
 
     virtual SessionInterface* session() = 0;
+
+    virtual bool inputAreaContains(const QPoint &) const = 0;
 
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;

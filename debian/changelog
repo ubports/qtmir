@@ -1,3 +1,145 @@
+qtmir (0.4.8+16.10.20160909-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Send relative pointer movement to Mir clients (LP: #1597205)
+  * Implement cursor confinement (LP: #1590099)
+
+  [ Gerry Boland ]
+  * Deliver mouse event manually if no cursor exists to deliver it
+  * [tests] refactor ScreensModel test to use mocks from mirtest-dev
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 09 Sep 2016 14:40:56 +0000
+
+qtmir (0.4.8+16.10.20160906-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Don't occlude newly created surfaces until some time has passed (LP:
+    #1620297)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 06 Sep 2016 18:31:26 +0000
+
+qtmir (0.4.8+16.10.20160831-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * DBusFocusInfo: added isSurfaceFocused(serializedId)
+  * Use content-hub for clipboard services (LP: #1471998)
+  * Don't link tests against LTTng
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Wed, 31 Aug 2016 01:52:12 +0000
+
+qtmir (0.4.8+16.10.20160826.1-0ubuntu3) xenial; urgency=medium
+
+  [ Vicamo Yang  ]
+  * Build qtmir-android on arm64 for the need of valid libqpa-mirserver.so for
+    ubuntu phone xenial arm64 porting.
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Tue, 30 Aug 2016 09:44:35 +0200
+
+qtmir (0.4.8+16.10.20160826.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * DBusFocusInfo.isPidFocused: search sessions recursively (LP:
+    #1612166)
+
+  [ Michał Sawicz ]
+  * Revert r538 that's causing a unity8 crash when launching emergency
+    dialer over greeter (LP: #1616842)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 26 Aug 2016 10:43:18 +0000
+
+qtmir (0.4.8+16.10.20160819-0ubuntu1) yakkety; urgency=medium
+
+  * No change rebuild for UAL ABI change
+
+ -- Ted Gould <ted@gould.cx>  Fri, 19 Aug 2016 14:38:12 +0000
+
+qtmir (0.4.8+16.10.20160816.1-0ubuntu1) yakkety; urgency=medium
+
+  * compatibility changes for mir 0.24.0
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 16 Aug 2016 11:41:40 +0000
+
+qtmir (0.4.8+16.10.20160810-0ubuntu1) yakkety; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce MirServer to an implementation detail of QMirServer (nothing
+    else needs to touch it).
+
+  [ Albert Astals Cid ]
+  * Improvements from running clazy over the code
+  * Compile with clang
+
+  [ Daniel d'Andrada ]
+  * Remove Application.stage and RoleStage from ApplicationManager
+
+  [ Daniel van Vugt ]
+  * Fix incorrect mouse wheel/touchpad scrolling scale (LP: #1607240)
+    (LP: #1607223, #1607240)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 10 Aug 2016 06:53:16 +0000
+
+qtmir (0.4.8+16.10.20160730-0ubuntu1) yakkety; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Fix memory leak in application_test
+
+  [ Daniel d'Andrada ]
+  * Ensure different cursor names for consecutive custom cursor changes
+    (LP: #1604701, #1605078)
+  * Remove com.canonical.Unity.WindowStack D-Bus service
+
+  [ Gerry Boland ]
+  * Dump core if Mir fails to start in time - dump will help us see
+    where Mir blocked (LP: #1537389)
+  * Tests: AppManTest: use stack instead of heap when possible, better
+    cleanup of resources
+  * AppMan: queue the onProcessStarting slot, as processStarting blocks
+    ubuntu-app-launch from executing the process.
+
+  [ Marco Trevisan (Treviño) ]
+  * ScreenWindow: handle window activated when exposing it (LP:
+    #1590060)
+
+  [ Nick Dedekind ]
+  * Re-added occlusion detection (LP: #1475678)
+
+ -- Lukáš Tinkl <lukas.tinkl@canonical.com>  Sat, 30 Jul 2016 21:21:32 +0000
+
+qtmir (0.4.8+16.10.20160714-0ubuntu2~2) yakkety; urgency=medium
+
+  * Rebuild against Qt 5.6.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Sun, 24 Jul 2016 17:56:42 +0300
+
+qtmir (0.4.8+16.10.20160714-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * Implement MirSurface::inputBounds and make use of mir's input region
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 14 Jul 2016 07:08:37 +0000
+
+qtmir (0.4.8+16.10.20160712-0ubuntu1) yakkety; urgency=medium
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Build the qtmir-android package for arm64 as well.
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Tue, 12 Jul 2016 13:39:51 +0000
+
+qtmir (0.4.8+16.10.20160705.2-0ubuntu1) yakkety; urgency=medium
+
+  [ Michał Sawicz ]
+  * Don't use root dbus path (LP: #1599145)
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Tue, 05 Jul 2016 19:29:43 +0000
+
+qtmir (0.4.8+16.10.20160704.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * com.canonical.Unity.FocusInfo D-Bus service for providing focus
+    information
+
+ -- Łukasz Zemczak <lukasz.zemczak@canonical.com>  Mon, 04 Jul 2016 13:58:19 +0000
+
 qtmir (0.4.8+16.10.20160614-0ubuntu1) yakkety; urgency=medium
 
   [ Albert Astals Cid ]
@@ -26,6 +168,31 @@ qtmir (0.4.8+16.10.20160614-0ubuntu1) yakkety; urgency=medium
   * Adding ApplicationInfo::surfaceCount property
 
  -- Albert Astals Cid <albert.astals@canonical.com>  Tue, 14 Jun 2016 08:38:00 +0000
+
+qtmir (0.4.8+16.10.20160606.1-0ubuntu1) yakkety; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Add support for compiler sanitizers via ECM
+  * Compile with -fsanitize=undefined
+  * Fix leak in ScreensModelTest (LP: #1585502)
+  * Fix leak in SessionManager test (LP: #1585498)
+  * Remove unused m_sessions member
+  * Add missing breaks
+  * Initialize m_lastX and m_lastY
+  * Initialize m_sessionId
+  * Give the locker a name
+  * Fix memory leak in QtEventFeederTest (LP: #1585503)
+  * Fix leaks in application_manager_test (LP: #1585501)
+
+  [ Daniel d'Andrada ]
+  * Improve Session debug logging
+  * MirSurfaceListModel: prepending a surface always causes
+    firstChanged() emission
+
+  [ Michael Zanetti ]
+  * Adding ApplicationInfo::surfaceCount property
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 06 Jun 2016 15:45:57 +0000
 
 qtmir (0.4.8+16.10.20160602-0ubuntu1) yakkety; urgency=medium
 

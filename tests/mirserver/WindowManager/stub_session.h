@@ -56,6 +56,9 @@ struct StubSession : mir::scene::Session
     void configure_streams(mir::scene::Surface& surface, std::vector<mir::shell::StreamSpecification> const& config) override;
 
     void send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) override;
+    mir::graphics::BufferID create_buffer(mir::graphics::BufferProperties const& properties) override;
+    void destroy_buffer(mir::graphics::BufferID) override;
+    std::shared_ptr<mir::graphics::Buffer> get_buffer(mir::graphics::BufferID) override;
 };
 
 #endif //QPAMIRSERVER_STUBSESSION_H

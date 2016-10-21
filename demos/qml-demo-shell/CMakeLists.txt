@@ -1,17 +1,14 @@
 set(DEMO_SHELL qtmir-demo-shell)
 
 include_directories(
+    SYSTEM
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Qml_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 )
 
 add_executable(${DEMO_SHELL}
     main.cpp
-)
-
-include_directories(
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-    ${Qt5Qml_PRIVATE_INCLUDE_DIRS}
-    ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 )
 
 target_link_libraries(

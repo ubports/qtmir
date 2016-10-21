@@ -7,8 +7,11 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/framework
-  ${MIRSERVER_INCLUDE_DIRS}
+)
 
+include_directories(
+  SYSTEM
+  ${MIRSERVER_INCLUDE_DIRS}
   ${Qt5Core_INCLUDE_DIRS}
   ${Qt5GUI_INCLUDE_DIRS}
   ${Qt5Quick_INCLUDE_DIRS}
@@ -23,8 +26,8 @@ target_link_libraries(
   application_test
 
   Qt5::Test
-  
-  unityapplicationplugin
+
+  unityapplicationplugin-nolttng
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

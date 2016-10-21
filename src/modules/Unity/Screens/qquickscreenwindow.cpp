@@ -55,7 +55,7 @@ QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
 {
     DEBUG_MSG << "()";
 
-    if (qGuiApp->platformName() == "mirserver") {
+    if (qGuiApp->platformName() == QLatin1String("mirserver")) {
         connect(qGuiApp->platformNativeInterface(), &QPlatformNativeInterface::windowPropertyChanged,
                 this, &QQuickScreenWindow::nativePropertyChanged);
         //m_scale = getScaleNativeProperty(); DO NOT CALL HERE - see note above

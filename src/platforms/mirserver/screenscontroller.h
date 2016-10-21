@@ -43,7 +43,7 @@ public:
                                QObject *parent = 0);
 
     CustomScreenConfigurationList configuration();
-    bool setConfiguration(CustomScreenConfigurationList newConfig);
+    bool setConfiguration(const CustomScreenConfigurationList &newConfig);
 
 private:
     const QSharedPointer<ScreensModel> m_screensModel;

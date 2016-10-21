@@ -144,7 +144,7 @@ void ScreensModel::update()
     );
 
     // Announce new Screens to Qt
-    for (auto screen : newScreenList) {
+    Q_FOREACH (auto screen, newScreenList) {
         Q_EMIT screenAdded(screen);
     }
 
@@ -157,7 +157,7 @@ void ScreensModel::update()
     }
 
     // Delete any old & unused Screens
-    for (auto screen: oldScreenList) {
+    Q_FOREACH (auto screen, oldScreenList) {
         DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
                                << " and geometry " << screen->geometry();
 
@@ -168,7 +168,7 @@ void ScreensModel::update()
         }
         bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
         if (!ok) {
-            DEBUG_MSG << "() - failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
+            DEBUG_MSG << "() - Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }
         Q_EMIT screenRemoved(screen); // should delete the backing Screen
     }
@@ -182,7 +182,7 @@ void ScreensModel::update()
                          buffer.view_area().size.width.as_int(),
                          buffer.view_area().size.height.as_int());
 
-            for (auto screen : m_screenList) {
+            Q_FOREACH (auto screen, m_screenList) {
                 if (dbGeom == screen->geometry()) {
                     screen->setMirDisplayBuffer(&buffer, &group);
                     break;
@@ -192,7 +192,7 @@ void ScreensModel::update()
     });
 
     qCDebug(QTMIR_SCREENS) << "=======================================";
-    for (auto screen: m_screenList) {
+    Q_FOREACH (auto screen, m_screenList) {
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->primaryWindow()
@@ -219,7 +219,7 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
 
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
-    for (const auto screen : m_screenList) {
+    Q_FOREACH (const auto screen, m_screenList) {
         Q_FOREACH (ScreenWindow* window, screen->windows()) {
             window->setExposed(exposed);
         }
@@ -241,7 +241,7 @@ Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::Di
     return nullptr;
 }
 
-QWindow* ScreensModel::getWindowForPoint(const QPoint &point) //FIXME - not thread safe & not efficient
+QWindow* ScreensModel::getWindowForPoint(QPoint point) //FIXME - not thread safe & not efficient
 {
     // This is a part optimization, and a part work-around for AP generated input events occasionally
     // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
@@ -250,7 +250,7 @@ QWindow* ScreensModel::getWindowForPoint(const QPoint &point) //FIXME - not thre
         if (primaryWindow) return primaryWindow->window();
     }
 
-    for (Screen *screen : m_screenList) {
+    Q_FOREACH (Screen *screen, m_screenList) {
         if (screen->primaryWindow() && screen->geometry().contains(point)) {
             return screen->primaryWindow()->window();
         }

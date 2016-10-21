@@ -30,7 +30,6 @@
 #include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/proc_info.h>
-#include <mirserver.h>
 
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
@@ -39,6 +38,7 @@
 #include "mock_shared_wakelock.h"
 #include "mock_settings.h"
 #include "mock_task_controller.h"
+#include "mock_persistent_surface_store.h"
 
 namespace ms = mir::scene;
 using namespace qtmir;
@@ -46,6 +46,7 @@ using namespace qtmir;
 namespace qtmir {
 
 typedef testing::NiceMock<mir::scene::MockPromptSessionManager> StubPromptSessionManager;
+typedef testing::NiceMock<mir::shell::MockPersistentSurfaceStore> StubPersistentSurfaceStore;
 
 // For better output in ASSERT_* and EXPECT_* error messages
 void PrintTo(const Application::InternalState& state, ::std::ostream* os);
@@ -69,7 +70,7 @@ public:
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
     std::shared_ptr<StubPromptSessionManager> promptSessionManager;
-    QSharedPointer<MirServer> mirServer;
+    std::shared_ptr<StubPersistentSurfaceStore> persistentSurfaceStore;
 
     mir::shell::Shell *mirShell{nullptr};
     ApplicationManager applicationManager;

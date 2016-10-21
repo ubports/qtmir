@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QMap>
 #include <QMutex>
+#include <QRect>
 #include <QSize>
 #include <mir/scene/surface_observer.h>
 
@@ -30,7 +31,7 @@ namespace mir {
         class Surface;
     }
     namespace shell {
-        class SurfaceSpecification;
+        struct SurfaceSpecification;
     }
 }
 
@@ -85,13 +86,15 @@ Q_SIGNALS:
     void widthIncrementChanged(int);
     void heightIncrementChanged(int);
     void shellChromeChanged(MirShellChrome);
+    void inputBoundsChanged(const QRect &rect);
+    void confinesMousePointerChanged(bool);
 
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
     QObject *m_listener;
     bool m_framesPosted;
     QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
-    static QMap<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
+    static QHash<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
 };
 
 #endif

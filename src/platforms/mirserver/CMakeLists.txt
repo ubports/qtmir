@@ -26,6 +26,10 @@ endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
 
+)
+
+include_directories(
+  SYSTEM
     ${MIRCOMMON_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
@@ -40,6 +44,8 @@ include_directories(
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
+
+    ${CONTENT_HUB_INCLUDE_DIRS}
 )
 
 # We have to remove -pedantic for tracepoints.c
@@ -51,6 +57,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     cursor.cpp
+    eventbuilder.cpp
     logging.cpp
     mircursorimages.cpp
     mirdisplayconfigurationpolicy.cpp
@@ -62,6 +69,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qmirserver_p.cpp
     sessionauthorizer.cpp
     sessionlistener.cpp
+    shelluuid.cpp
     surfaceobserver.cpp
     promptsessionlistener.cpp
     mirserver.cpp
@@ -107,6 +115,8 @@ target_link_libraries(
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
     ${XKBCOMMON_LIBRARIES}
+
+    ${CONTENT_HUB_LIBRARIES}
 
     Qt5::Core
     Qt5::DBus

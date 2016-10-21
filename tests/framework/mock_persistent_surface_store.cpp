@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,17 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mock_gl_display_buffer.h"
+#include "mock_persistent_surface_store.h"
 
-MockGLDisplayBuffer::MockGLDisplayBuffer()
+namespace mir
 {
-    using namespace testing;
-    ON_CALL(*this, view_area())
-        .WillByDefault(Return(mir::geometry::Rectangle{{0,0},{0,0}}));
-    ON_CALL(*this, native_display_buffer())
-        .WillByDefault(Return(dynamic_cast<mir::graphics::NativeDisplayBuffer*>(this)));
+namespace shell
+{
+
+MockPersistentSurfaceStore::MockPersistentSurfaceStore()
+{
+
 }
 
-MockGLDisplayBuffer::~MockGLDisplayBuffer()
-{
-}
+} // namespace shell
+} // namespace mir

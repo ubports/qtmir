@@ -38,7 +38,10 @@ namespace mir {
         class Session;
         class PromptSession;
     }
-    namespace shell { class Shell; }
+    namespace shell {
+        class Shell;
+        class PersistentSurfaceStore;
+    }
 }
 
 class SurfaceObserver;
@@ -58,6 +61,7 @@ public:
     explicit MirSurfaceManager(
         mir::shell::Shell* shell,
         SessionManager* sessionManager,
+        std::shared_ptr<mir::shell::PersistentSurfaceStore> surfaceStore,
         QObject* parent = nullptr
     );
     ~MirSurfaceManager();
@@ -75,7 +79,7 @@ public Q_SLOTS:
     void onSessionCreatedSurface(const mir::scene::Session *,
                                  const std::shared_ptr<mir::scene::Surface> &,
                                  std::shared_ptr<SurfaceObserver> const&,
-                                 qtmir::CreationHints);
+                                 const qtmir::CreationHints &);
     void onSessionDestroyingSurface(const mir::scene::Session *, const std::shared_ptr<mir::scene::Surface> &);
 
 protected:
@@ -85,6 +89,7 @@ protected:
 private:
     mir::shell::Shell *const m_shell;
     SessionManager* m_sessionManager;
+    std::shared_ptr<mir::shell::PersistentSurfaceStore> m_surfaceStore;
     static MirSurfaceManager *instance;
     MirSurfaceInterface* m_inputMethodSurface = nullptr;
 };

@@ -89,7 +89,7 @@ Session::~Session()
     DEBUG_MSG << "()";
     stopPromptSessions();
 
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         delete child;
     }
@@ -438,9 +438,9 @@ void Session::removeChildSession(SessionInterface* session)
     deleteIfZombieAndEmpty();
 }
 
-void Session::foreachChildSession(std::function<void(SessionInterface* session)> f) const
+void Session::foreachChildSession(const std::function<void(SessionInterface* session)>& f) const
 {
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         f(child);
     }
@@ -467,13 +467,13 @@ void Session::removePromptSession(const std::shared_ptr<ms::PromptSession>& prom
 
 void Session::stopPromptSessions()
 {
-    QList<SessionInterface*> children(m_children->list());
+    const QList<SessionInterface*> children(m_children->list());
     for (SessionInterface* child : children) {
         static_cast<Session*>(child)->stopPromptSessions();
     }
 
-    QList<std::shared_ptr<ms::PromptSession>> copy(m_promptSessions);
-    QListIterator<std::shared_ptr<ms::PromptSession>> it(copy);
+    QVector<std::shared_ptr<ms::PromptSession>> copy(m_promptSessions);
+    QVectorIterator<std::shared_ptr<ms::PromptSession>> it(copy);
     for ( it.toBack(); it.hasPrevious(); ) {
         std::shared_ptr<ms::PromptSession> promptSession = it.previous();
         DEBUG_MSG << " - promptSession=" << promptSession.get();
@@ -489,9 +489,9 @@ std::shared_ptr<ms::PromptSession> Session::activePromptSession() const
     return nullptr;
 }
 
-void Session::foreachPromptSession(std::function<void(const std::shared_ptr<ms::PromptSession>&)> f) const
+void Session::foreachPromptSession(const std::function<void(const std::shared_ptr<ms::PromptSession>&)>& f) const
 {
-    for (std::shared_ptr<ms::PromptSession> promptSession : m_promptSessions) {
+    Q_FOREACH (std::shared_ptr<ms::PromptSession> promptSession, m_promptSessions) {
         f(promptSession);
     }
 }
@@ -512,6 +512,23 @@ bool Session::hasClosingSurfaces() const
 bool Session::hadSurface() const
 {
     return m_hadSurface;
+}
+
+bool Session::activeFocus() const
+{
+    for (int i = 0; i < m_surfaceList.count(); ++i) {
+        auto surface = static_cast<const MirSurfaceInterface*>(m_surfaceList.get(i));
+        if (surface->activeFocus()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+pid_t Session::pid() const
+{
+    return m_session->process_id();
 }
 
 void Session::setSuspendTimer(AbstractTimer *timer)

@@ -26,8 +26,11 @@
 
 namespace qtmir {
 
+class SharedPointerData;
+
 class Cursor : public MirPlatformCursor
 {
+    Q_OBJECT
 public:
     Cursor();
 
@@ -47,19 +50,11 @@ public:
     void setPos(const QPoint &pos) override;
     QPoint pos() const override;
 
-private Q_SLOTS:
-    void setMirCursorName(const QString &mirCursorName);
-
 private:
-    MirMousePointerInterface *primaryMousePointer() const;
+    QSharedPointer<SharedPointerData> m_sharedPointer;
 
-    void updateMousePointerCursor();
     QMutex m_mutex;
-    QVector<QPointer<MirMousePointerInterface>> m_mousePointers;
     QMap<int,QString> m_shapeToCursorName;
-    QString m_qtCursorName;
-    QString m_mirCursorName;
-    QCursor* m_customCursor;
 };
 
 } // namespace qtmir

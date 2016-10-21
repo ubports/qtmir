@@ -1,5 +1,9 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
+)
+
+include_directories(
+  SYSTEM
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
@@ -14,7 +18,7 @@ target_link_libraries(
 
   Qt5::Test
 
-  qpa-mirserver
+  qpa-mirserver-nolttng
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}

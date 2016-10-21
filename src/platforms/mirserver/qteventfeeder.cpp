@@ -16,6 +16,7 @@
 
 #include "qteventfeeder.h"
 #include "cursor.h"
+#include "eventbuilder.h"
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
@@ -35,6 +36,8 @@
 
 // common dir
 #include <debughelpers.h>
+
+using namespace qtmir;
 
 // XKB Keysyms which do not map directly to Qt types (i.e. Unicode points)
 static const uint32_t KeyTable[] = {
@@ -529,10 +532,9 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
     auto modifiers = getQtModifiersFromMir(mir_pointer_event_modifiers(pev));
 
-    auto movement = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
+    auto relative = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
-
-    auto globalPosition = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+    auto absolute = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
     switch (action) {
@@ -540,14 +542,17 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     case mir_pointer_action_button_down:
     case mir_pointer_action_motion:
     {
+        EventBuilder::instance()->store(pev, timestamp.count());
+
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         if (hDelta != 0 || vDelta != 0) {
-            const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
+            // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
+            const QPoint angleDelta(120 * hDelta, 120 * vDelta);
 
-            auto wheel = new QWheelEvent(movement, globalPosition, QPoint(), angleDelta, 0, Qt::Vertical, buttons, modifiers);
+            auto wheel = new QWheelEvent(relative, absolute, QPoint(), angleDelta, 0, Qt::Vertical, buttons, modifiers);
             wheel->setTimestamp(timestamp.count());
             QGuiApplication::postEvent(this, wheel);
         }
@@ -568,7 +573,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
         }
 
         m_buttons = buttons;
-        auto mouseEvent = new QMouseEvent(type, movement, globalPosition, button, buttons, modifiers);
+        auto mouseEvent = new QMouseEvent(type, relative, absolute, button, buttons, modifiers);
         mouseEvent->setTimestamp(timestamp.count());
         QGuiApplication::postEvent(this, mouseEvent);
         break;
@@ -618,23 +623,23 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     }
     int keyCode = translateKeysym(xk_sym, text);
 
-    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
-    if (context) {
-        // TODO: consider event.repeat_count
-        QKeyEvent qKeyEvent(keyType, keyCode, modifiers,
-                            mir_keyboard_event_scan_code(kev),
-                            mir_keyboard_event_key_code(kev),
-                            mir_keyboard_event_modifiers(kev),
-                            text, is_auto_rep);
-        qKeyEvent.setTimestamp(timestamp.count());
-        if (context->filterEvent(&qKeyEvent)) {
-            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
-                << "but not dispatching as it was filtered out by input context";
-            return;
-        }
-    }
+//    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
+//    if (context) {
+//        // TODO: consider event.repeat_count
+//        QKeyEvent qKeyEvent(keyType, keyCode, modifiers,
+//                            mir_keyboard_event_scan_code(kev),
+//                            mir_keyboard_event_key_code(kev),
+//                            mir_keyboard_event_modifiers(kev),
+//                            text, is_auto_rep);
+//        qKeyEvent.setTimestamp(timestamp.count());
+//        if (context->filterEvent(&qKeyEvent)) {
+//            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
+//                << "but not dispatching as it was filtered out by input context";
+//            return;
+//        }
+//    }
 
-    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received" << qPrintable(mirKeyboardEventToString(kev))
+    qCDebug(QTMIR_MIR_INPUT).nospace() << "Received " << qPrintable(mirKeyboardEventToString(kev))
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();
 
     mQtWindowSystem->handleExtendedKeyEvent(mQtWindowSystem->focusedWindow(),
@@ -735,7 +740,7 @@ bool QtEventFeeder::event(QEvent *e)
     switch (e->type()) {
     case QEvent::Wheel:
     {
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
         QWheelEvent* we = static_cast<QWheelEvent*>(e);
         QWindowSystemInterface::handleWheelEvent(nullptr, // let app handle window resolution
@@ -747,14 +752,14 @@ bool QtEventFeeder::event(QEvent *e)
                                                  we->modifiers(),
                                                  Qt::ScrollUpdate);
 
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
 
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease:
     {
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
         QWindowSystemInterface::handleMouseEvent(nullptr, // let app handle window resolution
@@ -764,13 +769,13 @@ bool QtEventFeeder::event(QEvent *e)
                                                  me->buttons(),
                                                  me->modifiers());
 
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
 
     case QEvent::MouseButtonPress:
     {
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(true);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
 
@@ -787,7 +792,7 @@ bool QtEventFeeder::event(QEvent *e)
                                                  me->buttons(),
                                                  me->modifiers());
 
-        QWindowSystemInterface::setSynchronousWindowsSystemEvents(false);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         break;
     }
     default:
@@ -908,7 +913,7 @@ QString QtEventFeeder::touchesToString(const QList<struct QWindowSystemInterface
             result.append(",");
         }
         const struct QWindowSystemInterface::TouchPoint &point = points.at(i);
-        result.append(QString("(id=%1,state=%2,normalPosition=(%3,%4))")
+        result.append(QStringLiteral("(id=%1,state=%2,normalPosition=(%3,%4))")
             .arg(point.id)
             .arg(touchPointStateToString(point.state))
             .arg(point.normalPosition.x())

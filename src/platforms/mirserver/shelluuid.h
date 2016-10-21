@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,22 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mock_display.h"
-#include <mir/graphics/event_handler_register.h>
-#include <mir/graphics/display_configuration.h>
+#include <QUuid>
+#include <QMutex>
 
-MockDisplaySyncGroup::MockDisplaySyncGroup()
-{
-}
+namespace qtmir {
 
-MockDisplaySyncGroup::~MockDisplaySyncGroup()
-{
-}
+/*
+    A UUID accessible by all shell code.
+ */
+class ShellUuId {
+public:
+    static QString toString();
+private:
+    static QUuid m_uuid;
+    static QMutex m_mutex;
+};
 
-MockDisplay::MockDisplay()
-{
-}
-
-MockDisplay::~MockDisplay()
-{
-}
+} // namespace qtmir

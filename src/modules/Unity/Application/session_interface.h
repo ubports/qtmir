@@ -92,15 +92,21 @@ public:
     virtual bool hadSurface() const = 0; // whether this session ever had any surface (currently or in the past)
     virtual bool hasClosingSurfaces() const = 0; // whether it has surfaces being forcibly closed
 
+    // Whether any of its MirSurfaces has activeFocus()
+    // See qtmir::MirSurfaceInterface::activeFocus
+    virtual bool activeFocus() const = 0;
+
+    virtual pid_t pid() const = 0;
+
     // For SessionManager use
 
     virtual void addChildSession(SessionInterface* session) = 0;
     virtual void insertChildSession(uint index, SessionInterface* session) = 0;
     virtual void removeChildSession(SessionInterface* session) = 0;
-    virtual void foreachChildSession(std::function<void(SessionInterface* session)> f) const = 0;
+    virtual void foreachChildSession(const std::function<void(SessionInterface* session)>& f) const = 0;
 
     virtual std::shared_ptr<mir::scene::PromptSession> activePromptSession() const = 0;
-    virtual void foreachPromptSession(std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> f) const = 0;
+    virtual void foreachPromptSession(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)>& f) const = 0;
 
     virtual void setFullscreen(bool fullscreen) = 0;
     virtual void setLive(const bool) = 0;

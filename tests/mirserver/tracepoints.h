@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,12 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mock_display_configuration.h"
+#ifndef NOOP_TRACEPOINTS_H
+#define NOOP_TRACEPOINTS_H
 
-MockDisplayConfiguration::MockDisplayConfiguration()
-{
-}
+#define tracepoint(a, ...) ((void)0)
 
-MockDisplayConfiguration::~MockDisplayConfiguration()
-{
-}
+#endif // NOOP_TRACEPOINTS_H
+

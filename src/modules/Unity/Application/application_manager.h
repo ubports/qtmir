@@ -49,6 +49,7 @@ namespace unity {
 
 namespace qtmir {
 
+class DBusFocusInfo;
 class DBusWindowStack;
 class MirSurfaceManager;
 class ProcInfo;
@@ -96,15 +97,10 @@ public:
     bool isEmpty() const { return rowCount() == 0; }
 
     const QList<Application*> &list() const { return m_applications; }
-    qtmir::Application* findApplicationWithPid(const pid_t pid);
+    qtmir::Application* findApplicationWithPid(const pid_t pid) const;
 
 public Q_SLOTS:
     void authorizeSession(const pid_t pid, bool &authorized);
-
-    void onSessionStarting(std::shared_ptr<mir::scene::Session> const& session);
-    void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
-
-    void onSessionCreatedSurface(mir::scene::Session const*, std::shared_ptr<mir::scene::Surface> const&);
 
     void onProcessStarting(const QString& appId);
     void onProcessStopped(const QString& appId);
@@ -138,7 +134,7 @@ private:
     Application *findApplication(MirSurfaceInterface* surface);
 
     QList<Application*> m_applications;
-    DBusWindowStack* m_dbusWindowStack;
+    DBusFocusInfo *m_dbusFocusInfo;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
     QSharedPointer<SharedWakelock> m_sharedWakelock;

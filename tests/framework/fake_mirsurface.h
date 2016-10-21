@@ -56,6 +56,7 @@ public:
     QPoint topLeft() const override;
     void moveTo(int x, int y) override;
     void moveTo(const QPoint &topLeft) override;
+    QString persistentId() const override;
     QSize size() const override;
     void resize(int width, int height) override;
     void resize(const QSize &size) override;
@@ -79,6 +80,8 @@ public:
     Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
 
     bool focused() const override { return false; }
+    QRect inputBounds() const override { return QRect(0,0,10,10); }
+    bool confinesMousePointer() const override { return false; }
 
     void requestFocus() override {
         Q_EMIT focusRequested();
@@ -113,6 +116,7 @@ public:
     void setFocused(bool focus) override;
 
     void setViewActiveFocus(qintptr, bool) override {};
+    bool activeFocus() const override { return false; }
 
     void mousePressEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
@@ -135,15 +139,17 @@ public:
 
     SessionInterface* session() override { return m_session; }
 
+    bool inputAreaContains(const QPoint &) const override { return true; }
+
 public Q_SLOTS:
     void onCompositorSwappedBuffers() override;
 
-    void setMinimumWidth(int) {}
-    void setMinimumHeight(int) {}
-    void setMaximumWidth(int) {}
-    void setMaximumHeight(int) {}
-    void setWidthIncrement(int) {}
-    void setHeightIncrement(int) {}
+    void setMinimumWidth(int) override {}
+    void setMinimumHeight(int) override {}
+    void setMaximumWidth(int) override {}
+    void setMaximumHeight(int) override {}
+    void setWidthIncrement(int) override {}
+    void setHeightIncrement(int) override {}
     void setShellChrome(Mir::ShellChrome) override {}
     void setTopLeft(const QPoint&) override {}
 

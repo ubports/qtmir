@@ -59,7 +59,7 @@ QString toShortAppIdIfPossible(const QString &appId) {
     gchar *package, *application;
     if (ubuntu_app_launch_app_id_parse(appId.toLatin1().constData(), &package, &application, nullptr)) {
         // is long appId, so assemble its short appId
-        QString shortAppId = QString("%1_%2").arg(package).arg(application);
+        QString shortAppId = QStringLiteral("%1_%2").arg(package, application);
         g_free(package);
         g_free(application);
         return shortAppId;

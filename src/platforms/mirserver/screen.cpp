@@ -173,15 +173,15 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
 
     if (!skipDBusRegistration) {
         // FIXME This is a unity8 specific dbus call and shouldn't be in qtmir
-        m_unityScreen = new QDBusInterface("com.canonical.Unity.Screen",
-                                         "/com/canonical/Unity/Screen",
-                                         "com.canonical.Unity.Screen",
+        m_unityScreen = new QDBusInterface(QStringLiteral("com.canonical.Unity.Screen"),
+                                         QStringLiteral("/com/canonical/Unity/Screen"),
+                                         QStringLiteral("com.canonical.Unity.Screen"),
                                          QDBusConnection::systemBus(), this);
 
-        m_unityScreen->connection().connect("com.canonical.Unity.Screen",
-                                          "/com/canonical/Unity/Screen",
-                                          "com.canonical.Unity.Screen",
-                                          "DisplayPowerStateChange",
+        m_unityScreen->connection().connect(QStringLiteral("com.canonical.Unity.Screen"),
+                                          QStringLiteral("/com/canonical/Unity/Screen"),
+                                          QStringLiteral("com.canonical.Unity.Screen"),
+                                          QStringLiteral("DisplayPowerStateChange"),
                                           this,
                                           SLOT(onDisplayPowerStateChanged(int, int)));
     }
@@ -219,8 +219,8 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_type = screen.type;
 
     // Physical screen size
-    m_physicalSize.setWidth(screen.physical_size_mm.width.as_float());
-    m_physicalSize.setHeight(screen.physical_size_mm.height.as_float());
+    m_physicalSize.setWidth(static_cast<float>(screen.physical_size_mm.width.as_int()));
+    m_physicalSize.setHeight(static_cast<float>(screen.physical_size_mm.height.as_int()));
 
     // Screen capabilities
     m_modes = screen.modes;

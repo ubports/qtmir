@@ -22,8 +22,10 @@
 
 // Qt
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QMutex>
 #include <QPointer>
+#include <QRect>
 #include <QSharedPointer>
 #include <QWeakPointer>
 #include <QSet>
@@ -55,6 +57,7 @@ class MirSurface : public MirSurfaceInterface
 
 public:
     MirSurface(std::shared_ptr<mir::scene::Surface> surface,
+            const QString& persistentId,
             SessionInterface* session,
             mir::shell::Shell *shell,
             std::shared_ptr<SurfaceObserver> observer,
@@ -71,6 +74,8 @@ public:
     virtual QPoint topLeft() const override;
     virtual void moveTo(int x, int y) override;
     virtual void moveTo(const QPoint &pos) override { moveTo(pos.x(), pos.y()); }
+
+    QString persistentId() const override;
 
     QSize size() const override;
     void resize(int width, int height) override;
@@ -94,6 +99,9 @@ public:
     int heightIncrement() const override;
 
     bool focused() const override;
+    QRect inputBounds() const override;
+
+    bool confinesMousePointer() const override;
 
     Q_INVOKABLE void requestFocus() override;
     Q_INVOKABLE void close() override;
@@ -126,6 +134,7 @@ public:
     void setFocused(bool focus) override;
 
     void setViewActiveFocus(qintptr viewId, bool value) override;
+    bool activeFocus() const override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -154,6 +163,8 @@ public:
 
     SessionInterface* session() override { return m_session.data(); }
 
+    bool inputAreaContains(const QPoint &) const override;
+
     ////
     // Own API
 
@@ -180,6 +191,7 @@ private Q_SLOTS:
     void emitSizeChanged();
     void setCursor(const QCursor &cursor);
     void onCloseTimedOut();
+    void setInputBounds(const QRect &rect);
 
 private:
     void syncSurfaceSizeWithItemSize();
@@ -194,6 +206,7 @@ private:
     std::shared_ptr<mir::scene::Surface> m_surface;
     QPointer<SessionInterface> m_session;
     mir::shell::Shell *const m_shell;
+    QString m_persistentId;
     bool m_firstFrameDrawn;
 
     //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
@@ -233,6 +246,8 @@ private:
     int m_heightIncrement{0};
     QPoint m_topLeft;
 
+    QRect m_inputBounds;
+
     bool m_focused{false};
 
     enum ClosingState {
@@ -242,6 +257,11 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
+
+    // TODO: Make it configurable, exposing it as a QML property to shell.
+    // In milliseconds.
+    const int m_minimumAgeForOcclusion{10000};
+    bool m_oldEnoughToBeOccluded{false};
 };
 
 } // namespace qtmir

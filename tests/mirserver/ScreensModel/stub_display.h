@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,12 +17,16 @@
 #ifndef STUB_DISPLAY_H
 #define STUB_DISPLAY_H
 
-#include "mock_display.h"
-#include "mock_gl_display_buffer.h"
-#include "mock_display_configuration.h"
-
-namespace mg = mir::graphics;
+#include <mir/test/doubles/null_display.h>
+#include <mir/test/doubles/null_display_sync_group.h>
+namespace mg = mir::graphics; // Bug lp:1614983
+#include <mir/test/doubles/mock_display_configuration.h>
 namespace geom = mir::geometry;
+
+using NullDisplay = mir::test::doubles::NullDisplay;
+using MockDisplayConfiguration = mir::test::doubles::MockDisplayConfiguration;
+
+class MockGLDisplayBuffer;
 
 class StubDisplayConfiguration : public MockDisplayConfiguration
 {
@@ -38,37 +42,27 @@ public:
         }
     }
 
-    
-    std::unique_ptr<mg::DisplayConfiguration> clone() const override
-    {
-        return std::make_unique<MockDisplayConfiguration>();
-    }
-
 private:
     const std::vector<mg::DisplayConfigurationOutput> m_config;
 };
 
 
-class StubDisplaySyncGroup : public MockDisplaySyncGroup
+class StubDisplaySyncGroup : public mir::test::doubles::NullDisplaySyncGroup
 {
 public:
-    StubDisplaySyncGroup(MockGLDisplayBuffer *buffer) : buffer(buffer) {}
+    StubDisplaySyncGroup(mg::DisplayBuffer *buffer) : m_buffer(buffer) {}
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
-        f(*buffer);
+        f(*m_buffer);
     }
-    std::chrono::milliseconds recommended_sleep() const
-    {
-        std::chrono::milliseconds one{1};
-        return one;
-    }
+
 private:
-    MockGLDisplayBuffer *buffer;
+    mg::DisplayBuffer *m_buffer;
 };
 
 
-class StubDisplay : public MockDisplay
+class StubDisplay : public NullDisplay
 {
 public:
     // Note, GMock cannot mock functions which return non-copyable objects, so stubbing needed
@@ -82,13 +76,13 @@ public:
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
     {
         for (auto displayBuffer : m_displayBuffers) {
-            StubDisplaySyncGroup b(displayBuffer);
+            StubDisplaySyncGroup b(reinterpret_cast<mg::DisplayBuffer *>(displayBuffer));
             f(b);
         }
     }
 
     void setFakeConfiguration(std::vector<mg::DisplayConfigurationOutput> &config,
-                              std::vector<MockGLDisplayBuffer*> &displayBuffers)
+                              std::vector<MockGLDisplayBuffer*> displayBuffers)
     {
         m_config = config;
         m_displayBuffers = displayBuffers;

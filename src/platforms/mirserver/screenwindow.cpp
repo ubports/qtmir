@@ -132,6 +132,7 @@ void ScreenWindow::updateExpose()
     if (isExposed()) {
         renderer->show(quickWindow);
         QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
+        QWindowSystemInterface::handleWindowActivated(window(), Qt::ActiveWindowFocusReason);
     } else {
         // set to non-persistent so we re-create when exposed. // NICK - why?
         quickWindow->setPersistentOpenGLContext(false);

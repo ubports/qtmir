@@ -33,6 +33,7 @@ namespace
 {
 class MirWindowManagerImpl : public MirWindowManager
 {
+    Q_OBJECT
 public:
 
     MirWindowManagerImpl(const std::shared_ptr<mir::shell::DisplayLayout> &displayLayout,
@@ -197,13 +198,22 @@ void MirWindowManagerImpl::modify_surface(const std::shared_ptr<mir::scene::Sess
                                           const mir::shell::SurfaceSpecification& modifications)
 {
     QMutexLocker locker(&SurfaceObserver::mutex);
-    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
-    if (observer) {
-        observer->notifySurfaceModifications(modifications);
-    }
 
     if (modifications.name.is_set()) {
         surface->rename(modifications.name.value());
+    }
+
+    if (modifications.input_shape.is_set()) {
+        surface->set_input_region(modifications.input_shape.value());
+    }
+
+    if (modifications.confine_pointer.is_set()) {
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
+    }
+
+    SurfaceObserver *observer = SurfaceObserver::observerForSurface(surface.get());
+    if (observer) {
+        observer->notifySurfaceModifications(modifications);
     }
 }
 
@@ -213,3 +223,5 @@ std::shared_ptr<MirWindowManager> MirWindowManager::create(
 {
     return std::make_shared<MirWindowManagerImpl>(displayLayout, sessionListener);
 }
+
+#include "mirwindowmanager.moc"

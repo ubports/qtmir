@@ -77,41 +77,6 @@ void PrintTo(const Session::State& state, ::std::ostream* os)
         break;
     }
 }
-
-// Initialization of mir::Server needed for by tests
-class TestMirServerInit : public virtual mir::Server
-{
-public:
-    TestMirServerInit(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
-        : mock_prompt_session_manager(promptSessionManager)
-    {
-        override_the_prompt_session_manager(
-            [this]{ return the_mock_prompt_session_manager(); });
-    }
-
-    std::shared_ptr<mir::scene::MockPromptSessionManager> the_mock_prompt_session_manager()
-    {
-        return mock_prompt_session_manager;
-    }
-
-private:
-    std::shared_ptr<StubPromptSessionManager> const mock_prompt_session_manager;
-};
-
-
-namespace { int argc = 0; char* argv[] = { nullptr }; }
-
-class FakeMirServer: private TestMirServerInit, public MirServer
-{
-public:
-    FakeMirServer(std::shared_ptr<StubPromptSessionManager> const& promptSessionManager)
-    : TestMirServerInit(promptSessionManager), MirServer(argc, argv, QSharedPointer<ScreensModel>())
-    {
-    }
-
-    using TestMirServerInit::the_mock_prompt_session_manager;
-};
-
 } // namespace qtmir
 
 namespace testing
@@ -119,13 +84,13 @@ namespace testing
 
 QtMirTest::QtMirTest()
     : promptSessionManager(std::make_shared<StubPromptSessionManager>())
-    , mirServer(QSharedPointer<MirServer>(new FakeMirServer(promptSessionManager)))
+    , persistentSurfaceStore(std::make_shared<StubPersistentSurfaceStore>())
     , applicationManager(taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
-    , sessionManager(mirServer, &applicationManager)
-    , surfaceManager(mirShell, &sessionManager)
+    , sessionManager(promptSessionManager, &applicationManager)
+    , surfaceManager(mirShell, &sessionManager, persistentSurfaceStore)
 {
 }
 
@@ -153,7 +118,6 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     EXPECT_EQ(authed, true);
 
     auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
-    applicationManager.onSessionStarting(appSession);
     sessionManager.onSessionStarting(appSession);
 
     Mock::VerifyAndClearExpectations(taskController);

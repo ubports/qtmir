@@ -18,6 +18,7 @@
 #include "application.h"
 #include "applicationinfo.h"
 #include "application_manager.h"
+#include "mirsurfaceinterface.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "timer.h"
@@ -46,7 +47,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_sharedWakelock(sharedWakelock)
     , m_appInfo(appInfo)
     , m_pid(0)
-    , m_stage(Application::MainStage)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
@@ -174,8 +174,8 @@ QColor Application::colorFromString(const QString &colorString, const char *colo
             color.setAlpha(255);
         } else {
             color.setRgba(qRgba(0, 0, 0, 0));
-            qCWarning(QTMIR_APPLICATIONS) << QString("Invalid %1: \"%2\"")
-                .arg(colorName).arg(colorString);
+            qCWarning(QTMIR_APPLICATIONS) << QStringLiteral("Invalid %1: \"%2\"")
+                .arg(colorName, colorString);
         }
     }
 
@@ -229,11 +229,6 @@ QColor Application::splashColorFooter() const
 {
     QString colorStr = m_appInfo->splashColorFooter();
     return colorFromString(colorStr, "splashColorFooter");
-}
-
-Application::Stage Application::stage() const
-{
-    return m_stage;
 }
 
 Application::Stages Application::supportedStages() const
@@ -466,7 +461,7 @@ void Application::setPid(pid_t pid)
     m_pid = pid;
 }
 
-void Application::setArguments(const QStringList arguments)
+void Application::setArguments(const QStringList &arguments)
 {
     m_arguments = arguments;
 }
@@ -530,19 +525,6 @@ void Application::setSession(SessionInterface *newSession)
     }
 
     Q_EMIT sessionChanged(m_session);
-}
-
-void Application::setStage(Application::Stage stage)
-{
-    if (m_stage != stage) {
-        if ((stage | m_supportedStages) == 0) {
-            return;
-        }
-        DEBUG_MSG << "(stage=" << stage << ")";
-
-        m_stage = stage;
-        Q_EMIT stageChanged(stage);
-    }
 }
 
 void Application::setInternalState(Application::InternalState state)
@@ -738,7 +720,7 @@ SessionInterface* Application::session() const
 
 void Application::acquireWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->acquire(this);
@@ -746,7 +728,7 @@ void Application::acquireWakelock() const
 
 void Application::releaseWakelock() const
 {
-    if (appId() == "unity8-dash")
+    if (appId() == QLatin1String("unity8-dash"))
         return;
 
     m_sharedWakelock->release(this);

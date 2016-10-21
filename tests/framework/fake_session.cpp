@@ -92,14 +92,14 @@ void FakeSession::insertChildSession(uint, SessionInterface *) {}
 
 void FakeSession::removeChildSession(SessionInterface *) {}
 
-void FakeSession::foreachChildSession(std::function<void (SessionInterface *)>) const {}
+void FakeSession::foreachChildSession(const std::function<void (SessionInterface *)> &) const {}
 
 std::shared_ptr<mir::scene::PromptSession> FakeSession::activePromptSession() const
 {
     return std::shared_ptr<mir::scene::PromptSession>();
 }
 
-void FakeSession::foreachPromptSession(std::function<void (const std::shared_ptr<mir::scene::PromptSession> &)>) const {}
+void FakeSession::foreachPromptSession(const std::function<void (const std::shared_ptr<mir::scene::PromptSession> &)> &) const {}
 
 void FakeSession::setFullscreen(bool) {}
 

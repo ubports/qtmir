@@ -15,7 +15,6 @@
  */
 
 #include "mirserverintegration.h"
-#include "mirserver.h"
 
 #include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
@@ -29,7 +28,6 @@
 
 #include <QGuiApplication>
 #include <QStringList>
-#include <QOpenGLContext>
 #include <QDebug>
 
 // Mir
@@ -58,7 +56,6 @@ MirServerIntegration::MirServerIntegration(int &argc, char **argv)
     , m_services(new Services)
     , m_mirServer(new QMirServer(argc, argv))
     , m_nativeInterface(nullptr)
-    , m_clipboard(new Clipboard)
 {
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the
     // UBUNTU_PLATFORM_API_BACKEND variable to decide if to load a valid sensor backend or not.
@@ -120,8 +117,7 @@ QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow 
 
 QPlatformOpenGLContext *MirServerIntegration::createPlatformOpenGLContext(QOpenGLContext *context) const
 {
-    auto server = m_mirServer->mirServer().lock();
-    return new MirOpenGLContext(*server->the_display(), *server->the_gl_config(), context->format());
+    return m_mirServer->createPlatformOpenGLContext(context);
 }
 
 QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
@@ -132,9 +128,7 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
-    if (!m_mirServer->start()) {
-        exit(2);
-    }
+    m_mirServer->start();
 
     auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
@@ -156,8 +150,6 @@ void MirServerIntegration::initialize()
     }
 
     m_nativeInterface = new NativeInterface(m_mirServer.data());
-
-    m_clipboard->setupDBusService();
 }
 
 QPlatformAccessibility *MirServerIntegration::accessibility() const
@@ -193,7 +185,11 @@ QPlatformNativeInterface *MirServerIntegration::nativeInterface() const
 
 QPlatformClipboard *MirServerIntegration::clipboard() const
 {
-    return m_clipboard.data();
+    static QPlatformClipboard *clipboard = nullptr;
+    if (!clipboard) {
+        clipboard = new Clipboard;
+    }
+    return clipboard;
 }
 
 QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(

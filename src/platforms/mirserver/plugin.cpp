@@ -20,7 +20,7 @@
 QPlatformIntegration *MirServerIntegrationPlugin::create(const QString &system, const QStringList &/*paramList*/,
                                                          int &argc, char **argv)
 {
-    if (system.toLower() == "mirserver")
+    if (system.toLower() == QLatin1String("mirserver"))
         return new MirServerIntegration(argc, argv);
     return 0;
 }

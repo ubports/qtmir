@@ -122,7 +122,7 @@ private Q_SLOTS:
     void updateMirSurfaceActiveFocus();
     void updateMirSurfaceVisibility();
 
-    void onActualSurfaceSizeChanged(const QSize &size);
+    void onActualSurfaceSizeChanged(QSize size);
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
@@ -130,8 +130,7 @@ private Q_SLOTS:
 private:
     void ensureTextureProvider();
 
-    bool hasTouchInsideUbuntuKeyboard(const QList<QTouchEvent::TouchPoint> &touchPoints);
-    bool isMouseInsideUbuntuKeyboard(const QMouseEvent *event);
+    bool hasTouchInsideInputRegion(const QList<QTouchEvent::TouchPoint> &touchPoints);
 
     QString appId() const;
     void endCurrentTouchSequence(ulong timestamp);

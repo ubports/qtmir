@@ -28,7 +28,24 @@
 #include <mir/geometry/size.h>
 #include <mir/shell/surface_specification.h>
 
-QMap<const mir::scene::Surface*, SurfaceObserver*> SurfaceObserver::m_surfaceToObserverMap;
+
+namespace {
+
+QRect calculateBoundingRect(const std::vector<mir::geometry::Rectangle> &rectVector)
+{
+    QRect boundingRect;
+    for (auto mirRect : rectVector) {
+        boundingRect |= QRect(mirRect.top_left.x.as_int(),
+                mirRect.top_left.y.as_int(),
+                mirRect.size.width.as_int(),
+                mirRect.size.height.as_int());
+    }
+    return boundingRect;
+}
+
+} // anonymous namespace
+
+QHash<const mir::scene::Surface*, SurfaceObserver*> SurfaceObserver::m_surfaceToObserverMap;
 QMutex SurfaceObserver::mutex;
 
 SurfaceObserver::SurfaceObserver()
@@ -83,7 +100,7 @@ SurfaceObserver::SurfaceObserver()
 SurfaceObserver::~SurfaceObserver()
 {
     QMutexLocker locker(&mutex);
-    QMutableMapIterator<const mir::scene::Surface*, SurfaceObserver*> i(m_surfaceToObserverMap);
+    QMutableHashIterator<const mir::scene::Surface*, SurfaceObserver*> i(m_surfaceToObserverMap);
     while (i.hasNext()) {
         i.next();
         if (i.value() == this) {
@@ -158,6 +175,13 @@ void SurfaceObserver::notifySurfaceModifications(const mir::shell::SurfaceSpecif
     }
     if (modifications.shell_chrome.is_set()) {
         Q_EMIT shellChromeChanged(modifications.shell_chrome.value());
+    }
+    if (modifications.input_shape.is_set()) {
+        QRect qRect = calculateBoundingRect(modifications.input_shape.value());
+        Q_EMIT inputBoundsChanged(qRect);
+    }
+    if (modifications.confine_pointer.is_set()) {
+        Q_EMIT confinesMousePointerChanged(modifications.confine_pointer.value() == mir_pointer_confined_to_surface);
     }
 }
 

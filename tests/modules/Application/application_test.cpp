@@ -82,7 +82,7 @@ public:
         const pid_t procId = 1234;
 
         auto mirSession = std::make_shared<NiceMock<mir::scene::MockSession>>(appId.toStdString(), procId);
-        Session* session = new Session(mirSession, mirServer->the_prompt_session_manager());
+        Session* session = new Session(mirSession, promptSessionManager);
 
         FakeTimer *fakeTimer(new FakeTimer(fakeTimeSource));
         session->setSuspendTimer(fakeTimer);
@@ -620,6 +620,8 @@ TEST_F(ApplicationTests, surfaceCountPropertyUpdates)
     EXPECT_EQ(application->surfaceCount(), 2);
     EXPECT_EQ(surfaceCountChangedSpy.count(), 2);
 
+    delete surface;
+    delete surface2;
 }
 
 /*

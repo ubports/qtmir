@@ -15,7 +15,6 @@
  */
 
 #include "nativeinterface.h"
-#include "mirserver.h"
 
 #include "qmirserver.h"
 #include "screen.h"
@@ -27,27 +26,7 @@ NativeInterface::NativeInterface(QMirServer *server)
 
 void *NativeInterface::nativeResourceForIntegration(const QByteArray &resource)
 {
-    void *result = nullptr;
-
-    auto const server = m_qMirServer->mirServer().lock();
-
-    if (server) {
-        if (resource == "SessionAuthorizer")
-            result = server->sessionAuthorizer();
-        else if (resource == "Shell")
-            result = server->shell();
-        else if (resource == "SessionListener")
-            result = server->sessionListener();
-        else if (resource == "PromptSessionListener")
-            result = server->promptSessionListener();
-        else if (resource == "WindowManager")
-            result = server->windowManager();
-        else if (resource == "ScreensController")
-            result = m_qMirServer->screensController().data();
-        else if (resource == "InputDispatcher")
-            result = server->inputDispatcher();
-    }
-    return result;
+    return m_qMirServer->nativeResourceForIntegration(resource);
 }
 
 // Changes to these properties are emitted via the UbuntuNativeInterface::windowPropertyChanged
@@ -58,8 +37,8 @@ QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
     auto w = static_cast<ScreenWindow*>(window);
     auto s = static_cast<Screen*>(w->screen());
     if (s) {
-        propertyMap.insert("scale", s->scale());
-        propertyMap.insert("formFactor", s->formFactor());
+        propertyMap.insert(QStringLiteral("scale"), s->scale());
+        propertyMap.insert(QStringLiteral("formFactor"), s->formFactor());
     }
     return propertyMap;
 }
@@ -94,7 +73,12 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     }
 }
 
-QWeakPointer<MirServer> NativeInterface::mirServer()
+std::shared_ptr<mir::scene::PromptSessionManager> NativeInterface::thePromptSessionManager() const
 {
-    return m_qMirServer->mirServer();
+    return m_qMirServer->thePromptSessionManager();
+}
+
+std::shared_ptr<mir::shell::PersistentSurfaceStore> NativeInterface::thePersistentSurfaceStore() const
+{
+    return m_qMirServer->thePersistentSurfaceStore();
 }

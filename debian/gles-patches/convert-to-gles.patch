@@ -9,7 +9,7 @@ Index: inline-gles-quilt/debian/control
  Priority: optional
  Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 @@ -16,7 +16,13 @@ Build-Depends: cmake,
-                libmirserver-dev (>= 0.19.0),
+                libmirserver-dev (>= 0.24.0),
                 libmtdev-dev,
                 libprocess-cpp-dev,
 +               libqt5gui5-gles,
@@ -37,7 +37,7 @@ Index: inline-gles-quilt/debian/control
  Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
  
  Package: qtmir-android
--Architecture: armhf
+-Architecture: armhf arm64
 +Architecture: amd64 i386
  Multi-Arch: same
  Conflicts: libqtmir,
@@ -84,7 +84,7 @@ Index: inline-gles-quilt/debian/control
 -Conflicts: libqtmir,
 -           libunity-mir1,
 -Provides: unity-application-impl,
--          unity-application-impl-17,
+-          unity-application-impl-22,
 -Description: Qt plugin for Unity specific Mir APIs
 - QtMir provides Qt/QML bindings for Mir features that are exposed through the
 - qtmir-desktop or qtmir-android QPA plugin such as Application management
@@ -128,7 +128,7 @@ Index: inline-gles-quilt/debian/rules
 -
 -# We only want to build qtmir-android on arches using Qt built with OpenGL ES2.0
 -DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
--gles2_architectures = armhf
+-gles2_architectures = armhf arm64
 -
 -USES_GLES2 = $(findstring $(DEB_HOST_ARCH), $(gles2_architectures))
  

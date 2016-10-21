@@ -1,9 +1,14 @@
 include_directories(
-    ${APPLICATION_API_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/modules
+)
+
+include_directories(
+    SYSTEM
+    ${APPLICATION_API_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
+    ${MIRTEST_INCLUDE_DIRS}
 
     ${Qt5Quick_INCLUDE_DIRS}
     ${Qt5DBus_INCLUDE_DIRS}
@@ -14,9 +19,6 @@ set(QTMIR_TEST_PRIVATE_SRC
     fake_mirsurface.cpp
     fake_session.cpp
     mock_application_info.cpp
-    mock_display.cpp
-    mock_display_configuration.cpp
-    mock_gl_display_buffer.cpp
     mock_main_loop.cpp
     mock_mir_session.cpp
     mock_proc_info.cpp
@@ -28,6 +30,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_shared_wakelock.cpp
     mock_surface.cpp
     mock_task_controller.cpp
+    mock_persistent_surface_store.cpp
     stub_input_channel.cpp
     fake_surface.h
     qtmir_test.cpp

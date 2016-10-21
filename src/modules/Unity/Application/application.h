@@ -89,8 +89,6 @@ public:
     QString name() const override;
     QString comment() const override;
     QUrl icon() const override;
-    Stage stage() const override;
-    void setStage(Stage stage) override;
     State state() const override;
     RequestedState requestedState() const override;
     void setRequestedState(RequestedState) override;
@@ -140,7 +138,6 @@ public:
 
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
-    void stageChanged(Stage stage);
     void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
@@ -160,7 +157,7 @@ private:
     void acquireWakelock() const;
     void releaseWakelock() const;
     void setPid(pid_t pid);
-    void setArguments(const QStringList arguments);
+    void setArguments(const QStringList &arguments);
     void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
@@ -177,7 +174,6 @@ private:
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
     pid_t m_pid;
-    Stage m_stage;
     Stages m_supportedStages;
     InternalState m_state;
     QStringList m_arguments;

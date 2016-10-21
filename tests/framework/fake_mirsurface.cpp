@@ -67,6 +67,8 @@ void FakeMirSurface::moveTo(int x, int y)
 
 void FakeMirSurface::moveTo(const QPoint &topLeft) { moveTo(topLeft.x(), topLeft.y()); }
 
+QString FakeMirSurface::persistentId() const { return QString("FakeSurfaceId"); }
+
 QSize FakeMirSurface::size() const { return m_size; }
 
 void FakeMirSurface::resize(int width, int height)
