@@ -94,6 +94,7 @@ enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat
         qFatal("[mirserver QPA] Unknown mir pixel format");
         break;
     }
+    return QImage::Format_Invalid;
 }
 
 QString displayTypeToString(enum mir::graphics::DisplayConfigurationOutputType type)
