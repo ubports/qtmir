@@ -313,3 +313,30 @@ TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
     EXPECT_EQ(Session::Stopped, session->state());
     EXPECT_FALSE(session->m_suspendTimer->isRunning());
 }
+
+TEST_F(SessionTests, CloseAllSurfaceOnSessionClose)
+{
+    using namespace testing;
+
+    const QString appId("test-app");
+    const pid_t procId = 5551;
+
+    auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
+
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
+
+    FakeMirSurface *surface1 = new FakeMirSurface;
+    session->registerSurface(surface1);
+    surface1->drawFirstFrame();
+
+    FakeMirSurface *surface2 = new FakeMirSurface;
+    session->registerSurface(surface2);
+    surface2->drawFirstFrame();
+
+    EXPECT_EQ(session->surfaceList()->count(), 2);
+    session->close();
+    EXPECT_EQ(session->surfaceList()->count(), 0);
+
+    delete surface2;
+    delete surface1;
+}
