@@ -237,6 +237,7 @@ private:
     int m_maximumHeight{0};
     int m_widthIncrement{0};
     int m_heightIncrement{0};
+    QSize m_pendingResize;
 
     QRect m_inputBounds;
 
