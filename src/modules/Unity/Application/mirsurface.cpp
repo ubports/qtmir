@@ -96,6 +96,12 @@ MirSurface::MirSurface(std::shared_ptr<mir::scene::Surface> surface,
     }
 
     connect(session, &QObject::destroyed, this, &MirSurface::onSessionDestroyed);
+    connect(session, &SessionInterface::stateChanged, this, [this]() {
+        if (clientIsRunning() && m_pendingResize.isValid()) {
+            resize(m_pendingResize.width(), m_pendingResize.height());
+            m_pendingResize = QSize(-1, -1);
+        }
+    });
 
     connect(&m_frameDropperTimer, &QTimer::timeout,
             this, &MirSurface::dropPendingBuffer);
@@ -382,12 +388,17 @@ void MirSurface::close()
 
 void MirSurface::resize(int width, int height)
 {
+    if (!clientIsRunning()) {
+        m_pendingResize = QSize(width, height);
+        return;
+    }
+
     int mirWidth = m_surface->size().width.as_int();
     int mirHeight = m_surface->size().height.as_int();
 
     bool mirSizeIsDifferent = width != mirWidth || height != mirHeight;
 
-    if (clientIsRunning() && mirSizeIsDifferent) {
+    if (mirSizeIsDifferent) {
         mir::geometry::Size newMirSize(width, height);
         m_surface->resize(newMirSize);
         DEBUG_MSG << " old (" << mirWidth << "," << mirHeight << ")"

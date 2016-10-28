@@ -341,7 +341,9 @@ void Session::close()
 
     if (m_state == Stopped) return;
 
-    for (int i = 0; i < m_surfaceList.count(); ++i) {
+    // surface::close ends up removing the surface from the list.
+    // Reverse iteration order to preserve the index.
+    for (int i = m_surfaceList.count()-1; i >= 0; --i) {
         auto surface = static_cast<MirSurfaceInterface*>(m_surfaceList.get(i));
         surface->close();
     }
