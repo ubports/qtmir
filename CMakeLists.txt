@@ -161,12 +161,14 @@ endif()
 add_definitions(-DQT_NO_KEYWORDS)
 
 # Tests
-if (NOT NO_TESTS)
+if (NO_TESTS)
+    message(STATUS "Tests disabled")
+elseif (LTTNG_VERSION VERSION_EQUAL 2.7.1)
+    message(STATUS "Tests disabled due to buggy lttng (lp:1618201)")
+else()
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
-else()
-    message(STATUS "Tests disabled")
 endif()
 
 # add subdirectories to build
