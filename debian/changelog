@@ -1,3 +1,16 @@
+qtmir (0.4.8+17.04.20161024-0ubuntu1) zesty; urgency=medium
+
+  [ Andrea Bernabei ]
+  * Add missing default return value to qImageFormatFromMirPixelFormat
+
+  [ Michael Zanetti ]
+  * don't lose resize events that come in while the app is suspended
+
+  [ Nick Dedekind ]
+  * Close windows in reverse order. (LP: #1622717)
+
+ -- Michael Zanetti <michael.zanetti@canonical.com>  Mon, 24 Oct 2016 11:32:53 +0000
+
 qtmir (0.4.8+16.10.20160909-0ubuntu1) yakkety; urgency=medium
 
   [ Daniel d'Andrada ]

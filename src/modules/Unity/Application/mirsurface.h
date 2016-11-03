@@ -245,6 +245,7 @@ private:
     int m_widthIncrement{0};
     int m_heightIncrement{0};
     QPoint m_topLeft;
+    QSize m_pendingResize;
 
     QRect m_inputBounds;
 
