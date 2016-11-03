@@ -163,8 +163,10 @@ add_definitions(-DQT_NO_KEYWORDS)
 # Tests
 if (NO_TESTS)
     message(STATUS "Tests disabled")
+# glibc on Vivid+Overlay has a bug which causes LTTng-enabled tests to hang. It is hard to get the glibc version
+# in cmake, so it is easier to check for the LTTng on V+O and gate on that instead.
 elseif (LTTNG_VERSION VERSION_EQUAL 2.7.1)
-    message(STATUS "Tests disabled due to buggy lttng (lp:1618201)")
+    message(STATUS "Tests disabled due to bug with glibc causing lttng to hang (lp:1618201)")
 else()
     include(CTest)
     enable_testing()
