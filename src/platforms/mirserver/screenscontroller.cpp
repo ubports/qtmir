@@ -16,6 +16,7 @@
 
 #include "screenscontroller.h"
 #include "screen.h"
+#include "screensmodel.h"
 
 // Mir
 #include <mir/graphics/display.h>

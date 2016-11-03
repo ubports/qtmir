@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.9)
 project(qtmir)
 
 set(QTMIR_VERSION_MAJOR 0)
-set(QTMIR_VERSION_MINOR 1)
+set(QTMIR_VERSION_MINOR 2)
 set(QTMIR_VERSION_PATCH 0)
 
 if(${PROJECT_BINARY_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
@@ -29,6 +29,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall -Wextra -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wall -fno-strict-aliasing -Werror -Wextra")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags -Wno-inconsistent-missing-override -Wno-implicit-exception-spec-mismatch -Wno-unknown-pragmas")
+endif()
 
 
 include(EnableCoverageReport)
@@ -70,6 +74,7 @@ find_package(Threads REQUIRED)
 pkg_check_modules(MIRSERVER mirserver>=0.24 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.24 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.24 REQUIRED)
+pkg_check_modules(MIRAL miral>=0.1 REQUIRED) #FIXME should be 0.3 once miral fixes its pkgconfig file
 
 pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
@@ -83,14 +88,12 @@ pkg_check_modules(LTTNG lttng-ust)
 pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
-pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=22)
+pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=23)
 pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 pkg_check_modules(CONTENT_HUB libcontent-hub>=0.2 REQUIRED)
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
 
-
-add_definitions(-DMIR_REQUIRE_DEPRECATED_EVENT_OPT_IN=1)
 
 # Use the fast string builder
 add_definitions(-DQT_USE_QSTRINGBUILDER)

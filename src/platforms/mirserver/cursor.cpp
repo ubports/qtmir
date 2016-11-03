@@ -69,7 +69,7 @@ void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
             // just different from the previous custom cursor name, which is enough to trigger a change in the cursor
             // source image URL in the QML side which on is turn makes QML request the new cursor image.
             static quint8 serialNumber = 1;
-            m_qtCursorName = QStringLiteral("custom%1").arg(serialNumber++);
+            m_qtCursorName = QString("custom%1").arg(serialNumber++);
             m_mousePointer->setCustomCursor(*windowCursor);
         }
     } else {

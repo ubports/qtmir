@@ -23,28 +23,23 @@
 #include "sessionmanager.h"
 
 // QPA mirserver
-#include "nativeinterface.h"
-#include "sessionlistener.h"
+#include "appnotifier.h"
 #include "logging.h"
+#include "nativeinterface.h"
 #include "promptsessionlistener.h"
+#include "promptsession.h"
 
-// mir
-#include <mir/scene/prompt_session.h>
-#include <mir/scene/prompt_session_manager.h>
-#include <mir/report_exception.h>
-
-namespace ms = mir::scene;
 
 namespace qtmir {
 
 SessionManager *SessionManager::the_session_manager = nullptr;
 
 
-void connectToSessionListener(SessionManager *manager, SessionListener *listener)
+void connectToAppNotifier(SessionManager *manager, AppNotifier *appNotifier)
 {
-    QObject::connect(listener, &SessionListener::sessionStarting,
+    QObject::connect(appNotifier, &AppNotifier::appAdded,
                      manager, &SessionManager::onSessionStarting);
-    QObject::connect(listener, &SessionListener::sessionStopping,
+    QObject::connect(appNotifier, &AppNotifier::appRemoved,
                      manager, &SessionManager::onSessionStopping);
 }
 
@@ -61,7 +56,6 @@ void connectToPromptSessionListener(SessionManager * manager, PromptSessionListe
 }
 
 SessionManager* SessionManager::singleton()
-try
 {
     if (!the_session_manager) {
 
@@ -73,27 +67,19 @@ try
             return nullptr;
         }
 
-        SessionListener *sessionListener = static_cast<SessionListener*>(nativeInterface->nativeResourceForIntegration("SessionListener"));
+        auto appNotifier = static_cast<AppNotifier*>(nativeInterface->nativeResourceForIntegration("AppNotifier"));
         PromptSessionListener *promptSessionListener = static_cast<PromptSessionListener*>(nativeInterface->nativeResourceForIntegration("PromptSessionListener"));
 
         the_session_manager = new SessionManager(nativeInterface->thePromptSessionManager(), ApplicationManager::singleton());
 
-        connectToSessionListener(the_session_manager, sessionListener);
+        connectToAppNotifier(the_session_manager, appNotifier);
         connectToPromptSessionListener(the_session_manager, promptSessionListener);
     }
     return the_session_manager;
 }
-catch (...)
-{
-    // We only call mir::report_exception() here to force linkage against libmirserver.
-    // Unless we force this module to have a link dependency on libmirserver we get
-    // several tests hanging during link loading. I wish I understood why.    alan_g
-    mir::report_exception();
-    throw;
-}
 
 SessionManager::SessionManager(
-        const std::shared_ptr<mir::scene::PromptSessionManager>& promptSessionManager,
+        const std::shared_ptr<qtmir::PromptSessionManager>& promptSessionManager,
         ApplicationManager* applicationManager,
         QObject *parent)
     : SessionModel(parent)
@@ -120,10 +106,11 @@ SessionInterface *SessionManager::findSession(const mir::scene::Session* session
     return nullptr;
 }
 
-void SessionManager::onSessionStarting(std::shared_ptr<mir::scene::Session> const& session)
+void SessionManager::onSessionStarting(const miral::ApplicationInfo &appInfo)
 {
-    qCDebug(QTMIR_SESSIONS) << "SessionManager::onSessionStarting - sessionName=" <<  session->name().c_str();
+    qCDebug(QTMIR_SESSIONS) << "SessionManager::onSessionStarting - sessionName=" <<  appInfo.name().c_str();
 
+    const auto &session = appInfo.application();
     Session* qmlSession = new Session(session, m_promptSessionManager);
     insert(0, qmlSession);
 
@@ -140,11 +127,11 @@ void SessionManager::onSessionStarting(std::shared_ptr<mir::scene::Session> cons
     Q_EMIT sessionStarting(qmlSession);
 }
 
-void SessionManager::onSessionStopping(std::shared_ptr<mir::scene::Session> const& session)
+void SessionManager::onSessionStopping(const miral::ApplicationInfo &appInfo)
 {
-    qCDebug(QTMIR_SESSIONS) << "SessionManager::onSessionStopping - sessionName=" << session->name().c_str();
+    qCDebug(QTMIR_SESSIONS) << "SessionManager::onSessionStopping - sessionName=" << appInfo.name().c_str();
 
-    SessionInterface* qmlSession = findSession(session.get());
+    SessionInterface* qmlSession = findSession(appInfo.application().get());
     if (!qmlSession) return;
 
     remove(qmlSession);
@@ -153,11 +140,11 @@ void SessionManager::onSessionStopping(std::shared_ptr<mir::scene::Session> cons
     Q_EMIT sessionStopping(qmlSession);
 }
 
-void SessionManager::onPromptSessionStarting(const std::shared_ptr<ms::PromptSession>& promptSession)
+void SessionManager::onPromptSessionStarting(const qtmir::PromptSession &promptSession)
 {
     qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptSessionStarting - promptSession=" << promptSession.get();
 
-    std::shared_ptr<mir::scene::Session> appSession = m_promptSessionManager->application_for(promptSession);
+    std::shared_ptr<mir::scene::Session> appSession = m_promptSessionManager->applicationFor(promptSession);
     SessionInterface *qmlAppSession = findSession(appSession.get());
     if (qmlAppSession) {
         m_mirPromptToSessionHash[promptSession.get()] = qmlAppSession;
@@ -167,7 +154,7 @@ void SessionManager::onPromptSessionStarting(const std::shared_ptr<ms::PromptSes
     }
 }
 
-void SessionManager::onPromptSessionStopping(const std::shared_ptr<ms::PromptSession>& promptSession)
+void SessionManager::onPromptSessionStopping(const qtmir::PromptSession &promptSession)
 {
     qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptSessionStopping - promptSession=" << promptSession.get();
 
@@ -177,12 +164,12 @@ void SessionManager::onPromptSessionStopping(const std::shared_ptr<ms::PromptSes
     m_mirPromptToSessionHash.remove(promptSession.get());
 }
 
-void SessionManager::onPromptProviderAdded(const mir::scene::PromptSession *promptSession,
+void SessionManager::onPromptProviderAdded(const qtmir::PromptSession &promptSession,
                                               const std::shared_ptr<mir::scene::Session> &promptProvider)
 {
-    qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptProviderAdded - promptSession=" << promptSession << " promptProvider=" << promptProvider.get();
+    qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptProviderAdded - promptSession=" << promptSession.get() << " promptProvider=" << promptProvider.get();
 
-    SessionInterface* qmlAppSession = m_mirPromptToSessionHash.value(promptSession, nullptr);
+    SessionInterface* qmlAppSession = m_mirPromptToSessionHash.value(promptSession.get(), nullptr);
     if (!qmlAppSession) {
         qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptProviderAdded - could not find session item for app session";
         return;
@@ -197,10 +184,10 @@ void SessionManager::onPromptProviderAdded(const mir::scene::PromptSession *prom
     qmlAppSession->addChildSession(qmlPromptProvider);
 }
 
-void SessionManager::onPromptProviderRemoved(const mir::scene::PromptSession *promptSession,
+void SessionManager::onPromptProviderRemoved(const qtmir::PromptSession &promptSession,
                                                 const std::shared_ptr<mir::scene::Session> &promptProvider)
 {
-    qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptProviderRemoved - promptSession=" << promptSession << " promptProvider=" << promptProvider.get();
+    qCDebug(QTMIR_SESSIONS) << "SessionManager::onPromptProviderRemoved - promptSession=" << promptSession.get() << " promptProvider=" << promptProvider.get();
 
     SessionInterface* qmlPromptProvider = findSession(promptProvider.get());
     if (!qmlPromptProvider) {

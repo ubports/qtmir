@@ -27,7 +27,7 @@
 class QMirServer;
 
 // mir
-namespace mir { namespace scene { class PromptSessionManager; }}
+namespace qtmir { class PromptSessionManager; }
 namespace mir { namespace shell { class PersistentSurfaceStore; }}
 
 class NativeInterface : public QPlatformNativeInterface
@@ -42,7 +42,7 @@ public:
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
 
-    std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
+    std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
 
 private:

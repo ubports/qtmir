@@ -58,7 +58,6 @@ public:
     void resize(int width, int height) override;
     void resize(const QSize &size) override;
     Mir::State state() const override;
-    void setState(Mir::State qmlState) override;
     bool live() const override;
     bool visible() const override;
     Mir::OrientationAngle orientationAngle() const override;
@@ -76,7 +75,7 @@ public:
 
     Mir::ShellChrome shellChrome() const override { return Mir::NormalChrome; }
 
-    bool focused() const override { return false; }
+    bool focused() const override { return m_focused; }
     QRect inputBounds() const override { return QRect(0,0,10,10); }
     bool confinesMousePointer() const override { return false; }
 
@@ -93,11 +92,15 @@ public:
     ////
     // qtmir.MirSurfaceInterface
 
-    bool isFirstFrameDrawn() const override;
+    QPoint position() const override;
+    QPoint requestedPosition() const override;
+    void setRequestedPosition(const QPoint &) override;
+
+    bool isReady() const override;
     void stopFrameDropper() override;
     void startFrameDropper() override;
     void setLive(bool value) override;
-    void setViewVisibility(qintptr viewId, bool visible) override;
+    void setViewExposure(qintptr viewId, bool visible) override;
     bool isBeingDisplayed() const override;
     void registerView(qintptr viewId) override;
     void unregisterView(qintptr viewId) override;
@@ -112,7 +115,7 @@ public:
 
     void setFocused(bool focus) override;
 
-    void setViewActiveFocus(qintptr, bool) override {};
+    void setViewActiveFocus(qintptr, bool) override {}
     bool activeFocus() const override { return false; }
 
     void mousePressEvent(QMouseEvent *) override;
@@ -134,29 +137,21 @@ public:
 
     QCursor cursor() const override { return QCursor(); }
 
-    void setScreen(QScreen *) override {}
-
     SessionInterface* session() override { return m_session; }
 
     bool inputAreaContains(const QPoint &) const override { return true; }
 
 public Q_SLOTS:
+    void requestState(Mir::State qmlState) override;
     void onCompositorSwappedBuffers() override;
 
-    void setMinimumWidth(int) override {}
-    void setMinimumHeight(int) override {}
-    void setMaximumWidth(int) override {}
-    void setMaximumHeight(int) override {}
-    void setWidthIncrement(int) override {}
-    void setHeightIncrement(int) override {}
-    void setShellChrome(Mir::ShellChrome) override {}
+    void setShellChrome(Mir::ShellChrome shellChrome) override;
 
     ////
     // Test API from now on
 
 public:
-
-    void drawFirstFrame();
+    void setReady();
 
     bool isFrameDropperRunning() const;
 
@@ -167,14 +162,14 @@ public:
 private:
     void updateVisibility();
 
-
-    bool m_isFirstFrameDrawn;
+    bool m_ready;
     bool m_isFrameDropperRunning;
     bool m_live;
     Mir::State m_state;
     Mir::OrientationAngle m_orientationAngle;
     bool m_visible;
     QSize m_size;
+    QPoint m_position;
     QHash<int, bool> m_views;
     bool m_focused;
 

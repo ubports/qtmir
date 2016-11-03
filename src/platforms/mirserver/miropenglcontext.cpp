@@ -29,7 +29,14 @@
 
 // Mir
 #include <mir/graphics/display.h>
+#include <mir/version.h>
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+#include <mir/renderer/gl/context_source.h>
+#include <mir/renderer/gl/context.h>
+#else
 #include <mir/graphics/gl_context.h>
+#endif
+
 
 // Qt supports one GL context per screen, but also shared contexts.
 // The Mir "Display" generates a shared GL context for all DisplayBuffers
@@ -45,7 +52,11 @@ MirOpenGLContext::MirOpenGLContext(
 #endif
 {
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(0, 25, 0)
     std::unique_ptr<mir::graphics::GLContext> mirContext = display.create_gl_context();
+#else
+    auto const mirContext = dynamic_cast<mir::renderer::gl::ContextSource&>(display).create_gl_context();
+#endif
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -78,6 +89,7 @@ MirOpenGLContext::MirOpenGLContext(
     formatCopy.setRenderableType(QSurfaceFormat::OpenGLES);
 
     m_format = q_glFormatFromConfig(eglDisplay, eglConfig, formatCopy);
+    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
 
     // FIXME: the temporary gl context created by Mir does not have the attributes we specified
     // in the GLConfig, so need to set explicitly for now

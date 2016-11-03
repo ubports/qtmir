@@ -18,6 +18,7 @@
 #include <condition_variable>
 #include <QSignalSpy>
 
+#include "promptsession.h"
 #include <Unity/Application/session.h>
 
 #include "qtmir_test.h"
@@ -33,9 +34,9 @@ public:
     SessionManagerTests()
     {}
 
-    QList<std::shared_ptr<ms::PromptSession>> listPromptSessions(SessionInterface* session) {
-        QList<std::shared_ptr<ms::PromptSession>> promptSessions;
-        session->foreachPromptSession([&promptSessions](const std::shared_ptr<ms::PromptSession>& promptSession) {
+    QList<qtmir::PromptSession> listPromptSessions(SessionInterface* session) {
+        QList<qtmir::PromptSession> promptSessions;
+        session->foreachPromptSession([&promptSessions](const qtmir::PromptSession &promptSession) {
             promptSessions << promptSession;
         });
         return promptSessions;
@@ -55,12 +56,14 @@ TEST_F(SessionManagerTests, sessionTracksPromptSession)
     using namespace testing;
 
     std::shared_ptr<ms::Session> mirAppSession = std::make_shared<MockSession>("mirAppSession", __LINE__);
-    sessionManager.onSessionStarting(mirAppSession);
+    miral::Application app(mirAppSession);
+    miral::ApplicationInfo appInfo(app);
+    sessionManager.onSessionStarting(appInfo);
     SessionInterface* qtmirAppSession = sessionManager.findSession(mirAppSession.get());
     EXPECT_TRUE(qtmirAppSession != nullptr);
 
-    auto promptSession = std::make_shared<ms::MockPromptSession>();
-    ON_CALL(*promptSessionManager, application_for(_)).WillByDefault(Return(mirAppSession));
+    qtmir::PromptSession promptSession{std::make_shared<ms::MockPromptSession>()};
+    ON_CALL(*stubPromptSessionManager, application_for(_)).WillByDefault(Return(mirAppSession));
 
     sessionManager.onPromptSessionStarting(promptSession);
 
@@ -79,43 +82,48 @@ TEST_F(SessionManagerTests, TestPromptSession)
     using namespace testing;
 
     std::shared_ptr<ms::Session> mirAppSession = std::make_shared<MockSession>("mirAppSession", __LINE__);
-    sessionManager.onSessionStarting(mirAppSession);
+    miral::Application app(mirAppSession);
+    miral::ApplicationInfo appInfo(app);
+    sessionManager.onSessionStarting(appInfo);
     SessionInterface* qtmirAppSession = sessionManager.findSession(mirAppSession.get());
     EXPECT_TRUE(qtmirAppSession != nullptr);
 
-    EXPECT_CALL(*promptSessionManager, application_for(_)).WillRepeatedly(Return(mirAppSession));
-    EXPECT_CALL(*promptSessionManager, helper_for(_)).WillRepeatedly(Return(nullptr));
+    EXPECT_CALL(*stubPromptSessionManager, application_for(_)).WillRepeatedly(Return(mirAppSession));
+    EXPECT_CALL(*stubPromptSessionManager, helper_for(_)).WillRepeatedly(Return(nullptr));
 
     std::shared_ptr<ms::PromptSession> mirPromptSession = std::make_shared<ms::MockPromptSession>();
+    qtmir::PromptSession promptSession{mirPromptSession};
 
     // prompt provider session
     std::shared_ptr<ms::Session> mirProviderSession = std::make_shared<MockSession>("mirProviderSession", __LINE__);
-    sessionManager.onSessionStarting(mirProviderSession);
+    miral::Application providerApp(mirProviderSession);
+    miral::ApplicationInfo providerAppInfo(providerApp);
+    sessionManager.onSessionStarting(providerAppInfo);
     SessionInterface* qtmirProviderSession = sessionManager.findSession(mirProviderSession.get());
 
-    EXPECT_CALL(*promptSessionManager, for_each_provider_in(mirPromptSession,_)).WillRepeatedly(WithArgs<1>(Invoke(
+    EXPECT_CALL(*stubPromptSessionManager, for_each_provider_in(mirPromptSession,_)).WillRepeatedly(WithArgs<1>(Invoke(
         [&](std::function<void(std::shared_ptr<ms::Session> const& prompt_provider)> const& f) {
             f(mirProviderSession);
         })));
 
     EXPECT_THAT(listPromptSessions(qtmirAppSession), IsEmpty());
 
-    sessionManager.onPromptSessionStarting(mirPromptSession);
+    sessionManager.onPromptSessionStarting(promptSession);
 
     EXPECT_THAT(listPromptSessions(qtmirAppSession), ElementsAre(mirPromptSession));
     EXPECT_THAT(listChildSessions(qtmirAppSession), IsEmpty());
 
-    sessionManager.onPromptProviderAdded(mirPromptSession.get(), mirProviderSession);
+    sessionManager.onPromptProviderAdded(promptSession, mirProviderSession);
 
     EXPECT_THAT(listChildSessions(qtmirAppSession), ElementsAre(qtmirProviderSession));
 
-    EXPECT_CALL(*promptSessionManager, for_each_provider_in(mirPromptSession,_)).WillRepeatedly(InvokeWithoutArgs([]{}));
+    EXPECT_CALL(*stubPromptSessionManager, for_each_provider_in(mirPromptSession,_)).WillRepeatedly(InvokeWithoutArgs([]{}));
 
     EXPECT_EQ(qtmirProviderSession->live(), true);
-    sessionManager.onPromptProviderRemoved(mirPromptSession.get(), mirProviderSession);
+    sessionManager.onPromptProviderRemoved(promptSession, mirProviderSession);
     EXPECT_EQ(qtmirProviderSession->live(), false);
 
-    sessionManager.onPromptSessionStopping(mirPromptSession);
+    sessionManager.onPromptSessionStopping(promptSession);
 
     EXPECT_THAT(listPromptSessions(qtmirAppSession), IsEmpty());
 

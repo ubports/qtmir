@@ -174,7 +174,7 @@ TEST_F(MirSurfaceItemTest, NoSurfaceActiveFocusIfItemDoesNotConsumeInput)
     auto surfaceObserver = std::make_shared<SurfaceObserver>();
     mir::shell::MockShell mockShell;
 
-    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &mockShell, surfaceObserver, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &mockShell, surfaceObserver, CreationHints());
 
     MirSurfaceItem *surfaceItem = new MirSurfaceItem;
     QQuickItemPrivate *surfaceItemPrivate = QQuickItemPrivate::get(surfaceItem);
@@ -230,7 +230,7 @@ TEST_F(MirSurfaceItemTest, AggregateSurfaceActiveFocus)
     auto surfaceObserver = std::make_shared<SurfaceObserver>();
     mir::shell::MockShell mockShell;
 
-    MirSurface *surface = new MirSurface(mockSurface, "1234", fakeSession, &mockShell, surfaceObserver, CreationHints());
+    MirSurface *surface = new MirSurface(mockSurface, fakeSession, &mockShell, surfaceObserver, CreationHints());
 
     MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
     QQuickItemPrivate *surfaceItem1Private = QQuickItemPrivate::get(surfaceItem1);

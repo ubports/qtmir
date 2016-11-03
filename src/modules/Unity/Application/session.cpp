@@ -19,16 +19,14 @@
 #include "debughelpers.h"
 #include "session.h"
 #include "mirsurfaceinterface.h"
-#include "mirsurfacemanager.h"
 #include "mirsurfaceitem.h"
+#include "promptsession.h"
 
 // mirserver
 #include "logging.h"
 
-// mir
-#include <mir/scene/session.h>
-#include <mir/scene/prompt_session.h>
-#include <mir/scene/prompt_session_manager.h>
+// miral
+#include <miral/application.h>
 
 // Qt
 #include <QPainter>
@@ -66,7 +64,7 @@ const char *sessionStateToString(SessionInterface::State state)
 }
 
 Session::Session(const std::shared_ptr<ms::Session>& session,
-                 const std::shared_ptr<ms::PromptSessionManager>& promptSessionManager,
+                 const std::shared_ptr<PromptSessionManager>& promptSessionManager,
                  QObject *parent)
     : SessionInterface(parent)
     , m_session(session)
@@ -121,7 +119,7 @@ void Session::doSuspend()
 
 QString Session::name() const
 {
-    return QString::fromStdString(m_session->name());
+    return QString::fromStdString(miral::name_of(m_session));
 }
 
 std::shared_ptr<ms::Session> Session::session() const
@@ -202,10 +200,10 @@ void Session::registerSurface(MirSurfaceInterface *newSurface)
     DEBUG_MSG << "(surface=" << newSurface << ")";
 
     // Only notify QML of surface creation once it has drawn its first frame.
-    if (newSurface->isFirstFrameDrawn()) {
+    if (newSurface->isReady()) {
         prependSurface(newSurface);
     } else {
-        connect(newSurface, &MirSurfaceInterface::firstFrameDrawn, this, [this, newSurface]()
+        connect(newSurface, &MirSurfaceInterface::ready, this, [this, newSurface]()
             {
                 newSurface->disconnect(this);
                 this->prependSurface(newSurface);
@@ -234,6 +232,10 @@ void Session::prependSurface(MirSurfaceInterface *newSurface)
             this->removeSurface(newSurface);
         });
     connect(newSurface, &MirSurfaceInterface::focusRequested, this, &SessionInterface::focusRequested);
+    connect(newSurface, &MirSurfaceInterface::focusedChanged, this, [&](bool /*value*/) {
+        // TODO: May want to optimize that in the future.
+        Q_EMIT focusedChanged(focused());
+    });
 
     m_surfaceList.prependSurface(newSurface);
     m_hadSurface = true;
@@ -289,11 +291,11 @@ void Session::suspend()
 {
     DEBUG_MSG << " state=" << sessionStateToString(m_state);
     if (m_state == Running) {
-        session()->set_lifecycle_state(mir_lifecycle_state_will_suspend);
+        miral::apply_lifecycle_state_to(session(), mir_lifecycle_state_will_suspend);
         m_suspendTimer->start();
 
-        foreachPromptSession([this](const std::shared_ptr<ms::PromptSession>& promptSession) {
-            m_promptSessionManager->suspend_prompt_session(promptSession);
+        foreachPromptSession([this](const qtmir::PromptSession &promptSession) {
+            m_promptSessionManager->suspendPromptSession(promptSession);
         });
 
         foreachChildSession([](SessionInterface* session) {
@@ -322,10 +324,10 @@ void Session::doResume()
         }
     }
 
-    session()->set_lifecycle_state(mir_lifecycle_state_resumed);
+    miral::apply_lifecycle_state_to(session(), mir_lifecycle_state_resumed);
 
-    foreachPromptSession([this](const std::shared_ptr<ms::PromptSession>& promptSession) {
-        m_promptSessionManager->resume_prompt_session(promptSession);
+    foreachPromptSession([this](const qtmir::PromptSession &promptSession) {
+        m_promptSessionManager->resumePromptSession(promptSession);
     });
 
     foreachChildSession([](SessionInterface* session) {
@@ -453,16 +455,16 @@ SessionModel* Session::childSessions() const
     return m_children;
 }
 
-void Session::appendPromptSession(const std::shared_ptr<ms::PromptSession>& promptSession)
+void Session::appendPromptSession(const qtmir::PromptSession &promptSession)
 {
-    DEBUG_MSG << "(promptSession=" << (promptSession ? promptSession.get() : nullptr) << ")";
+    DEBUG_MSG << "(promptSession=" << promptSession.get() << ")";
 
     m_promptSessions.append(promptSession);
 }
 
-void Session::removePromptSession(const std::shared_ptr<ms::PromptSession>& promptSession)
+void Session::removePromptSession(const qtmir::PromptSession &promptSession)
 {
-    DEBUG_MSG << "(promptSession=" << (promptSession ? promptSession.get() : nullptr) << ")";
+    DEBUG_MSG << "(promptSession=" << promptSession.get() << ")";
 
     m_promptSessions.removeAll(promptSession);
 }
@@ -474,26 +476,26 @@ void Session::stopPromptSessions()
         static_cast<Session*>(child)->stopPromptSessions();
     }
 
-    QVector<std::shared_ptr<ms::PromptSession>> copy(m_promptSessions);
-    QVectorIterator<std::shared_ptr<ms::PromptSession>> it(copy);
+    QVector<qtmir::PromptSession> copy(m_promptSessions);
+    QVectorIterator<qtmir::PromptSession> it(copy);
     for ( it.toBack(); it.hasPrevious(); ) {
-        std::shared_ptr<ms::PromptSession> promptSession = it.previous();
+        qtmir::PromptSession promptSession = it.previous();
         DEBUG_MSG << " - promptSession=" << promptSession.get();
 
-        m_promptSessionManager->stop_prompt_session(promptSession);
+        m_promptSessionManager->stopPromptSession(promptSession);
     }
 }
 
-std::shared_ptr<ms::PromptSession> Session::activePromptSession() const
+qtmir::PromptSession Session::activePromptSession() const
 {
     if (m_promptSessions.count() > 0)
         return m_promptSessions.back();
-    return nullptr;
+    return {};
 }
 
-void Session::foreachPromptSession(const std::function<void(const std::shared_ptr<ms::PromptSession>&)>& f) const
+void Session::foreachPromptSession(const std::function<void(const qtmir::PromptSession&)>& f) const
 {
-    Q_FOREACH (std::shared_ptr<ms::PromptSession> promptSession, m_promptSessions) {
+    Q_FOREACH (qtmir::PromptSession promptSession, m_promptSessions) {
         f(promptSession);
     }
 }
@@ -516,6 +518,18 @@ bool Session::hadSurface() const
     return m_hadSurface;
 }
 
+bool Session::focused() const
+{
+    for (int i = 0; i < m_surfaceList.count(); ++i) {
+        auto surface = static_cast<const MirSurfaceInterface*>(m_surfaceList.get(i));
+        if (surface->focused()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Session::activeFocus() const
 {
     for (int i = 0; i < m_surfaceList.count(); ++i) {
@@ -530,7 +544,7 @@ bool Session::activeFocus() const
 
 pid_t Session::pid() const
 {
-    return m_session->process_id();
+    return miral::pid_of(m_session);
 }
 
 void Session::setSuspendTimer(AbstractTimer *timer)

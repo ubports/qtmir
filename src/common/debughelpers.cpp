@@ -21,6 +21,7 @@
 
 // Unity API
 #include <unity/shell/application/ApplicationInfoInterface.h>
+#include <unity/shell/application/Mir.h>
 
 const char *touchPointStateToString(Qt::TouchPointState state)
 {
@@ -148,6 +149,8 @@ const char *mirSurfaceStateToStr(int value)
         return "vertmaximized";
     case mir_surface_state_fullscreen:
         return "fullscreen";
+    case mir_surface_state_hidden:
+        return "hidden";
     default:
         return "???";
     }
@@ -345,6 +348,42 @@ const char *qtCursorShapeToStr(Qt::CursorShape shape)
         return "DragLink";
     case Qt::BitmapCursor:
         return "Bitmap";
+    default:
+        return "???";
+    }
+}
+
+const char *unityapiMirStateToStr(int state)
+{
+    switch (state) {
+    case Mir::UnknownState:
+        return "unknown";
+    case Mir::RestoredState:
+        return "restored";
+    case Mir::MinimizedState:
+        return "minimized";
+    case Mir::MaximizedState:
+        return "maximized";
+    case Mir::VertMaximizedState:
+        return "vertMaximized";
+    case Mir::FullscreenState:
+        return "fullscreen";
+    case Mir::HorizMaximizedState:
+        return "horizMaximized";
+    case Mir::MaximizedLeftState:
+        return "maximizedLeft";
+    case Mir::MaximizedRightState:
+        return "maximizedRight";
+    case Mir::MaximizedTopLeftState:
+        return "maximizedTopLeft";
+    case Mir::MaximizedTopRightState:
+        return "maximizedTopRight";
+    case Mir::MaximizedBottomLeftState:
+        return "maximizedBottomLeft";
+    case Mir::MaximizedBottomRightState:
+        return "maximizedBottomRight";
+    case Mir::HiddenState:
+        return "hidden";
     default:
         return "???";
     }

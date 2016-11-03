@@ -20,11 +20,13 @@
 #include <QPoint>
 #include <QVector>
 
-#include <mir/graphics/display_configuration.h>
+#include "screentypes.h"
+#include <mir_toolkit/common.h>
+
 
 struct CustomScreenConfiguration
 {
-    mir::graphics::DisplayConfigurationOutputId id;
+    qtmir::OutputId id;
 
     QPoint topLeft;
     uint32_t currentModeIndex;

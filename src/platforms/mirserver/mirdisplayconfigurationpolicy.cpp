@@ -16,8 +16,10 @@
 
 #include "mirdisplayconfigurationpolicy.h"
 
+#include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/geometry/point.h>
+#include <mir/server.h>
 
 #include <qglobal.h>
 #include <QByteArray>
@@ -28,6 +30,18 @@ namespace mg = mir::graphics;
 #define DEFAULT_GRID_UNIT_PX 8
 
 namespace {
+class MirDisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
+{
+public:
+    MirDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped);
+
+    void apply_to(mir::graphics::DisplayConfiguration &conf) override;
+
+private:
+    const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
+    float m_defaultScale;
+};
+
 static float getenvFloat(const char* name, float defaultValue)
 {
     QByteArray stringValue = qgetenv(name);
@@ -35,7 +49,6 @@ static float getenvFloat(const char* name, float defaultValue)
     float value = stringValue.toFloat(&ok);
     return ok ? value : defaultValue;
 }
-} //namespace
 
 MirDisplayConfigurationPolicy::MirDisplayConfigurationPolicy(
         const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
@@ -98,4 +111,16 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
                 output.scale = m_defaultScale; // probably 1 on desktop anyway.
             }
         });
+}
+} //namespace
+
+void qtmir::setDisplayConfigurationPolicy(mir::Server& server)
+{
+    server.wrap_display_configuration_policy(
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
+            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+            {
+                return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
+            });
+
 }

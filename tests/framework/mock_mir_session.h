@@ -20,6 +20,7 @@
 #include <mir/scene/session.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/scene/surface_creation_parameters.h>
+#include <mir/version.h>
 #include <gmock/gmock.h>
 
 #include <string>
@@ -65,14 +66,23 @@ struct MockSession : public Session
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
-    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;;
+    void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;
 
     MOCK_METHOD1(send_input_device_change, void(std::vector<std::shared_ptr<mir::input::Device>> const&));
-    MOCK_METHOD1(create_buffer, mir::graphics::BufferID(mir::graphics::BufferProperties const&));
-    MOCK_METHOD1(destroy_buffer, void(mir::graphics::BufferID));
-    MOCK_METHOD1(get_buffer, std::shared_ptr<mir::graphics::Buffer>(mir::graphics::BufferID));
+    //void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
+
 
 private:
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
+    graphics::BufferID create_buffer(graphics::BufferProperties const&) { return graphics::BufferID{0}; }
+    void destroy_buffer(graphics::BufferID) {}
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) { return {}; }
+#endif
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+    void send_error(ClientVisibleError const&) override {};
+#endif
+
     std::string m_sessionName;
     pid_t m_sessionId;
 };

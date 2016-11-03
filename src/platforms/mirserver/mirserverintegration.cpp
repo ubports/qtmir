@@ -101,7 +101,7 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 {
     QWindowSystemInterface::flushWindowSystemEvents();
 
-    auto screens = m_mirServer->screensModel().lock();
+    auto screens = m_mirServer->screensModel();
     if (!screens) {
         qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
         return nullptr;
@@ -138,7 +138,7 @@ void MirServerIntegration::initialize()
     // Creates instance of and start the Mir server in a separate thread
     m_mirServer->start();
 
-    auto screens = m_mirServer->screensModel().lock();
+    auto screens = m_mirServer->screensModel();
     if (!screens) {
         qFatal("ScreensModel not initialized");
     }

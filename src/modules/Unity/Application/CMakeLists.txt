@@ -8,6 +8,7 @@ include_directories(
     ${GLIB_INCLUDE_DIRS}
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
+    ${MIRAL_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${PROCESS_CPP_INCLUDE_DIRS}
@@ -35,8 +36,6 @@ set(QMLMIRPLUGIN_SRC
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp
     plugin.cpp
-    mirsurfacemanager.cpp
-    mirfocuscontroller.cpp
     mirsurface.cpp
     mirsurfaceinterface.h
     mirsurfaceitem.cpp
@@ -50,16 +49,20 @@ set(QMLMIRPLUGIN_SRC
     upstart/taskcontroller.cpp
     timer.cpp
     timesource.cpp
+    toplevelwindowmodel.cpp
     tracepoints.c
     settings.cpp
+    window.cpp
+    windowmodel.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirFocusControllerInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceItemInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceListInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/TopLevelWindowModelInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/WindowInterface.h
 # Feed the automoc monster
     session_interface.h
     applicationinfo.h

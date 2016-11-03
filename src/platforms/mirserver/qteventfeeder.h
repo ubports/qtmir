@@ -17,8 +17,7 @@
 #ifndef MIR_QT_EVENT_FEEDER_H
 #define MIR_QT_EVENT_FEEDER_H
 
-#include <mir/input/input_dispatcher.h>
-#include <mir/shell/input_targeter.h>
+#include <mir_toolkit/event.h>
 
 #include <qpa/qwindowsysteminterface.h>
 
@@ -28,7 +27,7 @@ class ScreensModel;
 /*
   Fills Qt's event loop with input events from Mir
  */
-class QtEventFeeder : public mir::input::InputDispatcher
+class QtEventFeeder
 {
 public:
     // Interface between QtEventFeeder and the actual QWindowSystemInterface functions
@@ -61,18 +60,13 @@ public:
                   QtWindowSystemInterface *windowSystem);
     virtual ~QtEventFeeder();
 
-    static const int MirEventActionMask;
-    static const int MirEventActionPointerIndexMask;
-    static const int MirEventActionPointerIndexShift;
+    void dispatchKey(MirKeyboardEvent const* event);
+    void dispatchTouch(MirTouchEvent const* event);
+    void dispatchPointer(MirPointerEvent const* event);
 
-    bool dispatch(MirEvent const& event) override;
-    void start() override;
-    void stop() override;
+    bool dispatch(MirEvent const& event); // FIXME used only in tests
 
 private:
-    void dispatchKey(MirInputEvent const* event);
-    void dispatchTouch(MirInputEvent const* event);
-    void dispatchPointer(MirInputEvent const* event);
     void validateTouches(QWindow *window, ulong timestamp, QList<QWindowSystemInterface::TouchPoint> &touchPoints);
     bool validateTouch(QWindowSystemInterface::TouchPoint &touchPoint);
     void sendActiveTouchRelease(QWindow *window, ulong timestamp, int id);

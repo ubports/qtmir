@@ -55,6 +55,7 @@ public:
     void stop() override;
     bool hadSurface() const override;
     bool hasClosingSurfaces() const override;
+    bool focused() const override { return false; }
 
     void close() override;
 
@@ -69,13 +70,13 @@ public:
     void removeChildSession(SessionInterface*) override;
     void foreachChildSession(const std::function<void(SessionInterface* session)> &) const override;
 
-    std::shared_ptr<mir::scene::PromptSession> activePromptSession() const override;
-    void foreachPromptSession(const std::function<void(const std::shared_ptr<mir::scene::PromptSession>&)> &) const override;
+    PromptSession activePromptSession() const override;
+    void foreachPromptSession(const std::function<void(const PromptSession&)> &) const override;
 
     void setFullscreen(bool) override;
     void setLive(const bool) override;
-    void appendPromptSession(const std::shared_ptr<mir::scene::PromptSession>&) override;
-    void removePromptSession(const std::shared_ptr<mir::scene::PromptSession>&) override;
+    void appendPromptSession(const PromptSession&) override;
+    void removePromptSession(const PromptSession&) override;
 
     // For tests
 

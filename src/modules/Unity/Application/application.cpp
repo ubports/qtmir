@@ -409,11 +409,7 @@ void Application::applyRequestedSuspended()
 
 bool Application::focused() const
 {
-    bool someSurfaceHasFocus = false; // to be proven wrong
-    for (int i = 0; i < m_proxySurfaceList->rowCount() && !someSurfaceHasFocus; ++i) {
-        someSurfaceHasFocus |= m_proxySurfaceList->get(i)->focused();
-    }
-    return someSurfaceHasFocus;
+    return m_session && m_session->focused();
 }
 
 bool Application::fullscreen() const
@@ -512,6 +508,10 @@ void Application::setSession(SessionInterface *newSession)
         connect(m_session, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
         connect(m_session, &SessionInterface::focusRequested, this, &Application::focusRequested);
         connect(m_session->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
+        connect(m_session, &SessionInterface::focusedChanged, this, [&](bool focused) {
+            qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::focusedChanged(" << focused << ")";
+            Q_EMIT focusedChanged(focused);
+        });
 
         if (oldFullscreen != fullscreen())
             Q_EMIT fullscreenChanged(fullscreen());

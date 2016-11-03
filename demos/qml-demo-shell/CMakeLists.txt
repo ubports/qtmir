@@ -1,4 +1,4 @@
-set(DEMO_SHELL qtmir-demo-shell)
+set(DEMO_SHELL qml-demo-shell)
 
 include_directories(
     SYSTEM
@@ -8,6 +8,7 @@ include_directories(
 )
 
 add_executable(${DEMO_SHELL}
+    pointerposition.cpp
     main.cpp
 )
 

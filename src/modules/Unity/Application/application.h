@@ -31,12 +31,6 @@
 #include "mirsurfacelistmodel.h"
 #include "session_interface.h"
 
-namespace mir {
-    namespace scene {
-        class Session;
-    }
-}
-
 namespace qtmir
 {
 

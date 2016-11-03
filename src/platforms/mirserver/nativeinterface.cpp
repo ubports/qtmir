@@ -73,12 +73,8 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
     }
 }
 
-std::shared_ptr<mir::scene::PromptSessionManager> NativeInterface::thePromptSessionManager() const
+std::shared_ptr<qtmir::PromptSessionManager> NativeInterface::thePromptSessionManager() const
 {
     return m_qMirServer->thePromptSessionManager();
 }
 
-std::shared_ptr<mir::shell::PersistentSurfaceStore> NativeInterface::thePersistentSurfaceStore() const
-{
-    return m_qMirServer->thePersistentSurfaceStore();
-}

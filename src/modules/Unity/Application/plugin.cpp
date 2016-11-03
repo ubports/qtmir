@@ -20,11 +20,12 @@
 // local
 #include "application.h"
 #include "application_manager.h"
-#include "mirfocuscontroller.h"
-#include "mirsurfacemanager.h"
 #include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
 #include "mirsurfacelistmodel.h"
+#include "toplevelwindowmodel.h"
+#include "window.h"
+#include "windowmodel.h"
 
 // platforms/mirserver
 #include <mirsingleton.h>
@@ -46,21 +47,8 @@ QObject* applicationManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine
     return qtmir::ApplicationManager::singleton();
 }
 
-QObject* surfaceManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    qCDebug(QTMIR_APPLICATIONS) << "surfaceManagerSingleton - engine=" << engine << "scriptEngine=" << scriptEngine;
-
-    return qtmir::MirSurfaceManager::singleton();
-}
-
 QObject* mirSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
     return qtmir::Mir::instance();
-}
-
-QObject* mirFocusControllerSingleton(QQmlEngine*, QJSEngine*)
-{
-    return MirFocusController::instance();
 }
 } // anonymous namespace
 
@@ -78,6 +66,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<unity::shell::application::MirSurfaceInterface*>("MirSurfaceInterface*");
         qRegisterMetaType<unity::shell::application::MirSurfaceListInterface*>("unity::shell::application::MirSurfaceListInterface*");
         qRegisterMetaType<MirSurfaceAttrib>("MirSurfaceAttrib");
+        qRegisterMetaType<unity::shell::application::WindowInterface*>("unity::shell::application::WindowInterface*");
 
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
                     uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
@@ -87,13 +76,13 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "ApplicationInfoInterface", "Abstract interface. Cannot be created in QML");
         qmlRegisterUncreatableType<qtmir::Application>(
                     uri, 0, 1, "ApplicationInfo", "Application can't be instantiated");
-        qmlRegisterSingletonType<qtmir::MirSurfaceManager>(
-                    uri, 0, 1, "SurfaceManager", surfaceManagerSingleton);
-        qmlRegisterSingletonType<MirFocusController>(uri, 0, 1, "MirFocusController", mirFocusControllerSingleton);
         qmlRegisterUncreatableType<unity::shell::application::MirSurfaceInterface>(
                     uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
         qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
+
+        qmlRegisterType<qtmir::WindowModel>(uri, 0, 1, "WindowModel");
+        qmlRegisterType<qtmir::TopLevelWindowModel>(uri, 0, 1, "TopLevelWindowModel");
     }
 
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)

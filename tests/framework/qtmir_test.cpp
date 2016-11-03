@@ -79,18 +79,41 @@ void PrintTo(const Session::State& state, ::std::ostream* os)
 }
 } // namespace qtmir
 
+void PrintTo(const QString &text, ::std::ostream *os)
+{
+    *os << text.toUtf8().constData();
+}
+
+void PrintTo(const QSize &size, ::std::ostream *os)
+{
+    QString output;
+    QDebug debug(&output);
+
+    debug << size;
+
+    *os << output.toUtf8().constData();
+}
+
+void PrintTo(const QPoint &point, ::std::ostream *os)
+{
+    QString output;
+    QDebug debug(&output);
+
+    debug << point;
+
+    *os << output.toUtf8().constData();
+}
+
 namespace testing
 {
 
 QtMirTest::QtMirTest()
-    : promptSessionManager(std::make_shared<StubPromptSessionManager>())
-    , persistentSurfaceStore(std::make_shared<StubPersistentSurfaceStore>())
+    : persistentSurfaceStore(std::make_shared<StubPersistentSurfaceStore>())
     , applicationManager(taskControllerSharedPointer,
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
     , sessionManager(promptSessionManager, &applicationManager)
-    , surfaceManager(mirShell, &sessionManager, persistentSurfaceStore)
 {
 }
 
@@ -118,7 +141,8 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
     EXPECT_EQ(authed, true);
 
     auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
-    sessionManager.onSessionStarting(appSession);
+    miral::ApplicationInfo appInfo(appSession);
+    sessionManager.onSessionStarting(appInfo);
 
     Mock::VerifyAndClearExpectations(taskController);
     return application;

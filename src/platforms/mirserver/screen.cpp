@@ -24,6 +24,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
+#include <mir/graphics/display_configuration.h>
 #include <mir/renderer/gl/render_target.h>
 
 // Qt
@@ -97,25 +98,25 @@ enum QImage::Format qImageFormatFromMirPixelFormat(MirPixelFormat mirPixelFormat
     return QImage::Format_Invalid;
 }
 
-QString displayTypeToString(enum mir::graphics::DisplayConfigurationOutputType type)
+QString displayTypeToString(qtmir::OutputTypes type)
 {
-    typedef mir::graphics::DisplayConfigurationOutputType Type;
+    typedef qtmir::OutputTypes Type;
     switch (type) {
-    case Type::vga:           return QStringLiteral("VGP");
-    case Type::dvii:          return QStringLiteral("DVI-I");
-    case Type::dvid:          return QStringLiteral("DVI-D");
-    case Type::dvia:          return QStringLiteral("DVI-A");
-    case Type::composite:     return QStringLiteral("Composite");
-    case Type::svideo:        return QStringLiteral("S-Video");
-    case Type::lvds:          return QStringLiteral("LVDS");
-    case Type::component:     return QStringLiteral("Component");
-    case Type::ninepindin:    return QStringLiteral("9 Pin DIN");
-    case Type::displayport:   return QStringLiteral("DisplayPort");
-    case Type::hdmia:         return QStringLiteral("HDMI-A");
-    case Type::hdmib:         return QStringLiteral("HDMI-B");
-    case Type::tv:            return QStringLiteral("TV");
-    case Type::edp:           return QStringLiteral("EDP");
-    case Type::unknown:
+    case Type::VGA:           return QStringLiteral("VGP");
+    case Type::DVII:          return QStringLiteral("DVI-I");
+    case Type::DVID:          return QStringLiteral("DVI-D");
+    case Type::DVIA:          return QStringLiteral("DVI-A");
+    case Type::Composite:     return QStringLiteral("Composite");
+    case Type::SVideo:        return QStringLiteral("S-Video");
+    case Type::LVDS:          return QStringLiteral("LVDS");
+    case Type::Component:     return QStringLiteral("Component");
+    case Type::NinePinDIN:    return QStringLiteral("9 Pin DIN");
+    case Type::DisplayPort:   return QStringLiteral("DisplayPort");
+    case Type::HDMIA:         return QStringLiteral("HDMI-A");
+    case Type::HDMIB:         return QStringLiteral("HDMI-B");
+    case Type::TV:            return QStringLiteral("TV");
+    case Type::EDP:           return QStringLiteral("EDP");
+    case Type::Unknown:
     default:
         return QStringLiteral("Unknown");
     } //switch
@@ -212,18 +213,14 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // Output data - each output has a unique id and corresponding type. Can be multiple cards.
     m_outputId = screen.id;
-    m_cardId = screen.card_id;
-    m_type = screen.type;
+    m_type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
 
     // Physical screen size
-    m_physicalSize.setWidth(static_cast<float>(screen.physical_size_mm.width.as_int()));
-    m_physicalSize.setHeight(static_cast<float>(screen.physical_size_mm.height.as_int()));
+    m_physicalSize.setWidth(screen.physical_size_mm.width.as_int());
+    m_physicalSize.setHeight(screen.physical_size_mm.height.as_int());
 
     // Screen capabilities
-    m_modes = screen.modes;
     m_currentModeIndex = screen.current_mode_index;
-    m_preferredModeIndex = screen.preferred_mode_index;
-    m_pixelFormats = screen.pixel_formats;
 
     // Current Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
@@ -343,8 +340,10 @@ void Screen::onOrientationReadingChanged()
 
 QPlatformCursor *Screen::cursor() const
 {
-    const QPlatformCursor *platformCursor = &m_cursor;
-    return const_cast<QPlatformCursor *>(platformCursor);
+    if (!m_cursor) {
+        const_cast<Screen*>(this)->m_cursor.reset(new qtmir::Cursor);
+    }
+    return m_cursor.data();
 }
 
 QString Screen::name() const
@@ -415,7 +414,7 @@ void Screen::doneCurrent()
 bool Screen::internalDisplay() const
 {
     using namespace mir::graphics;
-    if (m_type == DisplayConfigurationOutputType::lvds || m_type == DisplayConfigurationOutputType::edp) {
+    if (m_type == qtmir::OutputTypes::LVDS || m_type == qtmir::OutputTypes::EDP) {
         return true;
     }
     return false;

@@ -17,6 +17,7 @@
 #include <qtmir_test.h>
 #include <fake_mirsurface.h>
 
+#include "promptsession.h"
 #include <Unity/Application/application.h>
 #include <Unity/Application/mirsurfaceitem.h>
 
@@ -60,7 +61,7 @@ TEST_F(SessionTests, FromStartingToRunningOnceSurfaceDrawsFirstFrame)
     // Still on Starting as the surface hasn't drawn its first frame yet
     EXPECT_EQ(Session::Starting, session->state());
 
-    surface->drawFirstFrame();
+    surface->setReady();
     EXPECT_EQ(Session::Running, session->state());
 
     delete surface;
@@ -221,15 +222,15 @@ TEST_F(SessionTests, SuspendPromptSessionWhenSessionSuspends)
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
-        surface->drawFirstFrame();
+        surface->setReady();
         delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
 
-    auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
-    session->appendPromptSession(mirPromptSession);
+    qtmir::PromptSession promptSession{std::make_shared<ms::MockPromptSession>()};
+    session->appendPromptSession(promptSession);
 
-    EXPECT_CALL(*promptSessionManager, suspend_prompt_session(_)).Times(1);
+    EXPECT_CALL(*stubPromptSessionManager, suspend_prompt_session(_)).Times(1);
 
     EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_will_suspend));
     session->suspend();
@@ -253,7 +254,7 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
-        surface->drawFirstFrame();
+        surface->setReady();
         delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
@@ -264,10 +265,10 @@ TEST_F(SessionTests, ResumePromptSessionWhenSessionResumes)
     session->doSuspend();
     EXPECT_EQ(Session::Suspended, session->state());
 
-    auto mirPromptSession = std::make_shared<ms::MockPromptSession>();
-    session->appendPromptSession(mirPromptSession);
+    qtmir::PromptSession promptSession{std::make_shared<ms::MockPromptSession>()};
+    session->appendPromptSession(promptSession);
 
-    EXPECT_CALL(*promptSessionManager, resume_prompt_session(_)).Times(1);
+    EXPECT_CALL(*stubPromptSessionManager, resume_prompt_session(_)).Times(1);
 
     EXPECT_CALL(*mirSession, set_lifecycle_state(mir_lifecycle_state_resumed));
     session->resume();
@@ -284,7 +285,7 @@ TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
     {
     public:
         SessionTestClass(const std::shared_ptr<mir::scene::Session>& session,
-                         const std::shared_ptr<mir::scene::PromptSessionManager>& promptSessionManager)
+                         const std::shared_ptr<qtmir::PromptSessionManager>& promptSessionManager)
             : Session(session, promptSessionManager) {}
 
         using Session::m_suspendTimer;
@@ -299,7 +300,7 @@ TEST_F(SessionTests, SessionStopsWhileSuspendingDoesntSuspend)
     {
         FakeMirSurface *surface = new FakeMirSurface;
         session->registerSurface(surface);
-        surface->drawFirstFrame();
+        surface->setReady();
         delete surface;
     }
     EXPECT_EQ(Session::Running, session->state());
@@ -327,11 +328,11 @@ TEST_F(SessionTests, CloseAllSurfaceOnSessionClose)
 
     FakeMirSurface *surface1 = new FakeMirSurface;
     session->registerSurface(surface1);
-    surface1->drawFirstFrame();
+    surface1->setReady();
 
     FakeMirSurface *surface2 = new FakeMirSurface;
     session->registerSurface(surface2);
-    surface2->drawFirstFrame();
+    surface2->setReady();
 
     EXPECT_EQ(session->surfaceList()->count(), 2);
     session->close();

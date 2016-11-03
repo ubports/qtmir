@@ -20,6 +20,7 @@
 #define MIR_SCENE_FAKESURFACE_H_
 
 #include <mir/scene/surface.h>
+#include <mir/version.h>
 #include "stub_input_channel.h"
 
 #include <memory>
@@ -100,11 +101,11 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) override {}
     void rename(std::string const&) override {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
     void set_confine_pointer_state(MirPointerConfinementState) {}
-    MirPointerConfinementState confine_pointer_state() const
-    {
-        return mir_pointer_unconfined;
-    }
+    MirPointerConfinementState confine_pointer_state() const { return {}; }
+#endif
 };
 
 } // namespace scene

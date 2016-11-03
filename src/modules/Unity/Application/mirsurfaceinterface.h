@@ -24,6 +24,7 @@
 
 // Qt
 #include <QCursor>
+#include <QPoint>
 #include <QSharedPointer>
 #include <QTouchEvent>
 
@@ -44,7 +45,7 @@ public:
 
     virtual void setLive(bool value) = 0;
 
-    virtual bool isFirstFrameDrawn() const = 0;
+    virtual bool isReady() const = 0;
 
     virtual void stopFrameDropper() = 0;
     virtual void startFrameDropper() = 0;
@@ -53,7 +54,7 @@ public:
 
     virtual void registerView(qintptr viewId) = 0;
     virtual void unregisterView(qintptr viewId) = 0;
-    virtual void setViewVisibility(qintptr viewId, bool visible) = 0;
+    virtual void setViewExposure(qintptr viewId, bool exposed) = 0;
 
     // methods called from the rendering (scene graph) thread:
     virtual QSharedPointer<QSGTexture> texture() = 0;
@@ -102,8 +103,6 @@ public:
 
     virtual QCursor cursor() const = 0;
 
-    virtual void setScreen(QScreen *screen) = 0;
-
     virtual SessionInterface* session() = 0;
 
     virtual bool inputAreaContains(const QPoint &) const = 0;
@@ -111,19 +110,13 @@ public:
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
-    virtual void setMinimumWidth(int) = 0;
-    virtual void setMinimumHeight(int) = 0;
-    virtual void setMaximumWidth(int) = 0;
-    virtual void setMaximumHeight(int) = 0;
-    virtual void setWidthIncrement(int) = 0;
-    virtual void setHeightIncrement(int) = 0;
     virtual void setShellChrome(Mir::ShellChrome shellChrome) = 0;
 
 Q_SIGNALS:
+    void ready();
     void cursorChanged(const QCursor &cursor);
     void raiseRequested();
     void closeRequested();
-    void firstFrameDrawn();
     void framesPosted();
     void isBeingDisplayedChanged();
     void frameDropped();

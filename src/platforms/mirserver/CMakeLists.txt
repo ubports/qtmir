@@ -25,11 +25,11 @@ endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
-
 )
 
 include_directories(
-  SYSTEM
+    SYSTEM
+    ${MIRAL_INCLUDE_DIRS}
     ${MIRCOMMON_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
@@ -53,56 +53,70 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # Needed to compile tracepoints in C99 mode.
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
-set(MIRSERVER_QPA_PLUGIN_SRC
-    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+# These files will compile without mirserver-dev
+add_library(qpa-mirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
-    cursor.cpp
-    eventbuilder.cpp
     logging.cpp
-    mircursorimages.cpp
-    mirdisplayconfigurationpolicy.cpp
-    mirwindowmanager.cpp
-    mirsingleton.cpp
-    qteventfeeder.cpp
     plugin.cpp
-    qmirserver.cpp
-    qmirserver_p.cpp
-    sessionauthorizer.cpp
-    sessionlistener.cpp
     shelluuid.cpp
-    surfaceobserver.cpp
-    promptsessionlistener.cpp
-    mirserver.cpp
-    mirserverstatuslistener.cpp
-    screen.cpp
-    screenwindow.cpp
-    screenscontroller.cpp
-    screensmodel.cpp
-    mirserverintegration.cpp
-    miropenglcontext.cpp
-    nativeinterface.cpp
-    offscreensurface.cpp
-    qtcompositor.cpp
-    services.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    creationhints.cpp
+    openglcontextfactory.cpp openglcontextfactory.h
+    mircursorimages.cpp
+    mirdisplayconfigurationpolicy.cpp
+    mirsingleton.cpp
+    sessionauthorizer.cpp
+    promptsessionlistener.cpp
+    mirserverstatuslistener.cpp
+    screenscontroller.cpp
+    nativeinterface.cpp
+    qtcompositor.cpp
+    services.cpp
+    windowcontroller.cpp
+    windowmanagementpolicy.cpp
+    mirserverhooks.cpp mirserverhooks.h
+    setqtcompositor.cpp setqtcompositor.h
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
+)
+set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
+
+include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
+
+set(MIRSERVER_QPA_PLUGIN_SRC
+    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+    cursor.cpp
+    eventbuilder.cpp
+    qteventfeeder.cpp
+    qmirserver.cpp
+    qmirserver_p.cpp
+    surfaceobserver.cpp
+    screen.cpp
+    screenwindow.cpp
+    screensmodel.cpp
+    mirserverintegration.cpp
+    miropenglcontext.cpp
+    offscreensurface.cpp
+    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+# We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
-    )
+)
 
 add_library(qpa-mirserver SHARED
     ${MIRSERVER_QPA_PLUGIN_SRC}
+    $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
 )
 
 target_link_libraries(
     qpa-mirserver
     Qt5PlatformSupport
 
+    ${MIRAL_LDFLAGS}
     ${MIRSERVER_LDFLAGS}
-    ${MIRCLIENT_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}

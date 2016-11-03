@@ -14,43 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_CREATIONHINTS_H
-#define QTMIR_CREATIONHINTS_H
+#ifndef QTMIR_APPLICATION_MANAGER_INTERFACE_H
+#define QTMIR_APPLICATION_MANAGER_INTERFACE_H
 
-#include <QMetaType>
-#include <QString>
-
-#include <unity/shell/application/Mir.h>
-
-namespace mir {
-    namespace scene {
-        struct SurfaceCreationParameters;
-    }
-}
+// Unity API
+#include <unity/shell/application/ApplicationManagerInterface.h>
 
 namespace qtmir {
 
-class CreationHints {
+class ApplicationManagerInterface : public unity::shell::application::ApplicationManagerInterface
+{
 public:
-    CreationHints() {}
-    CreationHints(const mir::scene::SurfaceCreationParameters&);
+    ApplicationManagerInterface(QObject *parent) : unity::shell::application::ApplicationManagerInterface(parent) {}
 
-    QString toString() const;
-
-    int minWidth{0};
-    int maxWidth{0};
-
-    int minHeight{0};
-    int maxHeight{0};
-
-    int widthIncrement{0};
-    int heightIncrement{0};
-
-    Mir::ShellChrome shellChrome{Mir::ShellChrome::NormalChrome};
+    virtual Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session) = 0;
 };
 
 } // namespace qtmir
 
-Q_DECLARE_METATYPE(qtmir::CreationHints)
-
-#endif // QTMIR_CREATIONHINTS_H
+#endif // QTMIR_APPLICATION_MANAGER_INTERFACE_H
