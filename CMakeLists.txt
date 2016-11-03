@@ -74,7 +74,7 @@ find_package(Threads REQUIRED)
 pkg_check_modules(MIRSERVER mirserver>=0.24 REQUIRED)
 pkg_check_modules(MIRCLIENT mirclient>=0.24 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.24 REQUIRED)
-pkg_check_modules(MIRAL miral>=0.1 REQUIRED) #FIXME should be 0.3 once miral fixes its pkgconfig file
+pkg_check_modules(MIRAL miral>=0.1 REQUIRED) #FIXME should be 0.4 once miral fixes its pkgconfig file
 
 pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
