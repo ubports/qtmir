@@ -94,7 +94,6 @@ private:
     int indexOf(MirSurfaceInterface *surface);
 
     void setInputMethodWindow(Window *window);
-    Window *findWindowWithSurface(MirSurface *surface);
     void setFocusedWindow(Window *window);
     void removeInputMethodWindow();
     MirSurface* find(const miral::WindowInfo &needle) const;
@@ -116,6 +115,9 @@ private:
 
     void move(int from, int to);
 
+    void rememberMirSurface(MirSurface *surface);
+    void forgetMirSurface(const miral::Window &window);
+
     struct ModelEntry {
         ModelEntry() {}
         ModelEntry(Window *window,
@@ -131,6 +133,8 @@ private:
     SessionManager* m_sessionManager;
     Window* m_inputMethodWindow{nullptr};
     Window* m_focusedWindow{nullptr};
+    QVector<MirSurface*> m_allSurfaces;
+
     int m_nextId{1};
     // Just something big enough that we don't risk running out of unused id numbers.
     // Not sure if QML int type supports something close to std::numeric_limits<int>::max() and

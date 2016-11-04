@@ -314,6 +314,7 @@ void TopLevelWindowModel::onWindowAdded(const NewWindow &window)
     SessionInterface* session = m_sessionManager->findSession(mirSession.get());
 
     auto surface = new MirSurface(window, m_windowController, session);
+    rememberMirSurface(surface);
 
     if (session)
         session->registerSurface(surface);
@@ -326,13 +327,20 @@ void TopLevelWindowModel::onWindowAdded(const NewWindow &window)
         setInputMethodWindow(qmlWindow);
     } else {
         Application *application = m_applicationManager->findApplicationWithSession(mirSession);
-        prependSurface(surface, application);
+        if (application) {
+            prependSurface(surface, application);
+        } else {
+            // Must be a prompt session. No need to do anything about it here as a prompt surface is not top-level.
+            // It will show up in the qtmir::Application::promptSurfaceList of some application.
+        }
     }
     // TODO: handle surfaces that are neither top-level windows nor input method. eg: child dialogs, popups, menus
 }
 
 void TopLevelWindowModel::onWindowRemoved(const miral::WindowInfo &windowInfo)
 {
+    forgetMirSurface(windowInfo.window());
+
     if (windowInfo.type() == mir_surface_type_inputmethod) {
         removeInputMethodWindow();
         return;
@@ -342,6 +350,21 @@ void TopLevelWindowModel::onWindowRemoved(const miral::WindowInfo &windowInfo)
     if (index >= 0) {
         auto surface = static_cast<MirSurface*>(m_windowModel[index].window->surface());
         surface->setLive(false);
+    }
+}
+
+void TopLevelWindowModel::rememberMirSurface(MirSurface *surface)
+{
+    m_allSurfaces.append(surface);
+}
+
+void TopLevelWindowModel::forgetMirSurface(const miral::Window &window)
+{
+    for (int i = 0; i < m_allSurfaces.count(); ++i) {
+        if (m_allSurfaces[i]->window() == window) {
+            m_allSurfaces.removeAt(i);
+            return;
+        }
     }
 }
 
@@ -399,11 +422,6 @@ void TopLevelWindowModel::onWindowStateChanged(const miral::WindowInfo &windowIn
 {
     if (auto mirSurface = find(windowInfo)) {
         mirSurface->updateState(state);
-    } else if (m_inputMethodWindow) {
-        auto surface = static_cast<MirSurface*>(m_inputMethodWindow->surface());
-        if (surface->window() == windowInfo.window()) {
-            surface->updateState(state);
-        }
     }
 }
 
@@ -460,9 +478,8 @@ QVariant TopLevelWindowModel::data(const QModelIndex& index, int role) const
 MirSurface *TopLevelWindowModel::find(const miral::WindowInfo &needle) const
 {
     auto window = needle.window();
-    Q_FOREACH(const auto entry, m_windowModel) {
-        auto surface = static_cast<MirSurface*>(entry.window->surface());
-        if (surface && surface->window() == window) {
+    Q_FOREACH(const auto surface, m_allSurfaces) {
+        if (surface->window() == window) {
             return surface;
         }
     }
@@ -606,17 +623,6 @@ void TopLevelWindowModel::doRaiseId(int id)
             move(fromIndex, 0);
         }
     }
-}
-
-Window *TopLevelWindowModel::findWindowWithSurface(MirSurface *surface)
-{
-    for (int i = 0; i < m_windowModel.count(); ++i) {
-        Window *window = m_windowModel[i].window;
-        if (window->surface() == surface) {
-            return window;
-        }
-    }
-    return nullptr;
 }
 
 void TopLevelWindowModel::setFocusedWindow(Window *window)
