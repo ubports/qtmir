@@ -843,7 +843,7 @@ void MirSurface::setReady()
         DEBUG_MSG << "()";
         m_ready = true;
         Q_EMIT ready();
-        updateVisible();
+        updateExposure();
     }
 }
 
