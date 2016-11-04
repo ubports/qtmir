@@ -839,9 +839,12 @@ void MirSurface::updateState(Mir::State newState)
 
 void MirSurface::setReady()
 {
-    m_ready = true;
-    Q_EMIT ready();
-    updateVisible();
+    if (!m_ready) {
+        DEBUG_MSG << "()";
+        m_ready = true;
+        Q_EMIT ready();
+        updateVisible();
+    }
 }
 
 void MirSurface::setCursor(const QCursor &cursor)

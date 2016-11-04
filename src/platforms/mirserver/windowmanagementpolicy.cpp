@@ -61,13 +61,11 @@ miral::WindowSpecification WindowManagementPolicy::place_new_surface(
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
 
-    qDebug() << "Place surface" << parameters.top_left().value().x.as_int();
     return parameters;
 }
 
 void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
 {
-    qDebug("Window Ready");
     CanonicalWindowManagerPolicy::handle_window_ready(windowInfo);
 
     Q_EMIT m_windowModel.windowReady(windowInfo);
@@ -80,8 +78,6 @@ void WindowManagementPolicy::handle_modify_window(
     miral::WindowInfo &windowInfo,
     const miral::WindowSpecification &modifications)
 {
-    qDebug("Window Modified!");
-
     // TODO this applies the default policy. Qt needs to process the request instead
     CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
 
@@ -94,7 +90,6 @@ void WindowManagementPolicy::handle_modify_window(
 
 void WindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)
 {
-    qDebug("Window Raise");
     CanonicalWindowManagerPolicy::handle_raise_window(windowInfo);
 }
 
@@ -167,13 +162,11 @@ void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &window
 
 void WindowManagementPolicy::advise_move_to(const miral::WindowInfo &windowInfo, Point topLeft)
 {
-    qDebug("Window Moved to (%d, %d)", topLeft.x.as_int(), topLeft.y.as_int());
     Q_EMIT m_windowModel.windowMoved(windowInfo, toQPoint(topLeft));
 }
 
 void WindowManagementPolicy::advise_resize(const miral::WindowInfo &windowInfo, const Size &newSize)
 {
-    qDebug("Window Resized to %dx%d", newSize.width.as_int(), newSize.height.as_int());
     Q_EMIT m_windowModel.windowResized(windowInfo, toQSize(newSize));
 }
 
