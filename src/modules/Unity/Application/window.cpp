@@ -138,10 +138,6 @@ void Window::setSurface(MirSurface *surface)
             updateFocused();
         });
 
-        // QPointer is based on QWeakPointer which will be cleared only on QObject destructor (according to docs).
-        // We don't want that. MirSurface emits detroyed() early on
-        connect(surface, &QObject::destroyed, this, [this, surface](){ setSurface(nullptr); });
-
         // bring it up to speed
         m_surface->setRequestedPosition(m_requestedPosition);
         m_surface->requestState(m_state);
