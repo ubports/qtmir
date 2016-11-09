@@ -119,24 +119,15 @@ void TopLevelWindowModel::removeApplication(Application *application)
     DEBUG_MSG << "(" << application->appId() << ")";
 
     Q_ASSERT(m_modelState == IdleState);
-    m_modelState = RemovingState;
 
     int i = 0;
     while (i < m_windowModel.count()) {
         if (m_windowModel.at(i).application == application) {
-            beginRemoveRows(QModelIndex(), i, i);
-            m_windowModel.removeAt(i);
-            endRemoveRows();
-            Q_EMIT countChanged();
-            Q_EMIT listChanged();
+            removeAt(i);
         } else {
             ++i;
         }
     }
-
-    m_modelState = IdleState;
-
-    DEBUG_MSG << " after " << toString();
 }
 
 void TopLevelWindowModel::prependPlaceholder(Application *application)
@@ -385,14 +376,18 @@ void TopLevelWindowModel::removeAt(int index)
 
     m_windowModel.removeAt(index);
 
-    delete window;
-
     if (m_modelState == RemovingState) {
         endRemoveRows();
         Q_EMIT countChanged();
         Q_EMIT listChanged();
         m_modelState = IdleState;
     }
+
+    disconnect(window, 0, this, 0);
+    if (m_focusedWindow == window) {
+        setFocusedWindow(nullptr);
+    }
+    delete window;
 
     DEBUG_MSG << " after " << toString();
 }
