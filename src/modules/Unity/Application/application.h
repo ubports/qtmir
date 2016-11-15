@@ -103,6 +103,7 @@ public:
     unity::shell::application::MirSurfaceListInterface* surfaceList() const override;
     unity::shell::application::MirSurfaceListInterface* promptSurfaceList() const override;
     int surfaceCount() const override { return surfaceList()->count(); }
+    void close() override;
 
     ProcessState processState() const { return m_processState; }
     void setProcessState(ProcessState value);
@@ -118,8 +119,6 @@ public:
     Stages supportedStages() const;
 
     pid_t pid() const;
-
-    void close();
 
     // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }

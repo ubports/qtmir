@@ -23,9 +23,8 @@
 #include "mirsurfaceinterface.h"
 #include "mirsurfaceitem.h"
 #include "mirsurfacelistmodel.h"
-#include "toplevelwindowmodel.h"
-#include "window.h"
 #include "windowmodel.h"
+#include "surfacemanager.h"
 
 // platforms/mirserver
 #include <mirsingleton.h>
@@ -65,8 +64,8 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<qtmir::Application*>("Application*");
         qRegisterMetaType<unity::shell::application::MirSurfaceInterface*>("MirSurfaceInterface*");
         qRegisterMetaType<unity::shell::application::MirSurfaceListInterface*>("unity::shell::application::MirSurfaceListInterface*");
+        qRegisterMetaType<unity::shell::application::SurfaceManagerInterface*>("unity::shell::application::SurfaceManagerInterface*");
         qRegisterMetaType<MirSurfaceAttrib>("MirSurfaceAttrib");
-        qRegisterMetaType<unity::shell::application::WindowInterface*>("unity::shell::application::WindowInterface*");
 
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
                     uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
@@ -80,9 +79,9 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
         qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
+        qmlRegisterType<qtmir::SurfaceManager>(uri, 0, 1, "SurfaceManager");
 
         qmlRegisterType<qtmir::WindowModel>(uri, 0, 1, "WindowModel");
-        qmlRegisterType<qtmir::TopLevelWindowModel>(uri, 0, 1, "TopLevelWindowModel");
     }
 
     virtual void initializeEngine(QQmlEngine *engine, const char *uri)
