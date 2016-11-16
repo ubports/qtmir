@@ -50,7 +50,7 @@ class PromptSessionManager;
 class QMirServerPrivate
 {
 public:
-    QMirServerPrivate(int argc, char* argv[]);
+    QMirServerPrivate(int &argc, char* argv[]);
     const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
     MirServerThread *serverThread;
