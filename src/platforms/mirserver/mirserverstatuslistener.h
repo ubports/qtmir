@@ -25,6 +25,8 @@ public:
     void paused() override;
     void resumed() override;
     void started() override;
+    void ready_for_user_input() override;
+    void stop_receiving_input() override;
 };
 
 #endif // MIRSERVERSTATUSLISTENER_H

@@ -18,7 +18,6 @@
 
 // Mir
 #include <mir/graphics/display.h>
-#include <mir/graphics/gl_context.h>
 
 //Qt
 #include <QOffscreenSurface>

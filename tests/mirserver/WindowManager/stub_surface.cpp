@@ -206,3 +206,7 @@ MirPointerConfinementState StubSurface::confine_pointer_state() const
 {
     return mir_pointer_unconfined;
 }
+
+void StubSurface::placed_relative(mir::geometry::Rectangle const& /*placement*/)
+{
+}
