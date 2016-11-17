@@ -116,7 +116,6 @@ Q_SIGNALS:
     void ready();
     void cursorChanged(const QCursor &cursor);
     void raiseRequested();
-    void closeRequested();
     void framesPosted();
     void isBeingDisplayedChanged();
     void frameDropped();

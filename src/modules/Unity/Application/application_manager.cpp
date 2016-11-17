@@ -577,6 +577,17 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     authorized = true;
 }
 
+
+unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurface(unityapi::MirSurfaceInterface* surface)
+{
+    if (!surface)
+        return nullptr;
+
+    auto qtmirSurface = static_cast<qtmir::MirSurfaceInterface*>(surface);
+
+    return findApplicationWithPid(miral::pid_of(qtmirSurface->session()->session()));
+}
+
 Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
 {
     if (!session)

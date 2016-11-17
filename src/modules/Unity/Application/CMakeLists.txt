@@ -45,14 +45,13 @@ set(QMLMIRPLUGIN_SRC
     session.cpp
     sessionmanager.cpp
     sharedwakelock.cpp
+    surfacemanager.cpp
     upstart/applicationinfo.cpp
     upstart/taskcontroller.cpp
     timer.cpp
     timesource.cpp
-    toplevelwindowmodel.cpp
     tracepoints.c
     settings.cpp
-    window.cpp
     windowmodel.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
@@ -61,8 +60,7 @@ set(QMLMIRPLUGIN_SRC
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceItemInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirSurfaceListInterface.h
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/TopLevelWindowModelInterface.h
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/WindowInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/SurfaceManagerInterface.h
 # Feed the automoc monster
     session_interface.h
     applicationinfo.h
