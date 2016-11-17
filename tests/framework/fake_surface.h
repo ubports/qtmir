@@ -106,7 +106,7 @@ public:
         return mir_pointer_unconfined;
     }
 
-    void placed_relative(mir::geometry::Rectangle const& placement) {}
+    void placed_relative(mir::geometry::Rectangle const&) {}
 };
 
 } // namespace scene
