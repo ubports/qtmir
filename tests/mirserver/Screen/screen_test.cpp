@@ -41,7 +41,7 @@ void ScreenTest::SetUp()
         qputenv("QT_ACCEL_FILEPATH", "dummy");
         // Tell Qt >= 5.7 to use the generic orientation sensor
         // since the proper linux one is not always running
-        // in test environments making the test fails
+        // in test environments making the test fail
         if (QSensorManager::isBackendRegistered("QOrientationSensor", "iio-sensor-proxy.orientationsensor")) {
             QSensorManager::unregisterBackend("QOrientationSensor", "iio-sensor-proxy.orientationsensor");
         }
