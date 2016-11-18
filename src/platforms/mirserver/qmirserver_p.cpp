@@ -18,11 +18,11 @@
 
 // local
 #include "logging.h"
-#include "mirdisplayconfigurationpolicy.h"
 #include "windowmanagementpolicy.h"
 #include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
+#include <qtmir/sessionauthorizer.h>
 
 // miral
 #include <miral/add_init_callback.h>
@@ -65,9 +65,11 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
-QMirServerPrivate::QMirServerPrivate(int argc, char *argv[]) :
-    runner(argc, const_cast<const char **>(argv)),
-    argc{argc}, argv{argv}
+QMirServerPrivate::QMirServerPrivate(int argc, char *argv[])
+    : m_displayConfigurationPolicy(miral::SetDisplayConfigurationPolicy<qtmir::DisplayConfigurationPolicy>())
+    , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
+    , runner(argc, const_cast<const char **>(argv))
+    , argc{argc}, argv{argv}
 {
 }
 
@@ -142,11 +144,11 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_mirServerHooks,
             miral::set_window_managment_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
                     m_appNotifier, screensModel),
-            qtmir::setDisplayConfigurationPolicy,
+            m_displayConfigurationPolicy,
             setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
-            setTerminator,
+            setTerminator
         });
 }
 

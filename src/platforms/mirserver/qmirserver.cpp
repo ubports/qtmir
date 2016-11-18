@@ -39,9 +39,24 @@ QMirServer::~QMirServer()
     stop();
 }
 
+QSharedPointer<QMirServer> QMirServer::create(int &argc, char **argv)
+{
+    static QWeakPointer<QMirServer> server;
+    if (server.isNull()) {
+        QSharedPointer<QMirServer> newServer(new QMirServer(argc, argv));
+        server = newServer.toWeakRef();
+        return newServer;
+    }
+    return server.toStrongRef();
+}
+
 void QMirServer::start()
 {
     Q_D(QMirServer);
+
+    if (d->serverThread->isRunning()) {
+        return;
+    }
 
     d->serverThread->start(QThread::TimeCriticalPriority);
 
@@ -109,4 +124,20 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServer::thePromptSessionManager
 {
     Q_D(const QMirServer);
     return d->promptSessionManager();
+}
+
+void QMirServer::wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy)
+{
+    qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";
+
+    Q_D(QMirServer);
+    d->m_displayConfigurationPolicy = setDisplayConfigurationPolicy;
+}
+
+void QMirServer::overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer)
+{
+    qDebug() << "OVERRIDE overrideSessionAuthorizer";
+
+    Q_D(QMirServer);
+    d->m_sessionAuthorizer = setApplicationAuthorizer;
 }

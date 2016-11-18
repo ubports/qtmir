@@ -1,6 +1,7 @@
 # Qt5PlatformSupport is not available as a cmake module.
 # And also not anymore as pkgconfig module since Qt 5.6.
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
+include(FindQt5PlatformSupport)
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
@@ -11,19 +12,8 @@ if (QGL_DEBUG)
     add_definitions(-DQGL_DEBUG)
 endif()
 
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
-
-# Dirty hack: The private QtPlatformSupport include dirs are not made available via
-# a cmake module or the pkgconfig file (which only exposes the necessary linker flags)
-# So we generate the paths ourselves from the Qt5Gui private dirs!
-set(QT5_PLATFORMSUPPORT_INCLUDE_DIRS)
-foreach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
-  set(newitem "")
-   string(REGEX REPLACE "QtGui" "QtPlatformSupport" newitem ${item})
-   list(APPEND QT5_PLATFORMSUPPORT_INCLUDE_DIRS ${newitem})
-endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
-
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/common
 )
 
@@ -38,9 +28,12 @@ include_directories(
     ${EGL_INCLUDE_DIRS}
     ${LTTNG_INCLUDE_DIRS}
 
-    ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
+    ${Qt5PlatformSupport_INCLUDE_DIRS}
+
+    ${Qt5Gui_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-    ${QT5_PLATFORMSUPPORT_INCLUDE_DIRS}
+
+    ${Qt5Quick_INCLUDE_DIRS}
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
@@ -54,16 +47,15 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 # These files will compile without mirserver-dev
-add_library(qpa-mirserver-nomirserver OBJECT
+add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     logging.cpp
-    plugin.cpp
     shelluuid.cpp
     ubuntutheme.cpp
     clipboard.cpp
     openglcontextfactory.cpp openglcontextfactory.h
     mircursorimages.cpp
-    mirdisplayconfigurationpolicy.cpp
+    displayconfigurationpolicy.cpp
     mirsingleton.cpp
     sessionauthorizer.cpp
     promptsessionlistener.cpp
@@ -82,50 +74,108 @@ add_library(qpa-mirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
     ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
+
+    ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
 )
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 
-include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
+include(UseLttngGenTp)
+add_lttng_gen_tp(NAME tracepoints)
 
-set(MIRSERVER_QPA_PLUGIN_SRC
+set(QTMIRSERVER_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     cursor.cpp
     eventbuilder.cpp
-    qteventfeeder.cpp
-    qmirserver.cpp
-    qmirserver_p.cpp
-    surfaceobserver.cpp
-    screen.cpp
-    screenwindow.cpp
-    screensmodel.cpp
-    mirserverintegration.cpp
+    guiserverapplication.cpp
     miropenglcontext.cpp
+    mirserverintegration.cpp
     offscreensurface.cpp
     promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+    qmirserver.cpp
+    qmirserver_p.cpp
+    qteventfeeder.cpp
+    screen.cpp
+    screensmodel.cpp
+    screenwindow.cpp
+    surfaceobserver.cpp
+
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/guiserverapplication.h
 )
+
+add_library(qtmirserver SHARED
+    ${QTMIRSERVER_PLUGIN_SRC}
+    $<TARGET_OBJECTS:qtmirserver-nomirserver>
+)
+
+target_link_libraries(qtmirserver
+    PUBLIC
+        ${MIRAL_LDFLAGS}
+        ${MIRSERVER_LDFLAGS}
+        Qt5::Core
+        Qt5::Gui
+
+    PRIVATE
+        ${URL_DISPATCHER_LDFLAGS}
+        ${EGL_LDFLAGS}
+        ${GL_LIBRARIES}
+        ${LTTNG_LIBRARIES}
+        ${GIO_LDFLAGS}
+        ${FONTCONFIG_LDFLAGS}
+        ${XKBCOMMON_LIBRARIES}
+
+        ${CONTENT_HUB_LIBRARIES}
+
+        Qt5::DBus
+        Qt5::Quick
+        Qt5::Sensors
+        ${Qt5PlatformSupport_LIBRARIES}
+)
+
+#set_target_properties(qtmirserver PROPERTIES COMPILE_FLAGS -fvisibility=hidden)
+
+#set_target_properties(qtmirserver
+#  PROPERTIES
+#  SOVERSION ${QTMIRSERVER_ABI}
+#  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+#  LINK_DEPENDS ${symbol_map}
+#)
+
+install(
+  TARGETS qtmirserver
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/qtmir
+  DESTINATION "include/qtmir"
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
 
 add_library(qpa-mirserver SHARED
-    ${MIRSERVER_QPA_PLUGIN_SRC}
-    $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
+    mirserverintegration.cpp
+    plugin.cpp
+    ubuntutheme.cpp
 )
 
-target_link_libraries(
-    qpa-mirserver
-    Qt5PlatformSupport
+target_link_libraries(qpa-mirserver
+PRIVATE
+    qtmirserver
+    ${Qt5PlatformSupport_LIBRARIES}
 
-    ${MIRAL_LDFLAGS}
     ${MIRSERVER_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}
     ${LTTNG_LIBRARIES}
-
-    ${QT5PLATFORM_SUPPORT_LDFLAGS}
-    # TODO Qt5Platform support LDFLAGS dont provide actual required ldflags...
-    # I found these were needed...perhaps there is some way to query qmake/qconfig?
-    -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
     ${XKBCOMMON_LIBRARIES}
@@ -138,7 +188,5 @@ target_link_libraries(
     Qt5::Sensors
 )
 
-include(UseLttngGenTp)
-add_lttng_gen_tp(NAME tracepoints)
-
 install(TARGETS qpa-mirserver LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/qt5/plugins/platforms")
+

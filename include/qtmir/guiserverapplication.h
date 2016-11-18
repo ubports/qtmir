@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,15 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRDISPLAYCONFIGURATIONPOLICY_H
-#define MIRDISPLAYCONFIGURATIONPOLICY_H
+#ifndef QTMIR_GUISERVERAPPLICATION_H
+#define QTMIR_GUISERVERAPPLICATION_H
 
-namespace mir { class Server; }
+#include <QtGui/QGuiApplication>
 
-namespace qtmir
+// std
+#include <functional>
+
+class QMirServer;
+
+namespace qtmir {
+
+class GuiServerApplication : public QGuiApplication
 {
-void setDisplayConfigurationPolicy(mir::Server& server);
-}
+    Q_OBJECT
+public:
+    explicit GuiServerApplication(int &argc,
+                                  char **argv,
+                                  std::initializer_list<std::function<void(QMirServer&)>> options);
+    ~GuiServerApplication();
+};
 
+} // namespace qtmir
 
-#endif // MIRDISPLAYCONFIGURATIONPOLICY_H
+#endif // QTMIR_GUISERVERAPPLICATION_H

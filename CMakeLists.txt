@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(qtmir)
 
 set(QTMIR_VERSION_MAJOR 0)
 set(QTMIR_VERSION_MINOR 2)
 set(QTMIR_VERSION_PATCH 0)
+
+set(QTMIR_VERSION ${QTMIR_VERSION_MAJOR}.${QTMIR_VERSION_MINOR}.${QTMIR_VERSION_PATCH})
 
 if(${PROJECT_BINARY_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
    message(FATAL_ERROR "In-tree build attempt detected, aborting. Set your build dir outside your source dir, delete CMakeCache.txt and CMakeFiles/ from source root and try again.")

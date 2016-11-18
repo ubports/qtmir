@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@/qtmir
+
+Name: qtmirserver
+Description: QtMir server library
+Version: @QTMIR_VERSION@
+Requires: miral
+Libs: -L${libdir} -lqtmirserver
+Cflags: -I${includedir}

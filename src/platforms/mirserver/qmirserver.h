@@ -19,12 +19,15 @@
 
 // Qt
 #include <QObject>
-#include <QWeakPointer>
+#include <QSharedPointer>
 
 #include <memory>
+#include <qtmir/displayconfigurationpolicy.h>
+#include <qtmir/sessionauthorizer.h>
 
 // qtmir
 namespace qtmir { class PromptSessionManager; }
+namespace mir { class Server; }
 
 class QMirServerPrivate;
 class ScreensController;
@@ -37,8 +40,10 @@ class QMirServer: public QObject
     Q_OBJECT
 
 public:
-    QMirServer(int &argc, char **argv, QObject* parent=0);
     virtual ~QMirServer();
+
+    static QSharedPointer<QMirServer> create(int &argc,
+                                           char **argv);
 
     void start();
     Q_SLOT void stop();
@@ -49,6 +54,9 @@ public:
     void *nativeResourceForIntegration(const QByteArray &resource) const;
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
 
+    void wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy);
+    void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);
+
 Q_SIGNALS:
     void started();
     void stopped();
@@ -57,6 +65,7 @@ protected:
     QMirServerPrivate * const d_ptr;
 
 private:
+    QMirServer(int &argc, char **argv, QObject* parent=0);
     Q_DISABLE_COPY(QMirServer)
     Q_DECLARE_PRIVATE(QMirServer)
 };

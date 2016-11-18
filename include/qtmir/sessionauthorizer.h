@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,25 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SESSIONAUTHORIZER_H
-#define SESSIONAUTHORIZER_H
-
-//std
-#include <string>
-
-// mir
-#include <miral/application_authorizer.h>
+#ifndef QTMIR_APPLICATIONAUTHORIZER_H
+#define QTMIR_APPLICATIONAUTHORIZER_H
 
 // Qt
 #include <QObject>
 
+// mir
+#include <miral/application_authorizer.h>
+
+class QMirServer;
+
+namespace qtmir {
+
 class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
 {
     Q_OBJECT
-
 public:
     SessionAuthorizer(QObject *parent = 0);
-    ~SessionAuthorizer();
 
     bool connection_is_allowed(miral::ApplicationCredentials const& creds) override;
     bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override;
@@ -45,7 +44,32 @@ Q_SIGNALS:
     void requestAuthorizationForSession(const pid_t &pid, bool &authorized);
 
 private:
-    bool m_connectionChecked;
+    struct Private;
+    std::shared_ptr<Private> d;
 };
 
-#endif // SESSIONAUTHORIZER_H
+class BasicSetSessionAuthorizer
+{
+public:
+    explicit BasicSetSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& builder);
+    ~BasicSetSessionAuthorizer() = default;
+
+    void operator()(QMirServer& server);
+
+private:
+    struct Private;
+    std::shared_ptr<Private> d;
+};
+
+template<typename Policy>
+class SetSessionAuthorizer : public BasicSetSessionAuthorizer
+{
+public:
+    template<typename ...Args>
+    explicit SetSessionAuthorizer(Args const& ...args) :
+            BasicSetSessionAuthorizer{miral::SetApplicationAuthorizer<Policy>(args...)} {}
+};
+
+} // namespace qtmir
+
+#endif // QTMIR_APPLICATIONAUTHORIZER_H

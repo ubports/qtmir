@@ -14,20 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sessionauthorizer.h"
+#include <qtmir/sessionauthorizer.h>
+#include <qmirserver.h>
 #include "logging.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 
 #include <QMetaMethod>
 #include <QThread>
 
+namespace qtmir {
+
+struct SessionAuthorizer::Private
+{
+    bool m_connectionChecked{false};
+};
+
 SessionAuthorizer::SessionAuthorizer(QObject *parent)
     : QObject(parent)
-    , m_connectionChecked(false)
-{
-}
-
-SessionAuthorizer::~SessionAuthorizer()
+    , d(new SessionAuthorizer::Private)
 {
 }
 
@@ -37,7 +41,7 @@ bool SessionAuthorizer::connection_is_allowed(miral::ApplicationCredentials cons
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::connection_is_allowed - this=" << this << "pid=" << creds.pid();
     bool authorized = true;
 
-    if (!m_connectionChecked) {
+    if (!d->m_connectionChecked) {
         // Wait until the ApplicationManager is ready to receive requestAuthorizationForSession signals
         const QMetaObject *mo = metaObject();
         QMetaMethod mm = mo->method(mo->indexOfSignal("requestAuthorizationForSession(pid_t,bool&)"));
@@ -48,7 +52,7 @@ bool SessionAuthorizer::connection_is_allowed(miral::ApplicationCredentials cons
             qCDebug(QTMIR_MIR_MESSAGES) <<
                 "SessionAuthorizer::connection_is_allowed - Gave up waiting for signal listeners";
         }
-        m_connectionChecked = true;
+        d->m_connectionChecked = true;
     }
 
     Q_EMIT requestAuthorizationForSession(creds.pid(), authorized); // needs to block until authorized value returned
@@ -92,4 +96,27 @@ bool SessionAuthorizer::set_base_display_configuration_is_allowed(miral::Applica
     //FIXME Actually mediate this access for clients
     Q_UNUSED(creds)
     return false;
+}
+
+
+
+struct BasicSetSessionAuthorizer::Private
+{
+    Private(miral::BasicSetApplicationAuthorizer const& builder) :
+        builder{builder} {}
+
+    miral::BasicSetApplicationAuthorizer builder;
+};
+
+BasicSetSessionAuthorizer::BasicSetSessionAuthorizer(
+        miral::BasicSetApplicationAuthorizer const& builder)
+    : d(new BasicSetSessionAuthorizer::Private(builder))
+{
+}
+
+void BasicSetSessionAuthorizer::operator()(QMirServer &server)
+{
+    server.overrideSessionAuthorizer(d->builder);
+}
+
 }
