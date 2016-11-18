@@ -33,6 +33,10 @@
 class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
 {
 public:
+    MyDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+    {
+    }
+
     void apply_to(mir::graphics::DisplayConfiguration& conf)
     {
         qDebug() << "OVERRIDE APPLY TO";

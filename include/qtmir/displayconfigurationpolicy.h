@@ -31,7 +31,8 @@ namespace miral {
 class BasicSetDisplayConfigurationPolicy
 {
 public:
-    explicit BasicSetDisplayConfigurationPolicy(std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>()> const& builder);
+    explicit BasicSetDisplayConfigurationPolicy(std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>(
+                                                    std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const& builder);
     ~BasicSetDisplayConfigurationPolicy() = default;
 
     void operator()(mir::Server& server);
@@ -47,8 +48,12 @@ class SetDisplayConfigurationPolicy : public BasicSetDisplayConfigurationPolicy
 {
 public:
     template<typename ...Args>
-    explicit SetDisplayConfigurationPolicy(Args const& ...args) :
-            BasicSetDisplayConfigurationPolicy{[&args...]() { return std::make_shared<Policy>(args...); }} {}
+    explicit SetDisplayConfigurationPolicy(Args const& ...args)
+        : BasicSetDisplayConfigurationPolicy{
+            [&args...](std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped) {
+                return std::make_shared<Policy>(wrapped, args...);
+        }}
+    {}
 };
 
 } // namespace miral
@@ -58,10 +63,11 @@ class QMirServer;
 
 namespace qtmir {
 
+//Conver to miral::DisplayConfigurationPolicy.
 class DisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
-    DisplayConfigurationPolicy();
+    DisplayConfigurationPolicy(std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped);
 
     void apply_to(mir::graphics::DisplayConfiguration& conf);
 

@@ -26,24 +26,24 @@
 #include <qglobal.h>
 #include <QByteArray>
 
-namespace mg = mir::graphics;
-
 #define ENV_GRID_UNIT_PX "GRID_UNIT_PX"
 #define DEFAULT_GRID_UNIT_PX 8
+
+namespace mg = mir::graphics;
 
 ////////////////////// SHOULD BE IN MIRAL //////////////////
 namespace miral {
 
 struct BasicSetDisplayConfigurationPolicy::Private
 {
-    Private(std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>()> const& builder) :
+    Private(std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> const& builder) :
         builder{builder} {}
 
-    std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>()> builder;
+    std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> builder;
 };
 
 BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(
-        std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>()> const& builder)
+        std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> const& builder)
     : d(new BasicSetDisplayConfigurationPolicy::Private(builder))
 {
 }
@@ -51,10 +51,9 @@ BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(
 void BasicSetDisplayConfigurationPolicy::operator()(mir::Server &server)
 {
     server.wrap_display_configuration_policy(
-                [this, &server](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+                [this, &server](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
     {
-        auto wrapped = d->builder();
-        return wrapped;
+        return d->builder(wrapped);
     });
 }
 
@@ -90,7 +89,7 @@ struct DisplayConfigurationPolicy::Private
     float m_defaultScale;
 };
 
-DisplayConfigurationPolicy::DisplayConfigurationPolicy()
+DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
     : d(new DisplayConfigurationPolicy::Private)
 {
 }
