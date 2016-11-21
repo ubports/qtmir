@@ -141,3 +141,11 @@ void QMirServer::overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer 
     Q_D(QMirServer);
     d->m_sessionAuthorizer = setApplicationAuthorizer;
 }
+
+void QMirServer::overrideWindowManagementPolicy(const qtmir::BasicSetWindowManagementPolicy &wmPolicyCreator)
+{
+    qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";
+
+    Q_D(QMirServer);
+    d->m_windowManagementPolicy = wmPolicyCreator;
+}

@@ -33,6 +33,7 @@
 #include "windowmodelnotifier.h"
 #include "mirserverhooks.h"
 #include <qtmir/displayconfigurationpolicy.h>
+#include <qtmir/windowmanagementpolicy.h>
 
 //miral
 #include <miral/application_authorizer.h>
@@ -78,6 +79,7 @@ public:
 
     miral::BasicSetDisplayConfigurationPolicy m_displayConfigurationPolicy;
     miral::BasicSetApplicationAuthorizer m_sessionAuthorizer;
+    qtmir::BasicSetWindowManagementPolicy m_windowManagementPolicy;
 private:
     qtmir::OpenGLContextFactory m_openGLContextFactory;
     qtmir::MirServerHooks       m_mirServerHooks;

@@ -65,7 +65,7 @@ add_library(qtmirserver-nomirserver OBJECT
     qtcompositor.cpp
     services.cpp
     windowcontroller.cpp
-    windowmanagementpolicy.cpp
+    wrappedwindowmanagementpolicy.cpp
     mirserverhooks.cpp mirserverhooks.h
     setqtcompositor.cpp setqtcompositor.h
     tracepoints.c
@@ -77,6 +77,7 @@ add_library(qtmirserver-nomirserver OBJECT
 
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
 )
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 

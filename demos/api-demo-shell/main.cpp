@@ -26,6 +26,7 @@
 #include <qtmir/guiserverapplication.h>
 #include <qtmir/displayconfigurationpolicy.h>
 #include <qtmir/sessionauthorizer.h>
+#include <qtmir/windowmanagementpolicy.h>
 
 // REMOVEME - Should be able to use qmlscene, but in order to use the mir benchmarking we need
 // to parse command line switches. Wait until MIR_SOCKET supported by the benchmark framework.
@@ -33,14 +34,29 @@
 class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
 {
 public:
-    MyDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+    MyDisplayConfigurationPolicy(std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped)
+        : qtmir::DisplayConfigurationPolicy(wrapped)
     {
     }
 
     void apply_to(mir::graphics::DisplayConfiguration& conf)
     {
-        qDebug() << "OVERRIDE APPLY TO";
+        qDebug() << "OVERRIDE qtmir::DisplayConfigurationPolicy::apply_to";
         qtmir::DisplayConfigurationPolicy::apply_to(conf);
+    }
+};
+
+class MyWindowManagementPolicy : public qtmir::WindowManagementPolicy
+{
+public:
+    MyWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+        : qtmir::WindowManagementPolicy(tools, dd)
+    {}
+
+    bool handle_keyboard_event(const MirKeyboardEvent *event) override
+    {
+        qDebug() << "OVERRIDE qtmir::WindowManagementPolicy::handle_keyboard_event" << event;
+        return qtmir::WindowManagementPolicy::handle_keyboard_event(event);
     }
 };
 
@@ -77,13 +93,14 @@ int main(int argc, const char *argv[])
 {
     qtmir::SetSessionAuthorizer<MySessionAuthorizer> sessionAuth;
     qtmir::SetDisplayConfigurationPolicy<MyDisplayConfigurationPolicy> displayConfig;
+    qtmir::SetWindowManagementPolicy<MyWindowManagementPolicy> wmPolicy;
 
     setenv("QT_QPA_PLATFORM_PLUGIN_PATH", qPrintable(::qpaPluginDirectory()), 1 /* overwrite */);
 
     qtmir::GuiServerApplication::setApplicationName("api-demo-shell");
     qtmir::GuiServerApplication *application;
 
-    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth });
+    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy });
     QQuickView* view = new QQuickView();
     view->engine()->addImportPath(::qmlPluginDirectory());
     view->setResizeMode(QQuickView::SizeRootObjectToView);

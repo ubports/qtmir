@@ -24,6 +24,7 @@
 #include <memory>
 #include <qtmir/displayconfigurationpolicy.h>
 #include <qtmir/sessionauthorizer.h>
+#include <qtmir/windowmanagementpolicy.h>
 
 // qtmir
 namespace qtmir { class PromptSessionManager; }
@@ -56,6 +57,7 @@ public:
 
     void wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy);
     void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);
+    void overrideWindowManagementPolicy(qtmir::BasicSetWindowManagementPolicy const& wmPolicyCreator);
 
 Q_SIGNALS:
     void started();

@@ -18,7 +18,7 @@
 
 // local
 #include "logging.h"
-#include "windowmanagementpolicy.h"
+#include "wrappedwindowmanagementpolicy.h"
 #include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
@@ -33,6 +33,14 @@
 // Qt
 #include <QCoreApplication>
 #include <QOpenGLContext>
+
+class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
+{
+public:
+    DefaultWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+        : qtmir::WindowManagementPolicy(tools, dd)
+    {}
+};
 
 void MirServerThread::run()
 {
@@ -68,6 +76,7 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
 QMirServerPrivate::QMirServerPrivate(int argc, char *argv[])
     : m_displayConfigurationPolicy(miral::SetDisplayConfigurationPolicy<qtmir::DisplayConfigurationPolicy>())
     , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
+    , m_windowManagementPolicy(qtmir::SetWindowManagementPolicy<DefaultWindowManagementPolicy>())
     , runner(argc, const_cast<const char **>(argv))
     , argc{argc}, argv{argv}
 {
@@ -142,8 +151,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_sessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_managment_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                    m_appNotifier, screensModel),
+            miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier, m_windowController,
+                                                                              m_appNotifier, screensModel, m_windowManagementPolicy),
             m_displayConfigurationPolicy,
             setCommandLineHandler,
             addInitCallback,
