@@ -900,16 +900,10 @@ bool MirSurface::confinesMousePointer() const
     return m_surface->confine_pointer_state() == mir_pointer_confined_to_surface;
 }
 
-void MirSurface::requestFocus()
+void MirSurface::activate()
 {
     DEBUG_MSG << "()";
     m_controller->activate(m_window);
-}
-
-void MirSurface::raise()
-{
-    DEBUG_MSG << "()";
-    Q_EMIT raiseRequested();
 }
 
 void MirSurface::onCloseTimedOut()
@@ -1172,4 +1166,10 @@ QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const m
 
         return QCursor(QPixmap::fromImage(image), cursorImage.hotspot().dx.as_int(), cursorImage.hotspot().dy.as_int());
     }
+}
+
+void MirSurface::requestFocus()
+{
+    DEBUG_MSG << "()";
+    Q_EMIT focusRequested();
 }

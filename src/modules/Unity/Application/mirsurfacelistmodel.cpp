@@ -77,7 +77,11 @@ void MirSurfaceListModel::prependSurface(MirSurfaceInterface *surface)
 
 void MirSurfaceListModel::connectSurface(MirSurfaceInterface *surface)
 {
-    connect(surface, &MirSurfaceInterface::raiseRequested, this, [this, surface](){ this->raise(surface); });
+    connect(surface, &MirSurfaceInterface::focusedChanged, this, [this, surface](bool focused){
+        if (focused) {
+            this->raise(surface);
+        }
+    });
     connect(surface, &QObject::destroyed, this, [this, surface](){ this->removeSurface(surface); });
 }
 
@@ -143,10 +147,12 @@ void MirSurfaceListModel::prependSurfaces(QList<MirSurfaceInterface*> &surfaceLi
     for (int i = prependLast; i >= prependFirst; --i) {
         auto surface = surfaceList[i];
         m_surfaceList.prepend(surface);
-        connect(surface, &MirSurfaceInterface::raiseRequested, this,
-                [this, surface]()
+        connect(surface, &MirSurfaceInterface::focusedChanged, this,
+                [this, surface](bool focused)
                 {
-                    this->raise(surface);
+                    if (focused) {
+                        this->raise(surface);
+                    }
                 });
     }
     endInsertRows();

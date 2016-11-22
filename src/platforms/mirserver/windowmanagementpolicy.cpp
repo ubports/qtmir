@@ -90,7 +90,7 @@ void WindowManagementPolicy::handle_modify_window(
 
 void WindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)
 {
-    CanonicalWindowManagerPolicy::handle_raise_window(windowInfo);
+    Q_EMIT m_windowModel.windowRequestedRaise(windowInfo);
 }
 
 /* Handle input events - here just inject them into Qt event loop for later processing */

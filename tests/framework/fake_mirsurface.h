@@ -79,15 +79,11 @@ public:
     QRect inputBounds() const override { return QRect(0,0,10,10); }
     bool confinesMousePointer() const override { return false; }
 
-    void requestFocus() override {
-        Q_EMIT focusRequested();
-    }
-
     void close() override {
         Q_EMIT closeRequested();
     }
 
-    void raise() override {}
+    void activate() override {}
 
     ////
     // qtmir.MirSurfaceInterface
@@ -140,6 +136,10 @@ public:
     SessionInterface* session() override { return m_session; }
 
     bool inputAreaContains(const QPoint &) const override { return true; }
+
+    void requestFocus() override {
+        Q_EMIT focusRequested();
+    }
 
 public Q_SLOTS:
     void requestState(Mir::State qmlState) override;

@@ -52,15 +52,16 @@ SurfaceManager::SurfaceManager(QObject *)
 
 void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
 {
-    connect(notifier, &WindowModelNotifier::windowAdded,        this, &SurfaceManager::onWindowAdded,        Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowRemoved,      this, &SurfaceManager::onWindowRemoved,      Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowReady,        this, &SurfaceManager::onWindowReady,        Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowMoved,        this, &SurfaceManager::onWindowMoved,        Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowStateChanged, this, &SurfaceManager::onWindowStateChanged, Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowFocusChanged, this, &SurfaceManager::onWindowFocusChanged, Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowsRaised,      this, &SurfaceManager::onWindowsRaised,      Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::modificationsStarted, this, &SurfaceManager::modificationsStarted, Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::modificationsEnded, this, &SurfaceManager::modificationsEnded, Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowAdded,          this, &SurfaceManager::onWindowAdded,           Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowRemoved,        this, &SurfaceManager::onWindowRemoved,         Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowReady,          this, &SurfaceManager::onWindowReady,           Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowMoved,          this, &SurfaceManager::onWindowMoved,           Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowStateChanged,   this, &SurfaceManager::onWindowStateChanged,    Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowFocusChanged,   this, &SurfaceManager::onWindowFocusChanged,    Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowsRaised,        this, &SurfaceManager::onWindowsRaised,         Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowRequestedRaise, this, &SurfaceManager::onWindowsRequestedRaise, Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::modificationsStarted, this, &SurfaceManager::modificationsStarted,    Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::modificationsEnded,   this, &SurfaceManager::modificationsEnded,      Qt::QueuedConnection);
 }
 
 void SurfaceManager::rememberMirSurface(MirSurface *surface)
@@ -151,6 +152,13 @@ void SurfaceManager::onWindowsRaised(const std::vector<miral::Window> &windows)
         surfaces.append(mirSurface);
     }
     Q_EMIT surfacesRaised(surfaces);
+}
+
+void SurfaceManager::onWindowsRequestedRaise(const miral::WindowInfo &windowInfo)
+{
+    if (auto mirSurface = find(windowInfo)) {
+        mirSurface->requestFocus();
+    }
 }
 
 void SurfaceManager::raise(unityapi::MirSurfaceInterface *surface)

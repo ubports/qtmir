@@ -53,6 +53,7 @@ private Q_SLOTS:
     void onWindowStateChanged(const miral::WindowInfo &windowInfo, Mir::State state);
     void onWindowFocusChanged(const miral::WindowInfo &windowInfo, bool focused);
     void onWindowsRaised(const std::vector<miral::Window> &windows);
+    void onWindowsRequestedRaise(const miral::WindowInfo &windowInfo);
 
 private:
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
