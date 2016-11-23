@@ -23,6 +23,8 @@ include_directories(
 
 add_executable(ScreensModelTest ${SCREENCONTROLLER_TEST_SOURCES})
 
+set_property(TARGET ScreensModelTest PROPERTY CXX_STANDARD 14)
+
 target_link_libraries(
   ScreensModelTest
   qpa-mirserver
