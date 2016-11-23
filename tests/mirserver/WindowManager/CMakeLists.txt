@@ -18,7 +18,7 @@ target_link_libraries(
 
   Qt5::Test
 
-  qpa-mirserver-nolttng
+  qpa-mirserver
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
