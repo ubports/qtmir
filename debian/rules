@@ -56,7 +56,7 @@ endif
 override_dh_install:
 ifeq ($(DEB_HOST_ARCH),$(USES_GLES2))
 	#clean gmock/gtest if it built in our build dir
-	-rm -f $(TMP1_DIR)/usr/lib/libgmock*.a (TMP1_DIR)/usr/lib/libgtest*.a
+	-rm -f $(TMP1_DIR)/usr/lib/libgmock*.a $(TMP1_DIR)/usr/lib/libgtest*.a
 	-rm -rf $(TMP1_DIR)/usr/include/gmock $(TMP1_DIR)/usr/include/gtest
 	dh_install --sourcedir=$(TMP1_DIR) -pqtmir-android
 endif
