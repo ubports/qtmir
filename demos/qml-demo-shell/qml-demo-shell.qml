@@ -25,9 +25,7 @@ Instantiator {
             height: 100
             width: parent.width / 2
             text: "Scale up"
-            onClicked: { print("try", window.scale + 0.2);
-window.setScaleAndFormFactor(window.scale + 0.2, Screens.FormFactorMonitor)
-}
+            onClicked: window.setScaleAndFormFactor(window.scale + 0.2, Screens.FormFactorMonitor)
         }
         Button {
             anchors { right: parent.right; bottom: parent.bottom }
