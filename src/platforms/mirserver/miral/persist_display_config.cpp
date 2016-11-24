@@ -17,3 +17,21 @@
  */
 
 #include "persist_display_config.h"
+
+struct qtmir::miral::PersistDisplayConfig::Self {};
+
+qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
+    self{std::make_shared<Self>()}
+{
+}
+
+qtmir::miral::PersistDisplayConfig::~PersistDisplayConfig() = default;
+
+qtmir::miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
+
+auto qtmir::miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
+
+void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& /*server*/)
+{
+
+}

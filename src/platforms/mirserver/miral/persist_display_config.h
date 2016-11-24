@@ -19,4 +19,32 @@
 #ifndef MIRAL_PERSIST_DISPLAY_CONFIG_H
 #define MIRAL_PERSIST_DISPLAY_CONFIG_H
 
+#include <memory>
+
+namespace mir { class Server; }
+
+namespace qtmir
+{
+
+// Prototyping namespace for later incorporation in MirAL
+namespace miral
+{
+/// Restores the saved display configuration and saves changes to the base configuration
+class PersistDisplayConfig
+{
+public:
+    PersistDisplayConfig();
+    ~PersistDisplayConfig();
+    PersistDisplayConfig(PersistDisplayConfig const&);
+    auto operator=(PersistDisplayConfig const&) -> PersistDisplayConfig&;
+
+    void operator()(mir::Server& server);
+
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
+};
+}
+}
+
 #endif //MIRAL_PERSIST_DISPLAY_CONFIG_H
