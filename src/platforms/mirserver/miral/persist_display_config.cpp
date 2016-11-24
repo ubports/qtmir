@@ -32,7 +32,7 @@ struct PersistDisplayConfigPolicy
     PersistDisplayConfigPolicy(PersistDisplayConfigPolicy const&) = delete;
     auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
 
-    void apply_to(mg::DisplayConfiguration& conf, mg::DisplayConfigurationPolicy& wrapped);
+    void apply_to(mg::DisplayConfiguration& conf, mg::DisplayConfigurationPolicy& default_policy);
     void save_config(mg::DisplayConfiguration const& base_conf);
 };
 
@@ -41,16 +41,16 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
     DisplayConfigurationPolicyAdapter(
         std::shared_ptr<PersistDisplayConfigPolicy> const& self,
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped) :
-        self{self}, wrapped{wrapped}
+        self{self}, default_policy{wrapped}
     {}
 
     void apply_to(mg::DisplayConfiguration& conf) override
     {
-        self->apply_to(conf, *wrapped);
+        self->apply_to(conf, *default_policy);
     }
 
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
-    std::shared_ptr<mg::DisplayConfigurationPolicy> const wrapped;
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const default_policy;
 };
 }
 
@@ -77,15 +77,17 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
         });
 
     // TODO create an adapter to detect changes to base config
+    // Up to Mir-0.25 this is only possible client-side and gives a different configuration API
+    // This is such a PITA that I'll first make changes to lp:mir and hope to land them in 0.26 - alan_g
 }
 
 void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
-    mg::DisplayConfigurationPolicy& wrapped)
+    mg::DisplayConfigurationPolicy& default_policy)
 {
-    // TODO if the h/w profile (by some definition) has changed, then apply saved config (if any).
+    // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
     // TODO Otherwise...
-    wrapped.apply_to(conf);
+    default_policy.apply_to(conf);
 }
 
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& /*base_conf*/)
