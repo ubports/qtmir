@@ -24,6 +24,9 @@
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
 
+// prototyping for later incorporation in miral
+#include <miral/persist_display_config.h>
+
 // miral
 #include <miral/add_init_callback.h>
 #include <miral/set_command_line_hander.h>
@@ -139,6 +142,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
+            qtmir::miral::PersistDisplayConfig{}
         });
 }
 
