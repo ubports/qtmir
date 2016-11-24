@@ -107,6 +107,8 @@ public:
 
     virtual bool inputAreaContains(const QPoint &) const = 0;
 
+    virtual void requestFocus() = 0;
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
