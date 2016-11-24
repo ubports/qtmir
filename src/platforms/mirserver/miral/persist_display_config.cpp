@@ -18,7 +18,43 @@
 
 #include "persist_display_config.h"
 
-struct qtmir::miral::PersistDisplayConfig::Self {};
+#include <mir/graphics/display_configuration_policy.h>
+#include <mir/server.h>
+
+namespace mg = mir::graphics;
+
+namespace
+{
+struct PersistDisplayConfigPolicy
+{
+    PersistDisplayConfigPolicy() = default;
+    virtual ~PersistDisplayConfigPolicy() = default;
+    PersistDisplayConfigPolicy(PersistDisplayConfigPolicy const&) = delete;
+    auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
+
+    void apply_to(mg::DisplayConfiguration& conf, mg::DisplayConfigurationPolicy& wrapped);
+    void save_config(mg::DisplayConfiguration const& base_conf);
+};
+
+struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
+{
+    DisplayConfigurationPolicyAdapter(
+        std::shared_ptr<PersistDisplayConfigPolicy> const& self,
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped) :
+        self{self}, wrapped{wrapped}
+    {}
+
+    void apply_to(mg::DisplayConfiguration& conf) override
+    {
+        self->apply_to(conf, *wrapped);
+    }
+
+    std::shared_ptr<PersistDisplayConfigPolicy> const self;
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const wrapped;
+};
+}
+
+struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy {};
 
 qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
     self{std::make_shared<Self>()}
@@ -31,7 +67,28 @@ qtmir::miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig co
 
 auto qtmir::miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
 
-void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& /*server*/)
+void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
 {
+    server.wrap_display_configuration_policy(
+        [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+        -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            return std::make_shared<DisplayConfigurationPolicyAdapter>(self, wrapped);
+        });
 
+    // TODO create an adapter to detect changes to base config
+}
+
+void PersistDisplayConfigPolicy::apply_to(
+    mg::DisplayConfiguration& conf,
+    mg::DisplayConfigurationPolicy& wrapped)
+{
+    // TODO if the h/w profile (by some definition) has changed, then apply saved config (if any).
+    // TODO Otherwise...
+    wrapped.apply_to(conf);
+}
+
+void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& /*base_conf*/)
+{
+    // TODO save display config options against the h/w profile
 }
