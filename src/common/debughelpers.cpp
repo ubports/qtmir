@@ -126,7 +126,7 @@ const char *mirSurfaceTypeToStr(int value)
     case mir_surface_type_tip:          return "tip";           /**< AKA "tooltip"                   */
     case mir_surface_types:             Q_UNREACHABLE();
     }
-    return "";
+    Q_UNREACHABLE();
 }
 
 const char *mirSurfaceStateToStr(int value)
