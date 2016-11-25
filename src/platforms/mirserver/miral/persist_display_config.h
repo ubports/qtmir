@@ -19,9 +19,10 @@
 #ifndef MIRAL_PERSIST_DISPLAY_CONFIG_H
 #define MIRAL_PERSIST_DISPLAY_CONFIG_H
 
+#include <functional>
 #include <memory>
 
-namespace mir { class Server; }
+namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
 
 namespace qtmir
 {
@@ -37,6 +38,11 @@ public:
     ~PersistDisplayConfig();
     PersistDisplayConfig(PersistDisplayConfig const&);
     auto operator=(PersistDisplayConfig const&) -> PersistDisplayConfig&;
+
+    // TODO factor this out better
+    using DisplayConfigurationPolicyWrapper =
+        std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)>;
+    PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper);
 
     void operator()(mir::Server& server);
 
