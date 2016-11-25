@@ -134,7 +134,10 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
 {
-    DEBUG_MSG << "()";
+    DEBUG_MSG << "("
+        << "type=" << mirSurfaceTypeToStr(m_type)
+        << ",state=" << unityapiMirStateToStr(m_state)
+        << ")";
 
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
@@ -903,7 +906,9 @@ bool MirSurface::confinesMousePointer() const
 void MirSurface::activate()
 {
     DEBUG_MSG << "()";
-    m_controller->activate(m_window);
+    if (m_live) {
+        m_controller->activate(m_window);
+    }
 }
 
 void MirSurface::onCloseTimedOut()
@@ -914,7 +919,9 @@ void MirSurface::onCloseTimedOut()
 
     m_closingState = CloseOverdue;
 
-    m_controller->forceClose(m_window);
+    if (m_live) {
+        m_controller->forceClose(m_window);
+    }
 }
 
 void MirSurface::setCloseTimer(AbstractTimer *timer)
@@ -960,7 +967,10 @@ void MirSurface::setRequestedPosition(const QPoint &point)
     if (point != m_requestedPosition) {
         m_requestedPosition = point;
         Q_EMIT requestedPositionChanged(m_requestedPosition);
-        m_controller->move(m_window, m_requestedPosition);
+
+        if (m_live) {
+            m_controller->move(m_window, m_requestedPosition);
+        }
     }
 }
 
