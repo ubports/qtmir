@@ -58,25 +58,13 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
     std::shared_ptr<mg::DisplayConfigurationPolicy> const default_policy;
 };
-}
 
-struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, mg::DisplayConfigurationObserver
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
+struct DisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
-    Self() = default;
-    Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
-        custom_wrapper{custom_wrapper} {}
-
-    DisplayConfigurationPolicyWrapper const custom_wrapper =
-        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped) { return wrapped; };
-
     void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override {}
 
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override {}
-
-    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const& base_config) override
-    {
-        save_config(*base_config);
-    }
 
     void configuration_failed(
         std::shared_ptr<mg::DisplayConfiguration const> const& /*attempted*/,
@@ -85,6 +73,27 @@ struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, mg
     void catastrophic_configuration_error(
         std::shared_ptr<mg::DisplayConfiguration const> const& /*failed_fallback*/,
         std::exception const& /*error*/) override {}
+};
+#else
+struct DisplayConfigurationObserver { };
+#endif
+}
+
+struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
+{
+    Self() = default;
+    Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+        custom_wrapper{custom_wrapper} {}
+
+    DisplayConfigurationPolicyWrapper const custom_wrapper =
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped) { return wrapped; };
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const& base_config) override
+    {
+        save_config(*base_config);
+    }
+#endif
 };
 
 qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
