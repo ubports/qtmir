@@ -126,6 +126,18 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServer::thePromptSessionManager
     return d->promptSessionManager();
 }
 
+qtmir::WindowModelNotifier *QMirServer::windowModelNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->windowModelNotifier();
+}
+
+qtmir::AppNotifier *QMirServer::appNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->appNotifier();
+}
+
 void QMirServer::wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy)
 {
     qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";

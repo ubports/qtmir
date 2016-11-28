@@ -27,7 +27,11 @@
 #include <qtmir/windowmanagementpolicy.h>
 
 // qtmir
-namespace qtmir { class PromptSessionManager; }
+namespace qtmir {
+    class PromptSessionManager;
+    class WindowModelNotifier;
+    class AppNotifier;
+}
 namespace mir { class Server; }
 
 class QMirServerPrivate;
@@ -54,6 +58,9 @@ public:
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
     void *nativeResourceForIntegration(const QByteArray &resource) const;
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
+
+    qtmir::WindowModelNotifier *windowModelNotifier() const;
+    qtmir::AppNotifier *appNotifier() const;
 
     void wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy);
     void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);

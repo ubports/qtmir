@@ -51,4 +51,14 @@ GuiServerApplication::~GuiServerApplication()
     mirServer.clear();
 }
 
+AppNotifier *GuiServerApplication::appNotifier() const
+{
+    return mirServer->appNotifier();
+}
+
+WindowModelNotifier *GuiServerApplication::windowModelNotifier() const
+{
+    return mirServer->windowModelNotifier();
+}
+
 }
