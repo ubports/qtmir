@@ -20,6 +20,12 @@
 
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/server.h>
+#include <mir/version.h>
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/observer_registrar.h>
+#endif
 
 namespace mg = mir::graphics;
 
@@ -54,7 +60,7 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
 };
 }
 
-struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy
+struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, mg::DisplayConfigurationObserver
 {
     Self() = default;
     Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
@@ -62,6 +68,23 @@ struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy
 
     DisplayConfigurationPolicyWrapper const custom_wrapper =
         [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped) { return wrapped; };
+
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override {}
+
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override {}
+
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const& base_config) override
+    {
+        save_config(*base_config);
+    }
+
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const& /*attempted*/,
+        std::exception const& /*error*/) override {}
+
+    void catastrophic_configuration_error(
+        std::shared_ptr<mg::DisplayConfiguration const> const& /*failed_fallback*/,
+        std::exception const& /*error*/) override {}
 };
 
 qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
@@ -89,10 +112,14 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
             return std::make_shared<DisplayConfigurationPolicyAdapter>(self, self->custom_wrapper(wrapped));
         });
 
-    // TODO create an adapter to detect changes to base config
-    // Up to Mir-0.25 this is only possible client-side and gives a different configuration API
-    // This is such a PITA that I'll first make changes to lp:mir and hope to land them in 0.26 - alan_g
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
+    server.the_display_configuration_observer_registrar()->register_interest(self);
+#else
+    // Up to Mir-0.25 detecting changes to the base display config is only possible client-side
+    // (and gives a different configuration API)
+    // If we decide implementing this is necessary for earlier Mir versions then this is where to plumb it in.
     (void)&PersistDisplayConfigPolicy::save_config; // Fake "using" the function for now
+#endif
 }
 
 void PersistDisplayConfigPolicy::apply_to(
