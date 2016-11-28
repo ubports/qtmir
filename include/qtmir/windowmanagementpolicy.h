@@ -100,7 +100,7 @@ public:
     ~BasicSetWindowManagementPolicy() = default;
 
     void operator()(QMirServer& server);
-    std::shared_ptr<qtmir::WindowManagementPolicy> operator() (const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd) const;
+    WindowManagmentPolicyCreator builder() const;
 
 private:
     struct Private;

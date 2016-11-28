@@ -38,7 +38,7 @@ public:
                                   qtmir::WindowController &windowController,
                                   qtmir::AppNotifier &appNotifier,
                                   const QSharedPointer<ScreensModel> screensModel,
-                                  const qtmir::BasicSetWindowManagementPolicy& wrapperCreator);
+                                  const qtmir::WindowManagmentPolicyCreator& wmBuilder);
 
     // From WindowManagementPolicy
     auto place_new_surface(const miral::ApplicationInfo &app_info,

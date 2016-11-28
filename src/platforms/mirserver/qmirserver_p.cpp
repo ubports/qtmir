@@ -146,13 +146,15 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         screensController.clear();
     });
 
+    auto wmBuilder = m_windowManagementPolicy.builder();
+
     runner.run_with(
         {
             m_sessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
             miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                                                                              m_appNotifier, screensModel, m_windowManagementPolicy),
+                                                                              m_appNotifier, screensModel, wmBuilder),
             m_displayConfigurationPolicy,
             setCommandLineHandler,
             addInitCallback,
