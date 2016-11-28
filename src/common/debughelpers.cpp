@@ -115,23 +115,18 @@ QString mirSurfaceAttribAndValueToString(MirSurfaceAttrib attrib, int value)
 const char *mirSurfaceTypeToStr(int value)
 {
     switch (value) {
-    case mir_surface_type_normal:
-        return "normal";
-    case mir_surface_type_utility:
-        return "utility";
-    case mir_surface_type_dialog:
-        return "dialog";
-    case mir_surface_type_overlay:
-        return "overlay";
-    case mir_surface_type_freestyle:
-        return "freestyle";
-    case mir_surface_type_popover:
-        return "popover";
-    case mir_surface_type_inputmethod:
-        return "inputmethod";
-    default:
-        return "???";
+    case mir_surface_type_normal:       return "normal";        /**< AKA "regular"                   */
+    case mir_surface_type_utility:      return "utility";       /**< AKA "floating regular"          */
+    case mir_surface_type_dialog:       return "dialog";
+    case mir_surface_type_gloss:        return "gloss";
+    case mir_surface_type_freestyle:    return "freestyle";
+    case mir_surface_type_menu:         return "menu";
+    case mir_surface_type_inputmethod:  return "input Method";  /**< AKA "OSK" or handwriting etc.   */
+    case mir_surface_type_satellite:    return "satellite";     /**< AKA "toolbox"/"toolbar"         */
+    case mir_surface_type_tip:          return "tip";           /**< AKA "tooltip"                   */
+    case mir_surface_types:             Q_UNREACHABLE();
     }
+    Q_UNREACHABLE();
 }
 
 const char *mirSurfaceStateToStr(int value)
