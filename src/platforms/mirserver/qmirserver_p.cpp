@@ -24,6 +24,9 @@
 #include "setqtcompositor.h"
 #include <qtmir/sessionauthorizer.h>
 
+// prototyping for later incorporation in miral
+#include <miral/persist_display_config.h>
+
 // miral
 #include <miral/add_init_callback.h>
 #include <miral/set_command_line_hander.h>
@@ -73,7 +76,7 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
-QMirServerPrivate::QMirServerPrivate(int argc, char *argv[])
+QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
     : m_displayConfigurationPolicy(miral::SetDisplayConfigurationPolicy<qtmir::DisplayConfigurationPolicy>())
     , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
     , m_windowManagementPolicy(qtmir::SetWindowManagementPolicy<DefaultWindowManagementPolicy>())

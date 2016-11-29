@@ -164,10 +164,10 @@ void BasicSetDisplayConfigurationPolicy::operator()(QMirServer &server)
     server.wrapDisplayConfigurationPolicy(d->builder);
 }
 
-auto qtmir::wrapDisplayConfigurationPolicy(const std::shared_ptr<mg::DisplayConfigurationPolicy>& wrapped)
+auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mg::DisplayConfigurationPolicy>& wrapped)
 -> std::shared_ptr<mg::DisplayConfigurationPolicy>
 {
-    return std::make_shared<DisplayConfigurationPolicy>(wrapped);
+    return std::make_shared<qtmir::DisplayConfigurationPolicy>(wrapped);
 }
 
 } // namespace qtmir

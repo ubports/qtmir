@@ -100,8 +100,6 @@ public:
             BasicSetDisplayConfigurationPolicy{miral::SetDisplayConfigurationPolicy<Policy>(args...)} {}
 };
 
-
-
 auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
 -> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
 
