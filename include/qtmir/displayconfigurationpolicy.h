@@ -25,6 +25,8 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/server.h>
 
+#include <memory>
+
 ////////////////////// SHOULD BE IN MIRAL //////////////////
 namespace miral {
 
@@ -97,6 +99,11 @@ public:
     explicit SetDisplayConfigurationPolicy(Args const& ...args) :
             BasicSetDisplayConfigurationPolicy{miral::SetDisplayConfigurationPolicy<Policy>(args...)} {}
 };
+
+
+
+auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
+-> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
 
 } // namespace qtmir
 

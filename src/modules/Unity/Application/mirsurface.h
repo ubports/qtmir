@@ -94,9 +94,8 @@ public:
 
     bool confinesMousePointer() const override;
 
-    Q_INVOKABLE void requestFocus() override;
+    Q_INVOKABLE void activate() override;
     Q_INVOKABLE void close() override;
-    Q_INVOKABLE void raise() override;
 
     ////
     // qtmir::MirSurfaceInterface
@@ -155,6 +154,8 @@ public:
     SessionInterface* session() override { return m_session.data(); }
 
     bool inputAreaContains(const QPoint &) const override;
+
+    void requestFocus() override;
 
     ////
     // Own API

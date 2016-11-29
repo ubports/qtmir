@@ -155,11 +155,11 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_mirServerHooks,
             miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier, m_windowController,
                                                                               m_appNotifier, screensModel, wmBuilder),
-            m_displayConfigurationPolicy,
             setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
-            setTerminator
+            setTerminator,
+            qtmir::miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
         });
 }
 

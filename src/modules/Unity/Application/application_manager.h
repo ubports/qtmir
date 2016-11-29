@@ -26,8 +26,10 @@
 
 // local
 #include "application.h"
-#include "applicationmanagerinterface.h"
 #include "taskcontroller.h"
+
+// Unity API
+#include <unity/shell/application/ApplicationManagerInterface.h>
 
 namespace mir {
     namespace scene {
@@ -53,7 +55,7 @@ class ProcInfo;
 class SharedWakelock;
 class SettingsInterface;
 
-class ApplicationManager : public ApplicationManagerInterface
+class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
 {
     Q_OBJECT
 
@@ -81,12 +83,10 @@ public:
     QString focusedApplicationId() const override;
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
+    unity::shell::application::ApplicationInfoInterface *findApplicationWithSurface(unity::shell::application::MirSurfaceInterface* surface) override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
     Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments = QStringList()) override;
     Q_INVOKABLE bool stopApplication(const QString &appId) override;
-
-    // qtmir::ApplicationManagerInterface
-    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session) override;
 
     // QAbstractListModel
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
@@ -119,6 +119,7 @@ private Q_SLOTS:
     void onApplicationClosing(Application *application);
 
 private:
+    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
     void setFocused(Application *application);
     void add(Application *application);
     void remove(Application* application);

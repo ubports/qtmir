@@ -107,6 +107,8 @@ public:
 
     virtual bool inputAreaContains(const QPoint &) const = 0;
 
+    virtual void requestFocus() = 0;
+
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 
@@ -116,7 +118,6 @@ Q_SIGNALS:
     void ready();
     void cursorChanged(const QCursor &cursor);
     void raiseRequested();
-    void closeRequested();
     void framesPosted();
     void isBeingDisplayedChanged();
     void frameDropped();

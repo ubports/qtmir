@@ -113,6 +113,8 @@ namespace qtmir {
     void WindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)
     {
         CanonicalWindowManagerPolicy::handle_raise_window(windowInfo);
+
+        Q_EMIT m_windowModel.windowRequestedRaise(windowInfo);
     }
 
     bool WindowManagementPolicy::handle_keyboard_event(const MirKeyboardEvent *event)

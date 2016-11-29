@@ -3,6 +3,8 @@
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 include(FindQt5PlatformSupport)
 
+add_subdirectory(miral)
+
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
 add_definitions(-DQ_FONTCONFIGDATABASE)
@@ -100,6 +102,7 @@ set(QTMIRSERVER_PLUGIN_SRC
     screensmodel.cpp
     screenwindow.cpp
     surfaceobserver.cpp
+    $<TARGET_OBJECTS:miral-prototypes>
 
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h

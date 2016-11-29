@@ -852,7 +852,8 @@ void Application::requestFocus()
 {
     if (m_proxySurfaceList->rowCount() > 0) {
         DEBUG_MSG << "() - Requesting focus for most recent app surface";
-        m_proxySurfaceList->get(0)->requestFocus();
+        auto surface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(0));
+        surface->requestFocus();
     } else {
         DEBUG_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();
