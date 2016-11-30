@@ -54,6 +54,11 @@ const mg::DisplayConfigurationOutput fakeOutput1
     {},
     mir_output_gamma_unsupported
 #endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+    ,
+    std::vector<uint8_t>{1, 2, 3, 4, 5, 6}
+#endif
     };
 
 const mg::DisplayConfigurationOutput fakeOutput2
@@ -85,6 +90,11 @@ const mg::DisplayConfigurationOutput fakeOutput2
     mir_subpixel_arrangement_unknown,
     {},
     mir_output_gamma_unsupported
+#endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+    ,
+    std::vector<uint8_t>{1, 2, 3, 4, 5, 6}
 #endif
 };
 
