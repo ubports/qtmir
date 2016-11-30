@@ -27,9 +27,9 @@ class AppNotifier : public QObject
     Q_OBJECT
 
 Q_SIGNALS:
-    void appAdded(const ::miral::ApplicationInfo &app);
-    void appRemoved(const ::miral::ApplicationInfo &app);
-    void appCreatedWindow(const ::miral::ApplicationInfo &app);
+    void appAdded(const miral::ApplicationInfo &app);
+    void appRemoved(const miral::ApplicationInfo &app);
+    void appCreatedWindow(const miral::ApplicationInfo &app);
 };
 
 } // namespace qtmir

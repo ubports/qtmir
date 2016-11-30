@@ -28,7 +28,7 @@ namespace
 
 struct MirWrappedMiralDisplayConfigurationPolicy : mg::DisplayConfigurationPolicy
 {
-    MirWrappedMiralDisplayConfigurationPolicy(std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> const& self) :
+    MirWrappedMiralDisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& self) :
         self{self}
     {}
 
@@ -37,13 +37,13 @@ struct MirWrappedMiralDisplayConfigurationPolicy : mg::DisplayConfigurationPolic
         self->apply_to(conf);
     }
 
-    std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> self;
+    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> self;
 };
 
-struct MiralWrappedMirDisplayConfigurationPolicy : qtmir::miral::DisplayConfigurationPolicy
+struct MiralWrappedMirDisplayConfigurationPolicy : miral::experimental::DisplayConfigurationPolicy
 {
     MiralWrappedMirDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const& self) :
-        qtmir::miral::DisplayConfigurationPolicy(nullptr),
+        miral::experimental::DisplayConfigurationPolicy(nullptr),
         self{self}
     {}
 
@@ -57,21 +57,21 @@ struct MiralWrappedMirDisplayConfigurationPolicy : qtmir::miral::DisplayConfigur
 
 }
 
-struct qtmir::miral::DisplayConfigurationPolicy::Self
+struct miral::experimental::DisplayConfigurationPolicy::Self
 {
-    Self(const std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> &wrapped) :
+    Self(const std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> &wrapped) :
         wrapped{wrapped}
     {}
 
-    std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> wrapped;
+    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> wrapped;
 };
 
-qtmir::miral::DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> const& wrapped)
+miral::experimental::DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
     : self{std::make_shared<Self>(wrapped)}
 {
 }
 
-std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> qtmir::miral::DisplayConfigurationPolicy::wrapped_policy() const
+std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> miral::experimental::DisplayConfigurationPolicy::wrapped_policy() const
 {
     return self->wrapped;
 }

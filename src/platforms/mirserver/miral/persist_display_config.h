@@ -24,11 +24,10 @@
 
 namespace mir { class Server; }
 
-namespace qtmir
-{
-
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
+{
+namespace experimental
 {
 class DisplayConfigurationPolicy;
 

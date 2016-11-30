@@ -32,7 +32,7 @@
 
 #include "mirbuffersgtexture.h"
 #include "windowcontrollerinterface.h"
-#include "windowmodelnotifier.h"
+#include "qtmir/windowmodelnotifier.h"
 
 // mir
 #include <mir_toolkit/common.h>

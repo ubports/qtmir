@@ -47,8 +47,8 @@ public:
     {}
 };
 
-auto wrapDisplayConfigurationPolicy(const std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> &wrapped)
--> std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy>
+auto wrapDisplayConfigurationPolicy(const std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> &wrapped)
+-> std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>
 {
     return std::make_shared<qtmir::DisplayConfigurationPolicy>(wrapped);
 }
@@ -172,7 +172,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            qtmir::miral::PersistDisplayConfig{m_displayConfigurationPolicy}
+            miral::experimental::PersistDisplayConfig{m_displayConfigurationPolicy}
         });
 }
 

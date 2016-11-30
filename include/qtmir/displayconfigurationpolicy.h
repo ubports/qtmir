@@ -35,10 +35,10 @@ namespace qtmir
 
     This Policy allows the overriding of default display configuration policy decisions
  */
-class DisplayConfigurationPolicy : public miral::DisplayConfigurationPolicy
+class DisplayConfigurationPolicy : public miral::experimental::DisplayConfigurationPolicy
 {
 public:
-    DisplayConfigurationPolicy(std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped);
+    DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped);
 
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
 
@@ -48,7 +48,7 @@ private:
 };
 
 using DisplayConfigurationPolicyWrapper =
-    std::function<std::shared_ptr<miral::DisplayConfigurationPolicy>(std::shared_ptr<miral::DisplayConfigurationPolicy> const&)>;
+    std::function<std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const&)>;
 
 /*
     Base class for helper to set the display configuration policy
@@ -76,7 +76,7 @@ public:
     template<typename ...Args>
     explicit SetDisplayConfigurationPolicy(Args const& ...args) :
         BasicSetDisplayConfigurationPolicy{
-            [&args...](std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped) {
+            [&args...](std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped) {
                 return std::make_shared<Policy>(wrapped, args...); }} {}
 };
 

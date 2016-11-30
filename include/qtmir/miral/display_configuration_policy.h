@@ -27,9 +27,9 @@ namespace mir {
     namespace graphics { class DisplayConfiguration; }
 }
 
-namespace qtmir
-{
 namespace miral
+{
+namespace experimental
 {
 
 class DisplayConfigurationPolicy
@@ -51,8 +51,8 @@ private:
     std::shared_ptr<Self> self;
 };
 
+} // namespace experimental
 } // namespace miral
-} // namespace qtmir
 
 
 #endif // MIRAL_DISPLAY_CONDIFIGURATION_POLICY_H

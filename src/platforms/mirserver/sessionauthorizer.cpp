@@ -33,7 +33,7 @@ qtmir::SessionAuthorizer::SessionAuthorizer(QObject *parent)
 {
 }
 
-bool qtmir::SessionAuthorizer::connection_is_allowed(::miral::ApplicationCredentials const& creds)
+bool qtmir::SessionAuthorizer::connection_is_allowed(miral::ApplicationCredentials const& creds)
 {
     tracepoint(qtmirserver, sessionAuthorizeStart);
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::connection_is_allowed - this=" << this << "pid=" << creds.pid();
@@ -59,7 +59,7 @@ bool qtmir::SessionAuthorizer::connection_is_allowed(::miral::ApplicationCredent
     return authorized;
 }
 
-bool qtmir::SessionAuthorizer::configure_display_is_allowed(::miral::ApplicationCredentials const& creds)
+bool qtmir::SessionAuthorizer::configure_display_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::configure_display_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -68,7 +68,7 @@ bool qtmir::SessionAuthorizer::configure_display_is_allowed(::miral::Application
     return true;
 }
 
-bool qtmir::SessionAuthorizer::screencast_is_allowed(::miral::ApplicationCredentials const& creds)
+bool qtmir::SessionAuthorizer::screencast_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::screencast_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -77,7 +77,7 @@ bool qtmir::SessionAuthorizer::screencast_is_allowed(::miral::ApplicationCredent
     return true;
 }
 
-bool qtmir::SessionAuthorizer::prompt_session_is_allowed(::miral::ApplicationCredentials const& creds)
+bool qtmir::SessionAuthorizer::prompt_session_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::prompt_session_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -86,7 +86,7 @@ bool qtmir::SessionAuthorizer::prompt_session_is_allowed(::miral::ApplicationCre
     return true;
 }
 
-bool qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed(::miral::ApplicationCredentials const& creds)
+bool qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::set_base_display_configuration_is_allowed - this="
         << this << "pid=" << creds.pid();
@@ -100,13 +100,13 @@ bool qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed(::miral
 
 struct qtmir::BasicSetSessionAuthorizer::Private
 {
-    Private(::miral::BasicSetApplicationAuthorizer const& builder) :
+    Private(miral::BasicSetApplicationAuthorizer const& builder) :
         builder{builder} {}
 
    :: miral::BasicSetApplicationAuthorizer builder;
 };
 
-qtmir::BasicSetSessionAuthorizer::BasicSetSessionAuthorizer(::miral::BasicSetApplicationAuthorizer const& builder)
+qtmir::BasicSetSessionAuthorizer::BasicSetSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& builder)
     : d(new BasicSetSessionAuthorizer::Private(builder))
 {
 }

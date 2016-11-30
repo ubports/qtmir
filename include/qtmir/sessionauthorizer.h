@@ -27,17 +27,17 @@ class QMirServer;
 
 namespace qtmir {
 
-class SessionAuthorizer : public QObject, public ::miral::ApplicationAuthorizer
+class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
 {
     Q_OBJECT
 public:
     SessionAuthorizer(QObject *parent = 0);
 
-    bool connection_is_allowed(::miral::ApplicationCredentials const& creds) override;
-    bool configure_display_is_allowed(::miral::ApplicationCredentials const& creds) override;
-    bool set_base_display_configuration_is_allowed(::miral::ApplicationCredentials const& creds) override;
-    bool screencast_is_allowed(::miral::ApplicationCredentials const& creds) override;
-    bool prompt_session_is_allowed(::miral::ApplicationCredentials const& creds) override;
+    bool connection_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override;
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
@@ -51,7 +51,7 @@ private:
 class BasicSetSessionAuthorizer
 {
 public:
-    explicit BasicSetSessionAuthorizer(::miral::BasicSetApplicationAuthorizer const& builder);
+    explicit BasicSetSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& builder);
     ~BasicSetSessionAuthorizer() = default;
 
     void operator()(QMirServer& server);
@@ -67,7 +67,7 @@ class SetSessionAuthorizer : public BasicSetSessionAuthorizer
 public:
     template<typename ...Args>
     explicit SetSessionAuthorizer(Args const& ...args) :
-            BasicSetSessionAuthorizer{::miral::SetApplicationAuthorizer<Policy>(args...)} {}
+            BasicSetSessionAuthorizer{miral::SetApplicationAuthorizer<Policy>(args...)} {}
 };
 
 } // namespace qtmir

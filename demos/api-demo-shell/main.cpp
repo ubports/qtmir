@@ -34,7 +34,7 @@
 class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
 {
 public:
-    MyDisplayConfigurationPolicy(std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> const& wrapped)
+    MyDisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
         : qtmir::DisplayConfigurationPolicy(wrapped)
     {
         qDebug() << "OVERRIDE CREATE MyDisplayConfigurationPolicy";

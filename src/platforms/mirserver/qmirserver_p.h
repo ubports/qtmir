@@ -26,14 +26,14 @@
 #include <mutex>
 
 // local
-#include "appnotifier.h"
 #include "openglcontextfactory.h"
 #include "screensmodel.h"
 #include "windowcontroller.h"
-#include "windowmodelnotifier.h"
 #include "mirserverhooks.h"
 #include "qtmir/displayconfigurationpolicy.h"
 #include "qtmir/windowmanagementpolicy.h"
+#include "qtmir/windowmodelnotifier.h"
+#include "qtmir/appnotifier.h"
 
 //miral
 #include <miral/application_authorizer.h>

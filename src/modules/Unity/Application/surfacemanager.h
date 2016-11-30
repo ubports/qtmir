@@ -17,8 +17,8 @@
 #ifndef QTMIR_SURFACEMANAGER_H
 #define QTMIR_SURFACEMANAGER_H
 
-// common
-#include "windowmodelnotifier.h"
+// qtmir
+#include "qtmir/windowmodelnotifier.h"
 
 // Unity API
 #include <unity/shell/application/SurfaceManagerInterface.h>

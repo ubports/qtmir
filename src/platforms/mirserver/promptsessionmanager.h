@@ -35,7 +35,7 @@ public:
     explicit PromptSessionManager(const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager);
     virtual ~PromptSessionManager();
 
-    ::miral::Application applicationFor(qtmir::PromptSession const &promptSession) const;
+    miral::Application applicationFor(qtmir::PromptSession const &promptSession) const;
 
     void stopPromptSession(qtmir::PromptSession const &promptSession) const;
     void suspendPromptSession(qtmir::PromptSession const &promptSession) const;

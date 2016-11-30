@@ -21,7 +21,7 @@
 #include <QSignalSpy>
 
 #include "mirqtconversion.h"
-#include "windowmodelnotifier.h"
+#include "qtmir/windowmodelnotifier.h"
 #include "Unity/Application/mirsurface.h"
 #include "Unity/Application/windowmodel.h"
 

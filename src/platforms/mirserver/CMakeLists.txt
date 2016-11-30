@@ -73,13 +73,13 @@ add_library(qtmirserver-nomirserver OBJECT
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
-    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
 
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/windowmodelnotifier.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/appnotifier.h
 )
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 
