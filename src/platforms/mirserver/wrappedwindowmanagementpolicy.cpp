@@ -36,13 +36,13 @@ namespace qtmir
 
     struct BasicSetWindowManagementPolicy::Private
     {
-        Private(WindowManagmentPolicyCreator const& builder) :
+        Private(WindowManagmentPolicyBuilder const& builder) :
             builder{builder} {}
 
-        WindowManagmentPolicyCreator builder;
+        WindowManagmentPolicyBuilder builder;
     };
 
-    BasicSetWindowManagementPolicy::BasicSetWindowManagementPolicy(WindowManagmentPolicyCreator const& builder)
+    BasicSetWindowManagementPolicy::BasicSetWindowManagementPolicy(WindowManagmentPolicyBuilder const& builder)
         : d(new BasicSetWindowManagementPolicy::Private(builder))
     {
     }
@@ -52,7 +52,7 @@ namespace qtmir
         server.overrideWindowManagementPolicy(*this);
     }
 
-    WindowManagmentPolicyCreator BasicSetWindowManagementPolicy::builder() const
+    WindowManagmentPolicyBuilder BasicSetWindowManagementPolicy::builder() const
     {
         return d->builder;
     }
@@ -373,14 +373,14 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
                                                qtmir::AppNotifier &appNotifier,
-                                               const QSharedPointer<ScreensModel> screensModel,
-                                               const qtmir::WindowManagmentPolicyCreator& wmBuilder)
+                                               const std::shared_ptr<QtEventFeeder>& eventFeeder,
+                                               const qtmir::WindowManagmentPolicyBuilder& wmBuilder)
     : qtmir::WindowManagementPolicy(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
                                                                                      appNotifier,
-                                                                                     std::make_shared<QtEventFeeder>(screensModel)))
-    , m_wrapper(wmBuilder(tools, *new qtmir::WindowManagementPolicyPrivate(d->m_windowModel,
-                                                                           d->m_appNotifier,
-                                                                           d->m_eventFeeder)))
+                                                                                     eventFeeder))
+    , m_wrapper(wmBuilder(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
+                                                                           appNotifier,
+                                                                           eventFeeder)))
 {
     qRegisterMetaType<qtmir::NewWindow>();
     qRegisterMetaType<std::vector<miral::Window>>();

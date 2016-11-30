@@ -31,9 +31,18 @@ namespace qtmir
 {
 
 /*
-    Allows display configuration customization.
+    Provides callback for display configuration customization.
 
-    This Policy allows the overriding of default display configuration policy decisions
+    This default policy applies scaling and form factor decisions on the configuration.
+    It can be subclassed/overriden by using the SetDisplayConfigurationPolicy<> initializer.
+
+    usage:
+    class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
+    {
+        void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+    }
+
+    qtmir::GuiServerApplication app(argc, argv, { SetDisplayConfigurationPolicy<MyDisplayConfigurationPolicy>() });
  */
 class DisplayConfigurationPolicy : public miral::experimental::DisplayConfigurationPolicy
 {
@@ -51,7 +60,7 @@ using DisplayConfigurationPolicyWrapper =
     std::function<std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const&)>;
 
 /*
-    Base class for helper to set the display configuration policy
+    Base class for access to set the display configuration policy
  */
 class BasicSetDisplayConfigurationPolicy
 {
@@ -67,7 +76,7 @@ private:
 };
 
 /*
-    Helper to set the display configuration policy
+    Set the display configuration policy to allow server customization
  */
 template<typename Policy>
 class SetDisplayConfigurationPolicy : public BasicSetDisplayConfigurationPolicy

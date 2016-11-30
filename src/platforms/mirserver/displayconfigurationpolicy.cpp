@@ -19,9 +19,7 @@
 #include "qmirserver.h"
 
 // mir
-#include <mir/server.h>
 #include <mir/geometry/point.h>
-#include <mir/server.h>
 #include <mir/graphics/display_configuration.h>
 
 #include <qglobal.h>

@@ -27,6 +27,9 @@ class QMirServer;
 
 namespace qtmir {
 
+/*
+    Provides callbacks to grant/deny access for session capabilities
+ */
 class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
 {
     Q_OBJECT
@@ -61,6 +64,17 @@ private:
     std::shared_ptr<Private> d;
 };
 
+/*
+    Set the session authorizer to allow server customization
+
+    usage:
+    class MySessionAuthorizer : publi qtmir::SessionAuthorizer
+    {
+    ...
+    }
+
+    qtmir::GuiServerApplication app(argc, argv, { SetSessionAuthorizer<MySessionAuthorizer>() });
+ */
 template<typename Policy>
 class SetSessionAuthorizer : public BasicSetSessionAuthorizer
 {

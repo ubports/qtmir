@@ -22,6 +22,7 @@
 #include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
+#include "qteventfeeder.h"
 #include "qtmir/sessionauthorizer.h"
 
 // prototyping for later incorporation in miral
@@ -159,6 +160,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         screensController.clear();
     });
 
+    auto eventFeeder = std::make_shared<QtEventFeeder>(screensModel);
     auto wmBuilder = m_windowManagementPolicy.builder();
 
     runner.run_with(
@@ -166,8 +168,11 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_sessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                                                                              m_appNotifier, screensModel, wmBuilder),
+            miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
+                                                                              m_windowController,
+                                                                              m_appNotifier,
+                                                                              eventFeeder,
+                                                                              wmBuilder),
             setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},

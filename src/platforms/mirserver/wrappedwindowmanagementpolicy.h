@@ -28,7 +28,7 @@
 
 using namespace mir::geometry;
 
-class ScreensModel;
+class QtEventFeeder;
 
 class WrappedWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
@@ -37,8 +37,8 @@ public:
                                   qtmir::WindowModelNotifier &windowModel,
                                   qtmir::WindowController &windowController,
                                   qtmir::AppNotifier &appNotifier,
-                                  const QSharedPointer<ScreensModel> screensModel,
-                                  const qtmir::WindowManagmentPolicyCreator& wmBuilder);
+                                  const std::shared_ptr<QtEventFeeder>& eventFeeder,
+                                  const qtmir::WindowManagmentPolicyBuilder& wmBuilder);
 
     // From WindowManagementPolicy
     auto place_new_surface(const miral::ApplicationInfo &app_info,

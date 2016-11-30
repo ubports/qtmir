@@ -31,9 +31,8 @@
 // REMOVEME - Should be able to use qmlscene, but in order to use the mir benchmarking we need
 // to parse command line switches. Wait until MIR_SOCKET supported by the benchmark framework.
 
-class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
+struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
 {
-public:
     MyDisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
         : qtmir::DisplayConfigurationPolicy(wrapped)
     {

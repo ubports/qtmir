@@ -34,6 +34,9 @@ class WindowModelNotifier;
 class AppNotifier;
 class WindowManagementPolicyPrivate;
 
+/*
+    Provides window management callbacks for window behaviour customization
+ */
 class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
@@ -87,26 +90,39 @@ public:
 
 protected:
     WindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd);
+
+private:
     std::shared_ptr<WindowManagementPolicyPrivate> d;
 };
 
-
-typedef std::function<std::shared_ptr<WindowManagementPolicy>(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)> WindowManagmentPolicyCreator;
+using WindowManagmentPolicyBuilder =
+    std::function<std::shared_ptr<WindowManagementPolicy>(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)>;
 
 class BasicSetWindowManagementPolicy
 {
 public:
-    explicit BasicSetWindowManagementPolicy(WindowManagmentPolicyCreator const& builder);
+    explicit BasicSetWindowManagementPolicy(WindowManagmentPolicyBuilder const& builder);
     ~BasicSetWindowManagementPolicy() = default;
 
     void operator()(QMirServer& server);
-    WindowManagmentPolicyCreator builder() const;
+    WindowManagmentPolicyBuilder builder() const;
 
 private:
     struct Private;
     std::shared_ptr<Private> d;
 };
 
+/*
+    Set the window management policy to allow server customization
+
+    usage:
+    class MyWindowManagementPolicy : publi qtmir::WindowManagementPolicy
+    {
+    ...
+    }
+
+    qtmir::GuiServerApplication app(argc, argv, { SetWindowManagementPolicy<MyWindowManagementPolicy>() });
+ */
 template<typename Policy>
 class SetWindowManagementPolicy : public BasicSetWindowManagementPolicy
 {

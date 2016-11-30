@@ -18,45 +18,6 @@
 
 #include "qtmir/miral/display_configuration_policy.h"
 
-#include <mir/graphics/display_configuration_policy.h>
-#include <mir/server.h>
-
-namespace mg = mir::graphics;
-
-namespace
-{
-
-struct MirWrappedMiralDisplayConfigurationPolicy : mg::DisplayConfigurationPolicy
-{
-    MirWrappedMiralDisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& self) :
-        self{self}
-    {}
-
-    void apply_to(mg::DisplayConfiguration& conf) override
-    {
-        self->apply_to(conf);
-    }
-
-    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> self;
-};
-
-struct MiralWrappedMirDisplayConfigurationPolicy : miral::experimental::DisplayConfigurationPolicy
-{
-    MiralWrappedMirDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const& self) :
-        miral::experimental::DisplayConfigurationPolicy(nullptr),
-        self{self}
-    {}
-
-    void apply_to(mg::DisplayConfiguration& conf) override
-    {
-        self->apply_to(conf);
-    }
-
-    std::shared_ptr<mg::DisplayConfigurationPolicy> self;
-};
-
-}
-
 struct miral::experimental::DisplayConfigurationPolicy::Self
 {
     Self(const std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> &wrapped) :
