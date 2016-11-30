@@ -40,7 +40,7 @@ class DisplayConfigurationPolicy : public miral::experimental::DisplayConfigurat
 public:
     DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped);
 
-    virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
+    virtual void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
 private:
     struct Private;
