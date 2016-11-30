@@ -59,9 +59,8 @@ struct DisplayConfigurationPolicy::Private
     float m_defaultScale;
 };
 
-DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
-    : miral::experimental::DisplayConfigurationPolicy(wrapped)
-    , d(new DisplayConfigurationPolicy::Private)
+DisplayConfigurationPolicy::DisplayConfigurationPolicy() :
+    d(new DisplayConfigurationPolicy::Private)
 {
 }
 
@@ -69,7 +68,6 @@ void DisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
 {
     int nextTopLeftPosition = 0;
 
-    wrapped_policy()->apply_to(conf);
     //TODO: scan through saved configurations and select matching one to apply
 
     // We want to apply a particular display config policy when connecting an external display

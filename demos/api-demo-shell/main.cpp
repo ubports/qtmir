@@ -33,8 +33,7 @@
 
 struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
 {
-    MyDisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
-        : qtmir::DisplayConfigurationPolicy(wrapped)
+    MyDisplayConfigurationPolicy()
     {
         qDebug() << "OVERRIDE CREATE MyDisplayConfigurationPolicy";
     }

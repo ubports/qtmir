@@ -18,21 +18,4 @@
 
 #include "qtmir/miral/display_configuration_policy.h"
 
-struct miral::experimental::DisplayConfigurationPolicy::Self
-{
-    Self(const std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> &wrapped) :
-        wrapped{wrapped}
-    {}
-
-    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> wrapped;
-};
-
-miral::experimental::DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped)
-    : self{std::make_shared<Self>(wrapped)}
-{
-}
-
-std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> miral::experimental::DisplayConfigurationPolicy::wrapped_policy() const
-{
-    return self->wrapped;
-}
+miral::experimental::DisplayConfigurationPolicy::DisplayConfigurationPolicy() = default;

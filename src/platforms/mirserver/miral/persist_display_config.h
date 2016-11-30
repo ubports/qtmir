@@ -35,14 +35,12 @@ class DisplayConfigurationPolicy;
 class PersistDisplayConfig
 {
 public:
-    PersistDisplayConfig();
     ~PersistDisplayConfig();
     PersistDisplayConfig(PersistDisplayConfig const&);
     auto operator=(PersistDisplayConfig const&) -> PersistDisplayConfig&;
 
     // TODO factor this out better
-    using DisplayConfigurationPolicyWrapper =
-        std::function<std::shared_ptr<DisplayConfigurationPolicy>(const std::shared_ptr<DisplayConfigurationPolicy> &wrapped)>;
+    using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<DisplayConfigurationPolicy>()>;
     PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper);
 
     void operator()(mir::Server& server);

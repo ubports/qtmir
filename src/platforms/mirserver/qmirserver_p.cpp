@@ -48,10 +48,10 @@ public:
     {}
 };
 
-auto wrapDisplayConfigurationPolicy(const std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> &wrapped)
+auto wrapDisplayConfigurationPolicy()
 -> std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>
 {
-    return std::make_shared<qtmir::DisplayConfigurationPolicy>(wrapped);
+    return std::make_shared<qtmir::DisplayConfigurationPolicy>();
 }
 
 }

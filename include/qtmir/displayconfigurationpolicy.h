@@ -37,7 +37,7 @@ namespace qtmir
     It can be subclassed/overriden by using the SetDisplayConfigurationPolicy<> initializer.
 
     usage:
-    class MyDisplayConfigurationPolicy : public qtmir::DisplayConfigurationPolicy
+    struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
     {
         void apply_to(mir::graphics::DisplayConfiguration& conf) override;
     }
@@ -47,7 +47,7 @@ namespace qtmir
 class DisplayConfigurationPolicy : public miral::experimental::DisplayConfigurationPolicy
 {
 public:
-    DisplayConfigurationPolicy(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped);
+    DisplayConfigurationPolicy();
 
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
@@ -56,8 +56,7 @@ private:
     std::shared_ptr<Private> d;
 };
 
-using DisplayConfigurationPolicyWrapper =
-    std::function<std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>(std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const&)>;
+using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>()>;
 
 /*
     Base class for access to set the display configuration policy
@@ -85,8 +84,7 @@ public:
     template<typename ...Args>
     explicit SetDisplayConfigurationPolicy(Args const& ...args) :
         BasicSetDisplayConfigurationPolicy{
-            [&args...](std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped) {
-                return std::make_shared<Policy>(wrapped, args...); }} {}
+            [&args...]() { return std::make_shared<Policy>(args...); }} {}
 };
 
 } // namespace qtmir

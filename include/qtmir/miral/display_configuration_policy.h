@@ -19,13 +19,7 @@
 #ifndef MIRAL_DISPLAY_CONDIFIGURATION_POLICY_H
 #define MIRAL_DISPLAY_CONDIFIGURATION_POLICY_H
 
-#include <functional>
-#include <memory>
-
-namespace mir {
-    class Server;
-    namespace graphics { class DisplayConfiguration; }
-}
+namespace mir { namespace graphics { class DisplayConfiguration; } }
 
 namespace miral
 {
@@ -35,20 +29,13 @@ namespace experimental
 class DisplayConfigurationPolicy
 {
 public:
-    DisplayConfigurationPolicy(std::shared_ptr<DisplayConfigurationPolicy> const& wrapped);
+    DisplayConfigurationPolicy();
 
     virtual ~DisplayConfigurationPolicy() = default;
     DisplayConfigurationPolicy(DisplayConfigurationPolicy const&) = delete;
     DisplayConfigurationPolicy& operator=(DisplayConfigurationPolicy const&) = delete;
 
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf) = 0;
-
-protected:
-    std::shared_ptr<DisplayConfigurationPolicy> wrapped_policy() const;
-
-private:
-    struct Self;
-    std::shared_ptr<Self> self;
 };
 
 } // namespace experimental
