@@ -31,12 +31,12 @@ namespace qtmir {
 class NewWindow {
 public:
     NewWindow() = default;
-    NewWindow(const miral::WindowInfo &windowInfo)
+    NewWindow(const ::miral::WindowInfo &windowInfo)
       : windowInfo(windowInfo)
       , surface(windowInfo.window())
     {}
 
-    miral::WindowInfo windowInfo;
+    ::miral::WindowInfo windowInfo;
 
     // hold copy of Surface shared pointer, as miral::Window has just a weak pointer to the Surface
     // but MirSurface needs to share ownership of the Surface with Mir
@@ -60,7 +60,7 @@ struct ExtraWindowInfo {
     Mir::State state{Mir::UnknownState};
 };
 
-std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo);
+std::shared_ptr<ExtraWindowInfo> getExtraInfo(const ::miral::WindowInfo &windowInfo);
 
 class WindowModelNotifier : public QObject
 {
@@ -70,14 +70,14 @@ public:
 
 Q_SIGNALS: // **Must used Queued Connection or else events will be out of order**
     void windowAdded(const qtmir::NewWindow &window);
-    void windowRemoved(const miral::WindowInfo &window);
-    void windowReady(const miral::WindowInfo &window);
-    void windowMoved(const miral::WindowInfo &window, const QPoint topLeft);
-    void windowResized(const miral::WindowInfo &window, const QSize size);
-    void windowStateChanged(const miral::WindowInfo &window, Mir::State state);
-    void windowFocusChanged(const miral::WindowInfo &window, bool focused);
-    void windowsRaised(const std::vector<miral::Window> &windows); // results in deep copy when passed over Queued connection:(
-    void windowRequestedRaise(const miral::WindowInfo &window);
+    void windowRemoved(const ::miral::WindowInfo &window);
+    void windowReady(const ::miral::WindowInfo &window);
+    void windowMoved(const ::miral::WindowInfo &window, const QPoint topLeft);
+    void windowResized(const ::miral::WindowInfo &window, const QSize size);
+    void windowStateChanged(const ::miral::WindowInfo &window, Mir::State state);
+    void windowFocusChanged(const ::miral::WindowInfo &window, bool focused);
+    void windowsRaised(const std::vector<::miral::Window> &windows); // results in deep copy when passed over Queued connection:(
+    void windowRequestedRaise(const ::miral::WindowInfo &window);
     void modificationsStarted();
     void modificationsEnded();
 
@@ -88,8 +88,8 @@ private:
 } // namespace qtmir
 
 Q_DECLARE_METATYPE(qtmir::NewWindow)
-Q_DECLARE_METATYPE(miral::WindowInfo)
-Q_DECLARE_METATYPE(std::vector<miral::Window>)
+Q_DECLARE_METATYPE(::miral::WindowInfo)
+Q_DECLARE_METATYPE(std::vector<::miral::Window>)
 Q_DECLARE_METATYPE(MirSurfaceState)
 
 #endif // WINDOWMODELNOTIFIER_H

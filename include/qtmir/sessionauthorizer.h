@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_APPLICATIONAUTHORIZER_H
-#define QTMIR_APPLICATIONAUTHORIZER_H
+#ifndef QTMIR_SESSIONAUTHORIZER_H
+#define QTMIR_SESSIONAUTHORIZER_H
 
 // Qt
 #include <QObject>
@@ -27,17 +27,17 @@ class QMirServer;
 
 namespace qtmir {
 
-class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
+class SessionAuthorizer : public QObject, public ::miral::ApplicationAuthorizer
 {
     Q_OBJECT
 public:
     SessionAuthorizer(QObject *parent = 0);
 
-    bool connection_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool connection_is_allowed(::miral::ApplicationCredentials const& creds) override;
+    bool configure_display_is_allowed(::miral::ApplicationCredentials const& creds) override;
+    bool set_base_display_configuration_is_allowed(::miral::ApplicationCredentials const& creds) override;
+    bool screencast_is_allowed(::miral::ApplicationCredentials const& creds) override;
+    bool prompt_session_is_allowed(::miral::ApplicationCredentials const& creds) override;
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
@@ -51,7 +51,7 @@ private:
 class BasicSetSessionAuthorizer
 {
 public:
-    explicit BasicSetSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& builder);
+    explicit BasicSetSessionAuthorizer(::miral::BasicSetApplicationAuthorizer const& builder);
     ~BasicSetSessionAuthorizer() = default;
 
     void operator()(QMirServer& server);
@@ -67,9 +67,9 @@ class SetSessionAuthorizer : public BasicSetSessionAuthorizer
 public:
     template<typename ...Args>
     explicit SetSessionAuthorizer(Args const& ...args) :
-            BasicSetSessionAuthorizer{miral::SetApplicationAuthorizer<Policy>(args...)} {}
+            BasicSetSessionAuthorizer{::miral::SetApplicationAuthorizer<Policy>(args...)} {}
 };
 
 } // namespace qtmir
 
-#endif // QTMIR_APPLICATIONAUTHORIZER_H
+#endif // QTMIR_SESSIONAUTHORIZER_H

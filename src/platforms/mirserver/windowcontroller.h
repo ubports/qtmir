@@ -23,25 +23,25 @@ namespace qtmir {
 
 class WindowManagementPolicy;
 
-class WindowController : public WindowControllerInterface
+class WindowController : public qtmir::WindowControllerInterface
 {
 public:
     WindowController();
     virtual ~WindowController() = default;
 
-    void activate(const miral::Window &window) override;
-    void raise(const miral::Window &window) override;
-    void resize(const miral::Window &window, const QSize &size) override;
-    void move  (const miral::Window &window, const QPoint &topLeft) override;
+    void activate(const ::miral::Window &window) override;
+    void raise(const ::miral::Window &window) override;
+    void resize(const ::miral::Window &window, const QSize &size) override;
+    void move  (const ::miral::Window &window, const QPoint &topLeft) override;
 
-    void requestClose(const miral::Window &window) override;
-    void forceClose(const miral::Window &window) override;
+    void requestClose(const ::miral::Window &window) override;
+    void forceClose(const ::miral::Window &window) override;
 
-    void requestState(const miral::Window &window, const Mir::State state) override;
+    void requestState(const ::miral::Window &window, const Mir::State state) override;
 
-    void deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event) override;
-    void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) override;
-    void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) override;
+    void deliverKeyboardEvent(const ::miral::Window &window, const MirKeyboardEvent *event) override;
+    void deliverTouchEvent   (const ::miral::Window &window, const MirTouchEvent *event) override;
+    void deliverPointerEvent (const ::miral::Window &window, const MirPointerEvent *event) override;
 
     void setPolicy(WindowManagementPolicy *policy);
 

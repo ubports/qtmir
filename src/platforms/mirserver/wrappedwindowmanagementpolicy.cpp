@@ -28,8 +28,9 @@
 #include <mir/scene/surface.h>
 #include <QDebug>
 
-namespace qtmir {
-    std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo) {
+namespace qtmir
+{
+    std::shared_ptr<ExtraWindowInfo> getExtraInfo(const ::miral::WindowInfo &windowInfo) {
         return std::static_pointer_cast<ExtraWindowInfo>(windowInfo.userdata());
     }
 
@@ -71,15 +72,15 @@ namespace qtmir {
         const std::shared_ptr<QtEventFeeder> m_eventFeeder;
     };
 
-    WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
-        : miral::CanonicalWindowManagerPolicy(tools)
+    WindowManagementPolicy::WindowManagementPolicy(const ::miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+        : ::miral::CanonicalWindowManagerPolicy(tools)
         , d(&dd)
     {
     }
 
-    miral::WindowSpecification WindowManagementPolicy::place_new_surface(
-        const miral::ApplicationInfo &app_info,
-        const miral::WindowSpecification &request_parameters)
+    ::miral::WindowSpecification WindowManagementPolicy::place_new_surface(
+        const ::miral::ApplicationInfo &app_info,
+        const ::miral::WindowSpecification &request_parameters)
     {
         auto parameters = CanonicalWindowManagerPolicy::place_new_surface(app_info, request_parameters);
 
@@ -88,7 +89,7 @@ namespace qtmir {
         return parameters;
     }
 
-    void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::handle_window_ready(::miral::WindowInfo &windowInfo)
     {
         CanonicalWindowManagerPolicy::handle_window_ready(windowInfo);
 
@@ -98,7 +99,7 @@ namespace qtmir {
         Q_EMIT d->m_appNotifier.appCreatedWindow(appInfo);
     }
 
-    void WindowManagementPolicy::handle_modify_window(miral::WindowInfo &windowInfo, const miral::WindowSpecification &modifications)
+    void WindowManagementPolicy::handle_modify_window(::miral::WindowInfo &windowInfo, const ::miral::WindowSpecification &modifications)
     {
         // TODO this applies the default policy. Qt needs to process the request instead
         CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
@@ -110,7 +111,7 @@ namespace qtmir {
         }
     }
 
-    void WindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::handle_raise_window(::miral::WindowInfo &windowInfo)
     {
         CanonicalWindowManagerPolicy::handle_raise_window(windowInfo);
 
@@ -145,17 +146,17 @@ namespace qtmir {
         Q_EMIT d->m_windowModel.modificationsEnded();
     }
 
-    void WindowManagementPolicy::advise_new_app(miral::ApplicationInfo &application)
+    void WindowManagementPolicy::advise_new_app(::miral::ApplicationInfo &application)
     {
         Q_EMIT d->m_appNotifier.appAdded(application);
     }
 
-    void WindowManagementPolicy::advise_delete_app(const miral::ApplicationInfo &application)
+    void WindowManagementPolicy::advise_delete_app(const ::miral::ApplicationInfo &application)
     {
         Q_EMIT d->m_appNotifier.appRemoved(application);
     }
 
-    void WindowManagementPolicy::advise_new_window(const miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::advise_new_window(const ::miral::WindowInfo &windowInfo)
     {
         // TODO: attach surface observer here
 
@@ -167,12 +168,12 @@ namespace qtmir {
         Q_EMIT d->m_windowModel.windowAdded(NewWindow{windowInfo});
     }
 
-    void WindowManagementPolicy::advise_focus_lost(const miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::advise_focus_lost(const ::miral::WindowInfo &windowInfo)
     {
         Q_EMIT d->m_windowModel.windowFocusChanged(windowInfo, false);
     }
 
-    void WindowManagementPolicy::advise_focus_gained(const miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::advise_focus_gained(const ::miral::WindowInfo &windowInfo)
     {
         // update Qt model ASAP, before applying Mir policy
         Q_EMIT d->m_windowModel.windowFocusChanged(windowInfo, true);
@@ -180,7 +181,7 @@ namespace qtmir {
         CanonicalWindowManagerPolicy::advise_focus_gained(windowInfo);
     }
 
-    void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &windowInfo, MirSurfaceState state)
+    void WindowManagementPolicy::advise_state_change(const ::miral::WindowInfo &windowInfo, MirSurfaceState state)
     {
         auto extraWinInfo = getExtraInfo(windowInfo);
 
@@ -196,29 +197,29 @@ namespace qtmir {
         Q_EMIT d->m_windowModel.windowStateChanged(windowInfo, extraWinInfo->state);
     }
 
-    void WindowManagementPolicy::advise_move_to(const miral::WindowInfo &windowInfo, Point topLeft)
+    void WindowManagementPolicy::advise_move_to(const ::miral::WindowInfo &windowInfo, Point topLeft)
     {
         Q_EMIT d->m_windowModel.windowMoved(windowInfo, toQPoint(topLeft));
     }
 
-    void WindowManagementPolicy::advise_resize(const miral::WindowInfo &windowInfo, const Size &newSize)
+    void WindowManagementPolicy::advise_resize(const ::miral::WindowInfo &windowInfo, const Size &newSize)
     {
         Q_EMIT d->m_windowModel.windowResized(windowInfo, toQSize(newSize));
     }
 
-    void WindowManagementPolicy::advise_delete_window(const miral::WindowInfo &windowInfo)
+    void WindowManagementPolicy::advise_delete_window(const ::miral::WindowInfo &windowInfo)
     {
         Q_EMIT d->m_windowModel.windowRemoved(windowInfo);
     }
 
-    void WindowManagementPolicy::advise_raise(const std::vector<miral::Window> &windows)
+    void WindowManagementPolicy::advise_raise(const std::vector<::miral::Window> &windows)
     {
         Q_EMIT d->m_windowModel.windowsRaised(windows);
     }
 
     /* Following methods all called from the Qt GUI thread to deliver events to clients */
     void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
-                                                        const miral::Window &window)
+                                                        const ::miral::Window &window)
     {
         tools.invoke_under_lock([&window, this]() {
            tools.select_active_window(window);
@@ -231,7 +232,7 @@ namespace qtmir {
     }
 
     void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
-                                                     const miral::Window &window)
+                                                     const ::miral::Window &window)
     {
         tools.invoke_under_lock([&window, this]() {
             tools.select_active_window(window);
@@ -244,7 +245,7 @@ namespace qtmir {
     }
 
     void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
-                                                       const miral::Window &window)
+                                                       const ::miral::Window &window)
     {
         // Prevent mouse hover events causing window focus to change
         if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
@@ -262,7 +263,7 @@ namespace qtmir {
     /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
 
     // raises the window tree and focus it.
-    void WindowManagementPolicy::activate(const miral::Window &window)
+    void WindowManagementPolicy::activate(const ::miral::Window &window)
     {
         if (window) {
             auto &windowInfo = tools.info_for(window);
@@ -281,16 +282,16 @@ namespace qtmir {
     }
 
     // raises the window tree
-    void WindowManagementPolicy::raise(const miral::Window &window)
+    void WindowManagementPolicy::raise(const ::miral::Window &window)
     {
         tools.invoke_under_lock([&window, this]() {
             tools.raise_tree(window);
         });
     }
 
-    void WindowManagementPolicy::resize(const miral::Window &window, const Size size)
+    void WindowManagementPolicy::resize(const ::miral::Window &window, const Size size)
     {
-        miral::WindowSpecification modifications;
+        ::miral::WindowSpecification modifications;
         modifications.size() = size;
         tools.invoke_under_lock([&window, &modifications, this]() {
             try {
@@ -304,9 +305,9 @@ namespace qtmir {
         });
     }
 
-    void WindowManagementPolicy::move(const miral::Window &window, const Point topLeft)
+    void WindowManagementPolicy::move(const ::miral::Window &window, const Point topLeft)
     {
-        miral::WindowSpecification modifications;
+        ::miral::WindowSpecification modifications;
         modifications.top_left() = topLeft;
         tools.invoke_under_lock([&window, &modifications, this]() {
             try {
@@ -318,21 +319,21 @@ namespace qtmir {
         });
     }
 
-    void WindowManagementPolicy::ask_client_to_close(const miral::Window &window)
+    void WindowManagementPolicy::ask_client_to_close(const ::miral::Window &window)
     {
         tools.invoke_under_lock([&window, this]() {
             tools.ask_client_to_close(window);
         });
     }
 
-    void WindowManagementPolicy::forceClose(const miral::Window &window)
+    void WindowManagementPolicy::forceClose(const ::miral::Window &window)
     {
         tools.invoke_under_lock([&window, this]() {
             tools.force_close(window);
         });
     }
 
-    void WindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
+    void WindowManagementPolicy::requestState(const ::miral::Window &window, const Mir::State state)
     {
         auto &windowInfo = tools.info_for(window);
         auto extraWinInfo = getExtraInfo(windowInfo);
@@ -340,7 +341,7 @@ namespace qtmir {
         if (extraWinInfo->state == state)
             return;
 
-        miral::WindowSpecification modifications;
+        ::miral::WindowSpecification modifications;
         modifications.state() = toMirState(state);
 
         // TODO: What if the window modification fails? Is that possible?
@@ -367,8 +368,6 @@ namespace qtmir {
         return d->m_appNotifier;
     }
 }
-
-using namespace qtmir;
 
 WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,

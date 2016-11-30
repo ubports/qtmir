@@ -15,13 +15,14 @@
  */
 
 // qtmir
-#include <qtmir/displayconfigurationpolicy.h>
-#include <qmirserver.h>
+#include "qtmir/displayconfigurationpolicy.h"
+#include "qmirserver.h"
 
 // mir
 #include <mir/server.h>
 #include <mir/geometry/point.h>
 #include <mir/server.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <qglobal.h>
 #include <QByteArray>
@@ -31,39 +32,10 @@
 
 namespace mg = mir::graphics;
 
-////////////////////// SHOULD BE IN MIRAL //////////////////
-namespace miral {
-
-struct BasicSetDisplayConfigurationPolicy::Private
+namespace qtmir
 {
-    Private(std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> const& builder) :
-        builder{builder} {}
-
-    std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> builder;
-};
-
-BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(
-        std::function<std::shared_ptr<mg::DisplayConfigurationPolicy>(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)> const& builder)
-    : d(new BasicSetDisplayConfigurationPolicy::Private(builder))
+namespace
 {
-}
-
-void BasicSetDisplayConfigurationPolicy::operator()(mir::Server &server)
-{
-    server.wrap_display_configuration_policy(
-                [this, &server](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
-    {
-        return d->builder(wrapped);
-    });
-}
-
-} // namespace miral
-////////////////////////////////////////////////////////////
-
-
-namespace qtmir {
-
-namespace {
 
 float getenvFloat(const char* name, float defaultValue)
 {
@@ -89,8 +61,9 @@ struct DisplayConfigurationPolicy::Private
     float m_defaultScale;
 };
 
-DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
-    : d(new DisplayConfigurationPolicy::Private)
+DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped)
+    : miral::DisplayConfigurationPolicy(wrapped)
+    , d(new DisplayConfigurationPolicy::Private)
 {
 }
 
@@ -98,6 +71,8 @@ void DisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
 {
     int nextTopLeftPosition = 0;
 
+    miral::DisplayConfigurationPolicy::apply_to(conf)
+;
     //TODO: scan through saved configurations and select matching one to apply
 
     // We want to apply a particular display config policy when connecting an external display
@@ -142,32 +117,25 @@ void DisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
                 output.scale = d->m_defaultScale; // probably 1 on desktop anyway.
             }
         });
-
 }
 
-struct BasicSetDisplayConfigurationPolicy::Private
+
+struct BasicSetDisplayConfigurationPolicy::Self
 {
-    Private(miral::BasicSetDisplayConfigurationPolicy const& builder) :
+    Self(DisplayConfigurationPolicyWrapper const& builder) :
         builder{builder} {}
 
-    miral::BasicSetDisplayConfigurationPolicy builder;
+    DisplayConfigurationPolicyWrapper builder;
 };
 
-BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(
-        miral::BasicSetDisplayConfigurationPolicy const& builder)
-    : d(new BasicSetDisplayConfigurationPolicy::Private(builder))
+BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(DisplayConfigurationPolicyWrapper const& builder)
+    : self(std::make_shared<Self>(builder))
 {
 }
 
-void BasicSetDisplayConfigurationPolicy::operator()(QMirServer &server)
+void BasicSetDisplayConfigurationPolicy::operator()(QMirServer& server)
 {
-    server.wrapDisplayConfigurationPolicy(d->builder);
-}
-
-auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mg::DisplayConfigurationPolicy>& wrapped)
--> std::shared_ptr<mg::DisplayConfigurationPolicy>
-{
-    return std::make_shared<qtmir::DisplayConfigurationPolicy>(wrapped);
+    server.wrapDisplayConfigurationPolicy(self->builder);
 }
 
 } // namespace qtmir

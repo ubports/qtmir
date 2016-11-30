@@ -22,7 +22,7 @@
 #include <functional>
 #include <memory>
 
-namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
+namespace mir { class Server; }
 
 namespace qtmir
 {
@@ -30,6 +30,8 @@ namespace qtmir
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
+class DisplayConfigurationPolicy;
+
 /// Restores the saved display configuration and saves changes to the base configuration
 class PersistDisplayConfig
 {
@@ -41,7 +43,7 @@ public:
 
     // TODO factor this out better
     using DisplayConfigurationPolicyWrapper =
-        std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)>;
+        std::function<std::shared_ptr<DisplayConfigurationPolicy>(const std::shared_ptr<DisplayConfigurationPolicy> &wrapped)>;
     PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper);
 
     void operator()(mir::Server& server);

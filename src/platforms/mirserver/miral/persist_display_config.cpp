@@ -17,6 +17,7 @@
  */
 
 #include "persist_display_config.h"
+#include "qtmir/miral/display_configuration_policy.h"
 
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/server.h>
@@ -38,7 +39,7 @@ struct PersistDisplayConfigPolicy
     PersistDisplayConfigPolicy(PersistDisplayConfigPolicy const&) = delete;
     auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
 
-    void apply_to(mg::DisplayConfiguration& conf, mg::DisplayConfigurationPolicy& default_policy);
+    void apply_to(mg::DisplayConfiguration& conf, qtmir::miral::DisplayConfigurationPolicy& default_policy);
     void save_config(mg::DisplayConfiguration const& base_conf);
 };
 
@@ -46,7 +47,7 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
 {
     DisplayConfigurationPolicyAdapter(
         std::shared_ptr<PersistDisplayConfigPolicy> const& self,
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped) :
+        std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> const& wrapped) :
         self{self}, default_policy{wrapped}
     {}
 
@@ -56,7 +57,22 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
     }
 
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
-    std::shared_ptr<mg::DisplayConfigurationPolicy> const default_policy;
+    std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> const default_policy;
+};
+
+struct MirWrappedMiralDisplayConfigurationPolicy : qtmir::miral::DisplayConfigurationPolicy
+{
+    MirWrappedMiralDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const& self) :
+        qtmir::miral::DisplayConfigurationPolicy(nullptr),
+        self{self}
+    {}
+
+    void apply_to(mg::DisplayConfiguration& conf) override
+    {
+        self->apply_to(conf);
+    }
+
+    std::shared_ptr<mg::DisplayConfigurationPolicy> self;
 };
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
@@ -86,7 +102,7 @@ struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, Di
         custom_wrapper{custom_wrapper} {}
 
     DisplayConfigurationPolicyWrapper const custom_wrapper =
-        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped) { return wrapped; };
+        [](const std::shared_ptr<DisplayConfigurationPolicy> &wrapped) { return wrapped; };
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
     void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const& base_config) override
@@ -118,7 +134,8 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<DisplayConfigurationPolicyAdapter>(self, self->custom_wrapper(wrapped));
+            auto custom_wrapper = self->custom_wrapper(std::make_shared<MirWrappedMiralDisplayConfigurationPolicy>(wrapped));
+            return std::make_shared<DisplayConfigurationPolicyAdapter>(self, custom_wrapper);
         });
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
@@ -134,7 +151,7 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
 
 void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
-    mg::DisplayConfigurationPolicy& default_policy)
+    qtmir::miral::DisplayConfigurationPolicy& default_policy)
 {
     // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
     // TODO Otherwise...

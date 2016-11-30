@@ -37,20 +37,20 @@ public:
     virtual ~WindowControllerInterface() = default;
 
     // activate() asks Mir to bring particular window to the front and recommend to shell that it be focused
-    virtual void activate (const miral::Window &window) = 0;
-    virtual void raise(const miral::Window &window) = 0;
+    virtual void activate (const ::miral::Window &window) = 0;
+    virtual void raise(const ::miral::Window &window) = 0;
 
-    virtual void resize(const miral::Window &window, const QSize &size) = 0;
-    virtual void move  (const miral::Window &window, const QPoint &topLeft) = 0;
+    virtual void resize(const ::miral::Window &window, const QSize &size) = 0;
+    virtual void move  (const ::miral::Window &window, const QPoint &topLeft) = 0;
 
-    virtual void requestClose(const miral::Window &window) = 0;
-    virtual void forceClose(const miral::Window &window) = 0;
+    virtual void requestClose(const ::miral::Window &window) = 0;
+    virtual void forceClose(const ::miral::Window &window) = 0;
 
-    virtual void requestState(const miral::Window &window, const Mir::State state) = 0;
+    virtual void requestState(const ::miral::Window &window, const Mir::State state) = 0;
 
-    virtual void deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event) = 0;
-    virtual void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) = 0;
-    virtual void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) = 0;
+    virtual void deliverKeyboardEvent(const ::miral::Window &window, const MirKeyboardEvent *event) = 0;
+    virtual void deliverTouchEvent   (const ::miral::Window &window, const MirTouchEvent *event) = 0;
+    virtual void deliverPointerEvent (const ::miral::Window &window, const MirPointerEvent *event) = 0;
 };
 
 } // namespace qtmir

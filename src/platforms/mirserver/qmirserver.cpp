@@ -138,7 +138,7 @@ qtmir::AppNotifier *QMirServer::appNotifier() const
     return d->appNotifier();
 }
 
-void QMirServer::wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy)
+void QMirServer::wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy)
 {
     qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";
 

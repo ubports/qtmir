@@ -32,8 +32,8 @@
 #include "windowcontroller.h"
 #include "windowmodelnotifier.h"
 #include "mirserverhooks.h"
-#include <qtmir/displayconfigurationpolicy.h>
-#include <qtmir/windowmanagementpolicy.h>
+#include "qtmir/displayconfigurationpolicy.h"
+#include "qtmir/windowmanagementpolicy.h"
 
 //miral
 #include <miral/application_authorizer.h>
@@ -77,7 +77,7 @@ public:
     qtmir::WindowControllerInterface *windowController() const
         { return &m_windowController; }
 
-    miral::BasicSetDisplayConfigurationPolicy m_displayConfigurationPolicy;
+    qtmir::DisplayConfigurationPolicyWrapper m_displayConfigurationPolicy;
     miral::BasicSetApplicationAuthorizer m_sessionAuthorizer;
     qtmir::BasicSetWindowManagementPolicy m_windowManagementPolicy;
 private:

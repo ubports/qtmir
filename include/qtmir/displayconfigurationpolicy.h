@@ -17,78 +17,45 @@
 #ifndef QTMIR_DISPLAYCONFIGURATIONPOLICY_H
 #define QTMIR_DISPLAYCONFIGURATIONPOLICY_H
 
-// Qt
-#include <QScopedPointer>
+//qtmir
+#include "qtmir/miral/display_configuration_policy.h"
 
 // mir
-#include <mir/graphics/display_configuration_policy.h>
-#include <mir/graphics/display_configuration.h>
 #include <mir/server.h>
 
 #include <memory>
-
-////////////////////// SHOULD BE IN MIRAL //////////////////
-namespace miral {
-
-class BasicSetDisplayConfigurationPolicy
-{
-public:
-    explicit BasicSetDisplayConfigurationPolicy(std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>(
-                                                    std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const& builder);
-    ~BasicSetDisplayConfigurationPolicy() = default;
-
-    void operator()(mir::Server& server);
-    auto the_display_configuration_policy() const -> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
-
-private:
-    struct Private;
-    std::shared_ptr<Private> d;
-};
-
-template<typename Policy>
-class SetDisplayConfigurationPolicy : public BasicSetDisplayConfigurationPolicy
-{
-public:
-    template<typename ...Args>
-    explicit SetDisplayConfigurationPolicy(Args const& ...args)
-        : BasicSetDisplayConfigurationPolicy{
-            [&args...](std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped) {
-                return std::make_shared<Policy>(wrapped, args...);
-        }}
-    {}
-};
-
-} // namespace miral
-////////////////////////////////////////////////////////////
 
 class QMirServer;
 
 namespace qtmir {
 
-//Conver to miral::DisplayConfigurationPolicy.
-class DisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
+class DisplayConfigurationPolicy : public miral::DisplayConfigurationPolicy
 {
 public:
-    DisplayConfigurationPolicy(std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped);
+    DisplayConfigurationPolicy(std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped);
 
-    void apply_to(mir::graphics::DisplayConfiguration& conf);
+    virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
 
 private:
     struct Private;
     std::shared_ptr<Private> d;
 };
 
+
+using DisplayConfigurationPolicyWrapper =
+    std::function<std::shared_ptr<miral::DisplayConfigurationPolicy>(std::shared_ptr<miral::DisplayConfigurationPolicy> const&)>;
+
 class BasicSetDisplayConfigurationPolicy
 {
 public:
-    explicit BasicSetDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& builder);
+    explicit BasicSetDisplayConfigurationPolicy(DisplayConfigurationPolicyWrapper const& builder);
     ~BasicSetDisplayConfigurationPolicy() = default;
 
     void operator()(QMirServer& server);
 
 private:
-    struct Private;
-    std::shared_ptr<Private> d;
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 
 template<typename Policy>
@@ -97,11 +64,10 @@ class SetDisplayConfigurationPolicy : public BasicSetDisplayConfigurationPolicy
 public:
     template<typename ...Args>
     explicit SetDisplayConfigurationPolicy(Args const& ...args) :
-            BasicSetDisplayConfigurationPolicy{miral::SetDisplayConfigurationPolicy<Policy>(args...)} {}
+        BasicSetDisplayConfigurationPolicy{
+            [&args...](std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped) {
+                return std::make_shared<Policy>(wrapped, args...); }} {}
 };
-
-auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
--> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
 
 } // namespace qtmir
 

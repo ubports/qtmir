@@ -22,9 +22,11 @@
 #include <QSharedPointer>
 
 #include <memory>
-#include <qtmir/displayconfigurationpolicy.h>
-#include <qtmir/sessionauthorizer.h>
-#include <qtmir/windowmanagementpolicy.h>
+
+// local
+#include "qtmir/sessionauthorizer.h"
+#include "qtmir/windowmanagementpolicy.h"
+#include "qtmir/displayconfigurationpolicy.h"
 
 // qtmir
 namespace qtmir {
@@ -62,7 +64,7 @@ public:
     qtmir::WindowModelNotifier *windowModelNotifier() const;
     qtmir::AppNotifier *appNotifier() const;
 
-    void wrapDisplayConfigurationPolicy(miral::BasicSetDisplayConfigurationPolicy const& setDisplayConfigurationPolicy);
+    void wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy);
     void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);
     void overrideWindowManagementPolicy(qtmir::BasicSetWindowManagementPolicy const& wmPolicyCreator);
 

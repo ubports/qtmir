@@ -22,7 +22,7 @@
 #include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
-#include <qtmir/sessionauthorizer.h>
+#include "qtmir/sessionauthorizer.h"
 
 // prototyping for later incorporation in miral
 #include <miral/persist_display_config.h>
@@ -37,6 +37,8 @@
 #include <QCoreApplication>
 #include <QOpenGLContext>
 
+namespace {
+
 class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
@@ -44,6 +46,14 @@ public:
         : qtmir::WindowManagementPolicy(tools, dd)
     {}
 };
+
+auto wrapDisplayConfigurationPolicy(const std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> &wrapped)
+-> std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy>
+{
+    return std::make_shared<qtmir::DisplayConfigurationPolicy>(wrapped);
+}
+
+}
 
 void MirServerThread::run()
 {
@@ -77,7 +87,7 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
 }
 
 QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
-    : m_displayConfigurationPolicy(miral::SetDisplayConfigurationPolicy<qtmir::DisplayConfigurationPolicy>())
+    : m_displayConfigurationPolicy(&wrapDisplayConfigurationPolicy)
     , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
     , m_windowManagementPolicy(qtmir::SetWindowManagementPolicy<DefaultWindowManagementPolicy>())
     , runner(argc, const_cast<const char **>(argv))
@@ -162,7 +172,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            qtmir::miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            qtmir::miral::PersistDisplayConfig{m_displayConfigurationPolicy}
         });
 }
 
