@@ -41,7 +41,7 @@ public:
     DisplayConfigurationPolicy(DisplayConfigurationPolicy const&) = delete;
     DisplayConfigurationPolicy& operator=(DisplayConfigurationPolicy const&) = delete;
 
-    virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
+    virtual void apply_to(mir::graphics::DisplayConfiguration& conf) = 0;
 
 protected:
     std::shared_ptr<DisplayConfigurationPolicy> wrapped_policy() const;

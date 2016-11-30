@@ -71,13 +71,6 @@ qtmir::miral::DisplayConfigurationPolicy::DisplayConfigurationPolicy(std::shared
 {
 }
 
-void qtmir::miral::DisplayConfigurationPolicy::apply_to(mir::graphics::DisplayConfiguration& conf)
-{
-    if (self->wrapped) {
-        self->wrapped->apply_to(conf);
-    }
-}
-
 std::shared_ptr<qtmir::miral::DisplayConfigurationPolicy> qtmir::miral::DisplayConfigurationPolicy::wrapped_policy() const
 {
     return self->wrapped;

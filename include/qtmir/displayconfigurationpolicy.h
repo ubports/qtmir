@@ -27,8 +27,14 @@
 
 class QMirServer;
 
-namespace qtmir {
+namespace qtmir
+{
 
+/*
+    Allows display configuration customization.
+
+    This Policy allows the overriding of default display configuration policy decisions
+ */
 class DisplayConfigurationPolicy : public miral::DisplayConfigurationPolicy
 {
 public:
@@ -41,10 +47,12 @@ private:
     std::shared_ptr<Private> d;
 };
 
-
 using DisplayConfigurationPolicyWrapper =
     std::function<std::shared_ptr<miral::DisplayConfigurationPolicy>(std::shared_ptr<miral::DisplayConfigurationPolicy> const&)>;
 
+/*
+    Base class for helper to set the display configuration policy
+ */
 class BasicSetDisplayConfigurationPolicy
 {
 public:
@@ -58,6 +66,9 @@ private:
     std::shared_ptr<Self> self;
 };
 
+/*
+    Helper to set the display configuration policy
+ */
 template<typename Policy>
 class SetDisplayConfigurationPolicy : public BasicSetDisplayConfigurationPolicy
 {
