@@ -91,5 +91,5 @@ bool SessionAuthorizer::set_base_display_configuration_is_allowed(miral::Applica
 
     //FIXME Actually mediate this access for clients
     Q_UNUSED(creds)
-    return false;
+    return true;
 }
