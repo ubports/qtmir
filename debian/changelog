@@ -1,3 +1,9 @@
+qtmir (0.5.1) UNRELEASED; urgency=medium
+
+  * First release using MirAL
+
+ -- Gerry Boland <gerry.boland@canonical.com>  Fri, 14 Oct 2016 16:51:26 +0100
+
 qtmir (0.5.0+17.04.20161123.3-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]
@@ -11,12 +17,6 @@ qtmir (0.5.0+17.04.20161123.3-0ubuntu1) zesty; urgency=medium
   * relax auth of clients to allow USS to set base mir display config
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 23 Nov 2016 20:46:06 +0000
-
-qtmir (0.5.0+16.10.20161011.1-0ubuntu1) UNRELEASED; urgency=medium
-
-  * First release using MirAL
-
- -- Gerry Boland <gerry.boland@canonical.com>  Fri, 14 Oct 2016 16:51:26 +0100
 
 qtmir (0.4.8+17.04.20161024-0ubuntu1) zesty; urgency=medium
 
