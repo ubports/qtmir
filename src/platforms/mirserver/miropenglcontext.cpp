@@ -191,7 +191,14 @@ void MirOpenGLContext::doneCurrent()
     }
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)
 {
     return eglGetProcAddress(procName.constData());
 }
+#else
+QFunctionPointer MirOpenGLContext::getProcAddress(const char *procName)
+{
+    return eglGetProcAddress(procName);
+}
+#endif

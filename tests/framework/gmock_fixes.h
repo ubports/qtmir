@@ -60,6 +60,10 @@ class ActionResultHolder<std::unique_ptr<T>>
     return retval;
   }
 
+  std::unique_ptr<T> Unwrap() {
+    return std::move(value_);
+  }
+
   // Prints the held value as an action's result to os.
   virtual void PrintAsActionResult(::std::ostream* os) const {
     *os << "\n          Returns: ";
