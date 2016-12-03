@@ -65,6 +65,7 @@ struct StubSurface : mir::scene::Surface
     void rename(std::string const& title) override;
     void set_confine_pointer_state(MirPointerConfinementState state) override;
     MirPointerConfinementState confine_pointer_state() const override;
+    void placed_relative(mir::geometry::Rectangle const& placement) override;
 };
 
 #endif //QPAMIRSERVER_STUB_SURFACE_H

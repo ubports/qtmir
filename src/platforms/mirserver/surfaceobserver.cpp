@@ -201,6 +201,11 @@ void SurfaceObserver::cursor_image_set_to(const mir::graphics::CursorImage &curs
     Q_EMIT cursorChanged(qcursor);
 }
 
+// TODO Implement
+void SurfaceObserver::placed_relative(mir::geometry::Rectangle const& /*placement*/)
+{
+}
+
 void SurfaceObserver::keymap_changed(MirInputDeviceId, const std::string &, const std::string &layout,
                                      const std::string &variant, const std::string &)
 {

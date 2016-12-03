@@ -67,8 +67,8 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-pkg_check_modules(MIRSERVER mirserver>=0.24 REQUIRED)
-pkg_check_modules(MIRCLIENT mirclient>=0.24 REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.25 REQUIRED)
+pkg_check_modules(MIRCLIENT mirclient>=0.25 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.24 REQUIRED)
 
 pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)

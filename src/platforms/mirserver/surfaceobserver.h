@@ -63,6 +63,7 @@ public:
                         std::string const& variant, std::string const& options) override;
     void renamed(char const * name) override;
     void cursor_image_removed() override;
+    void placed_relative(mir::geometry::Rectangle const& placement) override;
 
     void notifySurfaceModifications(const mir::shell::SurfaceSpecification&);
 

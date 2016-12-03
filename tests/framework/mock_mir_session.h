@@ -72,6 +72,9 @@ struct MockSession : public Session
     MOCK_METHOD1(destroy_buffer, void(mir::graphics::BufferID));
     MOCK_METHOD1(get_buffer, std::shared_ptr<mir::graphics::Buffer>(mir::graphics::BufferID));
 
+    void send_error(ClientVisibleError const&) override;
+
+
 private:
     std::string m_sessionName;
     pid_t m_sessionId;
