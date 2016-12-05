@@ -112,15 +112,11 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
             }
         });
 }
+
 } //namespace
 
-void qtmir::setDisplayConfigurationPolicy(mir::Server& server)
+auto qtmir::wrapDisplayConfigurationPolicy(const std::shared_ptr<mg::DisplayConfigurationPolicy>& wrapped)
+-> std::shared_ptr<mg::DisplayConfigurationPolicy>
 {
-    server.wrap_display_configuration_policy(
-        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
-            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
-            {
-                return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
-            });
-
+    return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
 }
