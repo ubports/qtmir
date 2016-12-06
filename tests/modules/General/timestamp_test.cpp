@@ -72,7 +72,7 @@ TEST_F(TimestampTest, TestOverflowWhenExceeding32bitCompression)
     
     compressedTimestamp = qtmir::compressTimestamp<Timestamp32bit>(timestamp);
 
-    EXPECT_EQ(0, compressedTimestamp.count());
+    EXPECT_EQ(0u, compressedTimestamp.count());
     // ensure the uncompression will yields the original timestamp
     EXPECT_EQ(qtmir::uncompressTimestamp<Timestamp32bit>(compressedTimestamp), timestamp);
 }
