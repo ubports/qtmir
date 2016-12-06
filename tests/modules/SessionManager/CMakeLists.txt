@@ -24,7 +24,7 @@ add_dependencies(sessionmanager_test qtmir-test-framework-static)
 target_link_libraries(
   sessionmanager_test
 
-  unityapplicationplugin-nolttng
+  unityapplicationplugin
 
   Qt5::Test
 

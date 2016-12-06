@@ -1,3 +1,17 @@
+qtmir (0.5.0+17.04.20161123.3-0ubuntu1) zesty; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Build with Qt 5.7 (LP: #1642608, #1642954)
+
+  [ Gerry Boland ]
+  * Fix FTBFS due to new googletest framework release (1.8)
+  * Revert Lttng test-crash workaround from rev 557
+
+  [ Jonas G. Drange ]
+  * relax auth of clients to allow USS to set base mir display config
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 23 Nov 2016 20:46:06 +0000
+
 qtmir (0.4.8+17.04.20161024-0ubuntu1) zesty; urgency=medium
 
   [ Andrea Bernabei ]
