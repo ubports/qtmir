@@ -185,20 +185,6 @@ const char *mirSurfaceVisibilityToStr(int value)
     }
 }
 
-const char *mirTouchActionToStr(MirTouchAction action)
-{
-    switch (action) {
-    case mir_touch_action_up:
-        return "up";
-    case mir_touch_action_down:
-        return "down";
-    case mir_touch_action_change:
-        return "change";
-    default:
-        return "???";
-    }
-}
-
 using namespace unity::shell::application;
 
 const char *applicationStateToStr(int state)
