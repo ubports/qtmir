@@ -79,7 +79,7 @@ struct DisplayConfigurationObserver { };
 #endif
 }
 
-struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
+struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
 {
     Self() = default;
     Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
@@ -96,23 +96,23 @@ struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, Di
 #endif
 };
 
-qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
+miral::PersistDisplayConfig::PersistDisplayConfig() :
     self{std::make_shared<Self>()}
 {
 }
 
-qtmir::miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
     self{std::make_shared<Self>(custom_wrapper)}
 {
 }
 
-qtmir::miral::PersistDisplayConfig::~PersistDisplayConfig() = default;
+miral::PersistDisplayConfig::~PersistDisplayConfig() = default;
 
-qtmir::miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
+miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
 
-auto qtmir::miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
+auto miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
 
-void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
+void miral::PersistDisplayConfig::operator()(mir::Server& server)
 {
     server.wrap_display_configuration_policy(
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
