@@ -24,6 +24,10 @@
 
 miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
 {
+    if (data.size() != 128) {
+        RETURN_ERROR("Invalid size != 128 bytes");
+    }
+
     uint8_t sum = 0;
     int i, j;
 
