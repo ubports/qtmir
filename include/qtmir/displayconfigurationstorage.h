@@ -3,6 +3,9 @@
 
 #include "qtmir/miral/display_configuration_storage.h"
 
+#include <functional>
+#include <memory>
+
 class QMirServer;
 
 namespace qtmir

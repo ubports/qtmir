@@ -173,7 +173,7 @@ void PersistDisplayConfigPolicy::apply_to(
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
             // TODO Otherwise...
 
-            miral::DisplayOutputConfiguration config;
+            miral::DisplayOutputOptions config;
             if (storage->load(edid, config)) {
 
                 int mode_index = output.current_mode_index;
@@ -210,7 +210,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
                 return;
             }
 
-            miral::DisplayOutputConfiguration config;
+            miral::DisplayOutputOptions config;
             config.extents = output.extents();
             config.form_factor = output.form_factor;
             config.orientation = output.orientation;

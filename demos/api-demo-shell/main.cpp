@@ -29,13 +29,8 @@
 #include <qtmir/windowmanagementpolicy.h>
 #include <qtmir/displayconfigurationstorage.h>
 
-struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
+struct DemoDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
 {
-    MyDisplayConfigurationPolicy()
-    {
-        qDebug() << "OVERRIDE CREATE MyDisplayConfigurationPolicy";
-    }
-
     void apply_to(mir::graphics::DisplayConfiguration& conf)
     {
         qDebug() << "OVERRIDE qtmir::DisplayConfigurationPolicy::apply_to";
@@ -43,10 +38,10 @@ struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
     }
 };
 
-class MyWindowManagementPolicy : public qtmir::WindowManagementPolicy
+class DemoWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
-    MyWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+    DemoWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
         : qtmir::WindowManagementPolicy(tools, dd)
     {}
 
@@ -57,59 +52,63 @@ public:
     }
 };
 
-class MyDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 {
-    void save(const miral::Edid&, const miral::DisplayOutputConfiguration&) override
+    void save(const miral::Edid&, const miral::DisplayOutputOptions&) override
     {
+        qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::save";
     }
 
-    bool load(const miral::Edid&, miral::DisplayOutputConfiguration&) const override
+    bool load(const miral::Edid&, miral::DisplayOutputOptions&) const override
     {
+        qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::load";
         return false;
     }
 };
 
-class MySessionAuthorizer : public qtmir::SessionAuthorizer
+struct DemoSessionAuthorizer : qtmir::SessionAuthorizer
 {
     bool connection_is_allowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE connection_is_allowed";
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::connection_is_allowed";
         return qtmir::SessionAuthorizer::connection_is_allowed(creds);
     }
     bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE configure_display_is_allowed";
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::configure_display_is_allowed";
         return qtmir::SessionAuthorizer::configure_display_is_allowed(creds);
     }
     bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE set_base_display_configuration_is_allowed";
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed";
         return qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed(creds);
     }
     bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE screencast_is_allowed";
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::screencast_is_allowed";
         return qtmir::SessionAuthorizer::screencast_is_allowed(creds);
     }
     bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE prompt_session_is_allowed";
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::prompt_session_is_allowed";
         return qtmir::SessionAuthorizer::prompt_session_is_allowed(creds);
     }
 };
 
 int main(int argc, const char *argv[])
 {
-    qtmir::SetSessionAuthorizer<MySessionAuthorizer> sessionAuth;
-    qtmir::SetDisplayConfigurationPolicy<MyDisplayConfigurationPolicy> displayConfig;
-    qtmir::SetWindowManagementPolicy<MyWindowManagementPolicy> wmPolicy;
+    qtmir::SetSessionAuthorizer<DemoSessionAuthorizer> sessionAuth;
+    qtmir::SetDisplayConfigurationPolicy<DemoDisplayConfigurationPolicy> displayConfig;
+    qtmir::SetWindowManagementPolicy<DemoWindowManagementPolicy> wmPolicy;
+
+    qtmir::SetDisplayConfigurationStorage<DemoDisplayConfigurationStorage> displayStorage;
 
     setenv("QT_QPA_PLATFORM_PLUGIN_PATH", qPrintable(::qpaPluginDirectory()), 1 /* overwrite */);
 
     qtmir::GuiServerApplication::setApplicationName("api-demo-shell");
     qtmir::GuiServerApplication *application;
 
-    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy });
+    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy, displayStorage });
     QQuickView* view = new QQuickView();
     view->engine()->addImportPath(::qmlPluginDirectory());
     view->setResizeMode(QQuickView::SizeRootObjectToView);
