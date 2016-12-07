@@ -27,7 +27,7 @@ namespace miral
 {
 class Edid;
 
-struct DisplayOutputConfiguration
+struct DisplayOutputOptions
 {
     bool used;
     mir::geometry::Rectangle extents;
@@ -41,8 +41,8 @@ class DisplayConfigurationStorage
 public:
     virtual ~DisplayConfigurationStorage() = default;
 
-    virtual void save(const Edid&, const DisplayOutputConfiguration&) = 0;
-    virtual bool load(const Edid&, DisplayOutputConfiguration&) const = 0;
+    virtual void save(const Edid&, const DisplayOutputOptions&) = 0;
+    virtual bool load(const Edid&, DisplayOutputOptions&) const = 0;
 };
 
 }
