@@ -22,8 +22,6 @@
 #include <string>
 #include <vector>
 
-namespace qtmir
-{
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
@@ -68,7 +66,6 @@ struct Edid
     Edid& parse_data(std::vector<uint8_t> const&);
 };
 
-}
 }
 
 #endif // MIRAL_EDID_H
