@@ -15,6 +15,7 @@
  */
 
 #include "qmirserver_p.h"
+#include "miral/display_configuration_storage.h"
 
 // local
 #include "logging.h"
@@ -36,6 +37,16 @@
 // Qt
 #include <QCoreApplication>
 #include <QOpenGLContext>
+
+namespace
+{
+struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::Edid&, const miral::DisplayOutputConfiguration&) override {}
+
+    bool load(const miral::Edid&, miral::DisplayOutputConfiguration&) const override { return false; }
+};
+}
 
 void MirServerThread::run()
 {
@@ -83,7 +94,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 {
     bool unknownArgsFound = false;
 
-    miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
+    ::miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
     {
         unknownArgsFound = true;
         // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
@@ -91,7 +102,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
     }};
 
-    miral::AddInitCallback addInitCallback{[&, this]
+    ::miral::AddInitCallback addInitCallback{[&, this]
     {
         if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
             argc = 1;
@@ -141,7 +152,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{std::make_shared<DefaultDisplayConfigurationStorage>(),
+                                        &qtmir::wrapDisplayConfigurationPolicy}
         });
 }
 

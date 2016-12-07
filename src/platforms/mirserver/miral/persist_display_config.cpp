@@ -17,8 +17,11 @@
  */
 
 #include "persist_display_config.h"
+#include "display_configuration_storage.h"
+#include "edid.h"
 
 #include <mir/graphics/display_configuration_policy.h>
+#include <mir/graphics/display_configuration.h>
 #include <mir/server.h>
 #include <mir/version.h>
 
@@ -33,13 +36,16 @@ namespace
 {
 struct PersistDisplayConfigPolicy
 {
-    PersistDisplayConfigPolicy() = default;
+    PersistDisplayConfigPolicy(std::shared_ptr<miral::DisplayConfigurationStorage> const& storage) :
+        storage(storage) {}
     virtual ~PersistDisplayConfigPolicy() = default;
     PersistDisplayConfigPolicy(PersistDisplayConfigPolicy const&) = delete;
     auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
 
     void apply_to(mg::DisplayConfiguration& conf, mg::DisplayConfigurationPolicy& default_policy);
     void save_config(mg::DisplayConfiguration const& base_conf);
+
+    std::shared_ptr<miral::DisplayConfigurationStorage> storage;
 };
 
 struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
@@ -81,8 +87,11 @@ struct DisplayConfigurationObserver { };
 
 struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
 {
-    Self() = default;
-    Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+    Self(std::shared_ptr<DisplayConfigurationStorage> const& storage) :
+        PersistDisplayConfigPolicy(storage) {}
+    Self(std::shared_ptr<DisplayConfigurationStorage> const& storage,
+         DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+        PersistDisplayConfigPolicy(storage),
         custom_wrapper{custom_wrapper} {}
 
     DisplayConfigurationPolicyWrapper const custom_wrapper =
@@ -96,13 +105,14 @@ struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayCo
 #endif
 };
 
-miral::PersistDisplayConfig::PersistDisplayConfig() :
-    self{std::make_shared<Self>()}
+miral::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<DisplayConfigurationStorage> const& storage) :
+    self{std::make_shared<Self>(storage)}
 {
 }
 
-miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
-    self{std::make_shared<Self>(custom_wrapper)}
+miral::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<DisplayConfigurationStorage> const& storage,
+                                                  DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+    self{std::make_shared<Self>(storage, custom_wrapper)}
 {
 }
 
@@ -136,12 +146,62 @@ void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
     mg::DisplayConfigurationPolicy& default_policy)
 {
-    // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
-    // TODO Otherwise...
+    if (storage) {
+        conf.for_each_output([this](mg::UserDisplayConfigurationOutput& output) {
+
+            miral::Edid edid;
+            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            if (edid.has_error) {
+                return;
+            }
+
+            // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
+            // TODO Otherwise...
+
+            miral::DisplayOutputConfiguration config;
+            if (storage->load(edid, config)) {
+
+                int mode_index = output.current_mode_index;
+                int i = 0;
+                // Find the mode index which supports the saved size.
+                for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
+                    if ((*iter).size == config.extents.size) {
+                        mode_index = i;
+                    }
+                }
+
+                output.current_mode_index = mode_index;
+                output.orientation = config.orientation;
+                output.used = config.used;
+                output.form_factor = config.form_factor;
+                output.scale = config.scale;
+            }
+        });
+    }
+
     default_policy.apply_to(conf);
 }
 
-void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& /*base_conf*/)
+void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)
 {
     // TODO save display config options against the h/w profile
+    if (storage) {
+        conf.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
+
+            miral::Edid edid;
+            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            if (edid.has_error) {
+                return;
+            }
+
+            miral::DisplayOutputConfiguration config;
+            config.extents = output.extents();
+            config.form_factor = output.form_factor;
+            config.orientation = output.orientation;
+            config.scale = output.scale;
+            config.used = output.used;
+
+            storage->save(edid, config);
+        });
+    }
 }
