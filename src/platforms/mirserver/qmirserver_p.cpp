@@ -49,7 +49,7 @@ public:
 };
 
 auto wrapDisplayConfigurationPolicy()
--> std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>
+-> std::shared_ptr<miral::DisplayConfigurationPolicy>
 {
     return std::make_shared<qtmir::DisplayConfigurationPolicy>();
 }
@@ -107,18 +107,10 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 
     miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
     {
-        qDebug() << "argc" << argc;
-        Q_UNUSED(filteredCount);
-        Q_UNUSED(filteredArgv);
-        // FIXME
-        // Commenting out because I'm getting a crazy argc like this (which causes an assertion failure in the editArgvToMatch):
-        // [2016-09-20:18:00:32.775] argc 1332568434
-        /*
         unknownArgsFound = true;
         // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
         // argc as filteredArgv only defined in this scope.
         qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
-        */
     }};
 
     miral::AddInitCallback addInitCallback{[&, this]
@@ -177,7 +169,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::experimental::PersistDisplayConfig{m_displayConfigurationPolicy}
+            miral::PersistDisplayConfig{m_displayConfigurationPolicy}
         });
 }
 

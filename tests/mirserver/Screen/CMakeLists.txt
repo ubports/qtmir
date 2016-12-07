@@ -24,6 +24,8 @@ target_link_libraries(
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
+
+  Qt5::Sensors
 )
 
 add_test(Screen, ScreenTest)

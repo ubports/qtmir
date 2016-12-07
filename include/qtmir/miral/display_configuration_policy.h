@@ -23,8 +23,6 @@ namespace mir { namespace graphics { class DisplayConfiguration; } }
 
 namespace miral
 {
-namespace experimental
-{
 
 class DisplayConfigurationPolicy
 {
@@ -38,7 +36,6 @@ public:
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf) = 0;
 };
 
-} // namespace experimental
 } // namespace miral
 
 

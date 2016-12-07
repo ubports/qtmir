@@ -40,12 +40,12 @@ struct PersistDisplayConfigPolicy
     auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
 
     void apply_to(mg::DisplayConfiguration& conf,
-                  miral::experimental::DisplayConfigurationPolicy& default_policy,
-                  miral::experimental::DisplayConfigurationPolicy& wrapped_policy);
+                  miral::DisplayConfigurationPolicy& default_policy,
+                  miral::DisplayConfigurationPolicy& wrapped_policy);
     void save_config(mg::DisplayConfiguration const& base_conf);
 };
 
-struct MiralWrappedMirDisplayConfigurationPolicy : miral::experimental::DisplayConfigurationPolicy
+struct MiralWrappedMirDisplayConfigurationPolicy : miral::DisplayConfigurationPolicy
 {
     MiralWrappedMirDisplayConfigurationPolicy(std::shared_ptr<mg::DisplayConfigurationPolicy> const& self) :
         self{self}
@@ -63,8 +63,8 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
 {
     DisplayConfigurationPolicyAdapter(
         std::shared_ptr<PersistDisplayConfigPolicy> const& self,
-        std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapper,
-            std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const& wrapped) :
+        std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapper,
+            std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped) :
         self{self}, custom_policy{wrapper}, wrapped_policy{wrapped}
     {}
 
@@ -74,8 +74,8 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
     }
 
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
-    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const custom_policy;
-    std::shared_ptr<miral::experimental::DisplayConfigurationPolicy> const wrapped_policy;
+    std::shared_ptr<miral::DisplayConfigurationPolicy> const custom_policy;
+    std::shared_ptr<miral::DisplayConfigurationPolicy> const wrapped_policy;
 };
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
@@ -98,7 +98,7 @@ struct DisplayConfigurationObserver { };
 #endif
 }
 
-struct miral::experimental::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
+struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
 {
     Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
         custom_wrapper{custom_wrapper} {}
@@ -113,18 +113,18 @@ struct miral::experimental::PersistDisplayConfig::Self : PersistDisplayConfigPol
 #endif
 };
 
-miral::experimental::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
     self{std::make_shared<Self>(custom_wrapper)}
 {
 }
 
-miral::experimental::PersistDisplayConfig::~PersistDisplayConfig() = default;
+miral::PersistDisplayConfig::~PersistDisplayConfig() = default;
 
-miral::experimental::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
+miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
 
-auto miral::experimental::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
+auto miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
 
-void miral::experimental::PersistDisplayConfig::operator()(mir::Server& server)
+void miral::PersistDisplayConfig::operator()(mir::Server& server)
 {
     server.wrap_display_configuration_policy(
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
@@ -149,8 +149,8 @@ void miral::experimental::PersistDisplayConfig::operator()(mir::Server& server)
 
 void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
-    miral::experimental::DisplayConfigurationPolicy& default_policy,
-    miral::experimental::DisplayConfigurationPolicy& wrapped_policy)
+    miral::DisplayConfigurationPolicy& default_policy,
+    miral::DisplayConfigurationPolicy& wrapped_policy)
 {
     // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
     // TODO Otherwise...

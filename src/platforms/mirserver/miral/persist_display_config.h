@@ -27,8 +27,6 @@ namespace mir { class Server; }
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
-namespace experimental
-{
 class DisplayConfigurationPolicy;
 
 /// Restores the saved display configuration and saves changes to the base configuration
@@ -49,7 +47,6 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 };
-}
 }
 
 #endif //MIRAL_PERSIST_DISPLAY_CONFIG_H

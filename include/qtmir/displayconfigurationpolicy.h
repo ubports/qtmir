@@ -44,7 +44,7 @@ namespace qtmir
 
     qtmir::GuiServerApplication app(argc, argv, { SetDisplayConfigurationPolicy<MyDisplayConfigurationPolicy>() });
  */
-class DisplayConfigurationPolicy : public miral::experimental::DisplayConfigurationPolicy
+class DisplayConfigurationPolicy : public miral::DisplayConfigurationPolicy
 {
 public:
     DisplayConfigurationPolicy();
@@ -56,7 +56,7 @@ private:
     std::shared_ptr<Private> d;
 };
 
-using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<miral::experimental::DisplayConfigurationPolicy>()>;
+using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<miral::DisplayConfigurationPolicy>()>;
 
 /*
     Base class for access to set the display configuration policy

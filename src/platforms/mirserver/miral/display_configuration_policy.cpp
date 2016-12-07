@@ -18,4 +18,4 @@
 
 #include "qtmir/miral/display_configuration_policy.h"
 
-miral::experimental::DisplayConfigurationPolicy::DisplayConfigurationPolicy() = default;
+miral::DisplayConfigurationPolicy::DisplayConfigurationPolicy() = default;
