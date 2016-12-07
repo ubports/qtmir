@@ -42,13 +42,6 @@
 namespace
 {
 
-struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
-{
-    void save(const miral::Edid&, const miral::DisplayOutputConfiguration&) override {}
-
-    bool load(const miral::Edid&, miral::DisplayOutputConfiguration&) const override { return false; }
-};
-
 class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
@@ -57,10 +50,23 @@ public:
     {}
 };
 
-auto wrapDisplayConfigurationPolicy()
+struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::Edid&, const miral::DisplayOutputConfiguration&) override {}
+
+    bool load(const miral::Edid&, miral::DisplayOutputConfiguration&) const override { return false; }
+};
+
+auto buildDisplayConfigurationPolicy()
 -> std::shared_ptr<miral::DisplayConfigurationPolicy>
 {
     return std::make_shared<qtmir::DisplayConfigurationPolicy>();
+}
+
+auto buildDisplayConfigurationStorage()
+-> std::shared_ptr<miral::DisplayConfigurationStorage>
+{
+    return std::make_shared<DefaultDisplayConfigurationStorage>();
 }
 
 }
@@ -97,9 +103,10 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
 }
 
 QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
-    : m_displayConfigurationPolicy(&wrapDisplayConfigurationPolicy)
+    : m_displayConfigurationPolicy(&buildDisplayConfigurationPolicy)
     , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
     , m_windowManagementPolicy(qtmir::SetWindowManagementPolicy<DefaultWindowManagementPolicy>())
+    , m_displayConfigurationStorage(&buildDisplayConfigurationStorage)
     , runner(argc, const_cast<const char **>(argv))
     , argc{argc}, argv{argv}
 {
@@ -163,6 +170,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 
     auto eventFeeder = std::make_shared<QtEventFeeder>(screensModel);
     auto wmBuilder = m_windowManagementPolicy.builder();
+    auto displayStorageBuilder = m_displayConfigurationStorage.builder();
 
     runner.run_with(
         {
@@ -178,7 +186,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{std::make_shared<DefaultDisplayConfigurationStorage>(),
+            miral::PersistDisplayConfig{displayStorageBuilder(),
                                         m_displayConfigurationPolicy}
         });
 }

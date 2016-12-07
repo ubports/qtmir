@@ -161,3 +161,11 @@ void QMirServer::overrideWindowManagementPolicy(const qtmir::BasicSetWindowManag
     Q_D(QMirServer);
     d->m_windowManagementPolicy = wmPolicyCreator;
 }
+
+void QMirServer::overrideDisplayConfigurationStorage(const qtmir::BasicSetDisplayConfigurationStorage &setDisplayConfigStorage)
+{
+    qDebug() << "OVERRIDE overrideDisplayConfigurationStorage";
+
+    Q_D(QMirServer);
+    d->m_displayConfigurationStorage = setDisplayConfigStorage;
+}

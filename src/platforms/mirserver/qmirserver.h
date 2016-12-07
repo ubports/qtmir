@@ -27,6 +27,7 @@
 #include "qtmir/sessionauthorizer.h"
 #include "qtmir/windowmanagementpolicy.h"
 #include "qtmir/displayconfigurationpolicy.h"
+#include "qtmir/displayconfigurationstorage.h"
 
 // qtmir
 namespace qtmir {
@@ -67,6 +68,7 @@ public:
     void wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy);
     void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);
     void overrideWindowManagementPolicy(qtmir::BasicSetWindowManagementPolicy const& wmPolicyCreator);
+    void overrideDisplayConfigurationStorage(qtmir::BasicSetDisplayConfigurationStorage const& setDisplayConfigStorage);
 
 Q_SIGNALS:
     void started();

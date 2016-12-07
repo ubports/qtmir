@@ -70,6 +70,7 @@ add_library(qtmirserver-nomirserver OBJECT
     wrappedwindowmanagementpolicy.cpp
     mirserverhooks.cpp mirserverhooks.h
     setqtcompositor.cpp setqtcompositor.h
+    displayconfigurationstorage.cpp
     tracepoints.c
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
@@ -80,6 +81,7 @@ add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmodelnotifier.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/appnotifier.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
 )
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 

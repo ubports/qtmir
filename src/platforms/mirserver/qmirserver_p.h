@@ -34,6 +34,7 @@
 #include "qtmir/windowmanagementpolicy.h"
 #include "qtmir/windowmodelnotifier.h"
 #include "qtmir/appnotifier.h"
+#include "qtmir/displayconfigurationstorage.h"
 
 //miral
 #include <miral/application_authorizer.h>
@@ -80,6 +81,7 @@ public:
     qtmir::DisplayConfigurationPolicyWrapper m_displayConfigurationPolicy;
     miral::BasicSetApplicationAuthorizer m_sessionAuthorizer;
     qtmir::BasicSetWindowManagementPolicy m_windowManagementPolicy;
+    qtmir::BasicSetDisplayConfigurationStorage m_displayConfigurationStorage;
 private:
     qtmir::OpenGLContextFactory m_openGLContextFactory;
     qtmir::MirServerHooks       m_mirServerHooks;

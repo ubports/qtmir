@@ -27,6 +27,7 @@
 #include <qtmir/displayconfigurationpolicy.h>
 #include <qtmir/sessionauthorizer.h>
 #include <qtmir/windowmanagementpolicy.h>
+#include <qtmir/displayconfigurationstorage.h>
 
 struct MyDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
 {
@@ -53,6 +54,18 @@ public:
     {
         qDebug() << "OVERRIDE qtmir::WindowManagementPolicy::handle_keyboard_event" << event;
         return qtmir::WindowManagementPolicy::handle_keyboard_event(event);
+    }
+};
+
+class MyDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::Edid&, const miral::DisplayOutputConfiguration&) override
+    {
+    }
+
+    bool load(const miral::Edid&, miral::DisplayOutputConfiguration&) const override
+    {
+        return false;
     }
 };
 
