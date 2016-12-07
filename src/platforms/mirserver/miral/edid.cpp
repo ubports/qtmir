@@ -22,7 +22,7 @@
 
 #define RETURN_ERROR(str) { has_error = true; error_string = str; return *this; }
 
-qtmir::miral::Edid& qtmir::miral::Edid::parse_data(std::vector<uint8_t> const& data)
+miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
 {
     uint8_t sum = 0;
     int i, j;
@@ -100,7 +100,7 @@ qtmir::miral::Edid& qtmir::miral::Edid::parse_data(std::vector<uint8_t> const& d
     return *this;
 }
 
-std::string qtmir::miral::Edid::Descriptor::string_value() const
+std::string miral::Edid::Descriptor::string_value() const
 {
     switch(type) {
     case Type::monitor_name:
