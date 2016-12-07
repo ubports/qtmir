@@ -578,7 +578,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
 }
 
 
-unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurface(unityapi::MirSurfaceInterface* surface)
+unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurface(unityapi::MirSurfaceInterface* surface) const
 {
     if (!surface)
         return nullptr;
