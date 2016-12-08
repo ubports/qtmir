@@ -83,7 +83,7 @@ public:
     QString focusedApplicationId() const override;
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
-    unity::shell::application::ApplicationInfoInterface *findApplicationWithSurface(unity::shell::application::MirSurfaceInterface* surface) override;
+    unity::shell::application::ApplicationInfoInterface *findApplicationWithSurface(unity::shell::application::MirSurfaceInterface* surface) const override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
     Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments = QStringList()) override;
     Q_INVOKABLE bool stopApplication(const QString &appId) override;
