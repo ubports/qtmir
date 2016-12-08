@@ -147,7 +147,7 @@ void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfigurationPolicy& default_policy)
 {
     if (storage) {
-        conf.for_each_output([this](mg::UserDisplayConfigurationOutput& output) {
+        conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
 
             miral::Edid edid;
             edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
@@ -161,20 +161,30 @@ void PersistDisplayConfigPolicy::apply_to(
             miral::DisplayOutputOptions config;
             if (storage->load(edid, config)) {
 
-                int mode_index = output.current_mode_index;
-                int i = 0;
-                // Find the mode index which supports the saved size.
-                for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
-                    if ((*iter).size == config.extents.size) {
-                        mode_index = i;
+                if (config.size.is_set()) {
+                    int mode_index = output.current_mode_index;
+                    int i = 0;
+                    // Find the mode index which supports the saved size.
+                    for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
+                        if ((*iter).size == config.size.value()) {
+                            mode_index = i;
+                        }
                     }
+                    output.current_mode_index = mode_index;
                 }
 
-                output.current_mode_index = mode_index;
-                output.orientation = config.orientation;
-                output.used = config.used;
-                output.form_factor = config.form_factor;
-                output.scale = config.scale;
+                uint monitor_index = 0;
+                conf.for_each_output([this, &output, config, &monitor_index](mg::DisplayConfigurationOutput const& o) {
+                    if (monitor_index == config.clone_of.value()) {
+                        output.top_left = o.top_left;
+                    }
+                    monitor_index++;
+                });
+
+                if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
+                if (config.used.is_set()) {output.used = config.used.value(); }
+                if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
+                if (config.scale.is_set()) {output.scale = config.scale.value(); }
             }
         });
     }
@@ -186,7 +196,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 {
     // TODO save display config options against the h/w profile
     if (storage) {
-        conf.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
+        conf.for_each_output([this, &conf](mg::DisplayConfigurationOutput const& output) {
 
             miral::Edid edid;
             // FIXME - output.edid should be std;:vector<uint8_t>, not std::vector<uint8_t const>
@@ -196,7 +206,16 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
             }
 
             miral::DisplayOutputOptions config;
-            config.extents = output.extents();
+
+            uint monitor_index = 0;
+            conf.for_each_output([this, output, &config, &monitor_index](mg::DisplayConfigurationOutput const& o) {
+                if (!config.clone_of.is_set() && output.top_left == o.top_left) {
+                    config.clone_of = monitor_index;
+                }
+                monitor_index++;
+            });
+
+            config.size = output.extents().size;
             config.form_factor = output.form_factor;
             config.orientation = output.orientation;
             config.scale = output.scale;

@@ -20,6 +20,7 @@
 #define MIRAL_DISPLAY_CONFIGURATION_STORAGE_H
 
 #include "mir/geometry/rectangle.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 // Prototyping namespace for later incorporation in MirAL
@@ -29,11 +30,12 @@ class Edid;
 
 struct DisplayOutputOptions
 {
-    bool used;
-    mir::geometry::Rectangle extents;
-    MirOrientation orientation;
-    MirFormFactor form_factor;
-    float scale;
+    mir::optional_value<bool> used;
+    mir::optional_value<uint> clone_of;
+    mir::optional_value<mir::geometry::Size> size;
+    mir::optional_value<MirOrientation> orientation;
+    mir::optional_value<MirFormFactor> form_factor;
+    mir::optional_value<float> scale;
 };
 
 class DisplayConfigurationStorage
