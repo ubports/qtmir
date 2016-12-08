@@ -191,7 +191,7 @@ void PersistDisplayConfigPolicy::apply_to(
 
             uint output_index = 0;
             conf.for_each_output([this, &output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-                if (output_index == config.clone_of_output_index.value()) {
+                if (output_index == config.clone_output_index.value()) {
                     output.top_left = find_output.top_left;
                 }
                 output_index++;
@@ -225,8 +225,8 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
         uint output_index = 0;
         conf.for_each_output([this, output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-            if (!config.clone_of_output_index.is_set() && output.top_left == find_output.top_left) {
-                config.clone_of_output_index = output_index;
+            if (!config.clone_output_index.is_set() && output.top_left == find_output.top_left) {
+                config.clone_output_index = output_index;
             }
             output_index++;
         });
