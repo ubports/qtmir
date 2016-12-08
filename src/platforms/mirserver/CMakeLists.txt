@@ -149,6 +149,14 @@ target_link_libraries(qtmirserver
 #  LINK_DEPENDS ${symbol_map}
 #)
 
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/qtmir")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qtmirserver.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
+    @ONLY
+)
+
 install(
   TARGETS qtmirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -195,4 +203,3 @@ PRIVATE
 )
 
 install(TARGETS qpa-mirserver LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/qt5/plugins/platforms")
-
