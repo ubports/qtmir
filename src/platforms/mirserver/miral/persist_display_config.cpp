@@ -161,38 +161,48 @@ void PersistDisplayConfigPolicy::apply_to(
     miral::DisplayConfigurationPolicy& default_policy,
     miral::DisplayConfigurationPolicy& wrapped_policy)
 {
-    if (storage) {
-        conf.for_each_output([this](mg::UserDisplayConfigurationOutput& output) {
+    if (!storage) return;
 
-            miral::Edid edid;
-            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-            if (edid.has_error) {
-                return;
-            }
+    conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
 
-            // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
-            // TODO Otherwise...
+        miral::Edid edid;
+        edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+        if (edid.has_error) {
+            return;
+        }
 
-            miral::DisplayOutputOptions config;
-            if (storage->load(edid, config)) {
+        // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
+        // TODO Otherwise...
 
+        miral::DisplayOutputOptions config;
+        if (storage->load(edid, config)) {
+
+            if (config.size.is_set()) {
                 int mode_index = output.current_mode_index;
                 int i = 0;
                 // Find the mode index which supports the saved size.
                 for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
-                    if ((*iter).size == config.extents.size) {
+                    if ((*iter).size == config.size.value()) {
                         mode_index = i;
                     }
                 }
-
                 output.current_mode_index = mode_index;
-                output.orientation = config.orientation;
-                output.used = config.used;
-                output.form_factor = config.form_factor;
-                output.scale = config.scale;
             }
-        });
-    }
+
+            uint output_index = 0;
+            conf.for_each_output([this, &output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+                if (output_index == config.clone_of_output_index.value()) {
+                    output.top_left = find_output.top_left;
+                }
+                output_index++;
+            });
+
+            if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
+            if (config.used.is_set()) {output.used = config.used.value(); }
+            if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
+            if (config.scale.is_set()) {output.scale = config.scale.value(); }
+        }
+    });
 
     wrapped_policy.apply_to(conf);
     default_policy.apply_to(conf);
@@ -200,24 +210,33 @@ void PersistDisplayConfigPolicy::apply_to(
 
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)
 {
-    // TODO save display config options against the h/w profile
-    if (storage) {
-        conf.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
+    if (!storage) return;
 
-            miral::Edid edid;
-            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-            if (edid.has_error) {
-                return;
+    conf.for_each_output([this, &conf](mg::DisplayConfigurationOutput const& output) {
+
+        miral::Edid edid;
+        // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
+        edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+        if (edid.has_error) {
+            return;
+        }
+
+        miral::DisplayOutputOptions config;
+
+        uint output_index = 0;
+        conf.for_each_output([this, output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+            if (!config.clone_of_output_index.is_set() && output.top_left == find_output.top_left) {
+                config.clone_of_output_index = output_index;
             }
-
-            miral::DisplayOutputOptions config;
-            config.extents = output.extents();
-            config.form_factor = output.form_factor;
-            config.orientation = output.orientation;
-            config.scale = output.scale;
-            config.used = output.used;
-
-            storage->save(edid, config);
+            output_index++;
         });
-    }
+
+        config.size = output.extents().size;
+        config.form_factor = output.form_factor;
+        config.orientation = output.orientation;
+        config.scale = output.scale;
+        config.used = output.used;
+
+        storage->save(edid, config);
+    });
 }
