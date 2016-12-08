@@ -31,7 +31,7 @@ class Edid;
 struct DisplayOutputOptions
 {
     mir::optional_value<bool> used;
-    mir::optional_value<uint> clone_of;
+    mir::optional_value<uint> clone_of_output_index;
     mir::optional_value<mir::geometry::Size> size;
     mir::optional_value<MirOrientation> orientation;
     mir::optional_value<MirFormFactor> form_factor;

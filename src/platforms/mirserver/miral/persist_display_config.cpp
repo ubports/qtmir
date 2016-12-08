@@ -174,12 +174,12 @@ void PersistDisplayConfigPolicy::apply_to(
                 output.current_mode_index = mode_index;
             }
 
-            uint monitor_index = 0;
-            conf.for_each_output([this, &output, config, &monitor_index](mg::DisplayConfigurationOutput const& find_output) {
-                if (monitor_index == config.clone_of.value()) {
+            uint output_index = 0;
+            conf.for_each_output([this, &output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+                if (output_index == config.clone_of_output_index.value()) {
                     output.top_left = find_output.top_left;
                 }
-                monitor_index++;
+                output_index++;
             });
 
             if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
@@ -207,12 +207,12 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
         miral::DisplayOutputOptions config;
 
-        uint monitor_index = 0;
-        conf.for_each_output([this, output, &config, &monitor_index](mg::DisplayConfigurationOutput const& find_output) {
-            if (!config.clone_of.is_set() && output.top_left == find_output.top_left) {
-                config.clone_of = monitor_index;
+        uint output_index = 0;
+        conf.for_each_output([this, output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+            if (!config.clone_of_output_index.is_set() && output.top_left == find_output.top_left) {
+                config.clone_of_output_index = output_index;
             }
-            monitor_index++;
+            output_index++;
         });
 
         config.size = output.extents().size;
