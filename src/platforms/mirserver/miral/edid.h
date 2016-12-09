@@ -36,7 +36,7 @@ struct Edid
     PhysicalSizeMM size{0,0};
 
     struct Descriptor {
-        enum class Type : std::uint8_t {
+        enum class Type : uint8_t {
             timing_identifiers = 0xfa,
             white_point_data = 0xfb,
             monitor_name = 0xfc,
@@ -60,8 +60,14 @@ struct Edid
     };
     Descriptor descriptors[4];
 
-    bool has_error{false};
-    std::string error_string;
+    enum class Error: uint8_t {
+        none,
+        incorrect_size,
+        invalid_checksum,
+        invalid_header
+    };
+    Error error{Error::none};
+    inline bool has_error() const { return error != Error::none; }
 
     Edid& parse_data(std::vector<uint8_t> const&);
 };
