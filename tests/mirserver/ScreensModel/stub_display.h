@@ -21,6 +21,9 @@
 #include <mir/test/doubles/null_display_sync_group.h>
 namespace mg = mir::graphics; // Bug lp:1614983
 #include <mir/test/doubles/mock_display_configuration.h>
+
+#include <mir/compositor/display_listener.h>
+
 namespace geom = mir::geometry;
 
 using NullDisplay = mir::test::doubles::NullDisplay;
@@ -91,6 +94,13 @@ public:
 private:
     std::vector<mg::DisplayConfigurationOutput> m_config;
     std::vector<MockGLDisplayBuffer*> m_displayBuffers;
+};
+
+class StubDisplayListener : public mir::compositor::DisplayListener
+{
+    void add_display(mir::geometry::Rectangle const& /*area*/) override {};
+
+    void remove_display(mir::geometry::Rectangle const& /*area*/) override {};
 };
 
 #endif // STUB_DISPLAY_H

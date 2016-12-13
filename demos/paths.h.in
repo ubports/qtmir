@@ -37,4 +37,22 @@ inline QString qmlDirectory() {
         return QString("@CMAKE_SOURCE_DIR@/demos/");
     }
 }
+
+inline QString qmlPluginDirectory() {
+    if (isRunningInstalled()) {
+        return QString("@QML_MODULE_INSTALL_DIR@/");
+    } else {
+        return QString("@CMAKE_BINARY_DIR@/src/modules/");
+    }
+}
+
+inline QString qpaPluginDirectory() {
+    if (isRunningInstalled()) {
+        return QString("@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/qt5/plugins/platforms/");
+    } else {
+        return QString("@CMAKE_BINARY_DIR@/src/platforms/mirserver/");
+    }
+}
+
 #endif
+

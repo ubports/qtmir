@@ -16,28 +16,20 @@
 
 // Qt
 #include <QObject>
-#include <QCoreApplication>
 #include <QDebug>
-#include <QOpenGLContext>
 
 // local
-#include "mirserver.h"
 #include "qmirserver.h"
 #include "qmirserver_p.h"
-#include "screen.h"
-#include "miropenglcontext.h"
+
 
 QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
     : QObject(parent)
-    , d_ptr(new QMirServerPrivate())
+    , d_ptr(new QMirServerPrivate(argc, argv))
 {
     Q_D(QMirServer);
 
-    d->screensModel = QSharedPointer<ScreensModel>(new ScreensModel());
-
-    d->server = QSharedPointer<MirServer>(new MirServer(argc, argv, d->screensModel));
-
-    d->serverThread = new MirServerThread(d->server);
+    d->serverThread = new MirServerThread(d);
 
     connect(d->serverThread, &MirServerThread::stopped, this, &QMirServer::stopped);
 }
@@ -53,13 +45,10 @@ void QMirServer::start()
 
     d->serverThread->start(QThread::TimeCriticalPriority);
 
-    if (!d->serverThread->waitForMirStartup()) {
+    if (!d->serverThread->waitForMirStartup())
+    {
         qFatal("ERROR: QMirServer - Mir failed to start"); // will core dump
     }
-    d->screensModel->update();
-    d->screensController = QSharedPointer<ScreensController>(
-                               new ScreensController(d->screensModel, d->server->the_display(),
-                                                     d->server->the_display_configuration_controller()));
     Q_EMIT started();
 }
 
@@ -68,8 +57,7 @@ void QMirServer::stop()
     Q_D(QMirServer);
 
     if (d->serverThread->isRunning()) {
-        d->screensController.clear();
-        d->serverThread->stop();
+        d->stop();
         if (!d->serverThread->wait(10000)) {
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
@@ -84,22 +72,16 @@ bool QMirServer::isRunning() const
     return d->serverThread->isRunning();
 }
 
-QWeakPointer<ScreensModel> QMirServer::screensModel() const
+QSharedPointer<ScreensModel> QMirServer::screensModel() const
 {
     Q_D(const QMirServer);
     return d->screensModel;
 }
 
-QWeakPointer<ScreensController> QMirServer::screensController() const
-{
-    Q_D(const QMirServer);
-    return d->screensController;
-}
-
 QPlatformOpenGLContext *QMirServer::createPlatformOpenGLContext(QOpenGLContext *context) const
 {
     Q_D(const QMirServer);
-    return new MirOpenGLContext(*d->server->the_display(), *d->server->the_gl_config(), context->format());
+    return d->createPlatformOpenGLContext(context);
 }
 
 void *QMirServer::nativeResourceForIntegration(const QByteArray &resource) const
@@ -107,33 +89,24 @@ void *QMirServer::nativeResourceForIntegration(const QByteArray &resource) const
     Q_D(const QMirServer);
     void *result = nullptr;
 
-    if (d->server) {
-        if (resource == "SessionAuthorizer")
-            result = d->server->sessionAuthorizer();
-        else if (resource == "Shell")
-            result = d->server->shell();
-        else if (resource == "SessionListener")
-            result = d->server->sessionListener();
-        else if (resource == "PromptSessionListener")
-            result = d->server->promptSessionListener();
-        else if (resource == "WindowManager")
-            result = d->server->windowManager();
-        else if (resource == "ScreensController")
-            result = screensController().data();
-    }
+    if (resource == "SessionAuthorizer")
+        result = d->theApplicationAuthorizer().get();
+    else if (resource == "AppNotifier")
+        result = d->appNotifier();
+    else if (resource == "PromptSessionListener")
+        result = d->promptSessionListener();
+    else if (resource == "WindowController")
+        result = d->windowController();
+    else if (resource == "WindowModelNotifier")
+        result = d->windowModelNotifier();
+    else if (resource == "ScreensController")
+        result = d->screensController.data();
+
     return result;
 }
 
-std::shared_ptr<mir::scene::PromptSessionManager> QMirServer::thePromptSessionManager() const
+std::shared_ptr<qtmir::PromptSessionManager> QMirServer::thePromptSessionManager() const
 {
     Q_D(const QMirServer);
-
-    return d->server->the_prompt_session_manager();
-}
-
-std::shared_ptr<mir::shell::PersistentSurfaceStore> QMirServer::thePersistentSurfaceStore() const
-{
-    Q_D(const QMirServer);
-
-    return d->server->the_persistent_surface_store();
+    return d->promptSessionManager();
 }

@@ -27,6 +27,9 @@
 // Mir
 #include <mir_toolkit/common.h>
 
+// miral
+#include <miral/application_info.h>
+
 // local
 #include "session.h"
 #include "sessionmodel.h"
@@ -49,7 +52,7 @@ class SessionManager : public SessionModel
 
 public:
     explicit SessionManager(
-        const std::shared_ptr<mir::scene::PromptSessionManager>& promptSessionManager,
+        const std::shared_ptr<PromptSessionManager>& promptSessionManager,
         ApplicationManager* applicationManager,
         QObject *parent = 0
     );
@@ -64,18 +67,18 @@ Q_SIGNALS:
     void sessionStopping(SessionInterface* session);
 
 public Q_SLOTS:
-    void onSessionStarting(std::shared_ptr<mir::scene::Session> const& session);
-    void onSessionStopping(std::shared_ptr<mir::scene::Session> const& session);
+    void onSessionStarting(const miral::ApplicationInfo &appInfo);
+    void onSessionStopping(const miral::ApplicationInfo &appInfo);
 
-    void onPromptSessionStarting(const std::shared_ptr<mir::scene::PromptSession>& promptSession);
-    void onPromptSessionStopping(const std::shared_ptr<mir::scene::PromptSession>& promptSession);
-    void onPromptProviderAdded(const mir::scene::PromptSession *, const std::shared_ptr<mir::scene::Session> &);
-    void onPromptProviderRemoved(const mir::scene::PromptSession *, const std::shared_ptr<mir::scene::Session> &);
+    void onPromptSessionStarting(const PromptSession& promptSession);
+    void onPromptSessionStopping(const PromptSession& promptSession);
+    void onPromptProviderAdded(const qtmir::PromptSession &promptSession, const std::shared_ptr<mir::scene::Session> &);
+    void onPromptProviderRemoved(const qtmir::PromptSession &promptSession, const std::shared_ptr<mir::scene::Session> &);
 
 protected:
 
 private:
-    const std::shared_ptr<mir::scene::PromptSessionManager> m_promptSessionManager;
+    const std::shared_ptr<PromptSessionManager> m_promptSessionManager;
     ApplicationManager* m_applicationManager;
     static SessionManager *the_session_manager;
 

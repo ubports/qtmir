@@ -16,16 +16,9 @@
 
 #include "offscreensurface.h"
 
-// Mir
-#include <mir/graphics/display.h>
-
 //Qt
 #include <QOffscreenSurface>
 #include <QOpenGLFramebufferObject>
-#include <QSurfaceFormat>
-#include <QtPlatformSupport/private/qeglconvenience_p.h>
-
-namespace mg = mir::graphics;
 
 OffscreenSurface::OffscreenSurface(QOffscreenSurface *offscreenSurface)
     : QPlatformOffscreenSurface(offscreenSurface)

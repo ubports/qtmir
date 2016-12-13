@@ -18,7 +18,6 @@
 #include "application.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
-#include "mirfocuscontroller.h"
 #include "logging.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 #include "timestamp.h"
@@ -104,16 +103,8 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceActiveFocus);
-    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
+    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceExposure);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
-}
-
-void MirSurfaceItem::componentComplete()
-{
-    QQuickItem::componentComplete();
-    if (window()) {
-        updateScreen(window()->screen());
-    }
 }
 
 MirSurfaceItem::~MirSurfaceItem()
@@ -492,13 +483,6 @@ Mir::State MirSurfaceItem::surfaceState() const
     }
 }
 
-void MirSurfaceItem::setSurfaceState(Mir::State state)
-{
-    if (m_surface) {
-        m_surface->setState(state);
-    }
-}
-
 void MirSurfaceItem::scheduleMirSurfaceSizeUpdate()
 {
     if (!m_updateMirSurfaceSizeTimer.isActive()) {
@@ -519,13 +503,13 @@ void MirSurfaceItem::updateMirSurfaceSize()
     m_surface->resize(width, height);
 }
 
-void MirSurfaceItem::updateMirSurfaceVisibility()
+void MirSurfaceItem::updateMirSurfaceExposure()
 {
     if (!m_surface || !m_surface->live()) {
         return;
     }
 
-    m_surface->setViewVisibility((qintptr)this, isVisible());
+    m_surface->setViewExposure((qintptr)this, isVisible());
 }
 
 void MirSurfaceItem::updateMirSurfaceActiveFocus()
@@ -628,10 +612,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
 
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
-        updateMirSurfaceVisibility();
-        if (window()) {
-            updateScreen(window()->screen());
-        }
+        updateMirSurfaceExposure();
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
@@ -672,16 +653,6 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
                 Qt::DirectConnection);
-
-        updateScreen(m_window->screen());
-        connect(m_window, &QQuickWindow::screenChanged, this, &MirSurfaceItem::updateScreen);
-    }
-}
-
-void MirSurfaceItem::updateScreen(QScreen *screen)
-{
-    if (screen && m_surface) {
-        m_surface->setScreen(screen);
     }
 }
 

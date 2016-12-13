@@ -48,7 +48,7 @@ using namespace qtmir;
 QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     : QQuickWindow(parent)
     , m_scale(-1.0) // start with invalid initial state, fetch correct value on first invokation
-    , m_formFactor(Screens::FormFactorUnknown)
+    , m_formFactor(FormFactorUnknown)
 {
     if (qGuiApp->platformName() == QLatin1String("mirserver")) {
         connect(qGuiApp->platformNativeInterface(), &QPlatformNativeInterface::windowPropertyChanged,
@@ -91,7 +91,7 @@ qreal QQuickScreenWindow::scale()
     return m_scale;
 }
 
-bool QQuickScreenWindow::setScaleAndFormFactor(const float scale, const Screens::FormFactor formFactor)
+bool QQuickScreenWindow::setScaleAndFormFactor(const float scale, const FormFactor formFactor)
 {
     if (qFuzzyCompare(scale, m_scale) && formFactor == m_formFactor) {
         return true;
@@ -125,9 +125,9 @@ bool QQuickScreenWindow::setScaleAndFormFactor(const float scale, const Screens:
     return controller->setConfiguration(configs);
 }
 
-Screens::FormFactor QQuickScreenWindow::formFactor()
+FormFactor QQuickScreenWindow::formFactor()
 {
-    if (m_formFactor == Screens::FormFactorUnknown) {
+    if (m_formFactor == FormFactorUnknown) {
         m_formFactor = getFormFactorNativeProperty();
     }
     return m_formFactor;
@@ -173,7 +173,7 @@ float QQuickScreenWindow::getScaleNativeProperty() const
     return scale;
 }
 
-Screens::FormFactor QQuickScreenWindow::getFormFactorNativeProperty() const
+FormFactor QQuickScreenWindow::getFormFactorNativeProperty() const
 {
     QVariant formFactorVal = qGuiApp->platformNativeInterface()
                                 ->windowProperty(handle(), QStringLiteral("formFactor"));
@@ -181,5 +181,5 @@ Screens::FormFactor QQuickScreenWindow::getFormFactorNativeProperty() const
         return m_formFactor;
     }
 
-    return static_cast<Screens::FormFactor>(formFactorVal.toInt());
+    return static_cast<FormFactor>(formFactorVal.toInt());
 }

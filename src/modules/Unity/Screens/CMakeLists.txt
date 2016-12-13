@@ -4,9 +4,9 @@ include_directories(
 
 include_directories(
     SYSTEM
+    ${MIRCLIENT_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${Qt5Quick_INCLUDE_DIRS}
-    ${MIRSERVER_INCLUDE_DIRS}
     )
 
 set(SCREENSPLUGIN_SRC

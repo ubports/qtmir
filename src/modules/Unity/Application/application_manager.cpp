@@ -19,7 +19,7 @@
 #include "application.h"
 #include "applicationinfo.h"
 #include "dbusfocusinfo.h"
-#include "mirfocuscontroller.h"
+#include "mirsurfaceinterface.h"
 #include "session.h"
 #include "sharedwakelock.h"
 #include "proc_info.h"
@@ -31,12 +31,11 @@
 #include "nativeinterface.h"
 #include "sessionauthorizer.h"
 #include "logging.h"
-#include <mirwindowmanager.h>
+
+//miral
+#include <miral/application.h>
 
 // mir
-#include <mir/scene/surface.h>
-#include <mir/graphics/display.h>
-#include <mir/graphics/display_buffer.h>
 #include <mir/geometry/rectangles.h>
 
 // Qt
@@ -82,15 +81,8 @@ void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *
 
 void connectToTaskController(ApplicationManager *manager, TaskController *controller)
 {
-    // TaskController::processStarting blocks Ubuntu-App-Launch from executing the process, have it return
-    // as fast as possible! Using a Queued connection will push an event on the event queue before the
-    // (blocking) event for authorizeSession is pushed on the same queue - so the application's processState
-    // will be up-to-date when authorizeSession is called.
-    //
-    // TODO: Unfortunately making this queued unearths a crash (likely in Qt) (LP: #1616842).
     QObject::connect(controller, &TaskController::processStarting,
                      manager, &ApplicationManager::onProcessStarting);
-
     QObject::connect(controller, &TaskController::processStopped,
                      manager, &ApplicationManager::onProcessStopped);
     QObject::connect(controller, &TaskController::processSuspended,
@@ -115,7 +107,6 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
         return nullptr;
     }
 
-    MirWindowManager *windowManager =  static_cast<MirWindowManager*>(nativeInterface->nativeResourceForIntegration("WindowManager"));
     SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
     QSharedPointer<TaskController> taskController(new upstart::TaskController());
@@ -137,9 +128,10 @@ ApplicationManager* ApplicationManager::Factory::Factory::create()
 
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
-    connect(windowManager, &MirWindowManager::sessionAboutToCreateSurface,
-            appManager, &ApplicationManager::onSessionAboutToCreateSurface,
-            Qt::BlockingQueuedConnection);
+//    TODO - re-implement this functionality using the new Mir WindowManagement API
+//    connect(windowManager, &MirWindowManager::sessionAboutToCreateSurface,
+//            appManager, &ApplicationManager::onSessionAboutToCreateSurface,
+//            Qt::BlockingQueuedConnection);
 
     // Emit signal to notify Upstart that Mir is ready to receive client connections
     // see http://upstart.ubuntu.com/cookbook/#expect-stop
@@ -179,17 +171,6 @@ ApplicationManager::ApplicationManager(
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName(QStringLiteral("qtmir::ApplicationManager"));
-
-    /*
-        All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
-        be processed by slots immediately and then trigger yet more model changes.
-
-        The connection below is queued to avoid stacked model change attempts cause by the above,
-        such as attempting to raise the newly focused application while another one is still
-        getting removed from the model.
-     */
-    connect(MirFocusController::instance(), &MirFocusController::focusedSurfaceChanged,
-        this, &ApplicationManager::updateFocusedApplication, Qt::QueuedConnection);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -273,18 +254,12 @@ bool ApplicationManager::requestFocusApplication(const QString &inputAppId)
 
 QString ApplicationManager::focusedApplicationId() const
 {
-    Application *focusedApplication = nullptr;
-    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
-    if (surface) {
-        auto self = const_cast<ApplicationManager*>(this);
-        focusedApplication = self->findApplication(surface);
+    for (const auto application : m_applications) {
+        if (application->focused()) {
+            return application->appId();
+        }
     }
-
-    if (focusedApplication) {
-        return focusedApplication->appId();
-    } else {
-        return QString();
-    }
+    return QString();
 }
 
 /**
@@ -602,16 +577,22 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     authorized = true;
 }
 
-Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
+
+unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurface(unityapi::MirSurfaceInterface* surface) const
 {
-    return findApplicationWithSession(session.get());
+    if (!surface)
+        return nullptr;
+
+    auto qtmirSurface = static_cast<qtmir::MirSurfaceInterface*>(surface);
+
+    return findApplicationWithPid(miral::pid_of(qtmirSurface->session()->session()));
 }
 
-Application* ApplicationManager::findApplicationWithSession(const ms::Session *session)
+Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
 {
     if (!session)
         return nullptr;
-    return findApplicationWithPid(session->process_id());
+    return findApplicationWithPid(miral::pid_of(session));
 }
 
 Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
@@ -640,7 +621,20 @@ void ApplicationManager::add(Application* application)
     Q_ASSERT(!m_modelUnderChange);
     m_modelUnderChange = true;
 
-    connect(application, &Application::focusedChanged, this, [this](bool) { onAppDataChanged(RoleFocused); });
+    /*
+        All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
+        be processed by slots immediately and then trigger yet more model changes.
+
+        The connection below is queued to avoid stacked model change attempts cause by the above,
+        such as attempting to raise the newly focused application while another one is still
+        getting removed from the model.
+     */
+    // TODO: That might not be the case anymore with miral. Investigate if we can do a direct connection now
+    connect(application, &Application::focusedChanged, this, [this](bool) {
+        onAppDataChanged(RoleFocused);
+        Q_EMIT focusedApplicationIdChanged();
+    }, Qt::QueuedConnection);
+
     connect(application, &Application::stateChanged, this, [this](Application::State) { onAppDataChanged(RoleState); });
     connect(application, &Application::closing, this, [this, application]() { onApplicationClosing(application); });
     connect(application, &unityapi::ApplicationInfoInterface::focusRequested, this, [this, application]() {
@@ -802,35 +796,6 @@ void ApplicationManager::onSessionAboutToCreateSurface(
     } else {
         qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface type=" << type
             << " NOOP";
-    }
-}
-
-void ApplicationManager::updateFocusedApplication()
-{
-    Application *focusedApplication = nullptr;
-    Application *previouslyFocusedApplication = nullptr;
-
-    auto surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->focusedSurface());
-    if (surface) {
-        focusedApplication = findApplication(surface);
-    }
-
-    surface = static_cast<qtmir::MirSurfaceInterface*>(MirFocusController::instance()->previouslyFocusedSurface());
-    if (surface) {
-        previouslyFocusedApplication = findApplication(surface);
-    }
-
-    if (focusedApplication != previouslyFocusedApplication) {
-        if (focusedApplication) {
-            DEBUG_MSG << "() focused " << focusedApplication->appId();
-            Q_EMIT focusedApplication->focusedChanged(true);
-            this->move(this->m_applications.indexOf(focusedApplication), 0);
-        }
-        if (previouslyFocusedApplication) {
-            DEBUG_MSG << "() unfocused " << previouslyFocusedApplication->appId();
-            Q_EMIT previouslyFocusedApplication->focusedChanged(false);
-        }
-        Q_EMIT focusedApplicationIdChanged();
     }
 }
 

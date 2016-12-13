@@ -28,10 +28,11 @@
 
 namespace mir {
     namespace graphics { class Display; }
-    namespace compositor { class Compositor; }
+    namespace compositor { class DisplayListener; }
 }
 class Screen;
 class QWindow;
+class QtCompositor;
 
 /*
  * ScreensModel monitors the Mir display configuration and compositor status, and updates
@@ -73,8 +74,10 @@ public Q_SLOTS:
 
 public:
     // called by MirServer
-    void init(const std::shared_ptr<mir::graphics::Display> &display,
-              const std::shared_ptr<mir::compositor::Compositor> &compositor);
+    void init(
+        const std::shared_ptr<mir::graphics::Display>& display,
+        const std::shared_ptr<QtCompositor>& compositor,
+        const std::shared_ptr<mir::compositor::DisplayListener>& displayListener);
     void terminate();
 
     // override for testing purposes
@@ -90,7 +93,8 @@ private:
     void allWindowsSetExposed(bool exposed);
 
     std::weak_ptr<mir::graphics::Display> m_display;
-    std::shared_ptr<mir::compositor::Compositor> m_compositor;
+    std::shared_ptr<QtCompositor> m_compositor;
+    std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
     QList<Screen*> m_screenList;
     bool m_compositing;
 };

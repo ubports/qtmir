@@ -11,6 +11,7 @@ include_directories(
 
 include_directories(
   SYSTEM
+  ${MIRAL_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
   ${Qt5Core_INCLUDE_DIRS}
   ${Qt5GUI_INCLUDE_DIRS}

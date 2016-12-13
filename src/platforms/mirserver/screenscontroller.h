@@ -24,7 +24,10 @@
 
 // local
 #include "customscreenconfiguration.h"
-#include "screensmodel.h"
+
+#include <memory>
+
+class ScreensModel;
 
 namespace mir {
     namespace graphics { class Display; }

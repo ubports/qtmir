@@ -25,6 +25,7 @@
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
+#include <qpa/qwindowsysteminterface_p.h>
 #include <QGuiApplication>
 #include <private/qguiapplication_p.h>
 #include <QTextCodec>
@@ -413,14 +414,44 @@ public:
                 quint32 nativeModifiers,
                 const QString& text, bool autorep, ushort count) override
     {
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleExtendedKeyEvent(window, timestamp, type, key, modifiers,
                 nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
+#else
+        // The version above is the right one, but we have to workaround a FIXME hack in
+        // QWindowSystemInterface::handleShortcutEvent which forcibly sets sync mode from the GUI thread.
+        // Sending an event synchronously from the mir input thread risks a deadlock with the main/GUI thread
+        // from a miral mutex locked by both thread (eg. holding Alt + dragging a window with the the mouse)
+        // See: https://bugreports.qt.io/browse/QTBUG-56274
+        // Bug was introduced by commit c7e5e1d9e01849347a9e59b8285477a20d82002b and fixed by commit
+        // 33d748bb88676b69e596ae77badfeaf5a69a33d1
+        QWindowSystemInterfacePrivate::KeyEvent *e =
+                new QWindowSystemInterfacePrivate::KeyEvent(window, timestamp, type, key, modifiers,
+                    nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
+        QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
+#endif
+
     }
 
     void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points, Qt::KeyboardModifiers mods) override
     {
+        // See comment in handleExtendedKeyEvent
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
+#else
+        {
+            if (!points.size()) // Touch events must have at least one point
+                return;
+            QEvent::Type type;
+            QList<QTouchEvent::TouchPoint> touchPoints = QWindowSystemInterfacePrivate::fromNativeTouchPoints(points, window, &type);
+
+            QWindowSystemInterfacePrivate::TouchEvent *e =
+                    new QWindowSystemInterfacePrivate::TouchEvent(window, timestamp, type, device, touchPoints, mods);
+            QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
+        }
+#endif
     }
 
     void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
@@ -510,13 +541,13 @@ bool QtEventFeeder::dispatch(MirEvent const& event)
 
     switch (mir_input_event_get_type(iev)) {
     case mir_input_event_type_key:
-        dispatchKey(iev);
+        dispatchKey(mir_input_event_get_keyboard_event(iev));
         break;
     case mir_input_event_type_touch:
-        dispatchTouch(iev);
+        dispatchTouch(mir_input_event_get_touch_event(iev));
         break;
     case mir_input_event_type_pointer:
-        dispatchPointer(iev);
+        dispatchPointer(mir_input_event_get_pointer_event(iev));
     default:
         break;
     }
@@ -564,12 +595,13 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
     return buttons;
 }
-}
+} // namespace
 
-void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
+void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
-    auto pev = mir_input_event_get_pointer_event(ev);
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_pointer_event_input_event(pev))));
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
 
@@ -604,11 +636,12 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     }
 }
 
-void QtEventFeeder::dispatchKey(MirInputEvent const* event)
+void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_keyboard_event_input_event(kev))));
 
-    auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
 
     // Key modifier and unicode index mapping.
@@ -669,13 +702,14 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
 }
 
-void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
+void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_touch_event_input_event(tev))));
 
     tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 
-    auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
 
     // FIXME(loicm) Max pressure is device specific. That one is for the Samsung Galaxy Nexus. That
@@ -744,16 +778,6 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
         touchPoints);
 
     tracepoint(qtmirserver, touchEventDispatch_end, std::chrono::nanoseconds(timestamp).count());
-}
-
-void QtEventFeeder::start()
-{
-    // not used
-}
-
-void QtEventFeeder::stop()
-{
-    // not used
 }
 
 void QtEventFeeder::validateTouches(QWindow *window, ulong timestamp,

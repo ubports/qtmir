@@ -23,9 +23,8 @@
 
 #include <memory>
 
-// mir
-namespace mir { namespace scene { class PromptSessionManager; }}
-namespace mir { namespace shell { class PersistentSurfaceStore; }}
+// qtmir
+namespace qtmir { class PromptSessionManager; }
 
 class QMirServerPrivate;
 class ScreensController;
@@ -45,12 +44,10 @@ public:
     Q_SLOT void stop();
     bool isRunning() const;
 
-    QWeakPointer<ScreensController> screensController() const;
-    QWeakPointer<ScreensModel> screensModel() const;
+    QSharedPointer<ScreensModel> screensModel() const;
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
     void *nativeResourceForIntegration(const QByteArray &resource) const;
-    std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
-    std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
+    std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
 
 Q_SIGNALS:
     void started();

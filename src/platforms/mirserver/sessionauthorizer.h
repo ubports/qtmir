@@ -21,12 +21,12 @@
 #include <string>
 
 // mir
-#include <mir/frontend/session_authorizer.h>
+#include <miral/application_authorizer.h>
 
 // Qt
 #include <QObject>
 
-class SessionAuthorizer : public QObject, public mir::frontend::SessionAuthorizer
+class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
 {
     Q_OBJECT
 
@@ -34,11 +34,11 @@ public:
     SessionAuthorizer(QObject *parent = 0);
     ~SessionAuthorizer();
 
-    bool connection_is_allowed(mir::frontend::SessionCredentials const& creds) override;
-    bool configure_display_is_allowed(mir::frontend::SessionCredentials const& creds) override;
-    bool set_base_display_configuration_is_allowed(mir::frontend::SessionCredentials const& creds) override;
-    bool screencast_is_allowed(mir::frontend::SessionCredentials const& creds) override;
-    bool prompt_session_is_allowed(mir::frontend::SessionCredentials const& creds) override;
+    bool connection_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override;
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
