@@ -72,6 +72,9 @@ struct MockSession : public Session
     //void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
 
 
+    void send_error(ClientVisibleError const&) override;
+
+
 private:
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
