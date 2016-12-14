@@ -94,7 +94,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 {
     bool unknownArgsFound = false;
 
-    ::miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
+    miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
     {
         unknownArgsFound = true;
         // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
@@ -102,7 +102,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
     }};
 
-    ::miral::AddInitCallback addInitCallback{[&, this]
+    miral::AddInitCallback addInitCallback{[&, this]
     {
         if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
             argc = 1;
