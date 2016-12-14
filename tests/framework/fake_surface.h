@@ -102,10 +102,13 @@ public:
     void rename(std::string const&) override {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
     void set_confine_pointer_state(MirPointerConfinementState) {}
-    MirPointerConfinementState confine_pointer_state() const { return {}; }
-#endif
+    MirPointerConfinementState confine_pointer_state() const
+    {
+        return mir_pointer_unconfined;
+    }
+
+    void placed_relative(mir::geometry::Rectangle const&) {}
 };
 
 } // namespace scene
