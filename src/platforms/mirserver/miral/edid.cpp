@@ -19,6 +19,7 @@
 #include "edid.h"
 
 #include <sstream>
+#include <cstring>
 
 #define RETURN_ERROR(err) { error = err; return *this; }
 
@@ -40,10 +41,9 @@ miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
     }
 
     // check header
-    for (i = 0; i < 8; i++) {
-        if (!(((i == 0 || i == 7) && data[i] == 0x00) || (data[i] == 0xff))) { //0x00 0xff 0xff 0xff 0xff 0xff 0x00
-            RETURN_ERROR(Error::invalid_header);
-        }
+    static constexpr uint8_t sig[] = { 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00 };
+    if (std::memcmp(data.data(), sig, sizeof sig)) {
+        RETURN_ERROR(Error::invalid_header);
     }
 
     vendor = { (char)((data[8] >> 2 & 0x1f) + 'A' - 1),
@@ -109,13 +109,10 @@ std::string miral::Edid::Descriptor::string_value() const
     switch(type) {
     case Type::monitor_name:
         return std::string(&value.monitor_name[0]);
-        break;
     case Type::unspecified_text:
         return std::string(&value.unspecified_text[0]);
-        break;
     case Type::serial_number:
         return std::string(&value.serial_number[0]);
-        break;
     default:
         return {};
     }
