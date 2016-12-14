@@ -89,10 +89,9 @@ struct MockSurface : public mir::scene::Surface
 
     MOCK_METHOD2(set_cursor_stream, void(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&));
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
-    void set_confine_pointer_state(MirPointerConfinementState) {}
-    MirPointerConfinementState confine_pointer_state() const { return {}; }
-#endif
+    MOCK_METHOD1(set_confine_pointer_state, void(MirPointerConfinementState));
+    MOCK_CONST_METHOD0(confine_pointer_state, MirPointerConfinementState());
+    MOCK_METHOD1(placed_relative, void(mir::geometry::Rectangle const& placement));
 };
 
 } // namespace scene

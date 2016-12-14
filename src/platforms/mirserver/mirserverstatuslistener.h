@@ -26,11 +26,8 @@ public:
     void paused() override;
     void resumed() override;
     void started() override;
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
-    void ready_for_user_input() override {}
-    void stop_receiving_input() override {}
-#endif
+    void ready_for_user_input() override;
+    void stop_receiving_input() override;
 };
 
 #endif // MIRSERVERSTATUSLISTENER_H
