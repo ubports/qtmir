@@ -146,6 +146,8 @@ void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
     mg::DisplayConfigurationPolicy& default_policy)
 {
+    default_policy.apply_to(conf);
+
     if (!storage) return;
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
@@ -188,8 +190,6 @@ void PersistDisplayConfigPolicy::apply_to(
             if (config.scale.is_set()) {output.scale = config.scale.value(); }
         }
     });
-
-    default_policy.apply_to(conf);
 }
 
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)
