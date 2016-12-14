@@ -82,9 +82,6 @@ private:
     void destroy_buffer(graphics::BufferID) {}
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) { return {}; }
 #endif
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
-    void send_error(ClientVisibleError const&) override {};
-#endif
 
     std::string m_sessionName;
     pid_t m_sessionId;
