@@ -167,7 +167,7 @@ void PersistDisplayConfigPolicy::apply_to(
 
         miral::Edid edid;
         edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-        if (edid.has_error) {
+        if (edid.has_error()) {
             return;
         }
 
@@ -217,7 +217,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
         miral::Edid edid;
         // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
         edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-        if (edid.has_error) {
+        if (edid.has_error()) {
             return;
         }
 

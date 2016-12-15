@@ -20,29 +20,29 @@
 
 #include <sstream>
 
-#define RETURN_ERROR(str) { has_error = true; error_string = str; return *this; }
+#define RETURN_ERROR(err) { error = err; return *this; }
 
 miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
 {
     if (data.size() != 128 && data.size() != 256) {
-        RETURN_ERROR("Invalid size != 128/256 bytes");
+        RETURN_ERROR(Error::incorrect_size);
     }
 
     uint8_t sum = 0;
     int i, j;
 
     // check the checksum
-    for (i = 0; i<128; i++) {
+    for (size_t i = 0; i < data.size(); i++) {
         sum += data[i];
     }
     if (sum) {
-        RETURN_ERROR("Checksum failed");
+        RETURN_ERROR(Error::invalid_checksum);
     }
 
     // check header
     for (i = 0; i < 8; i++) {
         if (!(((i == 0 || i == 7) && data[i] == 0x00) || (data[i] == 0xff))) { //0x00 0xff 0xff 0xff 0xff 0xff 0x00
-            RETURN_ERROR("Incorrect header. Probably not an edid");
+            RETURN_ERROR(Error::invalid_header);
         }
     }
 
