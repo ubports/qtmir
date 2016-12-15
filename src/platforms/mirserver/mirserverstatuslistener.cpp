@@ -35,3 +35,11 @@ void MirServerStatusListener::resumed()
 void MirServerStatusListener::started()
 {
 }
+
+void MirServerStatusListener::ready_for_user_input()
+{
+}
+
+void MirServerStatusListener::stop_receiving_input()
+{
+}

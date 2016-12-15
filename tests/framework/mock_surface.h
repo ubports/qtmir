@@ -90,6 +90,7 @@ struct MockSurface : public mir::scene::Surface
 
     MOCK_METHOD1(set_confine_pointer_state, void(MirPointerConfinementState));
     MOCK_CONST_METHOD0(confine_pointer_state, MirPointerConfinementState());
+    MOCK_METHOD1(placed_relative, void(mir::geometry::Rectangle const& placement));
 };
 
 } // namespace scene

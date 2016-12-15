@@ -56,6 +56,7 @@ struct MockSurface : StubSurface
 struct MockSession : StubSession
 {
     MOCK_CONST_METHOD1(surface, std::shared_ptr<ms::Surface> (mir::frontend::SurfaceId surface));
+    void send_error(mir::ClientVisibleError const&) {}
 };
 
 struct WindowManager : Test

@@ -1,3 +1,9 @@
+qtmir (0.5.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
+
+  * Mir 0.25 compat
+
+ -- Brandon Schaefer <brandon.schaefer@canonical.com>  Sat, 03 Dec 2016 12:38:04 +0000
+
 qtmir (0.5.0+17.04.20161123.3-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]

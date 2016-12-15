@@ -201,6 +201,11 @@ void SurfaceObserver::cursor_image_set_to(const mir::graphics::CursorImage &curs
     Q_EMIT cursorChanged(qcursor);
 }
 
+// TODO Implement
+void SurfaceObserver::placed_relative(mir::geometry::Rectangle const& /*placement*/)
+{
+}
+
 QCursor SurfaceObserver::createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage) {
     if (cursorImage.as_argb_8888() == nullptr) {
         // Must be a named cursor
