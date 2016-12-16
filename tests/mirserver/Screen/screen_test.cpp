@@ -88,7 +88,7 @@ TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
     EXPECT_EQ(screen->format(), QImage::Format_RGBA8888);
     EXPECT_EQ(screen->refreshRate(), 59);
     EXPECT_EQ(screen->physicalSize(), QSize(1111, 2222));
-    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::dvid);
+    EXPECT_EQ(screen->outputType(), qtmir::OutputTypes::DVID);
 }
 
 TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
@@ -101,5 +101,5 @@ TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
     EXPECT_EQ(screen->format(), QImage::Format_RGBX8888);
     EXPECT_EQ(screen->refreshRate(), 75);
     EXPECT_EQ(screen->physicalSize(), QSize(1000, 2000));
-    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::lvds);
+    EXPECT_EQ(screen->outputType(), qtmir::OutputTypes::LVDS);
 }

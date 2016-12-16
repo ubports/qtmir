@@ -24,12 +24,12 @@
 #include <QObject>
 #include <QStringList>
 
-// Unity API
-#include <unity/shell/application/ApplicationManagerInterface.h>
-
 // local
 #include "application.h"
 #include "taskcontroller.h"
+
+// Unity API
+#include <unity/shell/application/ApplicationManagerInterface.h>
 
 namespace mir {
     namespace scene {
@@ -51,7 +51,6 @@ namespace qtmir {
 
 class DBusFocusInfo;
 class DBusWindowStack;
-class MirSurfaceManager;
 class ProcInfo;
 class SharedWakelock;
 class SettingsInterface;
@@ -80,10 +79,11 @@ public:
             QObject *parent = 0);
     virtual ~ApplicationManager();
 
-    // ApplicationManagerInterface
+    // unity::shell::application::ApplicationManagerInterface
     QString focusedApplicationId() const override;
     Q_INVOKABLE qtmir::Application* get(int index) const override;
     Q_INVOKABLE qtmir::Application* findApplication(const QString &appId) const override;
+    unity::shell::application::ApplicationInfoInterface *findApplicationWithSurface(unity::shell::application::MirSurfaceInterface* surface) const override;
     Q_INVOKABLE bool requestFocusApplication(const QString &appId) override;
     Q_INVOKABLE qtmir::Application* startApplication(const QString &appId, const QStringList &arguments = QStringList()) override;
     Q_INVOKABLE bool stopApplication(const QString &appId) override;
@@ -117,14 +117,13 @@ private Q_SLOTS:
     void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
                                        int type, QSize &size);
     void onApplicationClosing(Application *application);
-    void updateFocusedApplication();
 
 private:
+    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
     void setFocused(Application *application);
     void add(Application *application);
     void remove(Application* application);
-    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
-    Application* findApplicationWithSession(const mir::scene::Session *session);
+
     QModelIndex findIndex(Application* application);
     void resumeApplication(Application *application);
     QString toString() const;
@@ -146,7 +145,6 @@ private:
 
     friend class Application;
     friend class DBusWindowStack;
-    friend class MirSurfaceManager;
     friend class SessionManager;
 };
 

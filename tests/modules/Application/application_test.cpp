@@ -286,7 +286,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenAppStopsWhileSuspending)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
 
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
@@ -381,7 +381,7 @@ TEST_F(ApplicationTests, suspendedApplicationResumesWhileSurfaceBeingClosed)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
 
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
@@ -389,7 +389,7 @@ TEST_F(ApplicationTests, suspendedApplicationResumesWhileSurfaceBeingClosed)
     // one surface.
     FakeMirSurface *secondSurface = new FakeMirSurface;
     session->registerSurface(secondSurface);
-    secondSurface->drawFirstFrame();
+    secondSurface->setReady();
 
     suspend(application.data());
 
@@ -438,14 +438,14 @@ TEST_F(ApplicationTests, quitsAfterLastSurfaceIsClosed)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
 
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
     ASSERT_EQ(Session::Running, session->state());
 
     FakeMirSurface *secondSurface = new FakeMirSurface;
     session->registerSurface(secondSurface);
-    secondSurface->drawFirstFrame();
+    secondSurface->setReady();
 
     delete surface;
 
@@ -489,7 +489,7 @@ TEST_F(ApplicationTests, sessionStopsWhileBeingSuspended)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
     application->setRequestedState(Application::RequestedSuspended);
@@ -533,7 +533,7 @@ TEST_F(ApplicationTests, closeWhenSuspendedProcessFailed)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
     suspend(application.data());
@@ -571,7 +571,7 @@ TEST_F(ApplicationTests, stoppedWhileSuspendedTurnsIntoStoppeResumable)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
 
     ASSERT_EQ(Application::InternalState::Running, application->internalState());
 
@@ -608,14 +608,14 @@ TEST_F(ApplicationTests, surfaceCountPropertyUpdates)
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
-    surface->drawFirstFrame();
+    surface->setReady();
 
     EXPECT_EQ(application->surfaceCount(), 1);
     EXPECT_EQ(surfaceCountChangedSpy.count(), 1);
 
     FakeMirSurface *surface2 = new FakeMirSurface;
     session->registerSurface(surface2);
-    surface2->drawFirstFrame();
+    surface2->setReady();
 
     EXPECT_EQ(application->surfaceCount(), 2);
     EXPECT_EQ(surfaceCountChangedSpy.count(), 2);

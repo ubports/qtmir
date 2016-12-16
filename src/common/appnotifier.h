@@ -14,43 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_CREATIONHINTS_H
-#define QTMIR_CREATIONHINTS_H
+#ifndef APPNOTIFIER_H
+#define APPNOTIFIER_H
 
-#include <QMetaType>
-#include <QString>
-
-#include <unity/shell/application/Mir.h>
-
-namespace mir {
-    namespace scene {
-        struct SurfaceCreationParameters;
-    }
-}
+#include <QObject>
+#include <miral/application_info.h>
 
 namespace qtmir {
 
-class CreationHints {
-public:
-    CreationHints() {}
-    CreationHints(const mir::scene::SurfaceCreationParameters&);
+class AppNotifier : public QObject
+{
+    Q_OBJECT
 
-    QString toString() const;
-
-    int minWidth{0};
-    int maxWidth{0};
-
-    int minHeight{0};
-    int maxHeight{0};
-
-    int widthIncrement{0};
-    int heightIncrement{0};
-
-    Mir::ShellChrome shellChrome{Mir::ShellChrome::NormalChrome};
+Q_SIGNALS:
+    void appAdded(const miral::ApplicationInfo &app);
+    void appRemoved(const miral::ApplicationInfo &app);
+    void appCreatedWindow(const miral::ApplicationInfo &app);
 };
 
 } // namespace qtmir
 
-Q_DECLARE_METATYPE(qtmir::CreationHints)
+Q_DECLARE_METATYPE(miral::ApplicationInfo)
 
-#endif // QTMIR_CREATIONHINTS_H
+#endif // APPNOTIFIER_H
