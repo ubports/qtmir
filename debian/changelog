@@ -1,3 +1,9 @@
+qtmir (0.5.1+17.04.20161216-0ubuntu2) zesty; urgency=medium
+
+  * No-change rebuild against latest miral.
+
+ -- Ĺukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Wed, 21 Dec 2016 10:07:36 +0100
+
 qtmir (0.5.1+17.04.20161216-0ubuntu1) zesty; urgency=medium
 
   [ Gerry Boland ]
