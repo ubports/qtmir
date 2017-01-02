@@ -146,7 +146,7 @@ std::shared_ptr<mir::input::InputDeviceHub> qtmir::MirServerHooks::theInputDevic
 QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController(QSharedPointer<ScreensModel> const &screensModel) const
 {
     return QSharedPointer<ScreensController>(
-                new ScreensController(screensModel, theMirDisplay(), self->m_mirDisplayConfigurationController.lock()));
+        new ScreensController(screensModel, theMirDisplay(), self->m_mirDisplayConfigurationController.lock()));
 }
 
 void qtmir::MirServerHooks::createInputDeviceObserver()

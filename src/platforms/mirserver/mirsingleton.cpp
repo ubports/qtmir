@@ -16,8 +16,6 @@
 
 #include "mirsingleton.h"
 
-#include <QDebug>
-
 qtmir::Mir *qtmir::Mir::m_instance = nullptr;
 
 qtmir::Mir::Mir()
