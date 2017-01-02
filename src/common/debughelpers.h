@@ -43,4 +43,6 @@ const char *mirTouchActionToString(MirTouchAction touchAction);
 
 const char *qtCursorShapeToStr(Qt::CursorShape shape);
 
+const char *unityapiMirStateToStr(int state);
+
 #endif // UBUNTUGESTURES_DEBUG_HELPER_H

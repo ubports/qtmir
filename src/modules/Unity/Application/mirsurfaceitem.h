@@ -31,7 +31,6 @@
 
 namespace qtmir {
 
-class MirSurfaceManager;
 class QSGMirSurfaceNode;
 class MirTextureProvider;
 
@@ -52,7 +51,6 @@ public:
     Mir::ShellChrome shellChrome() const override;
 
     Mir::State surfaceState() const override;
-    void setSurfaceState(Mir::State) override;
 
     Mir::OrientationAngle orientationAngle() const override;
     void setOrientationAngle(Mir::OrientationAngle angle) override;
@@ -109,7 +107,6 @@ protected:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
-    void componentComplete() override;
     void releaseResources() override;
 
 private Q_SLOTS:
@@ -117,13 +114,12 @@ private Q_SLOTS:
     void updateMirSurfaceSize();
 
     void updateMirSurfaceActiveFocus();
-    void updateMirSurfaceVisibility();
+    void updateMirSurfaceExposure();
 
     void onActualSurfaceSizeChanged(QSize size);
     void onCompositorSwappedBuffers();
 
     void onWindowChanged(QQuickWindow *window);
-    void updateScreen(QScreen *screen);
 
 private:
     void ensureTextureProvider();

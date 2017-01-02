@@ -13,6 +13,7 @@ Build-Depends: cmake,
                libglib2.0-dev,
                libgsettings-qt-dev,
                liblttng-ust-dev,
+               libmiral-dev (>= 0.4),
                libmirclient-dev (>= 0.25.0),
                libmircommon-dev (>= 0.25.0),
                libmirserver-dev (>= 0.25.0),
@@ -28,8 +29,8 @@ Build-Depends: cmake,
                liburl-dispatcher1-dev,
                libxkbcommon-dev,
                libxrender-dev,
-               mir-renderer-gl-dev (>= 0.24.0),
-               mirtest-dev (>= 0.24.0),
+               mir-renderer-gl-dev (>= 0.25.0),
+               mirtest-dev (>= 0.25.0),
                pkg-config,
 # lttng-gen-ts needs python3, but doesn't depend on it itself: bug 1359147
                python3:any,
@@ -41,6 +42,9 @@ Build-Depends: cmake,
                quilt,
 # libmirserver-dev should have brought this dep. Bug lp:1617435
                uuid-dev,
+# mirtest pkgconfig requires these, but doesn't have a deb dependency. Bug lp:1633537
+               libboost-filesystem-dev,
+               libboost-system-dev,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/qtmir
 # if you don't have have commit access to this branch but would like to upload
@@ -98,7 +102,7 @@ Replaces: libqtmir,
 Conflicts: libqtmir,
            libunity-mir1,
 Provides: unity-application-impl,
-          unity-application-impl-22,
+          unity-application-impl-23,
 Description: Qt plugin for Unity specific Mir APIs
  QtMir provides Qt/QML bindings for Mir features that are exposed through the
  qtmir-desktop or qtmir-android QPA plugin such as Application management

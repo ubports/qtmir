@@ -18,6 +18,7 @@
 #define MOCK_MIR_SCENE_SURFACE_H
 
 #include <mir/scene/surface.h>
+#include <mir/version.h>
 #include <gmock/gmock.h>
 
 #include <string>

@@ -22,6 +22,7 @@ qtmir::Mir *qtmir::Mir::m_instance = nullptr;
 
 qtmir::Mir::Mir()
 {
+    qRegisterMetaType<qtmir::Mir::State>("Mir::State");
 }
 
 qtmir::Mir::~Mir()

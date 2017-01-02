@@ -80,6 +80,7 @@ MirOpenGLContext::MirOpenGLContext(
     formatCopy.setRenderableType(QSurfaceFormat::OpenGLES);
 
     m_format = q_glFormatFromConfig(eglDisplay, eglConfig, formatCopy);
+    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
 
     // FIXME: the temporary gl context created by Mir does not have the attributes we specified
     // in the GLConfig, so need to set explicitly for now

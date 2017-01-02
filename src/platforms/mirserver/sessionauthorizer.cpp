@@ -21,11 +21,6 @@
 #include <QMetaMethod>
 #include <QThread>
 
-// mir
-#include <mir/frontend/session_credentials.h>
-
-using mir::frontend::SessionCredentials;
-
 SessionAuthorizer::SessionAuthorizer(QObject *parent)
     : QObject(parent)
     , m_connectionChecked(false)
@@ -36,7 +31,7 @@ SessionAuthorizer::~SessionAuthorizer()
 {
 }
 
-bool SessionAuthorizer::connection_is_allowed(SessionCredentials const& creds)
+bool SessionAuthorizer::connection_is_allowed(miral::ApplicationCredentials const& creds)
 {
     tracepoint(qtmirserver, sessionAuthorizeStart);
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::connection_is_allowed - this=" << this << "pid=" << creds.pid();
@@ -61,7 +56,7 @@ bool SessionAuthorizer::connection_is_allowed(SessionCredentials const& creds)
     return authorized;
 }
 
-bool SessionAuthorizer::configure_display_is_allowed(SessionCredentials const& creds)
+bool SessionAuthorizer::configure_display_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::configure_display_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -70,7 +65,7 @@ bool SessionAuthorizer::configure_display_is_allowed(SessionCredentials const& c
     return true;
 }
 
-bool SessionAuthorizer::screencast_is_allowed(SessionCredentials const& creds)
+bool SessionAuthorizer::screencast_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::screencast_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -79,7 +74,7 @@ bool SessionAuthorizer::screencast_is_allowed(SessionCredentials const& creds)
     return true;
 }
 
-bool SessionAuthorizer::prompt_session_is_allowed(SessionCredentials const& creds)
+bool SessionAuthorizer::prompt_session_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::prompt_session_is_allowed - this=" << this << "pid=" << creds.pid();
 
@@ -88,7 +83,7 @@ bool SessionAuthorizer::prompt_session_is_allowed(SessionCredentials const& cred
     return true;
 }
 
-bool SessionAuthorizer::set_base_display_configuration_is_allowed(SessionCredentials const& creds)
+bool SessionAuthorizer::set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::set_base_display_configuration_is_allowed - this="
         << this << "pid=" << creds.pid();

@@ -30,7 +30,7 @@ class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObse
 {
     Q_OBJECT
 public:
-    MirInputDeviceObserver(const std::shared_ptr<mir::input::InputDeviceHub> &hub, QObject * parent = nullptr);
+    MirInputDeviceObserver(const std::shared_ptr<mir::input::InputDeviceHub> &hub);
     ~MirInputDeviceObserver();
 
 protected:
