@@ -151,7 +151,7 @@ QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController
 
 void qtmir::MirServerHooks::createInputDeviceObserver()
 {
-    theInputDeviceHub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>(theInputDeviceHub()));
+    theInputDeviceHub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>());
 }
 
 PromptSessionListenerImpl::~PromptSessionListenerImpl() = default;

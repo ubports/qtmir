@@ -28,10 +28,10 @@
 using namespace qtmir;
 namespace mi = mir::input;
 
-MirInputDeviceObserver::MirInputDeviceObserver(const std::shared_ptr<mi::InputDeviceHub> &hub):
-    QObject(), m_hub(hub)
+MirInputDeviceObserver::MirInputDeviceObserver(QObject *parent):
+    QObject(parent)
 {
-    connect(Mir::instance(), &Mir::currentKeymapChanged, this, &MirInputDeviceObserver::setKeymap);
+    connect(Mir::instance(), &Mir::currentKeymapChanged, this, &MirInputDeviceObserver::setKeymap, Qt::DirectConnection);
 }
 
 MirInputDeviceObserver::~MirInputDeviceObserver()

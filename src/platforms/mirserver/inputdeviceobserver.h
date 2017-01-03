@@ -18,7 +18,6 @@
 #define INPUTDEVICEOBSERVER_H
 
 #include <mir/input/input_device_observer.h>
-#include <mir/input/input_device_hub.h>
 
 #include <QObject>
 #include <QString>
@@ -30,7 +29,7 @@ class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObse
 {
     Q_OBJECT
 public:
-    MirInputDeviceObserver(const std::shared_ptr<mir::input::InputDeviceHub> &hub);
+    MirInputDeviceObserver(QObject * parent = nullptr);
     ~MirInputDeviceObserver();
 
 protected:
@@ -47,7 +46,6 @@ private:
     void applyKeymap(const std::shared_ptr<mir::input::Device> &device);
     QString m_keymap;
     QVector<std::shared_ptr<mir::input::Device>> m_devices;
-    std::shared_ptr<mir::input::InputDeviceHub> m_hub;
 };
 
 } // namespace qtmir
