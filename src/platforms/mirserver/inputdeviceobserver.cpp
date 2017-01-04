@@ -78,7 +78,7 @@ void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mi::Device> &devi
     if (!m_keymap.isEmpty()) {
         const QStringList stringList = m_keymap.split('+', QString::SkipEmptyParts);
 
-        const QString layout = stringList.at(0);
+        const QString &layout = stringList.at(0);
         QString variant;
 
         if (stringList.count() > 1) {
