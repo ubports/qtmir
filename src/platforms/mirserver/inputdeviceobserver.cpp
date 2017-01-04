@@ -31,17 +31,13 @@ namespace mi = mir::input;
 MirInputDeviceObserver::MirInputDeviceObserver(QObject *parent):
     QObject(parent)
 {
+    // NB: have to use a Direct connection here, as it's called from Qt GUI thread
     connect(Mir::instance(), &Mir::currentKeymapChanged, this, &MirInputDeviceObserver::setKeymap, Qt::DirectConnection);
-}
-
-MirInputDeviceObserver::~MirInputDeviceObserver()
-{
-    m_devices.clear();
 }
 
 void MirInputDeviceObserver::setKeymap(const QString &keymap)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex); // lock so that Qt and Mir don't apply the keymap at the same time
 
     if (keymap != m_keymap) {
         qCDebug(QTMIR_MIR_KEYMAP) << "SET KEYMAP" << keymap;
@@ -59,7 +55,7 @@ void MirInputDeviceObserver::applyKeymap()
 
 void MirInputDeviceObserver::device_added(const std::shared_ptr<mi::Device> &device)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
 
     if (mir::contains(device->capabilities(), mi::DeviceCapability::keyboard) &&
             mir::contains(device->capabilities(), mi::DeviceCapability::alpha_numeric)) {
@@ -71,7 +67,7 @@ void MirInputDeviceObserver::device_added(const std::shared_ptr<mi::Device> &dev
 
 void MirInputDeviceObserver::device_removed(const std::shared_ptr<mi::Device> &device)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
 
     if (device && m_devices.contains(device)) {
         qCDebug(QTMIR_MIR_KEYMAP) << "Device removed" << device->id();

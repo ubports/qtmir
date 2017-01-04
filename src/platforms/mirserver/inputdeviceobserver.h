@@ -31,7 +31,7 @@ class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObse
     Q_OBJECT
 public:
     MirInputDeviceObserver(QObject * parent = nullptr);
-    ~MirInputDeviceObserver();
+    ~MirInputDeviceObserver() = default;
 
 protected:
     void device_added(std::shared_ptr<mir::input::Device> const& device) override;
