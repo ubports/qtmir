@@ -28,6 +28,8 @@
 using namespace qtmir;
 namespace mi = mir::input;
 
+// Note: MirInputDeviceObserver has affinity to a Mir thread, but it is expected setKeymap will be called from the Qt GUI thread
+
 MirInputDeviceObserver::MirInputDeviceObserver(QObject *parent):
     QObject(parent)
 {
