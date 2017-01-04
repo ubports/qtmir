@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,6 +22,7 @@
 #include <QObject>
 #include <QString>
 #include <QVector>
+#include <QMutex>
 
 namespace qtmir {
 
@@ -46,6 +47,7 @@ private:
     void applyKeymap(const std::shared_ptr<mir::input::Device> &device);
     QString m_keymap;
     QVector<std::shared_ptr<mir::input::Device>> m_devices;
+    QMutex m_mutex;
 };
 
 } // namespace qtmir

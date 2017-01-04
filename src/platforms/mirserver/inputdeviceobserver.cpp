@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -41,6 +41,8 @@ MirInputDeviceObserver::~MirInputDeviceObserver()
 
 void MirInputDeviceObserver::setKeymap(const QString &keymap)
 {
+    QMutexLocker locker(&m_mutex);
+
     if (keymap != m_keymap) {
         qCDebug(QTMIR_MIR_KEYMAP) << "SET KEYMAP" << keymap;
         m_keymap = keymap;
@@ -57,6 +59,8 @@ void MirInputDeviceObserver::applyKeymap()
 
 void MirInputDeviceObserver::device_added(const std::shared_ptr<mi::Device> &device)
 {
+    QMutexLocker locker(&m_mutex);
+
     if (mir::contains(device->capabilities(), mi::DeviceCapability::keyboard) &&
             mir::contains(device->capabilities(), mi::DeviceCapability::alpha_numeric)) {
         qCDebug(QTMIR_MIR_KEYMAP) << "Device added" << device->id();
@@ -67,6 +71,8 @@ void MirInputDeviceObserver::device_added(const std::shared_ptr<mi::Device> &dev
 
 void MirInputDeviceObserver::device_removed(const std::shared_ptr<mi::Device> &device)
 {
+    QMutexLocker locker(&m_mutex);
+
     if (device && m_devices.contains(device)) {
         qCDebug(QTMIR_MIR_KEYMAP) << "Device removed" << device->id();
         m_devices.removeAll(device);
