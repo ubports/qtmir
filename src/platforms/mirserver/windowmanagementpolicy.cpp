@@ -33,7 +33,6 @@ namespace qtmir {
     }
 }
 
-
 using namespace qtmir;
 
 WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools,
