@@ -54,10 +54,23 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
 };
 }
 
-struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy {};
+struct qtmir::miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy
+{
+    Self() = default;
+    Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+        custom_wrapper{custom_wrapper} {}
+
+    DisplayConfigurationPolicyWrapper const custom_wrapper =
+        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped) { return wrapped; };
+};
 
 qtmir::miral::PersistDisplayConfig::PersistDisplayConfig() :
     self{std::make_shared<Self>()}
+{
+}
+
+qtmir::miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+    self{std::make_shared<Self>(custom_wrapper)}
 {
 }
 
@@ -73,12 +86,13 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            return std::make_shared<DisplayConfigurationPolicyAdapter>(self, wrapped);
+            return std::make_shared<DisplayConfigurationPolicyAdapter>(self, self->custom_wrapper(wrapped));
         });
 
     // TODO create an adapter to detect changes to base config
     // Up to Mir-0.25 this is only possible client-side and gives a different configuration API
     // This is such a PITA that I'll first make changes to lp:mir and hope to land them in 0.26 - alan_g
+    (void)&PersistDisplayConfigPolicy::save_config; // Fake "using" the function for now
 }
 
 void PersistDisplayConfigPolicy::apply_to(
