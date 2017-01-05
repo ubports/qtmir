@@ -30,8 +30,6 @@ include_directories(
 include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
-    ${MIRCOMMON_INCLUDE_DIRS}
-    ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
@@ -90,6 +88,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     cursor.cpp
     eventbuilder.cpp
+    eventdispatch.cpp eventdispatch.h
     qteventfeeder.cpp
     qmirserver.cpp
     qmirserver_p.cpp

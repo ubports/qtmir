@@ -16,6 +16,7 @@
 
 #include "windowmanagementpolicy.h"
 
+#include "eventdispatch.h"
 #include "screensmodel.h"
 #include "surfaceobserver.h"
 
@@ -24,7 +25,6 @@
 
 #include "mirqtconversion.h"
 
-#include <mir/scene/surface.h>
 #include <QDebug>
 
 namespace qtmir {
@@ -32,6 +32,7 @@ namespace qtmir {
         return std::static_pointer_cast<ExtraWindowInfo>(windowInfo.userdata());
     }
 }
+
 
 using namespace qtmir;
 
@@ -200,11 +201,8 @@ void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *even
     m_tools.invoke_under_lock([&window, this]() {
         m_tools.select_active_window(window);
     });
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_keyboard_event_input_event(event));
 }
 
 void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
@@ -213,11 +211,8 @@ void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
     m_tools.invoke_under_lock([&window, this]() {
         m_tools.select_active_window(window);
     });
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_touch_event_input_event(event));
 }
 
 void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
@@ -229,11 +224,8 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
             m_tools.select_active_window(window);
         });
     }
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_pointer_event_input_event(event));
 }
 
 /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
