@@ -77,11 +77,9 @@ struct MockSession : public Session
 
 private:
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
     graphics::BufferID create_buffer(graphics::BufferProperties const&) { return graphics::BufferID{0}; }
     void destroy_buffer(graphics::BufferID) {}
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) { return {}; }
-#endif
 
     std::string m_sessionName;
     pid_t m_sessionId;
