@@ -122,7 +122,8 @@ void qtmir::miral::PersistDisplayConfig::operator()(mir::Server& server)
         });
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
-    server.the_display_configuration_observer_registrar()->register_interest(self);
+    server.add_init_callback([this, &server]
+        { server.the_display_configuration_observer_registrar()->register_interest(self); });
 #else
     // Up to Mir-0.25 detecting changes to the base display config is only possible client-side
     // (and gives a different configuration API)
