@@ -24,9 +24,6 @@
 
 namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
 
-namespace qtmir
-{
-
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
@@ -50,7 +47,6 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 };
-}
 }
 
 #endif //MIRAL_PERSIST_DISPLAY_CONFIG_H

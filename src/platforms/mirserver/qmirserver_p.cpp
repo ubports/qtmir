@@ -141,7 +141,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            qtmir::miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
         });
 }
 
