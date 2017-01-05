@@ -67,8 +67,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     mirsingleton.cpp
     sessionauthorizer.cpp
     promptsessionlistener.cpp
-    mirserverstatuslistener.cpp
-    screenscontroller.cpp
+        screenscontroller.cpp
     nativeinterface.cpp
     qtcompositor.cpp
     services.cpp
