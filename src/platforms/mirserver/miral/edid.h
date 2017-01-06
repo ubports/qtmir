@@ -60,14 +60,6 @@ struct Edid
     };
     Descriptor descriptors[4];
 
-    enum class Error: uint8_t {
-        none,
-        incorrect_size,
-        invalid_checksum,
-        invalid_header
-    };
-    Error error{Error::none};
-
     Edid& parse_data(std::vector<uint8_t> const&);
 };
 
