@@ -63,12 +63,7 @@ class ApplicationManager : public unity::shell::application::ApplicationManagerI
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
 
 public:
-    class Factory
-    {
-    public:
-        ApplicationManager* create();
-    };
-
+    static ApplicationManager* create();
     static ApplicationManager* singleton();
 
     explicit ApplicationManager(

@@ -1,8 +1,19 @@
-qtmir (0.5.1) UNRELEASED; urgency=medium
+qtmir (0.5.1+17.04.20161216-0ubuntu2) zesty; urgency=medium
 
+  * No-change rebuild against latest miral.
+
+ -- Ĺukasz 'sil2100' Zemczak <lukasz.zemczak@ubuntu.com>  Wed, 21 Dec 2016 10:07:36 +0100
+
+qtmir (0.5.1+17.04.20161216-0ubuntu1) zesty; urgency=medium
+
+  [ Gerry Boland ]
   * First release using MirAL
 
- -- Gerry Boland <gerry.boland@canonical.com>  Fri, 14 Oct 2016 16:51:26 +0100
+  [ Daniel d'Andrada ]
+  * Get rid of the ApplicationManager::Factory class
+  * Enable tests in Xenial
+
+ -- Daniel d'Andrada <daniel.dandrada@canonical.com>  Fri, 16 Dec 2016 08:25:00 +0000
 
 qtmir (0.5.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
 
