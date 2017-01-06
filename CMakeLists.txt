@@ -73,8 +73,8 @@ find_package(Qt5Test 5.4 REQUIRED)
 
 find_package(Threads REQUIRED)
 
-pkg_check_modules(MIRSERVER mirserver>=0.25 REQUIRED)
-pkg_check_modules(MIRCLIENT mirclient>=0.25 REQUIRED)
+pkg_check_modules(MIRSERVER mirserver>=0.26 REQUIRED)
+pkg_check_modules(MIRCLIENT mirclient>=0.26 REQUIRED)
 pkg_check_modules(MIRRENDERERGLDEV mir-renderer-gl-dev>=0.24 REQUIRED)
 pkg_check_modules(MIRAL miral>=0.4 REQUIRED)
 
@@ -168,10 +168,6 @@ add_definitions(-DQT_NO_KEYWORDS)
 # Tests
 if (NO_TESTS)
     message(STATUS "Tests disabled")
-# glibc on Vivid+Overlay has a bug which causes LTTng-enabled tests to hang. It is hard to get the glibc version
-# in cmake, so it is easier to check for the LTTng on V+O and gate on that instead.
-elseif (LTTNG_VERSION VERSION_EQUAL 2.7.1)
-    message(STATUS "Tests disabled due to bug with glibc causing lttng to hang (lp:1618201)")
 else()
     include(CTest)
     enable_testing()

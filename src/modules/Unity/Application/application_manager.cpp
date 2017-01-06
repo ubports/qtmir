@@ -97,7 +97,7 @@ void connectToTaskController(ApplicationManager *manager, TaskController *contro
 
 } // namespace
 
-ApplicationManager* ApplicationManager::Factory::Factory::create()
+ApplicationManager* ApplicationManager::create()
 {
     NativeInterface *nativeInterface = dynamic_cast<NativeInterface*>(QGuiApplication::platformNativeInterface());
 
@@ -150,8 +150,7 @@ ApplicationManager* ApplicationManager::singleton()
 {
     static ApplicationManager* instance;
     if (!instance) {
-        Factory appFactory;
-        instance = appFactory.create();
+        instance = create();
     }
     return instance;
 }
