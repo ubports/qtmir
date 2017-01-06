@@ -16,6 +16,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <numeric>
 
 #include "edid.h"
 
@@ -77,8 +78,13 @@ TEST_P(EdidTest, Test_IncorrectLength)
     std::vector<uint8_t> invalidLength{data.begin(), data.end()-1};
 
     Edid edid;
-    edid.parse_data(invalidLength);
-    ASSERT_EQ(edid.error, Edid::Error::incorrect_size);
+    try {
+        edid.parse_data(invalidLength);
+    } catch(std::runtime_error const& err) {
+        EXPECT_EQ(err.what(), std::string("Incorrect EDID structure size"));
+        return;
+    }
+    FAIL() << "Expected std::runtime_error(\"Incorrect EDID structure size\")";
 }
 
 TEST_P(EdidTest, Test_InvalidChecksum)
@@ -89,8 +95,13 @@ TEST_P(EdidTest, Test_InvalidChecksum)
     invalidChecksum[8] = invalidChecksum[8]+1;
 
     Edid edid;
-    edid.parse_data(invalidChecksum);
-    ASSERT_EQ(edid.error, Edid::Error::invalid_checksum);
+    try {
+        edid.parse_data(invalidChecksum);
+    } catch(std::runtime_error const& err) {
+        EXPECT_EQ(err.what(), std::string("Invalid EDID checksum"));
+        return;
+    }
+    FAIL() << "Expected std::runtime_error(\"Invalid EDID checksum\")";
 }
 
 TEST_P(EdidTest, Test_InvalidHeader)
@@ -100,15 +111,17 @@ TEST_P(EdidTest, Test_InvalidHeader)
     std::vector<uint8_t> invalidHeader{data};
     invalidHeader[1] = 0xfe;
 
-    uint8_t checksum = 0;
-    for (size_t i = 0; i < invalidHeader.size()-1; i++) {
-        checksum += invalidHeader[i];
-    }
+    uint8_t checksum = std::accumulate(invalidHeader.begin(), invalidHeader.end()-1, 0);
     invalidHeader[invalidHeader.size()-1] = (uint8_t)(~checksum+1);
 
     Edid edid;
-    edid.parse_data(invalidHeader);
-    ASSERT_EQ(edid.error, Edid::Error::invalid_header);
+    try {
+        edid.parse_data(invalidHeader);
+    } catch(std::runtime_error const& err) {
+        EXPECT_EQ(err.what(), std::string("Invalid EDID header"));
+        return;
+    }
+    FAIL() << "Expected std::runtime_error(\"Invalid EDID header\")";
 }
 
 TEST_P(EdidTest, Test_Valid)
@@ -116,8 +129,7 @@ TEST_P(EdidTest, Test_Valid)
     const std::vector<uint8_t>& data = std::get<0>(GetParam());
 
     Edid edid;
-    edid.parse_data(data);
-    ASSERT_EQ(edid.error, Edid::Error::none);
+    EXPECT_NO_THROW(edid.parse_data(data));
 }
 
 TEST_P(EdidTest, CheckData)
@@ -129,8 +141,7 @@ TEST_P(EdidTest, CheckData)
     const uint32_t serial_number = std::get<4>(GetParam());
 
     Edid edid;
-    edid.parse_data(data);
-    ASSERT_EQ(edid.error, Edid::Error::none);
+    EXPECT_NO_THROW(edid.parse_data(data));
 
     ASSERT_EQ(edid.vendor, vendor);
     ASSERT_EQ(edid.product_code, product_code);
