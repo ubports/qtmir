@@ -59,7 +59,6 @@ add_library(qtmirserver-nomirserver OBJECT
     mircursorimages.cpp
     displayconfigurationpolicy.cpp
     mirsingleton.cpp
-    sessionauthorizer.cpp
     promptsessionlistener.cpp
     mirserverstatuslistener.cpp
     screenscontroller.cpp
@@ -68,6 +67,7 @@ add_library(qtmirserver-nomirserver OBJECT
     services.cpp
     windowcontroller.cpp
     wrappedwindowmanagementpolicy.cpp
+    wrappedsessionauthorizer.cpp
     mirserverhooks.cpp mirserverhooks.h
     setqtcompositor.cpp setqtcompositor.h
     displayconfigurationstorage.cpp

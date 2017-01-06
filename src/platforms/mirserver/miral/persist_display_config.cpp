@@ -44,8 +44,8 @@ struct PersistDisplayConfigPolicy
     auto operator=(PersistDisplayConfigPolicy const&) -> PersistDisplayConfigPolicy& = delete;
 
     void apply_to(mg::DisplayConfiguration& conf,
-                  miral::DisplayConfigurationPolicy& default_policy,
-                  miral::DisplayConfigurationPolicy& wrapped_policy);
+                  miral::DisplayConfigurationPolicy& wrapped_policy,
+                  miral::DisplayConfigurationPolicy& custom_policy);
     void save_config(mg::DisplayConfiguration const& base_conf);
 
     std::shared_ptr<miral::DisplayConfigurationStorage> storage;
@@ -69,19 +69,19 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
 {
     DisplayConfigurationPolicyAdapter(
         std::shared_ptr<PersistDisplayConfigPolicy> const& self,
-        std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapper,
-            std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped) :
-        self{self}, custom_policy{wrapper}, wrapped_policy{wrapped}
+            std::shared_ptr<miral::DisplayConfigurationPolicy> const& wrapped_policy,
+            std::shared_ptr<miral::DisplayConfigurationPolicy> const& custom_policy) :
+        self{self}, wrapped_policy{wrapped_policy}, custom_policy{custom_policy}
     {}
 
     void apply_to(mg::DisplayConfiguration& conf) override
     {
-        self->apply_to(conf, *custom_policy, *wrapped_policy);
+        self->apply_to(conf, *wrapped_policy, *custom_policy);
     }
 
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
-    std::shared_ptr<miral::DisplayConfigurationPolicy> const custom_policy;
     std::shared_ptr<miral::DisplayConfigurationPolicy> const wrapped_policy;
+    std::shared_ptr<miral::DisplayConfigurationPolicy> const custom_policy;
 };
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
@@ -141,8 +141,8 @@ void miral::PersistDisplayConfig::operator()(mir::Server& server)
         {
             auto custom_wrapper = self->custom_wrapper();
             return std::make_shared<DisplayConfigurationPolicyAdapter>(self,
-                                                                       custom_wrapper,
-                                                                       std::make_shared<MiralWrappedMirDisplayConfigurationPolicy>(wrapped));
+                                                                       std::make_shared<MiralWrappedMirDisplayConfigurationPolicy>(wrapped),
+                                                                       custom_wrapper);
         });
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
@@ -158,9 +158,14 @@ void miral::PersistDisplayConfig::operator()(mir::Server& server)
 
 void PersistDisplayConfigPolicy::apply_to(
     mg::DisplayConfiguration& conf,
-    miral::DisplayConfigurationPolicy& default_policy,
-    miral::DisplayConfigurationPolicy& wrapped_policy)
+    miral::DisplayConfigurationPolicy& wrapped_policy,
+    miral::DisplayConfigurationPolicy& custom_policy)
 {
+    // first apply the policy we wrapped by setting a custom policy
+    wrapped_policy.apply_to(conf);
+    // then apply the custom policy
+    custom_policy.apply_to(conf);
+
     if (!storage) return;
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
@@ -203,9 +208,6 @@ void PersistDisplayConfigPolicy::apply_to(
             if (config.scale.is_set()) {output.scale = config.scale.value(); }
         }
     });
-
-    wrapped_policy.apply_to(conf);
-    default_policy.apply_to(conf);
 }
 
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)

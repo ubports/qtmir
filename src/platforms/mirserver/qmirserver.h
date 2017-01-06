@@ -66,8 +66,8 @@ public:
     qtmir::AppNotifier *appNotifier() const;
 
     void wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy);
-    void overrideSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& setApplicationAuthorizer);
-    void overrideWindowManagementPolicy(qtmir::BasicSetWindowManagementPolicy const& wmPolicyCreator);
+    void overrideSessionAuthorizer(qtmir::SessionAuthorizerBuilder const& setApplicationAuthorizer);
+    void overrideWindowManagementPolicy(qtmir::WindowManagmentPolicyBuilder const& wmPolicyCreator);
     void overrideDisplayConfigurationStorage(qtmir::BasicSetDisplayConfigurationStorage const& setDisplayConfigStorage);
 
 Q_SIGNALS:

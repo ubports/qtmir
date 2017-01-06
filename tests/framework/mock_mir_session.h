@@ -72,15 +72,15 @@ struct MockSession : public Session
     //void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
 
 
+    void send_error(ClientVisibleError const&) override;
+
+
 private:
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 24, 0)
     graphics::BufferID create_buffer(graphics::BufferProperties const&) { return graphics::BufferID{0}; }
     void destroy_buffer(graphics::BufferID) {}
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) { return {}; }
-#endif
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
-    void send_error(ClientVisibleError const&) override {};
 #endif
 
     std::string m_sessionName;

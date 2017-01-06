@@ -68,30 +68,30 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 
 struct DemoSessionAuthorizer : qtmir::SessionAuthorizer
 {
-    bool connection_is_allowed(miral::ApplicationCredentials const& creds) override
+    bool connectionIsAllowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::connection_is_allowed";
-        return qtmir::SessionAuthorizer::connection_is_allowed(creds);
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::connectionIsAllowed";
+        return qtmir::SessionAuthorizer::connectionIsAllowed(creds);
     }
-    bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override
+    bool configureDisplayIsAllowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::configure_display_is_allowed";
-        return qtmir::SessionAuthorizer::configure_display_is_allowed(creds);
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::configureDisplayIsAllowed";
+        return qtmir::SessionAuthorizer::configureDisplayIsAllowed(creds);
     }
-    bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override
+    bool setBaseDisplayConfigurationIsAllowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed";
-        return qtmir::SessionAuthorizer::set_base_display_configuration_is_allowed(creds);
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::setBaseDisplayConfigurationIsAllowed";
+        return qtmir::SessionAuthorizer::setBaseDisplayConfigurationIsAllowed(creds);
     }
-    bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override
+    bool screencastIsAllowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::screencast_is_allowed";
-        return qtmir::SessionAuthorizer::screencast_is_allowed(creds);
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::screencastIsAllowed";
+        return qtmir::SessionAuthorizer::screencastIsAllowed(creds);
     }
-    bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override
+    bool promptSessionIsAllowed(miral::ApplicationCredentials const& creds) override
     {
-        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::prompt_session_is_allowed";
-        return qtmir::SessionAuthorizer::prompt_session_is_allowed(creds);
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::promptSessionIsAllowed";
+        return qtmir::SessionAuthorizer::promptSessionIsAllowed(creds);
     }
 };
 

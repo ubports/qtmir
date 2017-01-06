@@ -30,17 +30,18 @@ namespace qtmir {
 /*
     Provides callbacks to grant/deny access for session capabilities
  */
-class SessionAuthorizer : public QObject, public miral::ApplicationAuthorizer
+class SessionAuthorizer : public QObject
 {
     Q_OBJECT
 public:
-    SessionAuthorizer(QObject *parent = 0);
+    SessionAuthorizer();
+    ~SessionAuthorizer();
 
-    bool connection_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool configure_display_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override;
-    bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override;
+    virtual bool connectionIsAllowed(miral::ApplicationCredentials const& creds);
+    virtual bool configureDisplayIsAllowed(miral::ApplicationCredentials const& creds);
+    virtual bool setBaseDisplayConfigurationIsAllowed(miral::ApplicationCredentials const& creds);
+    virtual bool screencastIsAllowed(miral::ApplicationCredentials const& creds);
+    virtual bool promptSessionIsAllowed(miral::ApplicationCredentials const& creds);
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
@@ -51,13 +52,17 @@ private:
     std::shared_ptr<Private> d;
 };
 
+using SessionAuthorizerBuilder =
+    std::function<std::shared_ptr<SessionAuthorizer>()>;
+
 class BasicSetSessionAuthorizer
 {
 public:
-    explicit BasicSetSessionAuthorizer(miral::BasicSetApplicationAuthorizer const& builder);
+    explicit BasicSetSessionAuthorizer(SessionAuthorizerBuilder const& builder);
     ~BasicSetSessionAuthorizer() = default;
 
     void operator()(QMirServer& server);
+    SessionAuthorizerBuilder builder() const;
 
 private:
     struct Private;
@@ -81,7 +86,7 @@ class SetSessionAuthorizer : public BasicSetSessionAuthorizer
 public:
     template<typename ...Args>
     explicit SetSessionAuthorizer(Args const& ...args) :
-            BasicSetSessionAuthorizer{miral::SetApplicationAuthorizer<Policy>(args...)} {}
+        BasicSetSessionAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }} {}
 };
 
 } // namespace qtmir

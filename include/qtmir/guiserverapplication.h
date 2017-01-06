@@ -44,6 +44,10 @@ public:
 
     qtmir::AppNotifier* appNotifier() const;
     qtmir::WindowModelNotifier* windowModelNotifier() const;
+
+Q_SIGNALS:
+    // invoked by screen model
+    void screenAboutToBeRemoved(QScreen *screen);
 };
 
 } // namespace qtmir

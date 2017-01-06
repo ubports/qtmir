@@ -49,7 +49,7 @@ namespace qtmir
 
     void BasicSetWindowManagementPolicy::operator()(QMirServer &server)
     {
-        server.overrideWindowManagementPolicy(*this);
+        server.overrideWindowManagementPolicy(d->builder);
     }
 
     WindowManagmentPolicyBuilder BasicSetWindowManagementPolicy::builder() const

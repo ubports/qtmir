@@ -69,6 +69,18 @@ auto buildDisplayConfigurationStorage()
     return std::make_shared<DefaultDisplayConfigurationStorage>();
 }
 
+auto buildWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+-> std::shared_ptr<qtmir::WindowManagementPolicy>
+{
+    return std::make_shared<DefaultWindowManagementPolicy>(tools, dd);
+}
+
+auto buildSessionAuthorizer()
+-> std::shared_ptr<qtmir::SessionAuthorizer>
+{
+    return std::make_shared<qtmir::SessionAuthorizer>();
+}
+
 }
 
 void MirServerThread::run()
@@ -102,11 +114,17 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
+std::shared_ptr<qtmir::SessionAuthorizer> QMirServerPrivate::theApplicationAuthorizer() const
+{
+    auto wrapped = m_wrappedSessionAuthorizer.the_custom_application_authorizer();
+    return wrapped ? wrapped->wrapper() : nullptr;
+}
+
 QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
     : m_displayConfigurationPolicy(&buildDisplayConfigurationPolicy)
-    , m_sessionAuthorizer(miral::SetApplicationAuthorizer<qtmir::SessionAuthorizer>())
-    , m_windowManagementPolicy(qtmir::SetWindowManagementPolicy<DefaultWindowManagementPolicy>())
+    , m_windowManagementPolicy(&buildWindowManagementPolicy)
     , m_displayConfigurationStorage(&buildDisplayConfigurationStorage)
+    , m_wrappedSessionAuthorizer(&buildSessionAuthorizer)
     , runner(argc, const_cast<const char **>(argv))
     , argc{argc}, argv{argv}
 {
@@ -169,19 +187,18 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
     });
 
     auto eventFeeder = std::make_shared<QtEventFeeder>(screensModel);
-    auto wmBuilder = m_windowManagementPolicy.builder();
     auto displayStorageBuilder = m_displayConfigurationStorage.builder();
 
     runner.run_with(
         {
-            m_sessionAuthorizer,
+            m_wrappedSessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
             miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
                                                                               m_windowController,
                                                                               m_appNotifier,
                                                                               eventFeeder,
-                                                                              wmBuilder),
+                                                                              m_windowManagementPolicy),
             setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},

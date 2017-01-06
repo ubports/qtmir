@@ -59,6 +59,8 @@ std::shared_ptr<scene::Surface> MockSession::surface_after(const std::shared_ptr
 }
 
 void MockSession::configure_streams(scene::Surface &, const std::vector<mir::shell::StreamSpecification> &) {}
+void MockSession::send_error(mir::ClientVisibleError const&) {}
+
 
 } // namespace scene
 } // namespace mir
