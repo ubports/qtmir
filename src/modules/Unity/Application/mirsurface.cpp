@@ -845,6 +845,7 @@ void MirSurface::setReady()
     if (!m_ready) {
         DEBUG_MSG << "()";
         m_ready = true;
+        updateVisible(); // as Mir can change m_surface->visible() to true after first frame swap
         Q_EMIT ready();
         updateExposure();
     }
