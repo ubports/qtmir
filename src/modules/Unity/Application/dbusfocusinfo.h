@@ -54,7 +54,6 @@ public Q_SLOTS:
 private:
     QSet<pid_t> fetchAssociatedPids(pid_t pid);
     SessionInterface* findSessionWithPid(const QSet<pid_t> &pidSet);
-    SessionInterface* findSessionWithPid(SessionInterface* session, const QSet<pid_t> &pidSet);
     MirSurfaceInterface *findQmlSurface(const QString &serializedId);
 
     const QList<Application*> &m_applications;

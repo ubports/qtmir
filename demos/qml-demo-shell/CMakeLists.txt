@@ -8,6 +8,7 @@ include_directories(
 )
 
 add_executable(${DEMO_SHELL}
+    pointerposition.cpp
     main.cpp
 )
 

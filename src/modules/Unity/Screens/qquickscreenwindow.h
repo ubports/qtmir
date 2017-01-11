@@ -28,7 +28,7 @@ class QQuickScreenWindow : public QQuickWindow
 
     Q_PROPERTY(QScreen *screen READ screen WRITE setScreen NOTIFY screenChanged)
     Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
-    Q_PROPERTY(Screens::FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
+    Q_PROPERTY(FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
     Q_PROPERTY(int winId READ winId CONSTANT)
 
 public:
@@ -39,13 +39,13 @@ public:
     void setScreen(QScreen *screen);
 
     qreal scale();
-    Screens::FormFactor formFactor();
-    Q_INVOKABLE bool setScaleAndFormFactor(const float scale, const Screens::FormFactor formFactor);
+    FormFactor formFactor();
+    Q_INVOKABLE bool setScaleAndFormFactor(const float scale, const FormFactor formFactor);
 
 Q_SIGNALS:
     void screenChanged(QScreen *screen);
     void scaleChanged(qreal scale);
-    void formFactorChanged(Screens::FormFactor arg);
+    void formFactorChanged(FormFactor arg);
 
 private Q_SLOTS:
     void nativePropertyChanged(QPlatformWindow *window, const QString &propertyName);
@@ -53,8 +53,8 @@ private Q_SLOTS:
 private:
     float getScaleNativeProperty() const;
     float m_scale;
-    Screens::FormFactor getFormFactorNativeProperty() const;
-    Screens::FormFactor m_formFactor;
+    FormFactor getFormFactorNativeProperty() const;
+    FormFactor m_formFactor;
 };
 
 } //namespace qtmir

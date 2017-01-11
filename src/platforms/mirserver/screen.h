@@ -19,20 +19,22 @@
 
 // Qt
 #include <QObject>
+#include <QScopedPointer>
 #include <QTimer>
 #include <QtDBus/QDBusInterface>
 #include <qpa/qplatformscreen.h>
 
 // Mir
-#include <mir/graphics/display_configuration.h>
+#include <mir_toolkit/common.h>
 
 // local
 #include "cursor.h"
 #include "screenwindow.h"
+#include "screentypes.h"
 
 class QOrientationSensor;
 namespace mir {
-    namespace graphics { class DisplayBuffer; class DisplaySyncGroup; }
+    namespace graphics { class DisplayBuffer; class DisplaySyncGroup; class DisplayConfigurationOutput; }
     namespace renderer { namespace gl { class RenderTarget; }}
 }
 
@@ -59,12 +61,9 @@ public:
     float scale() const { return m_scale; }
     MirFormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
-    mir::graphics::DisplayConfigurationOutputId outputId() const { return m_outputId; }
-    mir::graphics::DisplayConfigurationOutputType outputType() const { return m_type; }
-    std::vector<MirPixelFormat> pixelFormats() const { return m_pixelFormats; }
-    std::vector<mir::graphics::DisplayConfigurationMode> modes() const { return m_modes; }
+    qtmir::OutputId outputId() const { return m_outputId; }
+    qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
-    uint32_t preferredModeIndex() const { return m_preferredModeIndex; }
 
     const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
     ScreenWindow* primaryWindow() const;
@@ -105,16 +104,12 @@ private:
     qreal m_refreshRate;
     float m_scale;
     MirFormFactor m_formFactor;
-    std::vector<MirPixelFormat> m_pixelFormats;
-    std::vector<mir::graphics::DisplayConfigurationMode> m_modes;
     uint32_t m_currentModeIndex;
-    uint32_t m_preferredModeIndex;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
-    mir::graphics::DisplayConfigurationOutputId m_outputId;
-    mir::graphics::DisplayConfigurationCardId m_cardId;
-    mir::graphics::DisplayConfigurationOutputType m_type;
+    qtmir::OutputId m_outputId;
+    qtmir::OutputTypes m_type;
     MirPowerMode m_powerMode;
 
     Qt::ScreenOrientation m_nativeOrientation;
@@ -124,7 +119,7 @@ private:
     QVector<ScreenWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
 
-    qtmir::Cursor m_cursor;
+    QScopedPointer<qtmir::Cursor> m_cursor;
 
     friend class ScreensModel;
     friend class ScreenWindow;

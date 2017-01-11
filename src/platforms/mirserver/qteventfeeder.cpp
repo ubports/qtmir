@@ -25,7 +25,7 @@
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
-#include <qpa/qplatformwindow.h>
+#include <qpa/qwindowsysteminterface_p.h>
 #include <QGuiApplication>
 #include <private/qguiapplication_p.h>
 #include <QTextCodec>
@@ -398,7 +398,7 @@ public:
         return QGuiApplication::focusWindow();
     }
 
-    QWindow* getWindowForPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
+    QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
         return m_screensModel->getWindowForPoint(point);
     }
@@ -414,14 +414,44 @@ public:
                 quint32 nativeModifiers,
                 const QString& text, bool autorep, ushort count) override
     {
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleExtendedKeyEvent(window, timestamp, type, key, modifiers,
                 nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
+#else
+        // The version above is the right one, but we have to workaround a FIXME hack in
+        // QWindowSystemInterface::handleShortcutEvent which forcibly sets sync mode from the GUI thread.
+        // Sending an event synchronously from the mir input thread risks a deadlock with the main/GUI thread
+        // from a miral mutex locked by both thread (eg. holding Alt + dragging a window with the the mouse)
+        // See: https://bugreports.qt.io/browse/QTBUG-56274
+        // Bug was introduced by commit c7e5e1d9e01849347a9e59b8285477a20d82002b and fixed by commit
+        // 33d748bb88676b69e596ae77badfeaf5a69a33d1
+        QWindowSystemInterfacePrivate::KeyEvent *e =
+                new QWindowSystemInterfacePrivate::KeyEvent(window, timestamp, type, key, modifiers,
+                    nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
+        QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
+#endif
+
     }
 
     void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points, Qt::KeyboardModifiers mods) override
     {
+        // See comment in handleExtendedKeyEvent
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
+#else
+        {
+            if (!points.size()) // Touch events must have at least one point
+                return;
+            QEvent::Type type;
+            QList<QTouchEvent::TouchPoint> touchPoints = QWindowSystemInterfacePrivate::fromNativeTouchPoints(points, window, &type);
+
+            QWindowSystemInterfacePrivate::TouchEvent *e =
+                    new QWindowSystemInterfacePrivate::TouchEvent(window, timestamp, type, device, touchPoints, mods);
+            QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
+        }
+#endif
     }
 
 private:
@@ -467,13 +497,13 @@ bool QtEventFeeder::dispatch(MirEvent const& event)
 
     switch (mir_input_event_get_type(iev)) {
     case mir_input_event_type_key:
-        dispatchKey(iev);
+        dispatchKey(mir_input_event_get_keyboard_event(iev));
         break;
     case mir_input_event_type_touch:
-        dispatchTouch(iev);
+        dispatchTouch(mir_input_event_get_touch_event(iev));
         break;
     case mir_input_event_type_pointer:
-        dispatchPointer(iev);
+        dispatchPointer(mir_input_event_get_pointer_event(iev));
     default:
         break;
     }
@@ -521,12 +551,14 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
     return buttons;
 }
-}
+} // namespace
 
-void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
+void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(ev)));
-    auto pev = mir_input_event_get_pointer_event(ev);
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_pointer_event_input_event(pev))));
+
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
 
@@ -534,6 +566,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
     auto relative = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
+
     auto absolute = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
@@ -542,15 +575,12 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     case mir_pointer_action_button_down:
     case mir_pointer_action_motion:
     {
-        EventBuilder::instance()->store(pev, timestamp.count());
-
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         if (hDelta != 0 || vDelta != 0) {
-            // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
-            const QPoint angleDelta(120 * hDelta, 120 * vDelta);
+            const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
 
             auto wheel = new QWheelEvent(relative, absolute, QPoint(), angleDelta, 0, Qt::Vertical, buttons, modifiers);
             wheel->setTimestamp(timestamp.count());
@@ -559,7 +589,7 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
 
         auto type = action == mir_pointer_action_motion ? QEvent::MouseMove
                                                         : action == mir_pointer_action_button_up ? QEvent::MouseButtonRelease
-                                                                                                 : QEvent::MouseButtonPress;
+                                                                                                 : QEvent::MouseButtonRelease;
 
         Qt::MouseButtons stateChange = m_buttons ^ buttons;
         Qt::MouseButton button = Qt::NoButton;
@@ -583,11 +613,12 @@ void QtEventFeeder::dispatchPointer(MirInputEvent const* ev)
     }
 }
 
-void QtEventFeeder::dispatchKey(MirInputEvent const* event)
+void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_keyboard_event_input_event(kev))));
 
-    auto kev = mir_input_event_get_keyboard_event(event);
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
 
     // Key modifier and unicode index mapping.
@@ -623,21 +654,21 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
     }
     int keyCode = translateKeysym(xk_sym, text);
 
-//    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
-//    if (context) {
-//        // TODO: consider event.repeat_count
-//        QKeyEvent qKeyEvent(keyType, keyCode, modifiers,
-//                            mir_keyboard_event_scan_code(kev),
-//                            mir_keyboard_event_key_code(kev),
-//                            mir_keyboard_event_modifiers(kev),
-//                            text, is_auto_rep);
-//        qKeyEvent.setTimestamp(timestamp.count());
-//        if (context->filterEvent(&qKeyEvent)) {
-//            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
-//                << "but not dispatching as it was filtered out by input context";
-//            return;
-//        }
-//    }
+    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
+    if (context) {
+        // TODO: consider event.repeat_count
+        QKeyEvent qKeyEvent(keyType, keyCode, modifiers,
+                            mir_keyboard_event_scan_code(kev),
+                            mir_keyboard_event_key_code(kev),
+                            mir_keyboard_event_modifiers(kev),
+                            text, is_auto_rep);
+        qKeyEvent.setTimestamp(timestamp.count());
+        if (context->filterEvent(&qKeyEvent)) {
+            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
+                << "but not dispatching as it was filtered out by input context";
+            return;
+        }
+    }
 
     qCDebug(QTMIR_MIR_INPUT).nospace() << "Received " << qPrintable(mirKeyboardEventToString(kev))
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();
@@ -648,13 +679,14 @@ void QtEventFeeder::dispatchKey(MirInputEvent const* event)
         mir_keyboard_event_modifiers(kev), text, is_auto_rep);
 }
 
-void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
+void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
 {
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(std::chrono::nanoseconds(mir_input_event_get_event_time(event)));
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+                std::chrono::nanoseconds(mir_input_event_get_event_time(
+                                             mir_touch_event_input_event(tev))));
 
     tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 
-    auto tev = mir_input_event_get_touch_event(event);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirTouchEventToString(tev));
 
     // FIXME(loicm) Max pressure is device specific. That one is for the Samsung Galaxy Nexus. That
@@ -665,7 +697,7 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     QWindow *window = nullptr;
 
     if (kPointerCount > 0) {
-        window = mQtWindowSystem->getWindowForPoint(
+        window = mQtWindowSystem->getWindowForTouchPoint(
                     QPoint(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                            mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
 
@@ -725,16 +757,6 @@ void QtEventFeeder::dispatchTouch(MirInputEvent const* event)
     tracepoint(qtmirserver, touchEventDispatch_end, std::chrono::nanoseconds(timestamp).count());
 }
 
-void QtEventFeeder::start()
-{
-    // not used
-}
-
-void QtEventFeeder::stop()
-{
-    // not used
-}
-
 bool QtEventFeeder::event(QEvent *e)
 {
     switch (e->type()) {
@@ -743,58 +765,24 @@ bool QtEventFeeder::event(QEvent *e)
         QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
         QWheelEvent* we = static_cast<QWheelEvent*>(e);
-        QWindowSystemInterface::handleWheelEvent(nullptr, // let app handle window resolution
-                                                 we->timestamp(),
-                                                 we->pos(),
-                                                 we->globalPos(),
-                                                 we->pixelDelta(),
-                                                 we->angleDelta(),
-                                                 we->modifiers(),
-                                                 Qt::ScrollUpdate);
+        QWindowSystemInterface::handleWheelEvent(nullptr, we->timestamp(), we->pos(), we->globalPos(),
+                we->pixelDelta(), we->angleDelta(), we->modifiers(), Qt::ScrollUpdate);
 
         QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
-
     case QEvent::MouseMove:
+    case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
     {
         QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
         QMouseEvent* me = static_cast<QMouseEvent*>(e);
-        QWindowSystemInterface::handleMouseEvent(nullptr, // let app handle window resolution
-                                                 me->timestamp(),
-                                                 me->localPos(),
-                                                 me->globalPos(),
-                                                 me->buttons(),
-                                                 me->modifiers());
+        QWindowSystemInterface::handleMouseEvent(nullptr, me->timestamp(), me->localPos(), me->globalPos(), me->buttons(), me->modifiers());
 
         QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
-
-    case QEvent::MouseButtonPress:
-    {
-        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
-
-        QMouseEvent* me = static_cast<QMouseEvent*>(e);
-
-        // need to activate the window first.
-        QWindow *window = mQtWindowSystem->getWindowForPoint(me->globalPos());
-        if (window && !window->isActive() && !window->flags().testFlag(Qt::WindowDoesNotAcceptFocus)) {
-            window->requestActivate();
-        }
-
-        QWindowSystemInterface::handleMouseEvent(nullptr, // let app handle window resolution
-                                                 me->timestamp(),
-                                                 me->localPos(),
-                                                 me->globalPos(),
-                                                 me->buttons(),
-                                                 me->modifiers());
-
-        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
-        break;
-    }
     default:
         break;
     }

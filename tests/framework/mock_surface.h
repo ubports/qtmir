@@ -18,6 +18,7 @@
 #define MOCK_MIR_SCENE_SURFACE_H
 
 #include <mir/scene/surface.h>
+#include <mir/version.h>
 #include <gmock/gmock.h>
 
 #include <string>
@@ -90,6 +91,7 @@ struct MockSurface : public mir::scene::Surface
 
     MOCK_METHOD1(set_confine_pointer_state, void(MirPointerConfinementState));
     MOCK_CONST_METHOD0(confine_pointer_state, MirPointerConfinementState());
+    MOCK_METHOD1(placed_relative, void(mir::geometry::Rectangle const& placement));
 };
 
 } // namespace scene

@@ -16,6 +16,8 @@
 
 #include "fake_session.h"
 
+#include "promptsession.h"
+
 namespace qtmir
 {
 
@@ -94,20 +96,20 @@ void FakeSession::removeChildSession(SessionInterface *) {}
 
 void FakeSession::foreachChildSession(const std::function<void (SessionInterface *)> &) const {}
 
-std::shared_ptr<mir::scene::PromptSession> FakeSession::activePromptSession() const
+qtmir::PromptSession FakeSession::activePromptSession() const
 {
-    return std::shared_ptr<mir::scene::PromptSession>();
+    return {};
 }
 
-void FakeSession::foreachPromptSession(const std::function<void (const std::shared_ptr<mir::scene::PromptSession> &)> &) const {}
+void FakeSession::foreachPromptSession(const std::function<void (const qtmir::PromptSession &)> &) const {}
 
 void FakeSession::setFullscreen(bool) {}
 
 void FakeSession::setLive(const bool) {}
 
-void FakeSession::appendPromptSession(const std::shared_ptr<mir::scene::PromptSession> &) {}
+void FakeSession::appendPromptSession(const qtmir::PromptSession &) {}
 
-void FakeSession::removePromptSession(const std::shared_ptr<mir::scene::PromptSession> &) {}
+void FakeSession::removePromptSession(const qtmir::PromptSession &) {}
 
 void FakeSession::setState(SessionInterface::State state)
 {

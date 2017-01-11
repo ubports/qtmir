@@ -17,9 +17,9 @@
 #ifndef MIR_QT_EVENT_FEEDER_H
 #define MIR_QT_EVENT_FEEDER_H
 
-#include <mir/input/input_dispatcher.h>
-#include <mir/shell/input_targeter.h>
+#include <mir_toolkit/event.h>
 
+#include <QObject>
 #include <qpa/qwindowsysteminterface.h>
 
 class QTouchDevice;
@@ -28,8 +28,7 @@ class ScreensModel;
 /*
   Fills Qt's event loop with input events from Mir
  */
-class QtEventFeeder : public QObject,
-                      public mir::input::InputDispatcher
+class QtEventFeeder : public QObject
 {
 public:
     // Interface between QtEventFeeder and the actual QWindowSystemInterface functions
@@ -39,7 +38,7 @@ public:
         public:
         virtual ~QtWindowSystemInterface() {}
         virtual void setScreensModel(const QSharedPointer<ScreensModel> &sc) = 0;
-        virtual QWindow* getWindowForPoint(const QPoint &point) = 0;
+        virtual QWindow* getWindowForTouchPoint(const QPoint &point) = 0;
         virtual QWindow* focusedWindow() = 0;
         virtual void registerTouchDevice(QTouchDevice *device) = 0;
         virtual void handleExtendedKeyEvent(QWindow *window, ulong timestamp, QEvent::Type type, int key,
@@ -58,20 +57,15 @@ public:
                   QtWindowSystemInterface *windowSystem);
     virtual ~QtEventFeeder();
 
-    static const int MirEventActionMask;
-    static const int MirEventActionPointerIndexMask;
-    static const int MirEventActionPointerIndexShift;
+    void dispatchKey(MirKeyboardEvent const* event);
+    void dispatchTouch(MirTouchEvent const* event);
+    void dispatchPointer(MirPointerEvent const* event);
 
-    bool dispatch(MirEvent const& event) override;
-    void start() override;
-    void stop() override;
+    bool dispatch(MirEvent const& event); // FIXME used only in tests
 
     bool event(QEvent *event) Q_DECL_OVERRIDE;
 
 private:
-    void dispatchKey(MirInputEvent const* event);
-    void dispatchTouch(MirInputEvent const* event);
-    void dispatchPointer(MirInputEvent const* event);
     void validateTouches(QWindow *window, ulong timestamp, QList<QWindowSystemInterface::TouchPoint> &touchPoints);
     bool validateTouch(QWindowSystemInterface::TouchPoint &touchPoint);
     void sendActiveTouchRelease(QWindow *window, ulong timestamp, int id);

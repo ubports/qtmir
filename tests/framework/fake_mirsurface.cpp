@@ -36,7 +36,7 @@ FakeMirSurface::TouchEvent::~TouchEvent()
 
 FakeMirSurface::FakeMirSurface(QObject *parent)
     : MirSurfaceInterface(parent)
-    , m_isFirstFrameDrawn(false)
+    , m_ready(false)
     , m_isFrameDropperRunning(true)
     , m_live(true)
     , m_state(Mir::RestoredState)
@@ -54,22 +54,22 @@ Mir::Type FakeMirSurface::type() const { return Mir::NormalType; }
 
 QString FakeMirSurface::name() const { return QString("Fake MirSurface"); }
 
-QPoint FakeMirSurface::topLeft() const { return m_topLeft; }
-
-void FakeMirSurface::moveTo(int x, int y)
-{
-    if (m_topLeft.x() != x || m_topLeft.y() != y) {
-        m_topLeft.setX(x);
-        m_topLeft.setY(y);
-        Q_EMIT topLeftChanged(m_topLeft);
-    }
-}
-
-void FakeMirSurface::moveTo(const QPoint &topLeft) { moveTo(topLeft.x(), topLeft.y()); }
-
 QString FakeMirSurface::persistentId() const { return QString("FakeSurfaceId"); }
 
 QSize FakeMirSurface::size() const { return m_size; }
+
+QPoint FakeMirSurface::position() const { return m_position; }
+
+QPoint FakeMirSurface::requestedPosition() const { return m_position; }
+
+void FakeMirSurface::setRequestedPosition(const QPoint &newPosition)
+{
+    if (m_position != newPosition) {
+        m_position = newPosition;
+        Q_EMIT requestedPositionChanged(newPosition);
+        Q_EMIT positionChanged(newPosition);
+    }
+}
 
 void FakeMirSurface::resize(int width, int height)
 {
@@ -84,7 +84,7 @@ void FakeMirSurface::resize(const QSize &size) { resize(size.width(), size.heigh
 
 Mir::State FakeMirSurface::state() const { return m_state; }
 
-void FakeMirSurface::setState(Mir::State qmlState)
+void FakeMirSurface::requestState(Mir::State qmlState)
 {
     if (qmlState != m_state) {
         m_state = qmlState;
@@ -106,9 +106,9 @@ void FakeMirSurface::setOrientationAngle(Mir::OrientationAngle angle)
     }
 }
 
-bool FakeMirSurface::isFirstFrameDrawn() const
+bool FakeMirSurface::isReady() const
 {
-    return m_isFirstFrameDrawn;
+    return m_ready;
 }
 
 void FakeMirSurface::stopFrameDropper()
@@ -129,7 +129,7 @@ void FakeMirSurface::setLive(bool value)
     }
 }
 
-void FakeMirSurface::setViewVisibility(qintptr viewId, bool visible) {
+void FakeMirSurface::setViewExposure(qintptr viewId, bool visible) {
     if (!m_views.contains(viewId)) return;
 
     m_views[viewId] = visible;
@@ -165,7 +165,13 @@ unsigned int FakeMirSurface::currentFrameNumber(qintptr) const { return 0; }
 
 bool FakeMirSurface::numBuffersReadyForCompositor(qintptr) { return 0; }
 
-void FakeMirSurface::setFocused(bool focus) { m_focused = focus; }
+void FakeMirSurface::setFocused(bool focus)
+{
+    if (m_focused != focus) {
+        m_focused = focus;
+        Q_EMIT focusedChanged(m_focused);
+    }
+}
 
 void FakeMirSurface::mousePressEvent(QMouseEvent *) {}
 
@@ -197,11 +203,13 @@ QString FakeMirSurface::appId() const { return "foo-app"; }
 
 void FakeMirSurface::onCompositorSwappedBuffers() {}
 
-void FakeMirSurface::drawFirstFrame()
+void FakeMirSurface::setShellChrome(Mir::ShellChrome /*shellChrome*/) {}
+
+void FakeMirSurface::setReady()
 {
-    if (!m_isFirstFrameDrawn) {
-        m_isFirstFrameDrawn = true;
-        Q_EMIT firstFrameDrawn();
+    if (!m_ready) {
+        m_ready = true;
+        Q_EMIT ready();
     }
 }
 

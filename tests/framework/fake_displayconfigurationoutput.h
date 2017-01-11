@@ -18,6 +18,7 @@
 #define FAKE_DISPLAYCONFIGURATIONOUTPUT_H
 
 #include <mir/graphics/display_configuration.h>
+#include <mir/version.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -45,7 +46,10 @@ const mg::DisplayConfigurationOutput fakeOutput1
     mir_power_mode_on,
     mir_orientation_normal,
     1.0f,
-    mir_form_factor_unknown
+    mir_form_factor_unknown,
+    mir_subpixel_arrangement_unknown,
+    {},
+    mir_output_gamma_unsupported
 };
 
 const mg::DisplayConfigurationOutput fakeOutput2
@@ -71,7 +75,10 @@ const mg::DisplayConfigurationOutput fakeOutput2
     mir_power_mode_on,
     mir_orientation_left,
     1.0f,
-    mir_form_factor_unknown
+    mir_form_factor_unknown,
+    mir_subpixel_arrangement_unknown,
+    {},
+    mir_output_gamma_unsupported
 };
 
 #endif // FAKE_DISPLAYCONFIGURATIONOUTPUT_H

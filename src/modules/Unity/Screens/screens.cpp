@@ -66,7 +66,7 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     case OutputTypeRole: {
         auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
         if (screen) {
-            return QVariant(static_cast<OutputTypes>(screen->outputType())); //FIXME: cheeky
+            return QVariant(screen->outputType());
         } else {
             return OutputTypes::Unknown;
         }

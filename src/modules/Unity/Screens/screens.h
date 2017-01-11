@@ -17,6 +17,8 @@
 #ifndef SCREENS_H
 #define SCREENS_H
 
+#include "screentypes.h"
+
 #include <QAbstractListModel>
 
 class QScreen;
@@ -37,33 +39,6 @@ public:
         OutputTypeRole,
         ScaleRole,
         FormFactorRole,
-    };
-
-    enum OutputTypes {
-        Unknown,
-        VGA,
-        DVII,
-        DVID,
-        DVIA,
-        Composite,
-        SVideo,
-        LVDS,
-        Component,
-        NinePinDIN,
-        DisplayPort,
-        HDMIA,
-        HDMIB,
-        TV,
-        EDP
-    };
-
-    enum FormFactor {
-        FormFactorUnknown,
-        FormFactorPhone,
-        FormFactorTablet,
-        FormFactorMonitor,
-        FormFactorTV,
-        FormFactorProjector,
     };
 
     explicit Screens(QObject *parent = 0);
@@ -90,7 +65,5 @@ private:
 };
 
 } // namespace qtmir
-
-Q_DECLARE_METATYPE(qtmir::Screens::FormFactor)
 
 #endif // SCREENS_H

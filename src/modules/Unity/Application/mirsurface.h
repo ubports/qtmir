@@ -22,33 +22,28 @@
 
 // Qt
 #include <QCursor>
-#include <QElapsedTimer>
 #include <QMutex>
 #include <QPointer>
 #include <QRect>
 #include <QSharedPointer>
 #include <QWeakPointer>
 #include <QSet>
+#include <QTimer>
 
 #include "mirbuffersgtexture.h"
-#include "session.h"
-
-// mirserver
-#include "creationhints.h"
+#include "windowcontrollerinterface.h"
+#include "windowmodelnotifier.h"
 
 // mir
 #include <mir_toolkit/common.h>
 
-namespace mir {
-namespace shell { class Shell; }
-namespace scene {class Surface; }
-}
 
 class SurfaceObserver;
 
 namespace qtmir {
 
 class AbstractTimer;
+class SessionInterface;
 class CompositorTexture;
 
 class MirSurface : public MirSurfaceInterface
@@ -56,12 +51,9 @@ class MirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
-    MirSurface(std::shared_ptr<mir::scene::Surface> surface,
-            const QString& persistentId,
-            SessionInterface* session,
-            mir::shell::Shell *shell,
-            std::shared_ptr<SurfaceObserver> observer,
-            const CreationHints &);
+    MirSurface(NewWindow windowInfo,
+               WindowControllerInterface *controller,
+               SessionInterface *session = nullptr);
     virtual ~MirSurface();
 
     ////
@@ -71,18 +63,18 @@ public:
 
     QString name() const override;
 
-    virtual QPoint topLeft() const override;
-    virtual void moveTo(int x, int y) override;
-    virtual void moveTo(const QPoint &pos) override { moveTo(pos.x(), pos.y()); }
-
     QString persistentId() const override;
 
     QSize size() const override;
     void resize(int width, int height) override;
-    void resize(const QSize &size) override { resize(size.width(), size.height()); }
+    Q_INVOKABLE void resize(const QSize &size) override { resize(size.width(), size.height()); }
+
+    QPoint position() const override;
+
+    QPoint requestedPosition() const override;
+    void setRequestedPosition(const QPoint &) override;
 
     Mir::State state() const override;
-    void setState(Mir::State qmlState) override;
 
     bool live() const override;
 
@@ -103,16 +95,15 @@ public:
 
     bool confinesMousePointer() const override;
 
-    Q_INVOKABLE void requestFocus() override;
+    Q_INVOKABLE void activate() override;
     Q_INVOKABLE void close() override;
-    Q_INVOKABLE void raise() override;
 
     ////
     // qtmir::MirSurfaceInterface
 
     void setLive(bool value) override;
 
-    bool isFirstFrameDrawn() const override { return m_firstFrameDrawn; }
+    bool isReady() const override { return m_ready; }
 
     void stopFrameDropper() override;
     void startFrameDropper() override;
@@ -121,7 +112,7 @@ public:
 
     void registerView(qintptr viewId) override;
     void unregisterView(qintptr viewId) override;
-    void setViewVisibility(qintptr viewId, bool visible) override;
+    void setViewExposure(qintptr viewId, bool exposed) override;
 
     // methods called from the rendering (scene graph) thread:
     QSharedPointer<QSGTexture> texture(qintptr userId) override;
@@ -165,23 +156,28 @@ public:
 
     bool inputAreaContains(const QPoint &) const override;
 
+    void requestFocus() override;
+
     ////
     // Own API
+    void setPosition(const QPoint newPosition);
+    void updateState(Mir::State state);
+    void setReady();
+    miral::Window window() const { return m_window; }
 
     // useful for tests
     void setCloseTimer(AbstractTimer *timer);
+    std::shared_ptr<SurfaceObserver> surfaceObserver() const;
 
 public Q_SLOTS:
-    void onCompositorSwappedBuffers() override;
+    ////
+    // unity::shell::application::MirSurfaceInterface
+    void requestState(Mir::State qmlState) override;
 
-    void setMinimumWidth(int) override;
-    void setMinimumHeight(int) override;
-    void setMaximumWidth(int) override;
-    void setMaximumHeight(int) override;
-    void setWidthIncrement(int) override;
-    void setHeightIncrement(int) override;
+    ////
+    // qtmir::MirSurfaceInterface
+    void onCompositorSwappedBuffers() override;
     void setShellChrome(Mir::ShellChrome shellChrome) override;
-    void setTopLeft(const QPoint& topLeft) override;
 
 private Q_SLOTS:
     void dropPendingBuffer();
@@ -196,18 +192,35 @@ private Q_SLOTS:
 private:
     void syncSurfaceSizeWithItemSize();
     bool clientIsRunning() const;
-    void updateVisibility();
+    void updateExposure();
     void applyKeymap();
     void updateActiveFocus();
+    void updateVisible();
+    void onNameChanged(const QString &name);
+    void onMinimumWidthChanged(int minWidth);
+    void onMinimumHeightChanged(int minHeight);
+    void onMaximumWidthChanged(int maxWidth);
+    void onMaximumHeightChanged(int maxHeight);
+    void onWidthIncrementChanged(int incWidth);
+    void onHeightIncrementChanged(int incHeight);
 
     CompositorTexture* compositorTextureForId(qintptr userId) const;
     bool updateTextureLocked(qintptr userId, CompositorTexture* compositorTexture);
 
-    std::shared_ptr<mir::scene::Surface> m_surface;
+    const miral::Window m_window;
+    const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
+    QString m_name;
+    MirSurfaceType m_type;
+    int m_minWidth;
+    int m_minHeight;
+    int m_maxWidth;
+    int m_maxHeight;
+    int m_incWidth;
+    int m_incHeight;
+
+    const std::shared_ptr<mir::scene::Surface> m_surface; // keep copy of the Surface for lifecycle
     QPointer<SessionInterface> m_session;
-    mir::shell::Shell *const m_shell;
-    QString m_persistentId;
-    bool m_firstFrameDrawn;
+    WindowControllerInterface *const m_controller;
 
     //FIXME -  have to save the state as Mir has no getter for it (bug:1357429)
     Mir::OrientationAngle m_orientationAngle;
@@ -218,34 +231,29 @@ private:
 
     QHash<qintptr, CompositorTexture*> m_textures;
 
-//    QWeakPointer<QSGTexture> m_texture;
-//    bool m_textureUpdated;
-
+    bool m_ready{false};
+    bool m_visible;
     bool m_live;
     struct View {
-        bool visible;
+        bool exposed;
     };
     QHash<qintptr, View> m_views;
 
     QSet<qintptr> m_activelyFocusedViews;
     bool m_neverSetSurfaceFocus{true};
 
-    std::shared_ptr<SurfaceObserver> m_surfaceObserver;
+    class SurfaceObserverImpl;
+    std::shared_ptr<SurfaceObserverImpl> m_surfaceObserver;
 
+    QPoint m_position;
+    QPoint m_requestedPosition;
     QSize m_size;
+    QSize m_pendingResize;
     QString m_keymap;
 
     QCursor m_cursor;
+    Mir::State m_state; // FIXME: remove when Mir gains additional window states to match Mir::State
     Mir::ShellChrome m_shellChrome;
-
-    int m_minimumWidth{0};
-    int m_minimumHeight{0};
-    int m_maximumWidth{0};
-    int m_maximumHeight{0};
-    int m_widthIncrement{0};
-    int m_heightIncrement{0};
-    QPoint m_topLeft;
-    QSize m_pendingResize;
 
     QRect m_inputBounds;
 
@@ -258,11 +266,6 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
-
-    // TODO: Make it configurable, exposing it as a QML property to shell.
-    // In milliseconds.
-    const int m_minimumAgeForOcclusion{10000};
-    bool m_oldEnoughToBeOccluded{false};
 };
 
 } // namespace qtmir

@@ -26,28 +26,75 @@
 #include <mutex>
 
 // local
-#include "screenscontroller.h"
+#include "appnotifier.h"
+#include "openglcontextfactory.h"
+#include "screensmodel.h"
+#include "windowcontroller.h"
+#include "windowmodelnotifier.h"
+#include "sessionauthorizer.h"
+#include "mirserverhooks.h"
 
-class MirServer;
-class QMirServer;
+//miral
+#include <miral/application_authorizer.h>
+#include <miral/runner.h>
+
 class MirServerThread;
+class QOpenGLContext;
+
+namespace qtmir
+{
+using SetSessionAuthorizer = miral::SetApplicationAuthorizer<SessionAuthorizer>;
+class PromptSessionManager;
+}
 
 class QMirServerPrivate
 {
 public:
-    QSharedPointer<MirServer> server;
+    QMirServerPrivate(int &argc, char* argv[]);
+    const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
-    QSharedPointer<ScreensModel> screensModel;
     MirServerThread *serverThread;
-};
 
+    QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
+
+    void run(const std::function<void()> &startCallback);
+    void stop();
+
+    PromptSessionListener *promptSessionListener() const;
+    std::shared_ptr<qtmir::PromptSessionManager> promptSessionManager() const;
+
+    std::shared_ptr<SessionAuthorizer> theApplicationAuthorizer() const
+        { return m_sessionAuthorizer.the_custom_application_authorizer(); }
+
+    qtmir::WindowModelNotifier *windowModelNotifier() const
+        { return &m_windowModelNotifier; }
+
+    qtmir::AppNotifier *appNotifier() const
+        { return &m_appNotifier; }
+
+    qtmir::WindowControllerInterface *windowController() const
+        { return &m_windowController; }
+
+private:
+    qtmir::SetSessionAuthorizer m_sessionAuthorizer;
+    qtmir::OpenGLContextFactory m_openGLContextFactory;
+    qtmir::MirServerHooks       m_mirServerHooks;
+
+    miral::MirRunner runner;
+
+    mutable qtmir::AppNotifier m_appNotifier;
+    mutable qtmir::WindowModelNotifier m_windowModelNotifier;
+    mutable qtmir::WindowController m_windowController;
+    int &argc;
+    char **argv;
+};
 
 class MirServerThread : public QThread
 {
     Q_OBJECT
 
 public:
-    MirServerThread(const QSharedPointer<MirServer> &server)
+    MirServerThread(QMirServerPrivate* server)
         : server(server)
     {}
 
@@ -58,14 +105,13 @@ Q_SIGNALS:
 
 public Q_SLOTS:
     void run() override;
-    void stop();
 
 private:
     std::mutex mutex;
     std::condition_variable started_cv;
     bool mir_running{false};
 
-    const QSharedPointer<MirServer> server;
+    QMirServerPrivate* const server;
 };
 
 #endif // QMIRSERVER_P_H

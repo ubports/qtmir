@@ -25,11 +25,11 @@
 
 #include <Unity/Application/application.h>
 #include <Unity/Application/application_manager.h>
-#include <Unity/Application/mirsurfacemanager.h>
 #include <Unity/Application/sessionmanager.h>
 #include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/proc_info.h>
+#include "promptsessionmanager.h"
 
 #include "mock_proc_info.h"
 #include "mock_mir_session.h"
@@ -51,8 +51,11 @@ typedef testing::NiceMock<mir::shell::MockPersistentSurfaceStore> StubPersistent
 // For better output in ASSERT_* and EXPECT_* error messages
 void PrintTo(const Application::InternalState& state, ::std::ostream* os);
 void PrintTo(const SessionInterface::State& state, ::std::ostream* os);
-
 } // namespace qtmir
+
+void PrintTo(const QString &string, ::std::ostream* os);
+void PrintTo(const QSize &size, ::std::ostream *os);
+void PrintTo(const QPoint &point, ::std::ostream *os);
 
 namespace testing {
 
@@ -64,18 +67,18 @@ public:
 
     Application* startApplication(pid_t procId, QString const& appId);
 
+
     QSharedPointer<qtmir::TaskController> taskControllerSharedPointer{new testing::NiceMock<qtmir::MockTaskController>};
     testing::NiceMock<qtmir::MockTaskController> *taskController{static_cast<testing::NiceMock<qtmir::MockTaskController>*>(taskControllerSharedPointer.data())};
     testing::NiceMock<MockProcInfo> procInfo;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
-    std::shared_ptr<StubPromptSessionManager> promptSessionManager;
+    std::shared_ptr<StubPromptSessionManager> stubPromptSessionManager{std::make_shared<StubPromptSessionManager>()};
+    std::shared_ptr<qtmir::PromptSessionManager> promptSessionManager{std::make_shared<qtmir::PromptSessionManager>(stubPromptSessionManager)};
     std::shared_ptr<StubPersistentSurfaceStore> persistentSurfaceStore;
 
-    mir::shell::Shell *mirShell{nullptr};
     ApplicationManager applicationManager;
     SessionManager sessionManager;
-    MirSurfaceManager surfaceManager;
 };
 } // namespace testing
 

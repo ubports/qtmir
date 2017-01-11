@@ -17,64 +17,39 @@
 #ifndef SESSIONOBSERVER_H
 #define SESSIONOBSERVER_H
 
-#include <QByteArray>
-#include <QCursor>
 #include <QObject>
-#include <QMap>
-#include <QMutex>
 #include <QRect>
 #include <QSize>
-#include <mir/scene/surface_observer.h>
+
+#include <mir_toolkit/common.h>
+#include <mir/geometry/size.h>
 
 namespace mir {
     namespace scene {
         class Surface;
     }
-    namespace shell {
-        struct SurfaceSpecification;
-    }
 }
 
-class SurfaceObserver : public QObject, public mir::scene::SurfaceObserver
+namespace miral { class WindowSpecification; }
+
+class SurfaceObserver : public QObject
 {
     Q_OBJECT
 
 public:
-    SurfaceObserver();
     virtual ~SurfaceObserver();
 
-    void setListener(QObject *listener);
+    virtual void frame_posted(int frames_available, mir::geometry::Size const& size ) = 0;
 
-    void attrib_changed(MirSurfaceAttrib, int) override;
-    void resized_to(mir::geometry::Size const&) override;
-    void moved_to(mir::geometry::Point const&) override;
-    void hidden_set_to(bool) override {}
-
-    // Get new frame notifications from Mir, called from a Mir thread.
-    void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
-
-    void alpha_set_to(float) override {}
-    void transformation_set_to(glm::mat4 const&) override {}
-    void reception_mode_set_to(mir::input::InputReceptionMode) override {}
-    void cursor_image_set_to(mir::graphics::CursorImage const&) override;
-    void orientation_set_to(MirOrientation) override {}
-    void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
-    void renamed(char const * name) override;
-    void cursor_image_removed() override;
-
-    void notifySurfaceModifications(const mir::shell::SurfaceSpecification&);
+    void notifySurfaceModifications(const miral::WindowSpecification&);
 
     static SurfaceObserver *observerForSurface(const mir::scene::Surface *surface);
     static void registerObserverForSurface(SurfaceObserver *observer, const mir::scene::Surface *surface);
-    static QMutex mutex;
 
 Q_SIGNALS:
     void attributeChanged(const MirSurfaceAttrib attribute, const int value);
     void framesPosted();
     void resized(const QSize &size);
-    void moved(const QPoint &topLeft);
     void keymapChanged(const QString &rules, const QString &variant);
     void nameChanged(const QString &name);
     void cursorChanged(const QCursor &cursor);
@@ -88,13 +63,6 @@ Q_SIGNALS:
     void shellChromeChanged(MirShellChrome);
     void inputBoundsChanged(const QRect &rect);
     void confinesMousePointerChanged(bool);
-
-private:
-    QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
-    QObject *m_listener;
-    bool m_framesPosted;
-    QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
-    static QHash<const mir::scene::Surface*, SurfaceObserver*> m_surfaceToObserverMap;
 };
 
 #endif

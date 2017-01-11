@@ -18,7 +18,6 @@
 #include "application.h"
 #include "session.h"
 #include "mirsurfaceitem.h"
-#include "mirfocuscontroller.h"
 #include "logging.h"
 #include "tracepoints.h" // generated from tracepoints.tp
 #include "timestamp.h"
@@ -115,7 +114,7 @@ MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     connect(&m_updateMirSurfaceSizeTimer, &QTimer::timeout, this, &MirSurfaceItem::updateMirSurfaceSize);
 
     connect(this, &QQuickItem::activeFocusChanged, this, &MirSurfaceItem::updateMirSurfaceActiveFocus);
-    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceVisibility);
+    connect(this, &QQuickItem::visibleChanged, this, &MirSurfaceItem::updateMirSurfaceExposure);
     connect(this, &QQuickItem::windowChanged, this, &MirSurfaceItem::onWindowChanged);
 }
 
@@ -465,6 +464,7 @@ bool MirSurfaceItem::processTouchEvent(
         const QList<QTouchEvent::TouchPoint> &touchPoints,
         Qt::TouchPointStates touchPointStates)
 {
+
     if (!m_consumesInput || !m_surface || !m_surface->live()) {
         return false;
     }
@@ -498,13 +498,6 @@ Mir::State MirSurfaceItem::surfaceState() const
     }
 }
 
-void MirSurfaceItem::setSurfaceState(Mir::State state)
-{
-    if (m_surface) {
-        m_surface->setState(state);
-    }
-}
-
 void MirSurfaceItem::scheduleMirSurfaceSizeUpdate()
 {
     if (!m_updateMirSurfaceSizeTimer.isActive()) {
@@ -525,24 +518,13 @@ void MirSurfaceItem::updateMirSurfaceSize()
     m_surface->resize(width, height);
 }
 
-void MirSurfaceItem::updateMirSurfacePosition()
-{
-    if (!m_positionSet) return;
-
-    if (m_surface) {
-        m_surface->moveTo(m_topLeft);
-    } else {
-        Q_EMIT surfaceTopLeftChanged(m_topLeft);
-    }
-}
-
-void MirSurfaceItem::updateMirSurfaceVisibility()
+void MirSurfaceItem::updateMirSurfaceExposure()
 {
     if (!m_surface || !m_surface->live()) {
         return;
     }
 
-    m_surface->setViewVisibility((qintptr)this, isVisible());
+    m_surface->setViewExposure((qintptr)this, isVisible());
 }
 
 void MirSurfaceItem::updateMirSurfaceActiveFocus()
@@ -638,16 +620,14 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
         connect(m_surface, &MirSurfaceInterface::sizeChanged, this, &MirSurfaceItem::onActualSurfaceSizeChanged);
         connect(m_surface, &MirSurfaceInterface::cursorChanged, this, &MirSurfaceItem::setCursor);
         connect(m_surface, &MirSurfaceInterface::shellChromeChanged, this, &MirSurfaceItem::shellChromeChanged);
-        connect(m_surface, &MirSurfaceInterface::topLeftChanged, this, &MirSurfaceItem::surfaceTopLeftChanged);
 
         Q_EMIT typeChanged(m_surface->type());
         Q_EMIT liveChanged(true);
         Q_EMIT surfaceStateChanged(m_surface->state());
 
-        updateMirSurfacePosition();
         updateMirSurfaceSize();
         setImplicitSize(m_surface->size().width(), m_surface->size().height());
-        updateMirSurfaceVisibility();
+        updateMirSurfaceExposure();
 
         // Qt::ArrowCursor is the default when no cursor has been explicitly set, so no point forwarding it.
         if (m_surface->cursor().shape() != Qt::ArrowCursor) {
@@ -733,20 +713,6 @@ void MirSurfaceItem::setSurfaceHeight(int value)
         m_surfaceHeight = value;
         scheduleMirSurfaceSizeUpdate();
         Q_EMIT surfaceHeightChanged(value);
-    }
-}
-
-QPoint MirSurfaceItem::surfaceTopLeft() const
-{
-    return m_surface ? m_surface->topLeft() : m_topLeft;
-}
-
-void MirSurfaceItem::setSurfaceTopLeft(const QPoint &value)
-{
-    m_positionSet = true;
-    if (m_topLeft != value) {
-        m_topLeft = value;
-        updateMirSurfacePosition();
     }
 }
 

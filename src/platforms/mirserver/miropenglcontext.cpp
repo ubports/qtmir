@@ -29,7 +29,8 @@
 
 // Mir
 #include <mir/graphics/display.h>
-#include <mir/graphics/gl_context.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/renderer/gl/context_source.h>
 
 // Qt supports one GL context per screen, but also shared contexts.
 // The Mir "Display" generates a shared GL context for all DisplayBuffers
@@ -45,7 +46,8 @@ MirOpenGLContext::MirOpenGLContext(
 #endif
 {
     // create a temporary GL context to fetch the EGL display and config, so Qt can determine the surface format
-    std::unique_ptr<mir::graphics::GLContext> mirContext = display.create_gl_context();
+    std::unique_ptr<mir::renderer::gl::Context> mirContext = dynamic_cast<mir::renderer::gl::ContextSource*>(
+                                                                display.native_display())->create_gl_context();
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -78,6 +80,7 @@ MirOpenGLContext::MirOpenGLContext(
     formatCopy.setRenderableType(QSurfaceFormat::OpenGLES);
 
     m_format = q_glFormatFromConfig(eglDisplay, eglConfig, formatCopy);
+    mirContext->release_current(); // Need to release as it doesn't happen when GLContext goes out of scope
 
     // FIXME: the temporary gl context created by Mir does not have the attributes we specified
     // in the GLConfig, so need to set explicitly for now
@@ -179,7 +182,14 @@ void MirOpenGLContext::doneCurrent()
     }
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)
 {
     return eglGetProcAddress(procName.constData());
 }
+#else
+QFunctionPointer MirOpenGLContext::getProcAddress(const char *procName)
+{
+    return eglGetProcAddress(procName);
+}
+#endif

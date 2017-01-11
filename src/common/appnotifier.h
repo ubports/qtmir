@@ -14,10 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NOOP_TRACEPOINTS_H
-#define NOOP_TRACEPOINTS_H
+#ifndef APPNOTIFIER_H
+#define APPNOTIFIER_H
 
-#define tracepoint(a, ...) ((void)0)
+#include <QObject>
+#include <miral/application_info.h>
 
-#endif // NOOP_TRACEPOINTS_H
+namespace qtmir {
 
+class AppNotifier : public QObject
+{
+    Q_OBJECT
+
+Q_SIGNALS:
+    void appAdded(const miral::ApplicationInfo &app);
+    void appRemoved(const miral::ApplicationInfo &app);
+    void appCreatedWindow(const miral::ApplicationInfo &app);
+};
+
+} // namespace qtmir
+
+Q_DECLARE_METATYPE(miral::ApplicationInfo)
+
+#endif // APPNOTIFIER_H

@@ -44,8 +44,8 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
 
         qRegisterMetaType<QScreen*>("QScreen*");
 
-        qRegisterMetaType<qtmir::Screens::FormFactor>("Screens::FormFactor");
         qmlRegisterSingletonType<qtmir::Screens>(uri, 0, 1, "Screens", screensSingleton);
+        qRegisterMetaType<qtmir::FormFactor>("qtmir::FormFactor");
 
         qmlRegisterType<qtmir::QQuickScreenWindow>(uri, 0, 1, "ScreenWindow");
         qmlRegisterRevision<QWindow,1>(uri, 0, 1);

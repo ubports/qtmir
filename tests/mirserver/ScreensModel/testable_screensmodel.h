@@ -28,9 +28,10 @@ public:
     }
 
     void do_init(const std::shared_ptr<mir::graphics::Display> &display,
-                 const std::shared_ptr<mir::compositor::Compositor> &compositor)
+                 const std::shared_ptr<QtCompositor> &compositor,
+                 const std::shared_ptr<mir::compositor::DisplayListener> &displayListener)
     {
-        init(display, compositor);
+        init(display, compositor, displayListener);
     }
 
     void do_terminate() { terminate(); }

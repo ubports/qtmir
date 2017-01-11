@@ -13,6 +13,7 @@ include_directories(
 include_directories(
   SYSTEM
   ${APPLICATION_API_INCLUDE_DIRS}
+  ${MIRAL_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
@@ -25,7 +26,7 @@ target_link_libraries(
 
   Qt5::Test
 
-  unityapplicationplugin-nolttng
+  unityapplicationplugin
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

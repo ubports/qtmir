@@ -22,6 +22,8 @@
 
 #include <screen.h>
 
+#include <QSensorManager>
+
 using namespace ::testing;
 
 namespace mg = mir::graphics;
@@ -37,6 +39,12 @@ void ScreenTest::SetUp()
     if (!qEnvironmentVariableIsSet("QT_ACCEL_FILEPATH")) {
         // Trick Qt >= 5.4.1 to load the generic sensors
         qputenv("QT_ACCEL_FILEPATH", "dummy");
+        // Tell Qt >= 5.7 to use the generic orientation sensor
+        // since the proper linux one is not always running
+        // in test environments making the test fail
+        if (QSensorManager::isBackendRegistered("QOrientationSensor", "iio-sensor-proxy.orientationsensor")) {
+            QSensorManager::unregisterBackend("QOrientationSensor", "iio-sensor-proxy.orientationsensor");
+        }
     }
 
     Screen::skipDBusRegistration = true;
@@ -80,7 +88,7 @@ TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
     EXPECT_EQ(screen->format(), QImage::Format_RGBA8888);
     EXPECT_EQ(screen->refreshRate(), 59);
     EXPECT_EQ(screen->physicalSize(), QSize(1111, 2222));
-    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::dvid);
+    EXPECT_EQ(screen->outputType(), qtmir::OutputTypes::DVID);
 }
 
 TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
@@ -93,5 +101,5 @@ TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
     EXPECT_EQ(screen->format(), QImage::Format_RGBX8888);
     EXPECT_EQ(screen->refreshRate(), 75);
     EXPECT_EQ(screen->physicalSize(), QSize(1000, 2000));
-    EXPECT_EQ(screen->outputType(), mg::DisplayConfigurationOutputType::lvds);
+    EXPECT_EQ(screen->outputType(), qtmir::OutputTypes::LVDS);
 }

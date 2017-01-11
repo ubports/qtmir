@@ -18,6 +18,7 @@
 #define MIRSERVERSTATUSLISTENER_H
 
 #include <mir/server_status_listener.h>
+#include <mir/version.h>
 
 class MirServerStatusListener : public virtual mir::ServerStatusListener
 {
@@ -25,6 +26,8 @@ public:
     void paused() override;
     void resumed() override;
     void started() override;
+    void ready_for_user_input() override;
+    void stop_receiving_input() override;
 };
 
 #endif // MIRSERVERSTATUSLISTENER_H

@@ -14,6 +14,7 @@ include_directories(
 include_directories(
   SYSTEM
   ${APPLICATION_API_INCLUDE_DIRS}
+  ${MIRAL_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
@@ -24,7 +25,7 @@ add_dependencies(sessionmanager_test qtmir-test-framework-static)
 target_link_libraries(
   sessionmanager_test
 
-  unityapplicationplugin-nolttng
+  unityapplicationplugin
 
   Qt5::Test
 
