@@ -54,16 +54,16 @@ public:
 
 } // namespace {
 
-class MirTextureProvider : public QSGTextureProvider
+class SurfaceItemTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    MirTextureProvider(QQuickItem* item, const QSharedPointer<QSGTexture> texture)
+    SurfaceItemTextureProvider(QQuickItem* item, const QSharedPointer<QSGTexture> texture)
         : t(texture)
         , m_item(item)
     {
         updateSmooth();
-        connect(item, &QQuickItem::smoothChanged, this, &MirTextureProvider::updateSmooth);
+        connect(item, &QQuickItem::smoothChanged, this, &SurfaceItemTextureProvider::updateSmooth);
     }
     QSGTexture *texture() const override {
         return t.data();
@@ -76,6 +76,8 @@ public:
     void setTexture(const QSharedPointer<QSGTexture>& newTexture) {
         t = newTexture;
         updateSmooth();
+
+        Q_EMIT textureChanged();
     }
 
 private Q_SLOTS:
@@ -208,7 +210,7 @@ void MirSurfaceItem::ensureTextureProvider()
     if (!userId) return;
 
     if (!m_textureProvider) {
-        m_textureProvider = new MirTextureProvider(this, m_surface->texture(userId));
+        m_textureProvider = new SurfaceItemTextureProvider(this, m_surface->texture(userId));
 
     // Check that the item is indeed using the texture from the MirSurface it currently holds
     // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",

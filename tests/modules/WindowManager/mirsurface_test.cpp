@@ -32,6 +32,7 @@ struct MirEvent {}; // otherwise won't compile otherwise due to incomplete type
 #include <Unity/Application/mirsurface.h>
 
 #include <Unity/Application/timer.h>
+#include <Unity/Application/compositortextureprovider.h>
 
 // mirtest
 #include <mir/test/doubles/stub_session.h>
@@ -63,6 +64,15 @@ struct MockSurface : public StubSurface
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
 };
 
+struct FakeCompositorTextureProvider: CompositorTextureProvider
+{
+    QSGTexture *createTexture() const override
+    {
+        return nullptr;
+    }
+
+};
+
 class MirSurfaceTest : public ::testing::Test
 {
 public:
@@ -87,10 +97,16 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     ms::SurfaceCreationParameters spec;
     miral::WindowInfo mockWindowInfo(mockWindow, spec);
 
+    auto fakeTextureProvider = new FakeCompositorTextureProvider;
+    // request multiple textures to simulate multiple screens.
+    fakeTextureProvider->texture((qintptr)123);
+    fakeTextureProvider->texture((qintptr)124);
+
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
 
     MirSurface surface(mockWindowInfo, nullptr);
+    surface.setTexturePorvider(fakeTextureProvider);
     surface.surfaceObserver()->frame_posted(1, mir::geometry::Size{1,1});
 
     QSignalSpy spyFrameDropped(&surface, SIGNAL(frameDropped()));

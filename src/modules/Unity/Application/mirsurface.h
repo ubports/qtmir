@@ -44,6 +44,7 @@ namespace qtmir {
 
 class AbstractTimer;
 class SessionInterface;
+class CompositorTextureProvider;
 class CompositorTexture;
 
 class MirSurface : public MirSurfaceInterface
@@ -168,6 +169,7 @@ public:
     // useful for tests
     void setCloseTimer(AbstractTimer *timer);
     std::shared_ptr<SurfaceObserver> surfaceObserver() const;
+    void setTexturePorvider(CompositorTextureProvider *textureProvider);
 
 public Q_SLOTS:
     ////
@@ -204,7 +206,6 @@ private:
     void onWidthIncrementChanged(int incWidth);
     void onHeightIncrementChanged(int incHeight);
 
-    CompositorTexture* compositorTextureForId(qintptr userId) const;
     bool updateTextureLocked(qintptr userId, CompositorTexture* compositorTexture);
 
     const miral::Window m_window;
@@ -229,7 +230,7 @@ private:
 
     mutable QMutex m_mutex;
 
-    QHash<qintptr, CompositorTexture*> m_textures;
+    CompositorTextureProvider* m_textures;
 
     bool m_ready{false};
     bool m_visible;

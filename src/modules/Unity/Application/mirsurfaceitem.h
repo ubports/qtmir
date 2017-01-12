@@ -32,7 +32,7 @@
 namespace qtmir {
 
 class QSGMirSurfaceNode;
-class MirTextureProvider;
+class SurfaceItemTextureProvider;
 
 class MirSurfaceItem : public unity::shell::application::MirSurfaceItemInterface
 {
@@ -138,7 +138,7 @@ private:
     QQuickWindow* m_window;
 
     QMutex m_mutex;
-    MirTextureProvider *m_textureProvider;
+    SurfaceItemTextureProvider *m_textureProvider;
 
     QTimer m_updateMirSurfaceSizeTimer;
 
