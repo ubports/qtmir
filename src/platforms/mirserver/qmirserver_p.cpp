@@ -133,7 +133,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_openGLContextFactory,
             m_mirServerHooks,
             miral::set_window_managment_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                    m_appNotifier, screensModel),
+                    m_appNotifier, eventFeeder),
             qtmir::setDisplayConfigurationPolicy,
             setCommandLineHandler,
             addInitCallback,

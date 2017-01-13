@@ -33,6 +33,7 @@
 #include "windowmodelnotifier.h"
 #include "sessionauthorizer.h"
 #include "mirserverhooks.h"
+#include "qteventfeeder.h"
 
 //miral
 #include <miral/application_authorizer.h>
@@ -53,6 +54,7 @@ public:
     QMirServerPrivate(int &argc, char* argv[]);
     const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
+    QSharedPointer<QtEventFeeder> eventFeeder{new QtEventFeeder(screensModel)};
     MirServerThread *serverThread;
 
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;

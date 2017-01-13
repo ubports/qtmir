@@ -39,12 +39,12 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
                                                qtmir::AppNotifier &appNotifier,
-                                               const QSharedPointer<ScreensModel> screensModel)
+                                               const QSharedPointer<QtEventFeeder> eventFeeder)
     : CanonicalWindowManagerPolicy(tools)
     , m_tools(tools)
     , m_windowModel(windowModel)
     , m_appNotifier(appNotifier)
-    , m_eventFeeder(new QtEventFeeder(screensModel))
+    , m_eventFeeder(eventFeeder)
 {
     qRegisterMetaType<qtmir::NewWindow>();
     qRegisterMetaType<std::vector<miral::Window>>();

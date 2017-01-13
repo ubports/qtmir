@@ -24,12 +24,12 @@
 #include "windowcontroller.h"
 #include "windowmodelnotifier.h"
 
-#include <QScopedPointer>
+#include <QSharedPointer>
 #include <QSize>
 
 using namespace mir::geometry;
 
-class ScreensModel;
+class QtEventFeeder;
 
 class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy
 {
@@ -38,7 +38,7 @@ public:
                            qtmir::WindowModelNotifier &windowModel,
                            qtmir::WindowController &windowController,
                            qtmir::AppNotifier &appNotifier,
-                           const QSharedPointer<ScreensModel> screensModel);
+                           const QSharedPointer<QtEventFeeder> eventFeeder);
 
     // From WindowManagementPolicy
     auto place_new_surface(const miral::ApplicationInfo &app_info,
@@ -90,7 +90,7 @@ private:
     miral::WindowManagerTools m_tools;
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
-    const QScopedPointer<QtEventFeeder> m_eventFeeder;
+    const QSharedPointer<QtEventFeeder> m_eventFeeder;
 };
 
 #endif // WINDOWMANAGEMENTPOLICY_H
