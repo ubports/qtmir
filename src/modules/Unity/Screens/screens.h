@@ -37,8 +37,12 @@ public:
     enum ItemRoles {
         ScreenRole = Qt::UserRole + 1,
         OutputTypeRole,
+        EnabledRole,
+        NameRole,
         ScaleRole,
         FormFactorRole,
+        GeometryRole,
+        SizesRole
     };
 
     explicit Screens(QObject *parent = 0);

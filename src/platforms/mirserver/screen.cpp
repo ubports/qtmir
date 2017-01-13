@@ -146,6 +146,7 @@ bool Screen::skipDBusRegistration = false;
 
 Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     : QObject(nullptr)
+    , m_used(false)
     , m_refreshRate(-1.0)
     , m_scale(1.0)
     , m_formFactor(mir_form_factor_unknown)
@@ -215,6 +216,8 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 {
     // Note: DisplayConfigurationOutput will be destroyed after this function returns
 
+    m_used = screen.used;
+
     // Output data - each output has a unique id and corresponding type. Can be multiple cards.
     m_outputId = screen.id;
     m_type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
@@ -242,6 +245,12 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
+
+    m_availableSizes.clear();
+    Q_FOREACH(auto mode, screen.modes) {
+        qDebug() << "PLOP" << QSize(mode.size.width.as_int(), mode.size.height.as_int());
+        m_availableSizes.append(QSize(mode.size.width.as_int(), mode.size.height.as_int()));
+    }
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 

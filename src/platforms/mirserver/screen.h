@@ -58,12 +58,14 @@ public:
     QString name() const override;
     QWindow *topLevelAt(const QPoint &point) const;
 
+    bool used() const { return m_used; }
     float scale() const { return m_scale; }
     MirFormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
     qtmir::OutputId outputId() const { return m_outputId; }
     qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
+    QList<QSize> availableSizes() const { return m_availableSizes; }
 
     const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
     ScreenWindow* primaryWindow() const;
@@ -96,6 +98,7 @@ private:
     void toggleSensors(const bool enable) const;
     bool internalDisplay() const;
 
+    bool m_used;
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;
@@ -105,6 +108,7 @@ private:
     float m_scale;
     MirFormFactor m_formFactor;
     uint32_t m_currentModeIndex;
+    QList<QSize> m_availableSizes;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;

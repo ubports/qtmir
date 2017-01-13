@@ -79,7 +79,7 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
     conf.for_each_output(
         [&](const mg::DisplayConfigurationOutput &output )
         {
-            if (output.connected && output.used) {
+            if (output.connected) {
                 screenCount++;
 
                 if (output.type == mg::DisplayConfigurationOutputType::lvds) {
@@ -91,7 +91,7 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
     conf.for_each_output(
         [&](mg::UserDisplayConfigurationOutput &output)
         {
-            if (!output.connected || !output.used) {
+            if (!output.connected) {
                 return;
             }
 

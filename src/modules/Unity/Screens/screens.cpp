@@ -49,8 +49,12 @@ QHash<int, QByteArray> Screens::roleNames() const
     QHash<int, QByteArray> roles;
     roles[ScreenRole] = "screen";
     roles[OutputTypeRole] = "outputType";
+    roles[EnabledRole] = "enabled";
+    roles[NameRole] = "name";
     roles[ScaleRole] = "scale";
     roles[FormFactorRole] = "formFactor";
+    roles[GeometryRole] = "geometry";
+    roles[SizesRole] = "sizes";
     return roles;
 }
 
@@ -71,6 +75,22 @@ QVariant Screens::data(const QModelIndex &index, int role) const
             return OutputTypes::Unknown;
         }
     }
+    case EnabledRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return screen->used();
+        } else {
+            return false;
+        }
+    }
+    case NameRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return screen->name();
+        } else {
+            return QString();
+        }
+    }
     case ScaleRole: {
         auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
         if (screen) {
@@ -85,6 +105,27 @@ QVariant Screens::data(const QModelIndex &index, int role) const
             return QVariant(static_cast<FormFactor>(screen->formFactor())); //FIXME: cheeky
         } else {
             return FormFactor::FormFactorUnknown;
+        }
+    }
+    case GeometryRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            return screen->geometry();
+        } else {
+            return QRect();
+        }
+    }
+    case SizesRole: {
+        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
+        if (screen) {
+            QVariantList sizes;
+            auto availableSizes = screen->availableSizes();
+            Q_FOREACH(auto size, availableSizes) {
+                sizes.append(QVariant(size));
+            }
+            return sizes;
+        } else {
+            return QVariantList();
         }
     }
     } // switch
