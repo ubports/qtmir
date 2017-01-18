@@ -64,7 +64,7 @@ public:
     void advise_new_window(const miral::WindowInfo &windowInfo) override;
     void advise_focus_lost(const miral::WindowInfo &info) override;
     void advise_focus_gained(const miral::WindowInfo &info) override;
-    void advise_state_change(const miral::WindowInfo &info, MirSurfaceState state) override;
+    void advise_state_change(const miral::WindowInfo &info, MirWindowState state) override;
     void advise_move_to(const miral::WindowInfo &windowInfo, Point topLeft) override;
     void advise_resize(const miral::WindowInfo &info, const Size &newSize) override;
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;

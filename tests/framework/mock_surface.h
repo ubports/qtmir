@@ -42,8 +42,8 @@ struct MockSurface : public mir::scene::Surface
 
 
     MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(type, MirSurfaceType());
-    MOCK_CONST_METHOD0(state, MirSurfaceState());
+    MOCK_CONST_METHOD0(type, MirWindowType());
+    MOCK_CONST_METHOD0(state, MirWindowState());
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_CONST_METHOD0(visible, bool());
@@ -80,8 +80,8 @@ struct MockSurface : public mir::scene::Surface
     MOCK_METHOD2(swap_buffers, void(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete));
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib attrib, int value));
-    MOCK_CONST_METHOD1(query, int(MirSurfaceAttrib attrib));
+    MOCK_METHOD2(configure, int(MirWindowAttrib attrib, int value));
+    MOCK_CONST_METHOD1(query, int(MirWindowAttrib attrib));
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
 
     // from mir::scene::SurfaceBufferAccess
