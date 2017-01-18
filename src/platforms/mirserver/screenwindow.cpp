@@ -109,7 +109,6 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
     myScreen->setWindow(this);
 
     QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
-    setExposed(true); //GERRY - assumption setScreen only called while compositor running
 
     qCDebug(QTMIR_SCREENS) << "ScreenWindow" << this << "with window ID" << uint(m_winId) << "NEWLY backed by" << myScreen;
 }
