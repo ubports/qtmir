@@ -155,14 +155,16 @@ void Cursor::registerMousePointer(MirMousePointerInterface *mousePointer)
 {
     QMutexLocker locker(&m_mutex);
 
-    connect(m_sharedPointer.data(), &SharedPointerData::screenPositionChanged, mousePointer, [mousePointer](const QPoint& screenPos) {
+    auto updatePositionFunction = [mousePointer](const QPoint& screenPos) {
+        if (!mousePointer->window()) return;
+        if (!mousePointer->isEnabled()) return;
+
         QPoint localPos = screenPos - mousePointer->window()->geometry().topLeft();
         mousePointer->setPosition(localPos);
-    }, Qt::UniqueConnection);
+    };
+
+    connect(m_sharedPointer.data(), &SharedPointerData::screenPositionChanged, mousePointer, updatePositionFunction, Qt::UniqueConnection);
     connect(m_sharedPointer.data(), &SharedPointerData::cursorChanged, mousePointer, [this, mousePointer](const QCursor& cursor, const QString& cursorName) {
-
-        qDebug() << "UPDATE CURSOR" << this << mousePointer << cursor << cursorName;
-
         mousePointer->setCursor(cursor);
         mousePointer->setCursorName(cursorName);
     }, Qt::UniqueConnection);

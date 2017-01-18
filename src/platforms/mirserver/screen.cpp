@@ -248,7 +248,6 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     m_availableSizes.clear();
     Q_FOREACH(auto mode, screen.modes) {
-        qDebug() << "PLOP" << QSize(mode.size.width.as_int(), mode.size.height.as_int());
         m_availableSizes.append(QSize(mode.size.width.as_int(), mode.size.height.as_int()));
     }
 
