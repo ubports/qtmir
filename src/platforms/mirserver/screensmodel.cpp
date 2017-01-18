@@ -224,6 +224,10 @@ bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::Displ
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
     Q_FOREACH (const auto screen, m_screenList) {
+        // Only set windows exposed on displays which are turned on
+        if (exposed && screen->powerMode() != mir_power_mode_on)
+            return;
+
         const auto window = static_cast<ScreenWindow *>(screen->window());
         if (window && window->window()) {
             window->setExposed(exposed);
