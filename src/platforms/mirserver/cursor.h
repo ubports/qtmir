@@ -26,7 +26,6 @@
 
 namespace qtmir {
 
-class SharedPointerData;
 
 class Cursor : public MirPlatformCursor
 {
@@ -51,10 +50,8 @@ public:
     QPoint pos() const override;
 
 private:
-    QSharedPointer<SharedPointerData> m_sharedPointer;
-
-    QMutex m_mutex;
-    QMap<int,QString> m_shapeToCursorName;
+    class Private;
+    QSharedPointer<Private> d;
 };
 
 } // namespace qtmir
