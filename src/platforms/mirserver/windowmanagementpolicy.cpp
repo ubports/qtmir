@@ -23,6 +23,7 @@
 #include "miral/window_specification.h"
 
 #include "mirqtconversion.h"
+#include "tracepoints.h"
 
 #include <mir/scene/surface.h>
 #include <QDebug>
@@ -136,11 +137,13 @@ void WindowManagementPolicy::advise_raise(const std::vector<miral::Window> &wind
 
 void WindowManagementPolicy::advise_new_app(miral::ApplicationInfo &application)
 {
+    tracepoint(qtmirserver, starting);
     Q_EMIT m_appNotifier.appAdded(application);
 }
 
 void WindowManagementPolicy::advise_delete_app(const miral::ApplicationInfo &application)
 {
+    tracepoint(qtmirserver, stopping);
     Q_EMIT m_appNotifier.appRemoved(application);
 }
 
