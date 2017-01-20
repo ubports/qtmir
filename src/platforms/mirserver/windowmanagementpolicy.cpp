@@ -202,17 +202,6 @@ void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
     });
 }
 
-bool WindowManagementPolicy::someTouchHasGoneDown(const MirTouchEvent *event)
-{
-    int touchCount = mir_touch_event_point_count(event);
-    for (int i = 0; i < touchCount; ++i) {
-        if (mir_touch_event_action(event, i) == mir_touch_action_down) {
-            return true;
-        }
-    }
-    return false;
-}
-
 /* Following methods all called from the Qt GUI thread to deliver events to clients */
 void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
                                                     const miral::Window &window)
@@ -231,9 +220,7 @@ void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *even
 void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
                                                  const miral::Window &window)
 {
-    if (someTouchHasGoneDown(event)) {
-        ensureWindowIsActive(window);
-    }
+    ensureWindowIsActive(window);
 
     auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
