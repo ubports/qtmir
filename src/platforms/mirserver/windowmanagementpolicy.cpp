@@ -193,13 +193,34 @@ void WindowManagementPolicy::advise_end()
     Q_EMIT m_windowModel.modificationsEnded();
 }
 
+void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
+{
+    m_tools.invoke_under_lock([&window, this]() {
+        if (m_tools.active_window() != window) {
+            m_tools.select_active_window(window);
+        }
+    });
+}
+
+bool WindowManagementPolicy::someTouchHasGoneDown(const MirTouchEvent *event)
+{
+    int touchCount = mir_touch_event_point_count(event);
+    for (int i = 0; i < touchCount; ++i) {
+        if (mir_touch_event_action(event, i) == mir_touch_action_down) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /* Following methods all called from the Qt GUI thread to deliver events to clients */
 void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
                                                     const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.select_active_window(window);
-    });
+    if (mir_keyboard_event_action(event) == mir_keyboard_action_down) {
+        ensureWindowIsActive(window);
+    }
+
     auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
     if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
@@ -210,9 +231,10 @@ void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *even
 void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
                                                  const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.select_active_window(window);
-    });
+    if (someTouchHasGoneDown(event)) {
+        ensureWindowIsActive(window);
+    }
+
     auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
     if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
@@ -225,9 +247,7 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
 {
     // Prevent mouse hover events causing window focus to change
     if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
-        m_tools.invoke_under_lock([&window, this]() {
-            m_tools.select_active_window(window);
-        });
+        ensureWindowIsActive(window);
     }
     auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 

@@ -87,6 +87,9 @@ public:
 Q_SIGNALS:
 
 private:
+    void ensureWindowIsActive(const miral::Window &window);
+    bool someTouchHasGoneDown(const MirTouchEvent *event);
+
     miral::WindowManagerTools m_tools;
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
