@@ -18,6 +18,7 @@
 
 #include "mirsurface.h"
 #include "sessionmanager.h"
+#include "tracepoints.h"
 
 // mirserver
 #include "nativeinterface.h"
@@ -89,6 +90,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     if (session)
         session->registerSurface(surface);
 
+    tracepoint(qtmir, surfaceCreated);
     Q_EMIT surfaceCreated(surface);
 }
 
@@ -97,6 +99,7 @@ void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
     MirSurface *surface = find(windowInfo);
     forgetMirSurface(windowInfo.window());
     surface->setLive(false);
+    tracepoint(qtmir, surfaceDestroyed);
 }
 
 MirSurface *SurfaceManager::find(const miral::WindowInfo &needle) const
@@ -117,6 +120,7 @@ MirSurface *SurfaceManager::find(const miral::Window &window) const
 void SurfaceManager::onWindowReady(const miral::WindowInfo &windowInfo)
 {
     if (auto mirSurface = find(windowInfo)) {
+        tracepoint(qtmir, firstFrameDrawn); // MirAL decides surface ready when it swaps its first frame
         mirSurface->setReady();
     }
 }
