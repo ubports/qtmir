@@ -143,6 +143,19 @@ int Screens::count() const
     return m_screenList.size();
 }
 
+void Screens::activateScreen(int index)
+{
+    if (index < 0 || m_screenList.count() <= index) return;
+
+    auto platformScreen = static_cast<Screen*>(m_screenList.at(index)->handle());
+    if (platformScreen && platformScreen->primaryWindow()) {
+        auto window = platformScreen->primaryWindow()->window();
+        if (window) {
+            window->requestActivate();
+        }
+    }
+}
+
 void Screens::onScreenAdded(QScreen *screen)
 {
     if (m_screenList.contains(screen))
