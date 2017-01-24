@@ -903,7 +903,7 @@ QRect MirSurface::inputBounds() const
 
 bool MirSurface::confinesMousePointer() const
 {
-    return m_surface->confine_pointer_state() == mir_pointer_confined_to_surface;
+    return m_surface->confine_pointer_state() == mir_pointer_confined_to_window;
 }
 
 void MirSurface::activate()
