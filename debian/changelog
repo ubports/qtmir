@@ -1,3 +1,15 @@
+qtmir (0.5.1+17.04.20170124-0ubuntu1) zesty; urgency=medium
+
+  [ Gerry Boland ]
+  * Recalculate MirSurface.visible after first frame swap by client (LP:
+    #1649077)
+
+  [ Lukáš Tinkl ]
+  * Some assorted cleanups and small optimizations
+  * Apply default device keymap (LP: #1626435)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 24 Jan 2017 07:38:05 +0000
+
 qtmir (0.5.1+17.04.20170110.1-0ubuntu1) zesty; urgency=medium
 
   [ Timo Jyrinki ]
