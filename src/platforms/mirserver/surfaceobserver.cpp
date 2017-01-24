@@ -86,6 +86,9 @@ void SurfaceObserver::notifySurfaceModifications(const miral::WindowSpecificatio
     if (modifications.confine_pointer().is_set()) {
         Q_EMIT confinesMousePointerChanged(modifications.confine_pointer().value() == mir_pointer_confined_to_surface);
     }
+    if (modifications.name().is_set()) {
+        Q_EMIT nameChanged(QString::fromStdString(modifications.name().value()));
+    }
 }
 
 SurfaceObserver *SurfaceObserver::observerForSurface(const mir::scene::Surface *surface)
