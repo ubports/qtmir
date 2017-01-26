@@ -89,8 +89,8 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
+    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+                        std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
@@ -1125,7 +1125,7 @@ void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle c
 }
 #endif
 
-void MirSurface::SurfaceObserverImpl::attrib_changed(MirSurfaceAttrib attribute, int value)
+void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
 {
     if (m_listener) {
         Q_EMIT attributeChanged(attribute, value);

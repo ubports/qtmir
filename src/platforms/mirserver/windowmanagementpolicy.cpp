@@ -53,11 +53,11 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
 }
 
 /* Following are hooks to allow custom policy be imposed */
-miral::WindowSpecification WindowManagementPolicy::place_new_surface(
+miral::WindowSpecification WindowManagementPolicy::place_new_window(
     const miral::ApplicationInfo &app_info,
     const miral::WindowSpecification &request_parameters)
 {
-    auto parameters = CanonicalWindowManagerPolicy::place_new_surface(app_info, request_parameters);
+    auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
 

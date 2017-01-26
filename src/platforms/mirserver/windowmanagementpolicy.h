@@ -41,7 +41,7 @@ public:
                            const QSharedPointer<ScreensModel> screensModel);
 
     // From WindowManagementPolicy
-    auto place_new_surface(const miral::ApplicationInfo &app_info,
+    auto place_new_window(const miral::ApplicationInfo &app_info,
                            const miral::WindowSpecification &request_parameters)
         -> miral::WindowSpecification override;
 

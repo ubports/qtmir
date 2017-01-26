@@ -62,7 +62,7 @@ struct MockSurface : public StubSurface
 {
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_CONST_METHOD0(visible, bool());
-    MOCK_CONST_METHOD0(state, MirSurfaceState());
+    MOCK_CONST_METHOD0(state, MirWindowState());
 };
 
 class MirSurfaceTest : public ::testing::Test
@@ -173,7 +173,7 @@ TEST_F(MirSurfaceTest, EnsureVisiblePropertyRecalculatedAfterFrameSwap)
     miral::WindowInfo mockWindowInfo(mockWindow, spec);
 
     EXPECT_CALL(*mockSurface.get(),state())
-        .WillRepeatedly(Return(mir_surface_state_maximized));
+        .WillRepeatedly(Return(mir_window_state_maximized));
     EXPECT_CALL(*mockSurface.get(),visible())
         .WillOnce(Return(false));
 
