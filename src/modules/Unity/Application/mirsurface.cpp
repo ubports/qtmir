@@ -47,7 +47,6 @@
 #include <limits>
 
 using namespace qtmir;
-namespace unityapi = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 #define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
@@ -109,8 +108,7 @@ private:
 
 MirSurface::MirSurface(NewWindow newWindowInfo,
         WindowControllerInterface* controller,
-        SessionInterface *session,
-        MirSurface *parentSurface)
+        SessionInterface *session)
     : MirSurfaceInterface()
     , m_window{newWindowInfo.windowInfo.window()}
     , m_extraInfo{getExtraInfo(newWindowInfo.windowInfo)}
@@ -131,19 +129,15 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_visible(newWindowInfo.windowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
+    , m_position(toQPoint(m_window.top_left()))
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
-    , m_parentSurface(parentSurface)
-    , m_childSurfaceList(new MirSurfaceListModel(this))
 {
     DEBUG_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
-        << ",parentSurface=" << m_parentSurface
         << ")";
-
-    m_position = convertDisplayToLocalCoords(toQPoint(m_window.top_left()));
 
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
@@ -479,9 +473,8 @@ QPoint MirSurface::position() const
     return m_position;
 }
 
-void MirSurface::setPosition(const QPoint newDisplayPosition)
+void MirSurface::setPosition(const QPoint newPosition)
 {
-    QPoint newPosition = convertDisplayToLocalCoords(newDisplayPosition);
     if (m_position != newPosition) {
         m_position = newPosition;
         Q_EMIT positionChanged(newPosition);
@@ -975,10 +968,8 @@ void MirSurface::setRequestedPosition(const QPoint &point)
         m_requestedPosition = point;
         Q_EMIT requestedPositionChanged(m_requestedPosition);
 
-        QPoint requestedDisplayPos = convertLocalToDisplayCoords(m_requestedPosition);
-
         if (m_live) {
-            m_controller->move(m_window, requestedDisplayPos);
+            m_controller->move(m_window, m_requestedPosition);
         }
     }
 }
@@ -1191,40 +1182,4 @@ void MirSurface::requestFocus()
 {
     DEBUG_MSG << "()";
     Q_EMIT focusRequested();
-}
-
-QPoint MirSurface::convertDisplayToLocalCoords(const QPoint &displayPos) const
-{
-    QPoint localPos = displayPos;
-
-    if (m_surface->parent()) {
-        auto parentPos = m_surface->parent()->top_left();
-        localPos.rx() -= parentPos.x.as_int();
-        localPos.ry() -= parentPos.y.as_int();
-    }
-
-    return localPos;
-}
-
-QPoint MirSurface::convertLocalToDisplayCoords(const QPoint &localPos) const
-{
-    QPoint displayPos = localPos;
-
-    if (m_surface->parent()) {
-        auto parentPos = m_surface->parent()->top_left();
-        displayPos.rx() += parentPos.x.as_int();
-        displayPos.ry() += parentPos.y.as_int();
-    }
-
-    return displayPos;
-}
-
-unityapi::MirSurfaceInterface *MirSurface::parentSurface() const
-{
-    return m_parentSurface;
-}
-
-unityapi::MirSurfaceListInterface *MirSurface::childSurfaceList() const
-{
-    return m_childSurfaceList;
 }

@@ -79,9 +79,6 @@ public:
     QRect inputBounds() const override { return QRect(0,0,10,10); }
     bool confinesMousePointer() const override { return false; }
 
-    unity::shell::application::MirSurfaceInterface *parentSurface() const override { return nullptr; }
-    unity::shell::application::MirSurfaceListInterface *childSurfaceList() const override { return nullptr; }
-
     void close() override {
         Q_EMIT closeRequested();
     }

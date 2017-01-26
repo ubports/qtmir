@@ -43,7 +43,6 @@ class SurfaceObserver;
 namespace qtmir {
 
 class AbstractTimer;
-class MirSurfaceListModel;
 class SessionInterface;
 
 class MirSurface : public MirSurfaceInterface
@@ -53,8 +52,7 @@ class MirSurface : public MirSurfaceInterface
 public:
     MirSurface(NewWindow windowInfo,
                WindowControllerInterface *controller,
-               SessionInterface *session = nullptr,
-               MirSurface *parentSurface = nullptr);
+               SessionInterface *session = nullptr);
     virtual ~MirSurface();
 
     ////
@@ -97,10 +95,6 @@ public:
     bool confinesMousePointer() const override;
 
     Q_INVOKABLE void activate() override;
-
-    unity::shell::application::MirSurfaceInterface *parentSurface() const override;
-    unity::shell::application::MirSurfaceListInterface *childSurfaceList() const override;
-
     Q_INVOKABLE void close() override;
 
     ////
@@ -208,8 +202,6 @@ private:
     void onMaximumHeightChanged(int maxHeight);
     void onWidthIncrementChanged(int incWidth);
     void onHeightIncrementChanged(int incHeight);
-    QPoint convertDisplayToLocalCoords(const QPoint &displayPos) const;
-    QPoint convertLocalToDisplayCoords(const QPoint &localPos) const;
 
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
@@ -273,11 +265,6 @@ private:
     };
     ClosingState m_closingState{NotClosing};
     AbstractTimer *m_closeTimer{nullptr};
-
-    // assumes parent won't be destroyed before its children
-    MirSurface *m_parentSurface;
-
-    MirSurfaceListModel *m_childSurfaceList;
 };
 
 } // namespace qtmir
