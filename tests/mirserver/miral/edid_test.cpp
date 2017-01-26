@@ -71,20 +71,23 @@ std::vector<TestDataParamType> testData = {
 class EdidTest :
     public ::testing::TestWithParam<TestDataParamType> {};
 
-TEST_P(EdidTest, Test_IncorrectLength)
+TEST(EdidTest, Construct)
 {
-    const std::vector<uint8_t>& data = std::get<0>(GetParam());
-
-    std::vector<uint8_t> invalidLength{data.begin(), data.end()-1};
-
     Edid edid;
-    try {
-        edid.parse_data(invalidLength);
-    } catch(std::runtime_error const& err) {
-        EXPECT_EQ(err.what(), std::string("Incorrect EDID structure size"));
-        return;
+    EXPECT_EQ(edid.vendor, "");
+    EXPECT_EQ(edid.product_code, 0);
+    EXPECT_EQ(edid.serial_number, uint32_t(0));
+    EXPECT_EQ(edid.size.width, 0); EXPECT_EQ(edid.size.height, 0);
+
+    char zero_array[13] = {0};
+    for (int i = 0; i < 4; i++) {
+        EXPECT_EQ(edid.descriptors[i].type, Edid::Descriptor::Type::undefined);
+
+        auto& value = edid.descriptors[i].value;
+        EXPECT_TRUE(std::equal(std::begin(value.monitor_name), std::end(value.monitor_name), std::begin(zero_array)));
+        EXPECT_TRUE(std::equal(std::begin(value.unspecified_text), std::end(value.unspecified_text), std::begin(zero_array)));
+        EXPECT_TRUE(std::equal(std::begin(value.serial_number), std::end(value.serial_number), std::begin(zero_array)));
     }
-    FAIL() << "Expected std::runtime_error(\"Incorrect EDID structure size\")";
 }
 
 TEST_P(EdidTest, Test_InvalidChecksum)
