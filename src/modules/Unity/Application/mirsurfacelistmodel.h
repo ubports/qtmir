@@ -68,7 +68,7 @@ private:
     void raise(MirSurfaceInterface *surface);
     void moveSurface(int from, int to);
     void connectSurface(MirSurfaceInterface *surface);
-    void prependSurfaces(QList<MirSurfaceInterface*> &surfaceList, int prependFirst, int prependLast);
+    void prependSurfaces(const QList<MirSurfaceInterface *> &surfaceList, int prependFirst, int prependLast);
 
     QList<MirSurfaceInterface*> m_surfaceList;
     QList<MirSurfaceListModel*> m_trackedModels;
