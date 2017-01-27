@@ -67,6 +67,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
     });
 
     window->setSurfaceType(QSurface::OpenGLSurface);
+    window->setWindowState(Qt::WindowFullScreen);
 
     // Nick - changing screen will create a new platform surface for the window, and require re-exposure.
     connect(window, &QWindow::screenChanged, this, &ScreenWindow::updateExpose);

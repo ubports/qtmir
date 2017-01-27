@@ -54,6 +54,8 @@ public:
 
     QPlatformOffscreenSurface *createPlatformOffscreenSurface(QOffscreenSurface *surface) const override;
 
+    Qt::WindowState defaultWindowState(Qt::WindowFlags) const override;
+
 private:
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;

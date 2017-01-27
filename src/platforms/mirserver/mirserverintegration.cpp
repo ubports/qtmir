@@ -197,3 +197,8 @@ QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
 {
     return new OffscreenSurface(surface);
 }
+
+Qt::WindowState MirServerIntegration::defaultWindowState(Qt::WindowFlags) const
+{
+    return Qt::WindowFullScreen;
+}
