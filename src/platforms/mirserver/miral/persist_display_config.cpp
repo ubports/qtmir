@@ -166,6 +166,7 @@ void PersistDisplayConfigPolicy::apply_to(
     // then apply the custom policy
     custom_policy.apply_to(conf);
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
     if (!storage) return;
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
@@ -208,8 +209,10 @@ void PersistDisplayConfigPolicy::apply_to(
         } catch (std::runtime_error const&) {
         }
     });
+#endif
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)
 {
     if (!storage) return;
@@ -243,3 +246,8 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
         }
     });
 }
+#else
+void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const&)
+{
+}
+#endif

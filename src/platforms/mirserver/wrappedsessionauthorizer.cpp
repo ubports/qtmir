@@ -46,8 +46,7 @@ namespace qtmir {
 
         if (!d->m_connectionChecked) {
             // Wait until the ApplicationManager is ready to receive requestAuthorizationForSession signals
-            const QMetaObject *mo = metaObject();
-            QMetaMethod mm = mo->method(mo->indexOfSignal("requestAuthorizationForSession(pid_t,bool&)"));
+            QMetaMethod mm = QMetaMethod::fromSignal(&SessionAuthorizer::requestAuthorizationForSession);
             for (int i = 0; i < 100 && !isSignalConnected(mm); ++i) {
                 QThread::usleep(10000);
             }
