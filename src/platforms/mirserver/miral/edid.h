@@ -54,7 +54,7 @@ struct Edid
         };
 
         Type type{Type::undefined};
-        Value value{0};
+        Value value{{0}};
 
         std::string string_value() const;
     };
