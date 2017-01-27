@@ -27,6 +27,9 @@
 
 #include "mock_qtwindowsystem.h"
 
+#include <linux/input.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::AnyNumber;
@@ -279,4 +282,43 @@ TEST_F(QtEventFeederTest, TimestampInMilliseconds)
     auto ev2 = mev::make_event(MirInputDeviceId(), std::chrono::milliseconds(125), std::vector<uint8_t>{} /* cookie */, 0);
     qtEventFeeder->dispatch(*ev2);
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockWindowSystem));
+}
+
+TEST_F(QtEventFeederTest, composeKeysNotFilteredOut)
+{
+    auto down = mir_keyboard_action_down;
+    auto up = mir_keyboard_action_up;
+
+    auto dispatch_key_event = [&](MirKeyboardAction action, int scan_code, xkb_keysym_t key_sym)
+    {
+        qtEventFeeder->dispatch(*mev::make_event(
+                MirInputDeviceId{0}, std::chrono::nanoseconds{0}, std::vector<uint8_t>{},
+                action, key_sym, scan_code, mir_input_event_modifier_none));
+    };
+
+    InSequence seq;
+    EXPECT_CALL(
+        *mockWindowSystem,
+        handleExtendedKeyEvent(_, _, QEvent::KeyPress, _, _, KEY_RIGHTSHIFT,
+                               XKB_KEY_Shift_R, _, _, _));
+    EXPECT_CALL(*mockWindowSystem,
+                handleExtendedKeyEvent(_, _, QEvent::KeyPress, _, _,
+                                       KEY_APOSTROPHE, XKB_KEY_NoSymbol,
+                                       _, _, _));
+    EXPECT_CALL(*mockWindowSystem,
+                handleExtendedKeyEvent(_, _, QEvent::KeyRelease, _, _,
+                                       KEY_APOSTROPHE, XKB_KEY_NoSymbol,
+                                       _, _, _));
+    EXPECT_CALL(
+        *mockWindowSystem,
+        handleExtendedKeyEvent(_, _, QEvent::KeyRelease, _, _, KEY_RIGHTSHIFT,
+                               XKB_KEY_Shift_R, _, _, _));
+    EXPECT_CALL(*mockWindowSystem,
+                handleExtendedKeyEvent(_, _, QEvent::KeyPress, _, _, KEY_U,
+                                       XKB_KEY_udiaeresis, _, _, _));
+    dispatch_key_event(down, KEY_RIGHTSHIFT, XKB_KEY_Shift_R);
+    dispatch_key_event(down, KEY_APOSTROPHE, XKB_KEY_NoSymbol);
+    dispatch_key_event(up, KEY_APOSTROPHE, XKB_KEY_NoSymbol);
+    dispatch_key_event(up, KEY_RIGHTSHIFT, XKB_KEY_Shift_R);
+    dispatch_key_event(down, KEY_U, XKB_KEY_udiaeresis);
 }

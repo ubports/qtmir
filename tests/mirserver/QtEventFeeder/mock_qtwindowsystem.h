@@ -29,14 +29,25 @@ public:
     MOCK_METHOD1(getWindowForPoint, QWindow*(const QPoint &point));
     MOCK_METHOD0(lastWindow, QWindow*());
     MOCK_METHOD0(focusedWindow, QWindow*());
+    // ignores the last parameter count, due to parameter limit in gmock
+    MOCK_METHOD10(handleExtendedKeyEvent,
+                  void(QWindow *window, ulong timestamp, QEvent::Type type,
+                       int key, Qt::KeyboardModifiers modifiers,
+                       quint32 nativeScanCode, quint32 nativeVirtualKey,
+                       quint32 nativeModifiers, const QString &text,
+                       bool autorep));
 
-    // Wanted to use GMock, but MOCK_METHOD11 not implemented
-    void handleExtendedKeyEvent(QWindow */*window*/, ulong /*timestamp*/, QEvent::Type /*type*/, int /*key*/,
-            Qt::KeyboardModifiers /*modifiers*/,
-            quint32 /*nativeScanCode*/, quint32 /*nativeVirtualKey*/,
-            quint32 /*nativeModifiers*/,
-            const QString& /*text*/ = QString(), bool /*autorep*/ = false,
-            ushort /*count*/ = 1) {}
+    void handleExtendedKeyEvent(QWindow *window, ulong timestamp, QEvent::Type type, int key,
+            Qt::KeyboardModifiers modifiers,
+            quint32 nativeScanCode, quint32 nativeVirtualKey,
+            quint32 nativeModifiers,
+            const QString& text, bool autorep,
+            ushort /*count*/ )
+    {
+        handleExtendedKeyEvent(window, timestamp, type, key, modifiers,
+                               nativeScanCode, nativeVirtualKey,
+                               nativeModifiers, text, autorep);
+    }
 
     MOCK_METHOD5(handleTouchEvent, void(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points,

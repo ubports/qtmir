@@ -90,8 +90,8 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
+    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+                        std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
@@ -221,7 +221,7 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
 {
     switch (attribute) {
     case mir_surface_attrib_type:
-        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(state());
+        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(type());
         Q_EMIT typeChanged(type());
         break;
     default:
@@ -761,6 +761,8 @@ QString MirSurface::appId() const
 
     if (m_session && m_session->application()) {
         appId = m_session->application()->appId();
+    } else if (m_session) {
+        appId = m_session->name();
     } else {
         appId.append("-");
     }
@@ -861,6 +863,7 @@ void MirSurface::setReady()
     if (!m_ready) {
         DEBUG_MSG << "()";
         m_ready = true;
+        updateVisible(); // as Mir can change m_surface->visible() to true after first frame swap
         Q_EMIT ready();
         updateExposure();
     }
@@ -1162,12 +1165,6 @@ void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::C
 {
     QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
     Q_EMIT cursorChanged(qcursor);
-}
-
-void MirSurface::SurfaceObserverImpl::keymap_changed(MirInputDeviceId, const std::string &, const std::string &layout,
-                                                     const std::string &variant, const std::string &)
-{
-    Q_EMIT keymapChanged(QString::fromStdString(layout), QString::fromStdString(variant));
 }
 
 QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage) {

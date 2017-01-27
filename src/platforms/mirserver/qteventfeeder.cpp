@@ -27,7 +27,6 @@
 #include <qpa/qplatformintegration.h>
 #include <qpa/qwindowsysteminterface_p.h>
 #include <QGuiApplication>
-#include <private/qguiapplication_p.h>
 #include <QTextCodec>
 #include <QDebug>
 
@@ -653,22 +652,6 @@ void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
         }
     }
     int keyCode = translateKeysym(xk_sym, text);
-
-    QPlatformInputContext* context = QGuiApplicationPrivate::platformIntegration()->inputContext();
-    if (context) {
-        // TODO: consider event.repeat_count
-        QKeyEvent qKeyEvent(keyType, keyCode, modifiers,
-                            mir_keyboard_event_scan_code(kev),
-                            mir_keyboard_event_key_code(kev),
-                            mir_keyboard_event_modifiers(kev),
-                            text, is_auto_rep);
-        qKeyEvent.setTimestamp(timestamp.count());
-        if (context->filterEvent(&qKeyEvent)) {
-            qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirKeyboardEventToString(kev))
-                << "but not dispatching as it was filtered out by input context";
-            return;
-        }
-    }
 
     qCDebug(QTMIR_MIR_INPUT).nospace() << "Received " << qPrintable(mirKeyboardEventToString(kev))
         << ". Dispatching to " << mQtWindowSystem->focusedWindow();

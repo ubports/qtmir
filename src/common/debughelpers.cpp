@@ -142,6 +142,8 @@ const char *mirSurfaceStateToStr(int value)
         return "maximized";
     case mir_surface_state_vertmaximized:
         return "vertmaximized";
+    case mir_surface_state_horizmaximized:
+        return "horizmaximized";
     case mir_surface_state_fullscreen:
         return "fullscreen";
     case mir_surface_state_hidden:
@@ -170,20 +172,6 @@ const char *mirSurfaceVisibilityToStr(int value)
         return "occluded";
     case mir_surface_visibility_exposed:
         return "exposed";
-    default:
-        return "???";
-    }
-}
-
-const char *mirTouchActionToStr(MirTouchAction action)
-{
-    switch (action) {
-    case mir_touch_action_up:
-        return "up";
-    case mir_touch_action_down:
-        return "down";
-    case mir_touch_action_change:
-        return "change";
     default:
         return "???";
     }

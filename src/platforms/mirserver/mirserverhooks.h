@@ -25,6 +25,7 @@
 namespace mir { class Server; }
 namespace mir { namespace scene { class PromptSessionManager; }}
 namespace mir { namespace graphics { class Display; }}
+namespace mir { namespace input { class InputDeviceHub; } }
 
 class PromptSessionListener;
 class ScreensController;
@@ -42,8 +43,10 @@ public:
     PromptSessionListener *promptSessionListener() const;
     std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::graphics::Display> theMirDisplay() const;
+    std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
 
     QSharedPointer<ScreensController> createScreensController(QSharedPointer<ScreensModel> const &screensModel) const;
+    void createInputDeviceObserver();
 
 private:
     struct Self;
