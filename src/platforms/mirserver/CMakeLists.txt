@@ -3,8 +3,6 @@
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 include(FindQt5PlatformSupport)
 
-message(STATUS "PLOP ${Qt5PlatformSupport_INCLUDE_DIRS}")
-
 add_subdirectory(miral)
 
 # Hacks for the QPA privates monster.
