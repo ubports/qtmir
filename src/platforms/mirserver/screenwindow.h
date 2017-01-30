@@ -33,8 +33,10 @@ public:
 
     void setVisible(bool visible) override;
     void setGeometry(const QRect &rect) override;
+    void requestActivateWindow() override;
 
     bool isExposed() const override;
+    bool isActive() const override;
     void setExposed(const bool exposed);
 
     WId winId() const override { return m_winId; }
@@ -47,12 +49,14 @@ public:
 
 private Q_SLOTS:
     void updateExpose();
+    void setActive(bool active);
 
 private:
     void setPrimary(const bool primary);
 
     bool m_exposed;
     bool m_primary;
+    bool m_active;
     WId m_winId;
 };
 

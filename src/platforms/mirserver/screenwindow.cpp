@@ -47,6 +47,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
     , QPlatformWindow(window)
     , m_exposed(exposed)
     , m_primary(false)
+    , m_active(false)
     , m_winId(newWId())
 {
     const auto platformScreen = static_cast<Screen *>(screen());
@@ -62,6 +63,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
     platformScreen->addWindow(this);
 
     m_primary = platformScreen->primaryWindow() == this;
+    m_active = platformScreen->isActive();
     connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
         setPrimary(primaryWindow == this);
     });
@@ -71,6 +73,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
 
     // Nick - changing screen will create a new platform surface for the window, and require re-exposure.
     connect(window, &QWindow::screenChanged, this, &ScreenWindow::updateExpose);
+    connect(platformScreen, &Screen::activeChanged, this, &ScreenWindow::setActive);
 }
 
 ScreenWindow::~ScreenWindow()
@@ -95,9 +98,21 @@ void ScreenWindow::setGeometry(const QRect &rect)
     QPlatformWindow::setGeometry(rect);
 }
 
+void ScreenWindow::requestActivateWindow()
+{
+    if (isActive()) {
+        QPlatformWindow::requestActivateWindow();
+    }
+}
+
 bool ScreenWindow::isExposed() const
 {
     return m_exposed && m_primary;
+}
+
+bool ScreenWindow::isActive() const
+{
+    return m_primary && m_active;
 }
 
 void ScreenWindow::setExposed(const bool exposed)
@@ -133,13 +148,22 @@ void ScreenWindow::updateExpose()
     if (isExposed()) {
         renderer->show(quickWindow);
         QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
-        QWindowSystemInterface::handleWindowActivated(window(), Qt::ActiveWindowFocusReason);
+        requestActivateWindow();
     } else {
         // set to non-persistent so we re-create when exposed. // NICK - why?
         quickWindow->setPersistentOpenGLContext(false);
         quickWindow->setPersistentSceneGraph(false);
         renderer->hide(quickWindow); // ExposeEvent will arrive too late, need to stop compositor immediately
     }
+}
+
+void ScreenWindow::setActive(bool active)
+{
+    if (m_active == active)
+        return;
+
+    m_active = active;
+    requestActivateWindow();
 }
 
 void ScreenWindow::setScreen(QPlatformScreen *newScreen)
@@ -151,6 +175,7 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
     // Dis-associate the old screen
     if (screen()) {
         disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
+        disconnect(static_cast<Screen *>(screen()), &Screen::activeChanged, this, 0);
         static_cast<Screen *>(screen())->removeWindow(this);
     }
     // Associate new screen and announce to Qt
@@ -160,6 +185,7 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
     connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
         setPrimary(primaryWindow == this);
     });
+    connect(platformScreen, &Screen::activeChanged, this, &ScreenWindow::setActive);
 
     QWindowSystemInterface::handleWindowScreenChanged(window(), platformScreen->screen());
 }

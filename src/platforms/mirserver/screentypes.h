@@ -55,6 +55,7 @@ enum FormFactor {
 };
 }
 
+Q_DECLARE_METATYPE(qtmir::OutputTypes)
 Q_DECLARE_METATYPE(qtmir::FormFactor)
 
 #endif //QTMIR_SCREEN_TYPES_H

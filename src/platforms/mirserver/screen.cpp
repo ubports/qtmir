@@ -150,6 +150,7 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     , m_refreshRate(-1.0)
     , m_scale(1.0)
     , m_formFactor(mir_form_factor_unknown)
+    , m_isActive(false)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
@@ -203,6 +204,62 @@ bool Screen::orientationSensorEnabled()
     return m_orientationSensor->isActive();
 }
 
+void Screen::setUsed(bool used)
+{
+    if (m_used == used)
+        return;
+    Q_EMIT __usedChanged(used);
+}
+
+void Screen::setScale(float scale)
+{
+    if (qFuzzyCompare(scale, m_scale))
+        return;
+    Q_EMIT __scaleChanged(scale);
+}
+
+void Screen::setFormFactor(MirFormFactor formFactor)
+{
+    if (formFactor == m_formFactor)
+        return;
+    Q_EMIT __formFactorChanged(formFactor);
+}
+
+void Screen::setSize(const QSize &size)
+{
+    QList<QSize> sizes = availableSizes();
+    for (int i = 0; i < sizes.size(); i++) {
+        if (sizes[i] == size) {
+            setCurrentModeIndex(i);
+        }
+    }
+}
+
+void Screen::setCurrentModeIndex(uint32_t currentModeIndex)
+{
+    if (m_currentModeIndex == currentModeIndex)
+        return;
+    Q_EMIT __currentModeIndexChanged(currentModeIndex);
+}
+
+void Screen::setActive(bool active)
+{
+    if (m_isActive == active)
+        return;
+
+    if (m_isActive) {
+        QList<QScreen *> screens = QGuiApplication::screens();
+        Q_FOREACH(auto screen, screens) {
+            const auto platformScreen = static_cast<Screen *>(screen->handle());
+            if (platformScreen->isActive()) {
+                platformScreen->setActive(false);
+            }
+        }
+    }
+    m_isActive = active;
+    Q_EMIT activeChanged(active);
+}
+
 void Screen::onDisplayPowerStateChanged(int status, int reason)
 {
     Q_UNUSED(reason);
@@ -216,7 +273,10 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 {
     // Note: DisplayConfigurationOutput will be destroyed after this function returns
 
-    m_used = screen.used;
+    if (m_used != screen.used) {
+        m_used = screen.used;
+        Q_EMIT usedChanged();
+    }
 
     // Output data - each output has a unique id and corresponding type. Can be multiple cards.
     m_outputId = screen.id;
@@ -227,7 +287,10 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setHeight(screen.physical_size_mm.height.as_int());
 
     // Screen capabilities
-    m_currentModeIndex = screen.current_mode_index;
+    if (m_currentModeIndex != screen.current_mode_index) {
+        m_currentModeIndex = screen.current_mode_index;
+        Q_EMIT currentModeIndexChanged();
+    }
 
     // Current Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
@@ -262,6 +325,9 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         Q_FOREACH (ScreenWindow* window, m_screenWindows) {
             window->setGeometry(m_geometry);
         }
+        if (oldGeometry.size() != m_geometry.size()) {
+            Q_EMIT sizeChanged();
+        }
     }
 
     // Refresh rate
@@ -277,23 +343,14 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // as there is no convenient way to emit signals for those custom properties on a QScreen
     m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
-    auto nativeInterface = qGuiApp->platformNativeInterface();
     if (screen.form_factor != m_formFactor) {
         m_formFactor = screen.form_factor;
-        if (notify) {
-            Q_FOREACH (ScreenWindow* window, m_screenWindows) {
-                Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("formFactor"));
-            }
-        }
+        Q_EMIT formFactorChanged();
     }
 
     if (!qFuzzyCompare(screen.scale, m_scale)) {
         m_scale = screen.scale;
-        if (notify) {
-            Q_FOREACH (ScreenWindow* window, m_screenWindows) {
-                Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("scale"));
-            }
-        }
+        Q_EMIT scaleChanged();
     }
 }
 
@@ -351,7 +408,12 @@ void Screen::onOrientationReadingChanged()
     // Make sure to switch to the main Qt thread context
     QCoreApplication::postEvent(this, new OrientationReadingEvent(
                                               OrientationReadingEvent::m_type,
-                                              m_orientationSensor->reading()->orientation()));
+                                    m_orientationSensor->reading()->orientation()));
+}
+
+void Screen::activate()
+{
+    setActive(true);
 }
 
 QPlatformCursor *Screen::cursor() const

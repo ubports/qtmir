@@ -28,6 +28,7 @@
 #include <memory>
 
 class ScreensModel;
+class Screen;
 
 namespace mir {
     namespace graphics { class Display; }
@@ -47,6 +48,15 @@ public:
 
     CustomScreenConfigurationList configuration();
     bool setConfiguration(const CustomScreenConfigurationList &newConfig);
+
+    CustomScreenConfiguration outputConfiguration(qtmir::OutputId outputId);
+    bool setOutputConfiguration(const CustomScreenConfiguration &newConfig);
+
+private Q_SLOTS:
+    void onScreenUsedChanged(Screen* screen, bool used);
+    void onScreenScaleChanged(Screen* screen, float scale);
+    void onScreenFormFactorChanged(Screen* screen, MirFormFactor formFactor);
+    void onScreenCurrentModeIndexChanged(Screen* screen, uint32_t currentModeIndex);
 
 private:
     const QSharedPointer<ScreensModel> m_screensModel;

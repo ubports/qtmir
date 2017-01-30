@@ -26,8 +26,10 @@
 
 struct CustomScreenConfiguration
 {
+    bool valid{false};
     qtmir::OutputId id;
 
+    bool used;
     QPoint topLeft;
     uint32_t currentModeIndex;
     MirPowerMode powerMode;

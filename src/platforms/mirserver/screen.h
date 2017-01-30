@@ -38,9 +38,11 @@ namespace mir {
     namespace renderer { namespace gl { class RenderTarget; }}
 }
 
-class Screen : public QObject, public QPlatformScreen
+class Screen : public QObject,
+               public QPlatformScreen
 {
     Q_OBJECT
+
 public:
     Screen(const mir::graphics::DisplayConfigurationOutput &);
     ~Screen();
@@ -66,6 +68,8 @@ public:
     qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
     QList<QSize> availableSizes() const { return m_availableSizes; }
+    QSize size() const { return m_geometry.size(); }
+    bool isActive() const { return m_isActive; }
 
     const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
     ScreenWindow* primaryWindow() const;
@@ -77,12 +81,34 @@ public:
     static bool skipDBusRegistration;
     bool orientationSensorEnabled();
 
+    void setUsed(bool used);
+    void setScale(float scale);
+    void setFormFactor(MirFormFactor formFactor);
+    void setSize(const QSize& size);
+    void setCurrentModeIndex(uint32_t currentModeIndex);
+    void setActive(bool active);
+
 Q_SIGNALS:
     void primaryWindowChanged(ScreenWindow* window);
+
+    void usedChanged();
+    void scaleChanged();
+    void formFactorChanged();
+    void currentModeIndexChanged();
+    void sizeChanged();
+    void activeChanged(bool active);
+
+    // for internal use
+    void __usedChanged(bool used);
+    void __scaleChanged(float scale);
+    void __formFactorChanged(MirFormFactor formFactor);
+    void __currentModeIndexChanged(uint32_t currentModeIndex);
 
 public Q_SLOTS:
    void onDisplayPowerStateChanged(int, int);
    void onOrientationReadingChanged();
+
+    void activate();
 
 protected:
     void addWindow(ScreenWindow *window);
@@ -109,6 +135,7 @@ private:
     MirFormFactor m_formFactor;
     uint32_t m_currentModeIndex;
     QList<QSize> m_availableSizes;
+    bool m_isActive;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;

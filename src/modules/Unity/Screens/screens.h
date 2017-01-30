@@ -22,15 +22,13 @@
 #include <QAbstractListModel>
 
 class QScreen;
+class Screen;
 
 namespace qtmir {
 
 class Screens : public QAbstractListModel
 {
     Q_OBJECT
-    Q_ENUMS(OutputTypes)
-    Q_ENUMS(FormFactor)
-
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
@@ -50,7 +48,7 @@ public:
 
     /* QAbstractItemModel */
     QHash<int, QByteArray> roleNames() const override;
-    QVariant data(const QModelIndex &index, int role = ScreenRole) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     int count() const;
@@ -60,15 +58,15 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void countChanged();
-    void screenAdded(QScreen *screen);
-    void screenRemoved(QScreen *screen);
+    void screenAdded(Screen *screen);
+    void screenRemoved(Screen *screen);
 
 private Q_SLOTS:
     void onScreenAdded(QScreen *screen);
     void onScreenRemoved(QScreen *screen);
 
 private:
-    QList<QScreen *> m_screenList;
+    QList<Screen *> m_screenList;
 };
 
 } // namespace qtmir
