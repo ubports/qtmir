@@ -1,6 +1,6 @@
 find_package(GMock)
 
-pkg_check_modules(MIRTEST mirtest>=0.24 REQUIRED)
+pkg_check_modules(MIRTEST mirtest>=0.26 REQUIRED)
 
 add_subdirectory(framework)
 add_subdirectory(mirserver)

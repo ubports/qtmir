@@ -53,11 +53,11 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
 }
 
 /* Following are hooks to allow custom policy be imposed */
-miral::WindowSpecification WindowManagementPolicy::place_new_surface(
+miral::WindowSpecification WindowManagementPolicy::place_new_window(
     const miral::ApplicationInfo &app_info,
     const miral::WindowSpecification &request_parameters)
 {
-    auto parameters = CanonicalWindowManagerPolicy::place_new_surface(app_info, request_parameters);
+    auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
 
@@ -144,15 +144,15 @@ void WindowManagementPolicy::advise_delete_app(const miral::ApplicationInfo &app
     Q_EMIT m_appNotifier.appRemoved(application);
 }
 
-void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &windowInfo, MirSurfaceState state)
+void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &windowInfo, MirWindowState state)
 {
     auto extraWinInfo = getExtraInfo(windowInfo);
 
-    // FIXME: Remove this mess once MirSurfaceState matches Mir::State
-    if (state == mir_surface_state_restored && extraWinInfo->state != Mir::RestoredState
+    // FIXME: Remove this mess once MirWindowState matches Mir::State
+    if (state == mir_window_state_restored && extraWinInfo->state != Mir::RestoredState
             && toMirState(extraWinInfo->state) == state) {
-        // Ignore. That MirSurfaceState is just a placeholder for a Mir::State value that has no counterpart
-        // in MirSurfaceState.
+        // Ignore. That MirWindowState is just a placeholder for a Mir::State value that has no counterpart
+        // in MirWindowState.
     } else {
         extraWinInfo->state = toQtState(state);
     }
@@ -245,7 +245,7 @@ void WindowManagementPolicy::activate(const miral::Window &window)
         auto &windowInfo = m_tools.info_for(window);
 
         // restore from minimized if needed
-        if (windowInfo.state() == mir_surface_state_minimized) {
+        if (windowInfo.state() == mir_window_state_minimized) {
             auto extraInfo = getExtraInfo(windowInfo);
             Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
             requestState(window, extraInfo->previousState);

@@ -76,7 +76,7 @@ public:
 
     void setListener(QObject *listener);
 
-    void attrib_changed(MirSurfaceAttrib, int) override;
+    void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
     void moved_to(mir::geometry::Point const&) override {}
     void hidden_set_to(bool) override {}
@@ -217,10 +217,10 @@ void MirSurface::onFramesPostedObserved()
     Q_EMIT framesPosted();
 }
 
-void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int /*value*/)
+void MirSurface::onAttributeChanged(const MirWindowAttrib attribute, const int /*value*/)
 {
     switch (attribute) {
-    case mir_surface_attrib_type:
+    case mir_window_attrib_type:
         DEBUG_MSG << " type = " << mirSurfaceTypeToStr(type());
         Q_EMIT typeChanged(type());
         break;
@@ -232,31 +232,31 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
 Mir::Type MirSurface::type() const
 {
     switch (m_type) {
-    case mir_surface_type_normal:
+    case mir_window_type_normal:
         return Mir::NormalType;
 
-    case mir_surface_type_utility:
+    case mir_window_type_utility:
         return Mir::UtilityType;
 
-    case mir_surface_type_dialog:
+    case mir_window_type_dialog:
         return Mir::DialogType;
 
-    case mir_surface_type_gloss:
+    case mir_window_type_gloss:
         return Mir::GlossType;
 
-    case mir_surface_type_freestyle:
+    case mir_window_type_freestyle:
         return Mir::FreeStyleType;
 
-    case mir_surface_type_menu:
+    case mir_window_type_menu:
         return Mir::MenuType;
 
-    case mir_surface_type_inputmethod:
+    case mir_window_type_inputmethod:
         return Mir::InputMethodType;
 
-    case mir_surface_type_satellite:
+    case mir_window_type_satellite:
         return Mir::SatelliteType;
 
-    case mir_surface_type_tip:
+    case mir_window_type_tip:
         return Mir::TipType;
 
     default:
@@ -726,13 +726,13 @@ void MirSurface::updateExposure()
         newExposed |= i.value().exposed;
     }
 
-    const bool oldExposed = (m_surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed);
+    const bool oldExposed = (m_surface->query(mir_window_attrib_visibility) == mir_window_visibility_exposed);
 
     if (newExposed != oldExposed) {
         DEBUG_MSG << "(" << newExposed << ")";
 
-        m_surface->configure(mir_surface_attrib_visibility,
-                             newExposed ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
+        m_surface->configure(mir_window_attrib_visibility,
+                             newExposed ? mir_window_visibility_exposed : mir_window_visibility_occluded);
     }
 }
 
@@ -919,7 +919,7 @@ QRect MirSurface::inputBounds() const
 
 bool MirSurface::confinesMousePointer() const
 {
-    return m_surface->confine_pointer_state() == mir_pointer_confined_to_surface;
+    return m_surface->confine_pointer_state() == mir_pointer_confined_to_window;
 }
 
 void MirSurface::activate()
@@ -1149,7 +1149,7 @@ void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle c
 }
 #endif
 
-void MirSurface::SurfaceObserverImpl::attrib_changed(MirSurfaceAttrib attribute, int value)
+void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
 {
     if (m_listener) {
         Q_EMIT attributeChanged(attribute, value);

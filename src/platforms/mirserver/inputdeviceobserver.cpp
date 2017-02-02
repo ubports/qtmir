@@ -16,7 +16,7 @@
 
 #include <mir/input/device.h>
 #include <mir/input/device_capability.h>
-#include <mir/input/keyboard_configuration.h>
+#include <mir/input/mir_keyboard_config.h>
 
 #include <Qt>
 #include <QTimer>
@@ -90,12 +90,12 @@ void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mi::Device> &devi
         }
 
         qCDebug(QTMIR_MIR_KEYMAP) << "Applying keymap" <<  layout << variant << "on" << device->id() << QString::fromStdString(device->name());
-        mi::KeyboardConfiguration oldConfig;
+        MirKeyboardConfig oldConfig;
         mi::Keymap keymap;
         if (device->keyboard_configuration().is_set()) { // preserve the model and options
             oldConfig = device->keyboard_configuration().value();
-            keymap.model = oldConfig.device_keymap.model;
-            keymap.options = oldConfig.device_keymap.options;
+            keymap.model = oldConfig.device_keymap().model;
+            keymap.options = oldConfig.device_keymap().options;
         }
         keymap.layout = layout.toStdString();
         keymap.variant = variant.toStdString();

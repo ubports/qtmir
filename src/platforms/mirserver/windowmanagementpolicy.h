@@ -41,7 +41,7 @@ public:
                            const QSharedPointer<QtEventFeeder> eventFeeder);
 
     // From WindowManagementPolicy
-    auto place_new_surface(const miral::ApplicationInfo &app_info,
+    auto place_new_window(const miral::ApplicationInfo &app_info,
                            const miral::WindowSpecification &request_parameters)
         -> miral::WindowSpecification override;
 
@@ -64,7 +64,7 @@ public:
     void advise_new_window(const miral::WindowInfo &windowInfo) override;
     void advise_focus_lost(const miral::WindowInfo &info) override;
     void advise_focus_gained(const miral::WindowInfo &info) override;
-    void advise_state_change(const miral::WindowInfo &info, MirSurfaceState state) override;
+    void advise_state_change(const miral::WindowInfo &info, MirWindowState state) override;
     void advise_move_to(const miral::WindowInfo &windowInfo, Point topLeft) override;
     void advise_resize(const miral::WindowInfo &info, const Size &newSize) override;
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;

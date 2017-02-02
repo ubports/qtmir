@@ -47,7 +47,7 @@ public:
     static void registerObserverForSurface(SurfaceObserver *observer, const mir::scene::Surface *surface);
 
 Q_SIGNALS:
-    void attributeChanged(const MirSurfaceAttrib attribute, const int value);
+    void attributeChanged(const MirWindowAttrib attribute, const int value);
     void framesPosted();
     void resized(const QSize &size);
     void nameChanged(const QString &name);
