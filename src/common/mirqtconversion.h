@@ -72,43 +72,43 @@ inline mir::geometry::Rectangle toMirRectangle(const QRect rect)
     };
 }
 
-inline Mir::State toQtState(MirSurfaceState state)
+inline Mir::State toQtState(MirWindowState state)
 {
     switch (state) {
-    case mir_surface_state_unknown:         return Mir::UnknownState;
-    case mir_surface_state_restored:        return Mir::RestoredState;
-    case mir_surface_state_minimized:       return Mir::MinimizedState;
-    case mir_surface_state_maximized:       return Mir::MaximizedState;
-    case mir_surface_state_vertmaximized:   return Mir::VertMaximizedState;
-    case mir_surface_state_fullscreen:      return Mir::FullscreenState;
-    case mir_surface_state_horizmaximized:  return Mir::HorizMaximizedState;
-    case mir_surface_state_hidden:          return Mir::HiddenState;
-    case mir_surface_states:                Q_UNREACHABLE();
+    case mir_window_state_unknown:         return Mir::UnknownState;
+    case mir_window_state_restored:        return Mir::RestoredState;
+    case mir_window_state_minimized:       return Mir::MinimizedState;
+    case mir_window_state_maximized:       return Mir::MaximizedState;
+    case mir_window_state_vertmaximized:   return Mir::VertMaximizedState;
+    case mir_window_state_fullscreen:      return Mir::FullscreenState;
+    case mir_window_state_horizmaximized:  return Mir::HorizMaximizedState;
+    case mir_window_state_hidden:          return Mir::HiddenState;
+    case mir_window_states:                Q_UNREACHABLE();
     }
     Q_UNREACHABLE();
 }
 
-inline MirSurfaceState toMirState(Mir::State state)
+inline MirWindowState toMirState(Mir::State state)
 {
     switch (state) {
-    case Mir::UnknownState:         return mir_surface_state_unknown;
-    case Mir::RestoredState:        return mir_surface_state_restored;
-    case Mir::MinimizedState:       return mir_surface_state_minimized;
-    case Mir::MaximizedState:       return mir_surface_state_maximized;
-    case Mir::VertMaximizedState:   return mir_surface_state_vertmaximized;
-    case Mir::FullscreenState:      return mir_surface_state_fullscreen;
-    case Mir::HorizMaximizedState:  return mir_surface_state_horizmaximized;
+    case Mir::UnknownState:         return mir_window_state_unknown;
+    case Mir::RestoredState:        return mir_window_state_restored;
+    case Mir::MinimizedState:       return mir_window_state_minimized;
+    case Mir::MaximizedState:       return mir_window_state_maximized;
+    case Mir::VertMaximizedState:   return mir_window_state_vertmaximized;
+    case Mir::FullscreenState:      return mir_window_state_fullscreen;
+    case Mir::HorizMaximizedState:  return mir_window_state_horizmaximized;
 
-    // FIXME: Map to the corresponding MirSurfaceState enum value once available
+    // FIXME: Map to the corresponding MirWindowState enum value once available
     case Mir::MaximizedLeftState:
     case Mir::MaximizedRightState:
     case Mir::MaximizedTopLeftState:
     case Mir::MaximizedTopRightState:
     case Mir::MaximizedBottomLeftState:
     case Mir::MaximizedBottomRightState:
-        return mir_surface_state_restored;
+        return mir_window_state_restored;
 
-    case Mir::HiddenState:          return mir_surface_state_hidden;
+    case Mir::HiddenState:          return mir_window_state_hidden;
     default: Q_UNREACHABLE();
     }
 }

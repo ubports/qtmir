@@ -77,32 +77,32 @@ QString touchEventToString(const QTouchEvent *ev)
     return message;
 }
 
-QString mirSurfaceAttribAndValueToString(MirSurfaceAttrib attrib, int value)
+QString mirSurfaceAttribAndValueToString(MirWindowAttrib attrib, int value)
 {
     QString str;
 
     switch (attrib) {
-    case mir_surface_attrib_type:
+    case mir_window_attrib_type:
         str = QStringLiteral("type=%1").arg(mirSurfaceTypeToStr(value));
         break;
 
-    case mir_surface_attrib_state:
+    case mir_window_attrib_state:
         str = QStringLiteral("state=%1").arg(mirSurfaceStateToStr(value));
         break;
 
-    case mir_surface_attrib_swapinterval:
+    case mir_window_attrib_swapinterval:
         str = QStringLiteral("swapinterval=%1").arg(value);
         break;
 
-    case mir_surface_attrib_focus:
+    case mir_window_attrib_focus:
         str = QStringLiteral("focus=%1").arg(mirSurfaceFocusStateToStr(value));
         break;
 
-    case mir_surface_attrib_dpi:
+    case mir_window_attrib_dpi:
         str = QStringLiteral("dpi=%1").arg(value);
         break;
 
-    case mir_surface_attrib_visibility:
+    case mir_window_attrib_visibility:
         str = QStringLiteral("visibility=%1").arg(mirSurfaceVisibilityToStr(value));
         break;
     default:
@@ -115,16 +115,16 @@ QString mirSurfaceAttribAndValueToString(MirSurfaceAttrib attrib, int value)
 const char *mirSurfaceTypeToStr(int value)
 {
     switch (value) {
-    case mir_surface_type_normal:       return "normal";        /**< AKA "regular"                   */
-    case mir_surface_type_utility:      return "utility";       /**< AKA "floating regular"          */
-    case mir_surface_type_dialog:       return "dialog";
-    case mir_surface_type_gloss:        return "gloss";
-    case mir_surface_type_freestyle:    return "freestyle";
-    case mir_surface_type_menu:         return "menu";
-    case mir_surface_type_inputmethod:  return "input Method";  /**< AKA "OSK" or handwriting etc.   */
-    case mir_surface_type_satellite:    return "satellite";     /**< AKA "toolbox"/"toolbar"         */
-    case mir_surface_type_tip:          return "tip";           /**< AKA "tooltip"                   */
-    case mir_surface_types:             Q_UNREACHABLE();
+    case mir_window_type_normal:       return "normal";        /**< AKA "regular"                   */
+    case mir_window_type_utility:      return "utility";       /**< AKA "floating regular"          */
+    case mir_window_type_dialog:       return "dialog";
+    case mir_window_type_gloss:        return "gloss";
+    case mir_window_type_freestyle:    return "freestyle";
+    case mir_window_type_menu:         return "menu";
+    case mir_window_type_inputmethod:  return "input Method";  /**< AKA "OSK" or handwriting etc.   */
+    case mir_window_type_satellite:    return "satellite";     /**< AKA "toolbox"/"toolbar"         */
+    case mir_window_type_tip:          return "tip";           /**< AKA "tooltip"                   */
+    case mir_window_types:             Q_UNREACHABLE();
     }
     Q_UNREACHABLE();
 }
@@ -132,21 +132,21 @@ const char *mirSurfaceTypeToStr(int value)
 const char *mirSurfaceStateToStr(int value)
 {
     switch (value) {
-    case mir_surface_state_unknown:
+    case mir_window_state_unknown:
         return "unknown";
-    case mir_surface_state_restored:
+    case mir_window_state_restored:
         return "restored";
-    case mir_surface_state_minimized:
+    case mir_window_state_minimized:
         return "minimized";
-    case mir_surface_state_maximized:
+    case mir_window_state_maximized:
         return "maximized";
-    case mir_surface_state_vertmaximized:
+    case mir_window_state_vertmaximized:
         return "vertmaximized";
-    case mir_surface_state_horizmaximized:
+    case mir_window_state_horizmaximized:
         return "horizmaximized";
-    case mir_surface_state_fullscreen:
+    case mir_window_state_fullscreen:
         return "fullscreen";
-    case mir_surface_state_hidden:
+    case mir_window_state_hidden:
         return "hidden";
     default:
         return "???";
@@ -156,9 +156,9 @@ const char *mirSurfaceStateToStr(int value)
 const char *mirSurfaceFocusStateToStr(int value)
 {
     switch (value) {
-    case mir_surface_unfocused:
+    case mir_window_focus_state_unfocused:
         return "unfocused";
-    case mir_surface_focused:
+    case mir_window_focus_state_focused:
         return "focused";
     default:
         return "???";
@@ -168,9 +168,9 @@ const char *mirSurfaceFocusStateToStr(int value)
 const char *mirSurfaceVisibilityToStr(int value)
 {
     switch (value) {
-    case mir_surface_visibility_occluded:
+    case mir_window_visibility_occluded:
         return "occluded";
-    case mir_surface_visibility_exposed:
+    case mir_window_visibility_exposed:
         return "exposed";
     default:
         return "???";
