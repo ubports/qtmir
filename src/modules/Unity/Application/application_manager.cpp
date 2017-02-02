@@ -434,9 +434,6 @@ void ApplicationManager::onProcessStopped(const QString &appId)
         return;
     }
 
-    remove(application);
-    application->deleteLater();
-
     // if an application gets killed, onProcessFailed is called first, followed by onProcessStopped.
     // we don't want to override what onProcessFailed already set.
     if (application->processState() != Application::ProcessFailed) {
@@ -659,8 +656,8 @@ void ApplicationManager::add(Application* application)
     connect(application, &Application::stopProcessRequested, this, [=]() {
         if (!m_taskController->stop(appId) && application->pid() > 0) {
             qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
-                       << "Sending last resort SIGKILL to process:" << appId;
-            kill(application->pid(), SIGKILL);
+                       << "Sending SIGTERM to process:" << appId;
+            kill(application->pid(), SIGTERM);
             application->setProcessState(Application::ProcessStopped);
         }
     });
