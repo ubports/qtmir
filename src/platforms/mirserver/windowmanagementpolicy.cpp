@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -16,6 +16,7 @@
 
 #include "windowmanagementpolicy.h"
 
+#include "initialsurfacesizes.h"
 #include "screensmodel.h"
 #include "surfaceobserver.h"
 
@@ -34,6 +35,7 @@ namespace qtmir {
 }
 
 using namespace qtmir;
+using namespace mir::geometry;
 
 WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
@@ -54,10 +56,21 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
 
 /* Following are hooks to allow custom policy be imposed */
 miral::WindowSpecification WindowManagementPolicy::place_new_window(
-    const miral::ApplicationInfo &app_info,
-    const miral::WindowSpecification &request_parameters)
+    const miral::ApplicationInfo &appInfo,
+    const miral::WindowSpecification &requestParameters)
 {
-    auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
+    auto parameters = CanonicalWindowManagerPolicy::place_new_window(appInfo, requestParameters);
+
+    if (!requestParameters.parent().is_set() || requestParameters.parent().value().lock().get() == nullptr) {
+
+        int surfaceType = requestParameters.type().is_set() ? requestParameters.type().value() : -1;
+
+        QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
+
+        if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
+            parameters.size() = Size{Width(initialSize.width()), Height(initialSize.height())};
+        }
+    }
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
 
