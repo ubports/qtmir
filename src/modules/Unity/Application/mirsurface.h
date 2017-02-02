@@ -180,7 +180,7 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void dropPendingBuffer();
-    void onAttributeChanged(const MirSurfaceAttrib, const int);
+    void onAttributeChanged(const MirWindowAttrib, const int);
     void onFramesPostedObserved();
     void onSessionDestroyed();
     void emitSizeChanged();
@@ -206,7 +206,7 @@ private:
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
     QString m_name;
-    MirSurfaceType m_type;
+    MirWindowType m_type;
     int m_minWidth;
     int m_minHeight;
     int m_maxWidth;

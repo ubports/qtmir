@@ -27,7 +27,7 @@ class QTouchEvent;
 const char *touchPointStateToString(Qt::TouchPointState state);
 QString touchEventToString(const QTouchEvent *ev);
 
-QString mirSurfaceAttribAndValueToString(MirSurfaceAttrib attrib, int value);
+QString mirSurfaceAttribAndValueToString(MirWindowAttrib attrib, int value);
 const char *mirSurfaceTypeToStr(int value);
 const char *mirSurfaceStateToStr(int value);
 const char *mirSurfaceFocusStateToStr(int value);
