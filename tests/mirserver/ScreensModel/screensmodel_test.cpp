@@ -26,7 +26,7 @@
 #include <mir/test/doubles/stub_display_buffer.h>
 
 #include "testable_screensmodel.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screenwindow.h"
 
 #include <QGuiApplication>
@@ -54,7 +54,7 @@ protected:
 void ScreensModelTest::SetUp()
 {
     setenv("QT_QPA_PLATFORM", "minimal", 1);
-    Screen::skipDBusRegistration = true;
+    PlatformScreen::skipDBusRegistration = true;
 
     // We don't want the logging spam cluttering the test results
     QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));
@@ -88,7 +88,7 @@ TEST_F(ScreensModelTest, SingleScreenFound)
     screensModel->update();
 
     ASSERT_EQ(1, screensModel->screens().count());
-    Screen* screen = screensModel->screens().first();
+    PlatformScreen* screen = screensModel->screens().first();
     EXPECT_EQ(QRect(0, 0, 150, 200), screen->geometry());
 }
 

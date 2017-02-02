@@ -20,6 +20,8 @@
 #include <mir/int_wrapper.h>
 
 #include <QtCore/qmetatype.h>
+#include <QSize>
+#include <QObject>
 
 namespace mir { namespace graphics { namespace detail { struct GraphicsConfOutputIdTag; } } }
 
@@ -53,9 +55,27 @@ enum FormFactor {
     FormFactorTV,
     FormFactorProjector,
 };
+
+class ScreenMode : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal refreshRate MEMBER refreshRate CONSTANT)
+    Q_PROPERTY(QSize size MEMBER size CONSTANT)
+public:
+    ScreenMode():refreshRate(-1) {}
+    ScreenMode(const ScreenMode& other)
+        : QObject(nullptr),
+          refreshRate{other.refreshRate},size{other.size}
+    {}
+
+    qreal refreshRate;
+    QSize size;
+};
+
 }
 
 Q_DECLARE_METATYPE(qtmir::OutputTypes)
 Q_DECLARE_METATYPE(qtmir::FormFactor)
+Q_DECLARE_METATYPE(qtmir::ScreenMode)
 
 #endif //QTMIR_SCREEN_TYPES_H

@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QPoint>
+#include <QMutex>
 
 // Mir
 #include <mir/graphics/display_configuration.h>
@@ -30,7 +31,7 @@ namespace mir {
     namespace graphics { class Display; }
     namespace compositor { class DisplayListener; }
 }
-class Screen;
+class PlatformScreen;
 class QWindow;
 class QtCompositor;
 
@@ -60,14 +61,14 @@ class ScreensModel : public QObject
 public:
     explicit ScreensModel(QObject *parent = 0);
 
-    QList<Screen*> screens() const { return m_screenList; }
+    QList<PlatformScreen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
 
     QWindow* getWindowForPoint(QPoint point);
 
 Q_SIGNALS:
-    void screenAdded(Screen *screen);
-    void screenRemoved(Screen *screen);
+    void screenAdded(PlatformScreen *screen);
+    void screenRemoved(PlatformScreen *screen);
 
 public Q_SLOTS:
     void update();
@@ -81,22 +82,23 @@ public:
     void terminate();
 
     // override for testing purposes
-    virtual Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const;
+    virtual PlatformScreen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const;
 
 protected Q_SLOTS:
     void onCompositorStarting();
     void onCompositorStopping();
 
 private:
-    Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
-    bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
+    PlatformScreen* findScreenWithId(const QList<PlatformScreen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
+    bool canUpdateExistingScreen(const PlatformScreen *screen, const mir::graphics::DisplayConfigurationOutput &output);
     void allWindowsSetExposed(bool exposed);
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<QtCompositor> m_compositor;
     std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
-    QList<Screen*> m_screenList;
+    QList<PlatformScreen*> m_screenList;
     bool m_compositing;
+    QMutex m_mutex;
 };
 
 #endif // SCREENCONTROLLER_H

@@ -20,7 +20,7 @@
 #include "qtcompositor.h"
 #include "logging.h"
 #include "mirserverintegration.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "mirqtconversion.h"
 
 // Mir
@@ -100,6 +100,8 @@ void ScreensModel::onCompositorStopping()
 
 void ScreensModel::update()
 {
+    QMutexLocker lock(&m_mutex);
+
     DEBUG_MSG << "()";
     auto display = m_display.lock();
     if (!display)
@@ -107,15 +109,15 @@ void ScreensModel::update()
     auto displayConfig = display->configuration();
 
     // Mir only tells us something changed, it is up to us to figure out what.
-    QList<Screen*> newScreenList;
-    QList<Screen*> oldScreenList = m_screenList;
-    QHash<ScreenWindow*, Screen*> windowMoveList;
+    QList<PlatformScreen*> newScreenList;
+    QList<PlatformScreen*> oldScreenList = m_screenList;
+    QHash<ScreenWindow*, PlatformScreen*> windowMoveList;
     m_screenList.clear();
 
     displayConfig->for_each_output(
         [this, &oldScreenList, &newScreenList, &windowMoveList](const mg::DisplayConfigurationOutput &output) {
             if (output.used && output.connected) {
-                Screen *screen = findScreenWithId(oldScreenList, output.id);
+                PlatformScreen *screen = findScreenWithId(oldScreenList, output.id);
                 if (screen) { // we've already set up this display before
 
                     // Can we re-use the existing Screen?
@@ -156,7 +158,7 @@ void ScreensModel::update()
     // Move Windows from about-to-be-deleted Screens to new Screen
     auto i = windowMoveList.constBegin();
     while (i != windowMoveList.constEnd()) {
-        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<Screen*>(i.key()->screen()) << " to " << i.value();
+        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<PlatformScreen*>(i.key()->screen()) << " to " << i.value();
         i.key()->setScreen(i.value());
         i++;
     }
@@ -208,7 +210,7 @@ void ScreensModel::update()
     qCDebug(QTMIR_SCREENS) << "=======================================";
 }
 
-bool ScreensModel::canUpdateExistingScreen(const Screen *screen, const mg::DisplayConfigurationOutput &output)
+bool ScreensModel::canUpdateExistingScreen(const PlatformScreen *screen, const mg::DisplayConfigurationOutput &output)
 {
     // Compare the properties of the existing Screen with its new configuration. Properties
     // like geometry, refresh rate and dpi can be updated on existing screens. Other property
@@ -232,14 +234,14 @@ void ScreensModel::allWindowsSetExposed(bool exposed)
     }
 }
 
-Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
+PlatformScreen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
 {
-    return new Screen(output);
+    return new PlatformScreen(output);
 }
 
-Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)
+PlatformScreen* ScreensModel::findScreenWithId(const QList<PlatformScreen *> &list, const mg::DisplayConfigurationOutputId id)
 {
-    for (Screen *screen : list) {
+    for (PlatformScreen *screen : list) {
         if (screen->m_outputId == id) {
             return screen;
         }
@@ -256,7 +258,7 @@ QWindow* ScreensModel::getWindowForPoint(QPoint point) //FIXME - not thread safe
         if (primaryWindow) return primaryWindow->window();
     }
 
-    Q_FOREACH (Screen *screen, m_screenList) {
+    Q_FOREACH (PlatformScreen *screen, m_screenList) {
         if (screen->primaryWindow() && screen->geometry().contains(point)) {
             return screen->primaryWindow()->window();
         }

@@ -15,9 +15,10 @@
  */
 
 // local
-#include "screen.h"
+#include "platformscreen.h"
 #include "logging.h"
 #include "nativeinterface.h"
+#include "screenscontroller.h"
 
 // Mir
 #include "mir/geometry/size.h"
@@ -30,7 +31,6 @@
 // Qt
 #include <QGuiApplication>
 #include <qpa/qwindowsysteminterface.h>
-#include <QThread>
 #include <QtMath>
 
 // Qt sensors
@@ -142,9 +142,9 @@ public:
 const QEvent::Type OrientationReadingEvent::m_type =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
-bool Screen::skipDBusRegistration = false;
+bool PlatformScreen::skipDBusRegistration = false;
 
-Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
+PlatformScreen::PlatformScreen(const mir::graphics::DisplayConfigurationOutput &screen)
     : QObject(nullptr)
     , m_used(false)
     , m_refreshRate(-1.0)
@@ -155,9 +155,15 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
     , m_unityScreen(nullptr)
+    , m_screensController(static_cast<ScreensController*>(qGuiApp->platformNativeInterface()
+                                                          ->nativeResourceForIntegration("ScreensController")))
 {
+    if (!m_screensController) {
+        qFatal("Screens Controller not initialized");
+    }
+
     setMirDisplayConfiguration(screen, false);
-    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value() << ", geometry=" << m_geometry << ")";
+    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value() << ", geometry=" << geometry() << ")";
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
@@ -171,7 +177,7 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
 
     if (internalDisplay()) { // only enable orientation sensor for device-internal display
         QObject::connect(m_orientationSensor, &QOrientationSensor::readingChanged,
-                         this, &Screen::onOrientationReadingChanged);
+                         this, &PlatformScreen::onOrientationReadingChanged);
         m_orientationSensor->start();
     }
 
@@ -191,7 +197,7 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     }
 }
 
-Screen::~Screen()
+PlatformScreen::~PlatformScreen()
 {
     //if a ScreenWindow associated with this screen, kill it
     Q_FOREACH (ScreenWindow* window, m_screenWindows) {
@@ -199,59 +205,69 @@ Screen::~Screen()
     }
 }
 
-bool Screen::orientationSensorEnabled()
+bool PlatformScreen::orientationSensorEnabled()
 {
     return m_orientationSensor->isActive();
 }
 
-void Screen::setUsed(bool used)
+void PlatformScreen::setUsed(bool used)
 {
     if (m_used == used)
         return;
-    Q_EMIT __usedChanged(used);
-}
 
-void Screen::setScale(float scale)
-{
-    if (qFuzzyCompare(scale, m_scale))
-        return;
-    Q_EMIT __scaleChanged(scale);
-}
-
-void Screen::setFormFactor(MirFormFactor formFactor)
-{
-    if (formFactor == m_formFactor)
-        return;
-    Q_EMIT __formFactorChanged(formFactor);
-}
-
-void Screen::setSize(const QSize &size)
-{
-    QList<QSize> sizes = availableSizes();
-    for (int i = 0; i < sizes.size(); i++) {
-        if (sizes[i] == size) {
-            setCurrentModeIndex(i);
-        }
+    auto config = m_screensController->outputConfiguration(m_outputId);
+    if (config.valid) {
+        config.used = used;
+        m_screensController->setOutputConfiguration(config);
     }
 }
 
-void Screen::setCurrentModeIndex(uint32_t currentModeIndex)
+void PlatformScreen::setScale(float scale)
+{
+    if (qFuzzyCompare(scale, m_scale))
+        return;
+
+    auto config = m_screensController->outputConfiguration(m_outputId);
+    if (config.valid) {
+        config.scale = scale;
+        m_screensController->setOutputConfiguration(config);
+    }
+}
+
+void PlatformScreen::setFormFactor(MirFormFactor formFactor)
+{
+    if (formFactor == m_formFactor)
+        return;
+
+    auto config = m_screensController->outputConfiguration(m_outputId);
+    if (config.valid) {
+        config.formFactor = formFactor;
+        m_screensController->setOutputConfiguration(config);
+    }
+}
+
+void PlatformScreen::setCurrentModeIndex(uint32_t currentModeIndex)
 {
     if (m_currentModeIndex == currentModeIndex)
         return;
-    Q_EMIT __currentModeIndexChanged(currentModeIndex);
+
+    auto config = m_screensController->outputConfiguration(m_outputId);
+    if (config.valid) {
+        config.currentModeIndex = currentModeIndex;
+        m_screensController->setOutputConfiguration(config);
+    }
 }
 
-void Screen::setActive(bool active)
+void PlatformScreen::setActive(bool active)
 {
     if (m_isActive == active)
         return;
+    qDebug() << "XXX: Screen::setActive" << active << name();
 
-    if (m_isActive) {
-        QList<QScreen *> screens = QGuiApplication::screens();
-        Q_FOREACH(auto screen, screens) {
-            const auto platformScreen = static_cast<Screen *>(screen->handle());
-            if (platformScreen->isActive()) {
+    if (active) {
+        Q_FOREACH(auto screen, QGuiApplication::screens()) {
+            const auto platformScreen = static_cast<PlatformScreen *>(screen->handle());
+            if (platformScreen->isActive() && platformScreen != this) {
                 platformScreen->setActive(false);
             }
         }
@@ -260,7 +276,7 @@ void Screen::setActive(bool active)
     Q_EMIT activeChanged(active);
 }
 
-void Screen::onDisplayPowerStateChanged(int status, int reason)
+void PlatformScreen::onDisplayPowerStateChanged(int status, int reason)
 {
     Q_UNUSED(reason);
     if (internalDisplay()) {
@@ -268,7 +284,7 @@ void Screen::onDisplayPowerStateChanged(int status, int reason)
     }
 }
 
-void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
+void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
                                         bool notify)
 {
     // Note: DisplayConfigurationOutput will be destroyed after this function returns
@@ -280,17 +296,21 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // Output data - each output has a unique id and corresponding type. Can be multiple cards.
     m_outputId = screen.id;
-    m_type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
+    auto type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
+    if (m_type != type) {
+        m_type = type;
+        Q_EMIT outputTypeChanged();
+        Q_EMIT nameChanged();
+    }
 
     // Physical screen size
-    m_physicalSize.setWidth(screen.physical_size_mm.width.as_int());
-    m_physicalSize.setHeight(screen.physical_size_mm.height.as_int());
+    QSize physicalSize{screen.physical_size_mm.width.as_int(), screen.physical_size_mm.height.as_int()};
+    if (physicalSize != m_physicalSize) {
+        m_physicalSize = physicalSize;
+        Q_EMIT physicalSizeChanged();
+    }
 
     // Screen capabilities
-    if (m_currentModeIndex != screen.current_mode_index) {
-        m_currentModeIndex = screen.current_mode_index;
-        Q_EMIT currentModeIndexChanged();
-    }
 
     // Current Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
@@ -309,11 +329,6 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
 
-    m_availableSizes.clear();
-    Q_FOREACH(auto mode, screen.modes) {
-        m_availableSizes.append(QSize(mode.size.width.as_int(), mode.size.height.as_int()));
-    }
-
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
     // Check for Screen geometry change
@@ -325,8 +340,8 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         Q_FOREACH (ScreenWindow* window, m_screenWindows) {
             window->setGeometry(m_geometry);
         }
-        if (oldGeometry.size() != m_geometry.size()) {
-            Q_EMIT sizeChanged();
+        if (oldGeometry.topLeft() != m_geometry.topLeft()) {
+            Q_EMIT positionChanged();
         }
     }
 
@@ -338,12 +353,29 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
         }
     }
 
+    // available modes
+    QList<PlatformScreen::Mode> availableModes;
+    Q_FOREACH(auto mode, screen.modes) {
+        availableModes.append(PlatformScreen::Mode{mode.vrefresh_hz,  QSize{mode.size.width.as_int(), mode.size.height.as_int()}});
+    }
+    if (m_availableModes != availableModes) {
+        m_availableModes = availableModes;
+        Q_EMIT availableModesChanged();
+    }
+
+    if (m_currentModeIndex != screen.current_mode_index) {
+        m_currentModeIndex = screen.current_mode_index;
+        Q_EMIT currentModeIndexChanged();
+    }
+
+    // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
+
     // Scale, DPR & Form Factor
     // Update the scale & form factor native-interface properties for the windows affected
     // as there is no convenient way to emit signals for those custom properties on a QScreen
     m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
-    if (screen.form_factor != m_formFactor) {
+    if (m_formFactor != screen.form_factor) {
         m_formFactor = screen.form_factor;
         Q_EMIT formFactorChanged();
     }
@@ -354,7 +386,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     }
 }
 
-void Screen::toggleSensors(const bool enable) const
+void PlatformScreen::toggleSensors(const bool enable) const
 {
     DEBUG_MSG_SENSORS << "(enable=" << enable << ")";
     if (enable) {
@@ -364,7 +396,7 @@ void Screen::toggleSensors(const bool enable) const
     }
 }
 
-void Screen::customEvent(QEvent* event)
+void PlatformScreen::customEvent(QEvent* event)
 {
     OrientationReadingEvent* oReadingEvent = static_cast<OrientationReadingEvent*>(event);
     switch (oReadingEvent->m_orientation) {
@@ -401,7 +433,7 @@ void Screen::customEvent(QEvent* event)
     DEBUG_MSG_SENSORS << "() - new orientation=" << m_currentOrientation;
 }
 
-void Screen::onOrientationReadingChanged()
+void PlatformScreen::onOrientationReadingChanged()
 {
     DEBUG_MSG_SENSORS << "()";
 
@@ -411,25 +443,25 @@ void Screen::onOrientationReadingChanged()
                                     m_orientationSensor->reading()->orientation()));
 }
 
-void Screen::activate()
+void PlatformScreen::activate()
 {
     setActive(true);
 }
 
-QPlatformCursor *Screen::cursor() const
+QPlatformCursor *PlatformScreen::cursor() const
 {
     if (!m_cursor) {
-        const_cast<Screen*>(this)->m_cursor.reset(new qtmir::Cursor);
+        const_cast<PlatformScreen*>(this)->m_cursor.reset(new qtmir::Cursor);
     }
     return m_cursor.data();
 }
 
-QString Screen::name() const
+QString PlatformScreen::name() const
 {
     return displayTypeToString(m_type);
 }
 
-QWindow *Screen::topLevelAt(const QPoint &point) const
+QWindow *PlatformScreen::topLevelAt(const QPoint &point) const
 {
     QVector<ScreenWindow*>::const_iterator screen = m_screenWindows.constBegin();
     QVector<ScreenWindow*>::const_iterator end = m_screenWindows.constEnd();
@@ -444,12 +476,17 @@ QWindow *Screen::topLevelAt(const QPoint &point) const
     return nullptr;
 }
 
-ScreenWindow *Screen::primaryWindow() const
+QList<PlatformScreen::Mode> PlatformScreen::availableModes() const
+{
+    return m_availableModes;
+}
+
+ScreenWindow *PlatformScreen::primaryWindow() const
 {
     return m_screenWindows.value(0, nullptr);
 }
 
-void Screen::addWindow(ScreenWindow *window)
+void PlatformScreen::addWindow(ScreenWindow *window)
 {
     if (!window || m_screenWindows.contains(window)) return;
     DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
@@ -460,6 +497,7 @@ void Screen::addWindow(ScreenWindow *window)
     Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("scale"));
 
     window->setGeometry(geometry());
+    window->setActive(m_isActive);
 
     if (m_screenWindows.count() > 1) {
         DEBUG_MSG_SCREENS << "() - secondary window added to screen.";
@@ -468,7 +506,7 @@ void Screen::addWindow(ScreenWindow *window)
     }
 }
 
-void Screen::removeWindow(ScreenWindow *window)
+void PlatformScreen::removeWindow(ScreenWindow *window)
 {
     int index = m_screenWindows.indexOf(window);
     if (index >= 0) {
@@ -480,7 +518,7 @@ void Screen::removeWindow(ScreenWindow *window)
     }
 }
 
-void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
+void PlatformScreen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::graphics::DisplaySyncGroup *group)
 {
     DEBUG_MSG_SCREENS << "(renderTarget=" << as_render_target(buffer) << ", displayGroup=" << group << ")";
     // This operation should only be performed while rendering is stopped
@@ -488,7 +526,7 @@ void Screen::setMirDisplayBuffer(mir::graphics::DisplayBuffer *buffer, mir::grap
     m_displayGroup = group;
 }
 
-void Screen::swapBuffers()
+void PlatformScreen::swapBuffers()
 {
     m_renderTarget->swap_buffers();
 
@@ -506,17 +544,17 @@ void Screen::swapBuffers()
     m_displayGroup->post();
 }
 
-void Screen::makeCurrent()
+void PlatformScreen::makeCurrent()
 {
     m_renderTarget->make_current();
 }
 
-void Screen::doneCurrent()
+void PlatformScreen::doneCurrent()
 {
     m_renderTarget->release_current();
 }
 
-bool Screen::internalDisplay() const
+bool PlatformScreen::internalDisplay() const
 {
     using namespace mir::graphics;
     if (m_type == qtmir::OutputTypes::LVDS || m_type == qtmir::OutputTypes::EDP) {

@@ -20,7 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "fake_displayconfigurationoutput.h"
 
-#include <screen.h>
+#include <platformscreen.h>
 
 #include <QSensorManager>
 
@@ -47,12 +47,12 @@ void ScreenTest::SetUp()
         }
     }
 
-    Screen::skipDBusRegistration = true;
+    PlatformScreen::skipDBusRegistration = true;
 }
 
 TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 {
-    Screen *screen = new Screen(fakeOutput1); // is external display (dvi)
+    PlatformScreen *screen = new PlatformScreen(fakeOutput1); // is external display (dvi)
 
     // Default state should be disabled
     ASSERT_FALSE(screen->orientationSensorEnabled());
@@ -66,7 +66,7 @@ TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 
 TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 {
-    Screen *screen = new Screen(fakeOutput2); // is internal display
+    PlatformScreen *screen = new PlatformScreen(fakeOutput2); // is internal display
 
     // Default state should be active
     ASSERT_TRUE(screen->orientationSensorEnabled());
@@ -80,7 +80,7 @@ TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 
 TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput1);
+    PlatformScreen *screen = new PlatformScreen(fakeOutput1);
 
     EXPECT_EQ(screen->geometry(), QRect(0, 0, 150, 200));
     EXPECT_EQ(screen->availableGeometry(), QRect(0, 0, 150, 200));
@@ -93,7 +93,7 @@ TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 
 TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput2);
+    PlatformScreen *screen = new PlatformScreen(fakeOutput2);
 
     EXPECT_EQ(screen->geometry(), QRect(500, 600, 1500, 2000));
     EXPECT_EQ(screen->availableGeometry(), QRect(500, 600, 1500, 2000));

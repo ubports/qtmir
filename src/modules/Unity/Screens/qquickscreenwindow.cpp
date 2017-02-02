@@ -34,6 +34,10 @@ using namespace qtmir;
 QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     : QQuickWindow(parent)
 {
+    if (qGuiApp->platformName() != QLatin1String("mirserver")) {
+        qCritical("Not using 'mirserver' QPA plugin. Using ScreenWindow may produce unknown results.");
+    }
+
     DEBUG_MSG << "()";
 }
 
@@ -42,16 +46,17 @@ QQuickScreenWindow::~QQuickScreenWindow()
     DEBUG_MSG << "()";
 }
 
-Screen *QQuickScreenWindow::screen() const
+Screen *QQuickScreenWindow::screenWrapper() const
 {
-    auto screen = QQuickWindow::screen();
-    if (!screen) return nullptr;
-
-    return static_cast<Screen*>(screen->handle());
+    return m_screen.data();
 }
 
-void QQuickScreenWindow::setScreen(Screen *screen)
+void QQuickScreenWindow::setScreenWrapper(Screen *screen)
 {
     DEBUG_MSG << "(screen=" << screen << ")";
+    if (m_screen != screen) {
+        m_screen = screen;
+        Q_EMIT screenWrapperChanged();
+    }
     QQuickWindow::setScreen(screen->screen());
 }

@@ -42,6 +42,7 @@ include_directories(
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${QT5_PLATFORMSUPPORT_INCLUDE_DIRS}
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Qml_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
 
@@ -77,6 +78,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     mirserverhooks.cpp mirserverhooks.h
     setqtcompositor.cpp setqtcompositor.h
     tracepoints.c
+    screentypes.h
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
@@ -95,7 +97,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qmirserver.cpp
     qmirserver_p.cpp
     surfaceobserver.cpp
-    screen.cpp
+    platformscreen.cpp
     screenwindow.cpp
     screensmodel.cpp
     mirserverintegration.cpp
@@ -137,6 +139,7 @@ target_link_libraries(
     Qt5::DBus
     Qt5::Quick
     Qt5::Sensors
+    Qt5::Qml
 )
 
 include(UseLttngGenTp)

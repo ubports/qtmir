@@ -18,24 +18,29 @@
 #define QQUICKSCREENWINDOW_H
 
 #include <QQuickWindow>
-#include "screens.h"
+#include <QPointer>
+
+class Screen;
 
 namespace qtmir {
 
 class QQuickScreenWindow : public QQuickWindow
 {
     Q_OBJECT
-    Q_PROPERTY(Screen *screen READ screen WRITE setScreen NOTIFY screenChanged)
+    Q_PROPERTY(Screen *screen READ screenWrapper WRITE setScreenWrapper NOTIFY screenWrapperChanged)
     Q_PROPERTY(int winId READ winId CONSTANT)
 public:
     explicit QQuickScreenWindow(QQuickWindow *parent = 0);
     ~QQuickScreenWindow();
 
-    Screen *screen() const;
-    void setScreen(Screen *screen);
+    Screen *screenWrapper() const;
+    void setScreenWrapper(Screen *screen);
 
 Q_SIGNALS:
-    void screenChanged(Screen *screen);
+    void screenWrapperChanged();
+
+private:
+    QPointer<Screen> m_screen;
 };
 
 } //namespace qtmir

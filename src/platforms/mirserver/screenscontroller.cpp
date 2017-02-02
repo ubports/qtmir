@@ -15,7 +15,7 @@
  */
 
 #include "screenscontroller.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screensmodel.h"
 
 // Mir
@@ -34,20 +34,6 @@ ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
     , m_display(display)
     , m_displayConfigurationController(controller)
 {
-    auto fnConnect = [this](Screen* screen) {
-        connect(screen, &Screen::__usedChanged, this, [this, screen](bool used){ onScreenUsedChanged(screen, used); });
-        connect(screen, &Screen::__scaleChanged, this, [this, screen](float scale){ onScreenScaleChanged(screen, scale); });
-        connect(screen, &Screen::__formFactorChanged, this, [this, screen](MirFormFactor formFactor){ onScreenFormFactorChanged(screen, formFactor); });
-        connect(screen, &Screen::__currentModeIndexChanged, this, [this, screen](uint32_t index){ onScreenCurrentModeIndexChanged(screen, index); });
-    };
-    connect(model.data(), &ScreensModel::screenAdded, this, fnConnect);
-
-    auto fnDisconnect = [this](Screen* screen) { connect(screen, 0, this, 0); };
-    connect(model.data(), &ScreensModel::screenRemoved, this, fnDisconnect);
-
-    Q_FOREACH(auto screen, model->screens()) {
-        fnConnect(screen);
-    }
 }
 
 CustomScreenConfigurationList ScreensController::configuration()
@@ -152,44 +138,4 @@ bool ScreensController::setOutputConfiguration(const CustomScreenConfiguration &
 
     m_displayConfigurationController->set_base_configuration(std::move(displayConfiguration));
     return true;
-}
-
-void ScreensController::onScreenUsedChanged(Screen *screen, bool used)
-{
-    auto id = screen->outputId();
-    auto config = outputConfiguration(id);
-    if (config.valid) {
-        config.used = used;
-        setOutputConfiguration(config);
-    }
-}
-
-void ScreensController::onScreenScaleChanged(Screen *screen, float scale)
-{
-    auto id = screen->outputId();
-    auto config = outputConfiguration(id);
-    if (config.valid) {
-        config.scale = scale;
-        setOutputConfiguration(config);
-    }
-}
-
-void ScreensController::onScreenFormFactorChanged(Screen *screen, MirFormFactor formFactor)
-{
-    auto id = screen->outputId();
-    auto config = outputConfiguration(id);
-    if (config.valid) {
-        config.formFactor = formFactor;
-        setOutputConfiguration(config);
-    }
-}
-
-void ScreensController::onScreenCurrentModeIndexChanged(Screen *screen, uint32_t currentModeIndex)
-{
-    auto id = screen->outputId();
-    auto config = outputConfiguration(id);
-    if (config.valid) {
-        config.currentModeIndex = currentModeIndex;
-        setOutputConfiguration(config);
-    }
 }

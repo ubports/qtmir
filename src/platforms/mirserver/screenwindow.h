@@ -47,9 +47,11 @@ public:
     void makeCurrent();
     void doneCurrent();
 
+public Q_SLOTS:
+    void setActive(bool active);
+
 private Q_SLOTS:
     void updateExpose();
-    void setActive(bool active);
 
 private:
     void setPrimary(const bool primary);

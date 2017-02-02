@@ -15,9 +15,10 @@
  */
 
 #include "screens.h"
+#include "screen.h"
 
 // mirserver
-#include "screen.h"
+#include "platformscreen.h"
 #include "logging.h"
 
 // Qt
@@ -33,18 +34,16 @@ namespace qtmir {
 Screens::Screens(QObject *parent) :
     QAbstractListModel(parent)
 {
-    auto app = static_cast<QGuiApplication *>(QGuiApplication::instance());
-    if (!app) {
-        return;
+    if (qGuiApp->platformName() != QLatin1String("mirserver")) {
+        qCritical("Not using 'mirserver' QPA plugin. Using Screens may produce unknown results.");
     }
-    connect(app, &QGuiApplication::screenAdded, this, &Screens::onScreenAdded);
-    connect(app, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
+
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, &Screens::onScreenAdded);
+    connect(qGuiApp, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
+    connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &Screens::activeScreenChanged);
 
     Q_FOREACH(QScreen* screen, QGuiApplication::screens()) {
-        QPlatformScreen* platformScreen = screen->handle();
-
-//        m_screenList << static_cast<Screen*>();
-        qDebug() << platformScreen << static_cast<Screen*>(platformScreen);
+        m_screenList.push_back(new Screen(screen));
     }
     DEBUG_MSG << "(" << m_screenList << ")";
 }
@@ -53,13 +52,6 @@ QHash<int, QByteArray> Screens::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ScreenRole] = "screen";
-    roles[OutputTypeRole] = "outputType";
-    roles[EnabledRole] = "enabled";
-    roles[NameRole] = "name";
-    roles[ScaleRole] = "scale";
-    roles[FormFactorRole] = "formFactor";
-    roles[GeometryRole] = "geometry";
-    roles[SizesRole] = "sizes";
     return roles;
 }
 
@@ -72,67 +64,6 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     switch(role) {
     case ScreenRole:
         return QVariant::fromValue(m_screenList.at(index.row()));
-    case OutputTypeRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return QVariant(screen->outputType());
-        } else {
-            return OutputTypes::Unknown;
-        }
-    }
-    case EnabledRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return screen->used();
-        } else {
-            return false;
-        }
-    }
-    case NameRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return screen->name();
-        } else {
-            return QString();
-        }
-    }
-    case ScaleRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return QVariant(screen->scale());
-        } else {
-            return 1.0;
-        }
-    }
-    case FormFactorRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return QVariant(static_cast<FormFactor>(screen->formFactor())); //FIXME: cheeky
-        } else {
-            return FormFactor::FormFactorUnknown;
-        }
-    }
-    case GeometryRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            return screen->geometry();
-        } else {
-            return QRect();
-        }
-    }
-    case SizesRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row()));
-        if (screen) {
-            QVariantList sizes;
-            auto availableSizes = screen->availableSizes();
-            Q_FOREACH(auto size, availableSizes) {
-                sizes.append(QVariant(size));
-            }
-            return sizes;
-        } else {
-            return QVariantList();
-        }
-    }
     } // switch
 
     return QVariant();
@@ -148,46 +79,62 @@ int Screens::count() const
     return m_screenList.size();
 }
 
-void Screens::activateScreen(int index)
+QVariant Screens::activeScreen() const
 {
-    if (index < 0 || m_screenList.count() <= index) return;
-
-    auto platformScreen = static_cast<Screen*>(m_screenList.at(index));
-    if (platformScreen && platformScreen->primaryWindow()) {
-        auto window = platformScreen->primaryWindow()->window();
-        if (window) {
-            window->requestActivate();
-        }
+    for (int i = 0; i < m_screenList.count(); i++) {
+        if (m_screenList[i]->isActive()) return i;
     }
+    return QVariant();
+}
+
+void Screens::activateScreen(const QVariant& vindex)
+{
+    bool ok = false;
+    int index = vindex.toInt(&ok);
+    if (!ok || index < 0 || m_screenList.count() <= index) return;
+
+    auto screen = static_cast<Screen*>(m_screenList.at(index));
+    screen->setActive(true);
 }
 
 void Screens::onScreenAdded(QScreen *screen)
 {
-    auto platform = static_cast<Screen*>(screen->handle());
-    if (m_screenList.contains(platform))
-        return;
+    Q_FOREACH(auto screenWrapper, m_screenList) {
+        if (screenWrapper->screen() == screen) return;
+    }
     DEBUG_MSG << "(screen=" << screen << ")";
 
     beginInsertRows(QModelIndex(), count(), count());
-    m_screenList.push_back(platform);
+    auto screenWrapper(new Screen(screen));
+    m_screenList.push_back(screenWrapper);
     endInsertRows();
-    Q_EMIT screenAdded(platform);
+    Q_EMIT screenAdded(screenWrapper);
     Q_EMIT countChanged();
 }
 
 void Screens::onScreenRemoved(QScreen *screen)
 {
-    auto platform = static_cast<Screen*>(screen->handle());
-    int index = m_screenList.indexOf(platform);
-    if (index < 0)
-        return;
-    DEBUG_MSG << "(screen=" << platform << ")";
+    DEBUG_MSG << "(screen=" << screen << ")";
 
-    beginRemoveRows(QModelIndex(), index, index);
-    m_screenList.removeAt(index);
-    endRemoveRows();
-    Q_EMIT screenRemoved(platform);
-    Q_EMIT countChanged();
+    int index = 0;
+    QMutableListIterator<Screen*> iter(m_screenList);
+    while(iter.hasNext()) {
+        auto screenWrapper = iter.next();
+        if (screenWrapper->screen() == screen) {
+
+            beginRemoveRows(QModelIndex(), index, index);
+            auto screenWrapper = m_screenList.takeAt(index);
+            endRemoveRows();
+
+            Q_EMIT screenRemoved(screenWrapper);
+            Q_EMIT countChanged();
+
+            iter.remove();
+            screenWrapper->deleteLater();
+            break;
+        }
+        index++;
+    }
 }
 
 } // namespace qtmir

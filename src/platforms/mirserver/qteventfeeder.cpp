@@ -20,7 +20,6 @@
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
-#include "screen.h" // NEEDED?
 #include "screensmodel.h"
 
 #include <qpa/qplatforminputcontext.h>

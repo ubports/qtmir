@@ -29,7 +29,7 @@
 // mirserver
 #include <eventbuilder.h>
 #include <surfaceobserver.h>
-#include "screen.h"
+#include "platformscreen.h"
 
 // Mir
 #include <mir/geometry/rectangle.h>

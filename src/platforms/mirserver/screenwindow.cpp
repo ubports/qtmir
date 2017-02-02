@@ -15,7 +15,7 @@
  */
 
 #include "screenwindow.h"
-#include "screen.h"
+#include "platformscreen.h"
 
 // Mir
 #include <mir/geometry/size.h>
@@ -50,7 +50,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
     , m_active(false)
     , m_winId(newWId())
 {
-    const auto platformScreen = static_cast<Screen *>(screen());
+    const auto platformScreen = static_cast<PlatformScreen *>(screen());
     QRect screenGeometry(platformScreen->availableGeometry());
 
     // Note: screen() is set to the primaryScreen(), if not specified explicitly.
@@ -64,7 +64,7 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
 
     m_primary = platformScreen->primaryWindow() == this;
     m_active = platformScreen->isActive();
-    connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
+    connect(platformScreen, &PlatformScreen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
         setPrimary(primaryWindow == this);
     });
 
@@ -73,14 +73,14 @@ ScreenWindow::ScreenWindow(QWindow *window, bool exposed)
 
     // Nick - changing screen will create a new platform surface for the window, and require re-exposure.
     connect(window, &QWindow::screenChanged, this, &ScreenWindow::updateExpose);
-    connect(platformScreen, &Screen::activeChanged, this, &ScreenWindow::setActive);
+    connect(platformScreen, &PlatformScreen::activeChanged, this, &ScreenWindow::setActive);
 }
 
 ScreenWindow::~ScreenWindow()
 {
     DEBUG_MSG << "()";
-    disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
-    static_cast<Screen *>(screen())->removeWindow(this);
+    disconnect(static_cast<PlatformScreen *>(screen()), &PlatformScreen::primaryWindowChanged, this, 0);
+    static_cast<PlatformScreen *>(screen())->removeWindow(this);
 
     disconnect(window(), &QWindow::screenChanged, this, &ScreenWindow::updateExpose);
 }
@@ -137,7 +137,8 @@ void ScreenWindow::updateExpose()
 {
     if (!window())
         return;
-    DEBUG_MSG << "(exposed=" << (m_exposed ? "true" : "false") << ", primary=" << (m_primary ? "true" : "false") << ")" << window();
+    DEBUG_MSG << "(exposed=" << (m_exposed ? "true" : "false")
+              << ", primary=" << (m_primary ? "true" : "false") << ")";
 
     // If backing a QQuickWindow, need to stop/start its renderer immediately
     auto quickWindow = static_cast<QQuickWindow *>(window());
@@ -163,47 +164,48 @@ void ScreenWindow::setActive(bool active)
         return;
 
     m_active = active;
-    requestActivateWindow();
+    updateExpose();
 }
 
 void ScreenWindow::setScreen(QPlatformScreen *newScreen)
 {
-    auto platformScreen = static_cast<Screen *>(newScreen);
+    auto platformScreen = static_cast<PlatformScreen *>(newScreen);
     Q_ASSERT(platformScreen);
-    DEBUG_MSG << "(screen=" << platformScreen << ", outputId=" << platformScreen->outputId().as_value() << ")";
+    DEBUG_MSG << "(screen=" << platformScreen
+              << ", outputId=" << platformScreen->outputId().as_value() << ")";
 
     // Dis-associate the old screen
     if (screen()) {
-        disconnect(static_cast<Screen *>(screen()), &Screen::primaryWindowChanged, this, 0);
-        disconnect(static_cast<Screen *>(screen()), &Screen::activeChanged, this, 0);
-        static_cast<Screen *>(screen())->removeWindow(this);
+        disconnect(static_cast<PlatformScreen *>(screen()), &PlatformScreen::primaryWindowChanged, this, 0);
+        disconnect(static_cast<PlatformScreen *>(screen()), &PlatformScreen::activeChanged, this, 0);
+        static_cast<PlatformScreen *>(screen())->removeWindow(this);
     }
     // Associate new screen and announce to Qt
     platformScreen->addWindow(this);
     setPrimary(platformScreen->primaryWindow() == this);
 
-    connect(platformScreen, &Screen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
+    connect(platformScreen, &PlatformScreen::primaryWindowChanged, this, [this](ScreenWindow* primaryWindow) {
         setPrimary(primaryWindow == this);
     });
-    connect(platformScreen, &Screen::activeChanged, this, &ScreenWindow::setActive);
+    connect(platformScreen, &PlatformScreen::activeChanged, this, &ScreenWindow::setActive);
 
     QWindowSystemInterface::handleWindowScreenChanged(window(), platformScreen->screen());
 }
 
 void ScreenWindow::swapBuffers()
 {
-    auto scrn = static_cast<Screen *>(screen());
+    auto scrn = static_cast<PlatformScreen *>(screen());
     if (scrn) scrn->swapBuffers();
 }
 
 void ScreenWindow::makeCurrent()
 {
-    auto scrn = static_cast<Screen *>(screen());
+    auto scrn = static_cast<PlatformScreen *>(screen());
     if (scrn) scrn->makeCurrent();
 }
 
 void ScreenWindow::doneCurrent()
 {
-    auto scrn = static_cast<Screen *>(screen());
+    auto scrn = static_cast<PlatformScreen *>(screen());
     if (scrn) scrn->doneCurrent();
 }

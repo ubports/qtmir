@@ -17,7 +17,7 @@
 #include "nativeinterface.h"
 
 #include "qmirserver.h"
-#include "screen.h"
+#include "platformscreen.h"
 
 NativeInterface::NativeInterface(QMirServer *server)
     : m_qMirServer(server)
@@ -35,7 +35,7 @@ QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
 {
     QVariantMap propertyMap;
     auto w = static_cast<ScreenWindow*>(window);
-    auto s = static_cast<Screen*>(w->screen());
+    auto s = static_cast<PlatformScreen*>(w->screen());
     if (s) {
         propertyMap.insert(QStringLiteral("scale"), s->scale());
         propertyMap.insert(QStringLiteral("formFactor"), s->formFactor());
@@ -49,7 +49,7 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
         return QVariant();
     }
     auto w = static_cast<ScreenWindow*>(window);
-    auto s = static_cast<Screen*>(w->screen());
+    auto s = static_cast<PlatformScreen*>(w->screen());
     if (!s) {
         return QVariant();
     }

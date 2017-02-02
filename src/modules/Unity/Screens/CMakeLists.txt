@@ -12,6 +12,7 @@ include_directories(
 set(SCREENSPLUGIN_SRC
     plugin.cpp
     screens.cpp
+    screen.cpp
     qquickscreenwindow.cpp
     )
 

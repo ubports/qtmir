@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREEN_H
-#define SCREEN_H
+#ifndef QTMIR_PLATFORMSCREEN_H
+#define QTMIR_PLATFORMSCREEN_H
 
 // Qt
 #include <QObject>
@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <QtDBus/QDBusInterface>
 #include <qpa/qplatformscreen.h>
+#include <QQmlListProperty>
 
 // Mir
 #include <mir_toolkit/common.h>
@@ -33,19 +34,20 @@
 #include "screentypes.h"
 
 class QOrientationSensor;
+class ScreensController;
+
 namespace mir {
     namespace graphics { class DisplayBuffer; class DisplaySyncGroup; class DisplayConfigurationOutput; }
     namespace renderer { namespace gl { class RenderTarget; }}
 }
 
-class Screen : public QObject,
-               public QPlatformScreen
+class PlatformScreen : public QObject,
+                       public QPlatformScreen
 {
     Q_OBJECT
-
 public:
-    Screen(const mir::graphics::DisplayConfigurationOutput &);
-    ~Screen();
+    PlatformScreen(const mir::graphics::DisplayConfigurationOutput &);
+    ~PlatformScreen();
 
     // QPlatformScreen methods.
     QRect geometry() const override { return m_geometry; }
@@ -67,9 +69,10 @@ public:
     qtmir::OutputId outputId() const { return m_outputId; }
     qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
-    QList<QSize> availableSizes() const { return m_availableSizes; }
-    QSize size() const { return m_geometry.size(); }
     bool isActive() const { return m_isActive; }
+
+    typedef QPair<qreal, QSize> Mode;
+    QList<Mode> availableModes() const;
 
     const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
     ScreenWindow* primaryWindow() const;
@@ -84,7 +87,6 @@ public:
     void setUsed(bool used);
     void setScale(float scale);
     void setFormFactor(MirFormFactor formFactor);
-    void setSize(const QSize& size);
     void setCurrentModeIndex(uint32_t currentModeIndex);
     void setActive(bool active);
 
@@ -92,17 +94,16 @@ Q_SIGNALS:
     void primaryWindowChanged(ScreenWindow* window);
 
     void usedChanged();
+    void nameChanged();
+    void outputTypeChanged();
     void scaleChanged();
     void formFactorChanged();
     void currentModeIndexChanged();
-    void sizeChanged();
+    void positionChanged();
+    void modeChanged();
+    void physicalSizeChanged();
+    void availableModesChanged();
     void activeChanged(bool active);
-
-    // for internal use
-    void __usedChanged(bool used);
-    void __scaleChanged(float scale);
-    void __formFactorChanged(MirFormFactor formFactor);
-    void __currentModeIndexChanged(uint32_t currentModeIndex);
 
 public Q_SLOTS:
    void onDisplayPowerStateChanged(int, int);
@@ -134,7 +135,7 @@ private:
     float m_scale;
     MirFormFactor m_formFactor;
     uint32_t m_currentModeIndex;
-    QList<QSize> m_availableSizes;
+    QList<PlatformScreen::Mode> m_availableModes;
     bool m_isActive;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
@@ -149,6 +150,7 @@ private:
 
     QVector<ScreenWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
+    ScreensController *m_screensController;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 
@@ -156,4 +158,4 @@ private:
     friend class ScreenWindow;
 };
 
-#endif // SCREEN_H
+#endif // QTMIR_PLATFORMSCREEN_H

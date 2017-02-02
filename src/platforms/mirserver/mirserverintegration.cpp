@@ -40,7 +40,7 @@
 #include "nativeinterface.h"
 #include "offscreensurface.h"
 #include "qmirserver.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screensmodel.h"
 #include "screenwindow.h"
 #include "services.h"
@@ -128,16 +128,20 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
+    m_nativeInterface = new NativeInterface(m_mirServer.data());
     m_mirServer->start();
 
     auto screens = m_mirServer->screensModel();
     if (!screens) {
         qFatal("ScreensModel not initialized");
     }
+    // need to create the screens before the integration initialises.
+    screens->update();
+
     QObject::connect(screens.data(), &ScreensModel::screenAdded,
-            [this](Screen *screen) { this->screenAdded(screen); });
+            [this](PlatformScreen *screen) { this->screenAdded(screen); });
     QObject::connect(screens.data(), &ScreensModel::screenRemoved,
-            [this](Screen *screen) {
+            [this](PlatformScreen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;
 #else
@@ -148,8 +152,6 @@ void MirServerIntegration::initialize()
     Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);
     }
-
-    m_nativeInterface = new NativeInterface(m_mirServer.data());
 }
 
 QPlatformAccessibility *MirServerIntegration::accessibility() const

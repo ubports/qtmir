@@ -30,17 +30,11 @@ class Screens : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QVariant activeScreen READ activeScreen WRITE activateScreen NOTIFY activeScreenChanged)
 
 public:
     enum ItemRoles {
         ScreenRole = Qt::UserRole + 1,
-        OutputTypeRole,
-        EnabledRole,
-        NameRole,
-        ScaleRole,
-        FormFactorRole,
-        GeometryRole,
-        SizesRole
     };
 
     explicit Screens(QObject *parent = 0);
@@ -52,12 +46,14 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     int count() const;
+    QVariant activeScreen() const;
 
 public Q_SLOTS:
-    void activateScreen(int index);
+    void activateScreen(const QVariant& index);
 
 Q_SIGNALS:
     void countChanged();
+    void activeScreenChanged();
     void screenAdded(Screen *screen);
     void screenRemoved(Screen *screen);
 
