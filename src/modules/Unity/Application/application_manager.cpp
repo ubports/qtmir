@@ -379,6 +379,9 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::stopApplication - appId=" << appId;
 
     Application *application = findApplication(appId);
+    if (!application) { // maybe it's already on the closing list
+        application = findClosingApplication(appId);
+    }
     if (!application) {
         qCritical() << "No such running application with appId" << appId;
         return false;
@@ -391,8 +394,6 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
 
 void ApplicationManager::onApplicationClosing(Application *application)
 {
-    remove(application);
-
     connect(application, &QObject::destroyed, this, [this, application](QObject*) {
         m_closingApplications.removeAll(application);
     });
@@ -432,6 +433,9 @@ void ApplicationManager::onProcessStopped(const QString &appId)
                  << "which AppMan is not managing, ignoring the event";
         return;
     }
+
+    remove(application);
+    application->deleteLater();
 
     // if an application gets killed, onProcessFailed is called first, followed by onProcessStopped.
     // we don't want to override what onProcessFailed already set.
@@ -655,8 +659,8 @@ void ApplicationManager::add(Application* application)
     connect(application, &Application::stopProcessRequested, this, [=]() {
         if (!m_taskController->stop(appId) && application->pid() > 0) {
             qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
-                       << "Sending SIGTERM to process:" << appId;
-            kill(application->pid(), SIGTERM);
+                       << "Sending last resort SIGKILL to process:" << appId;
+            kill(application->pid(), SIGKILL);
             application->setProcessState(Application::ProcessStopped);
         }
     });

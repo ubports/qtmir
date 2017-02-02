@@ -438,9 +438,11 @@ void Application::close()
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         m_session->close();
+        setInternalState(InternalState::Closing);
         break;
     case InternalState::Closing:
-        // already on the way
+        // the session/app close might have gotten interrupted/rejected by the app, try again
+        m_session->close();
         break;
     case InternalState::StoppedResumable:
         // session stopped while suspended. Stop it for good now.
