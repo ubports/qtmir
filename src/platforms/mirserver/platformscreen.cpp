@@ -439,10 +439,6 @@ void PlatformScreen::addWindow(ScreenWindow *window)
     DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
     m_screenWindows.push_back(window);
 
-    auto nativeInterface = qGuiApp->platformNativeInterface();
-    Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("formFactor"));
-    Q_EMIT nativeInterface->windowPropertyChanged(window, QStringLiteral("scale"));
-
     window->setGeometry(geometry());
     window->setActive(m_isActive);
 

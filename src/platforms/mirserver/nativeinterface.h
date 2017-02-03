@@ -38,10 +38,6 @@ public:
 
     void *nativeResourceForIntegration(const QByteArray &resource) override;
 
-    QVariantMap windowProperties(QPlatformWindow *window) const override;
-    QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
-    QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
-
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
 
