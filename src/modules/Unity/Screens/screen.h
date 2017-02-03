@@ -1,6 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include "types.h"
+
 #include <QObject>
 #include <QPointer>
 #include <QQmlListProperty>
@@ -25,7 +27,7 @@ class Screen : public QObject
     Q_PROPERTY(qtmir::FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
     Q_PROPERTY(QPoint position READ position NOTIFY positionChanged)
     Q_PROPERTY(uint currentModeIndex READ currentModeIndex NOTIFY currentModeIndexChanged)
-    Q_PROPERTY(QQmlListProperty<qtmir::ScreenMode> availableModes READ availableModes NOTIFY availableModesChanged)
+    Q_PROPERTY(QQmlListProperty<ScreenMode> availableModes READ availableModes NOTIFY availableModesChanged)
     Q_PROPERTY(QSizeF physicalSize READ physicalSize NOTIFY physicalSizeChanged)
 
 public:
@@ -40,7 +42,7 @@ public:
     qtmir::FormFactor formFactor() const;
     qtmir::OutputTypes outputType() const;
     QPoint position() const;
-    QQmlListProperty<qtmir::ScreenMode> availableModes();
+    QQmlListProperty<ScreenMode> availableModes();
     uint currentModeIndex() const;
     bool isActive() const;
 
@@ -67,7 +69,7 @@ private Q_SLOTS:
     void updateScreenModes();
 
 private:
-    QList<qtmir::ScreenMode*> m_modes;
+    QList<ScreenMode*> m_modes;
     QPointer<QScreen> m_screen;
     ScreensController *m_screensController;
 };

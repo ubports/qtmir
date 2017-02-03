@@ -116,9 +116,9 @@ QPoint Screen::position() const
     return platformScreen->geometry().topLeft();
 }
 
-QQmlListProperty<qtmir::ScreenMode> Screen::availableModes()
+QQmlListProperty<ScreenMode> Screen::availableModes()
 {
-    return QQmlListProperty<qtmir::ScreenMode>(this, m_modes);
+    return QQmlListProperty<ScreenMode>(this, m_modes);
 }
 
 uint Screen::currentModeIndex() const
@@ -180,7 +180,7 @@ void Screen::updateScreenModes()
     qDeleteAll(m_modes);
     m_modes.clear();
     Q_FOREACH(auto mode, platformScreen->availableModes()) {
-        auto newMode(new qtmir::ScreenMode);
+        auto newMode(new ScreenMode);
         QQmlEngine::setObjectOwnership(newMode, QQmlEngine::CppOwnership);
         newMode->refreshRate = mode.first;
         newMode->size = mode.second;
