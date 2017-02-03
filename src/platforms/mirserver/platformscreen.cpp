@@ -208,7 +208,6 @@ void PlatformScreen::setActive(bool active)
 {
     if (m_isActive == active)
         return;
-    qDebug() << "XXX: Screen::setActive" << active << name();
 
     if (active) {
         Q_FOREACH(auto screen, QGuiApplication::screens()) {
