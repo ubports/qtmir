@@ -149,19 +149,13 @@ PlatformScreen::PlatformScreen(const mir::graphics::DisplayConfigurationOutput &
     , m_used(false)
     , m_refreshRate(-1.0)
     , m_scale(1.0)
-    , m_formFactor(mir_form_factor_unknown)
+    , m_formFactor(qtmir::FormFactorUnknown)
     , m_isActive(false)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_orientationSensor(new QOrientationSensor(this))
     , m_unityScreen(nullptr)
-    , m_screensController(static_cast<ScreensController*>(qGuiApp->platformNativeInterface()
-                                                          ->nativeResourceForIntegration("ScreensController")))
 {
-    if (!m_screensController) {
-        qFatal("Screens Controller not initialized");
-    }
-
     setMirDisplayConfiguration(screen, false);
     DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value() << ", geometry=" << geometry() << ")";
 
@@ -208,54 +202,6 @@ PlatformScreen::~PlatformScreen()
 bool PlatformScreen::orientationSensorEnabled()
 {
     return m_orientationSensor->isActive();
-}
-
-void PlatformScreen::setUsed(bool used)
-{
-    if (m_used == used)
-        return;
-
-    auto config = m_screensController->outputConfiguration(m_outputId);
-    if (config.valid) {
-        config.used = used;
-        m_screensController->setOutputConfiguration(config);
-    }
-}
-
-void PlatformScreen::setScale(float scale)
-{
-    if (qFuzzyCompare(scale, m_scale))
-        return;
-
-    auto config = m_screensController->outputConfiguration(m_outputId);
-    if (config.valid) {
-        config.scale = scale;
-        m_screensController->setOutputConfiguration(config);
-    }
-}
-
-void PlatformScreen::setFormFactor(MirFormFactor formFactor)
-{
-    if (formFactor == m_formFactor)
-        return;
-
-    auto config = m_screensController->outputConfiguration(m_outputId);
-    if (config.valid) {
-        config.formFactor = formFactor;
-        m_screensController->setOutputConfiguration(config);
-    }
-}
-
-void PlatformScreen::setCurrentModeIndex(uint32_t currentModeIndex)
-{
-    if (m_currentModeIndex == currentModeIndex)
-        return;
-
-    auto config = m_screensController->outputConfiguration(m_outputId);
-    if (config.valid) {
-        config.currentModeIndex = currentModeIndex;
-        m_screensController->setOutputConfiguration(config);
-    }
 }
 
 void PlatformScreen::setActive(bool active)
@@ -375,8 +321,9 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     // as there is no convenient way to emit signals for those custom properties on a QScreen
     m_devicePixelRatio = 1.0; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
-    if (m_formFactor != screen.form_factor) {
-        m_formFactor = screen.form_factor;
+    auto formFactor = static_cast<qtmir::FormFactor>(screen.form_factor);
+    if (m_formFactor != formFactor) {
+        m_formFactor = formFactor;
         Q_EMIT formFactorChanged();
     }
 

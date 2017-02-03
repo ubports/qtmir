@@ -35,7 +35,7 @@ struct CustomScreenConfiguration
     MirPowerMode powerMode;
     MirOrientation orientation;
     float scale;
-    MirFormFactor formFactor;
+    qtmir::FormFactor formFactor;
 
     // To read additional readonly state, consult the Screen
 };

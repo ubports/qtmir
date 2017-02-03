@@ -64,7 +64,7 @@ public:
 
     bool used() const { return m_used; }
     float scale() const { return m_scale; }
-    MirFormFactor formFactor() const { return m_formFactor; }
+    qtmir::FormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
     qtmir::OutputId outputId() const { return m_outputId; }
     qtmir::OutputTypes outputType() const { return m_type; }
@@ -84,10 +84,6 @@ public:
     static bool skipDBusRegistration;
     bool orientationSensorEnabled();
 
-    void setUsed(bool used);
-    void setScale(float scale);
-    void setFormFactor(MirFormFactor formFactor);
-    void setCurrentModeIndex(uint32_t currentModeIndex);
     void setActive(bool active);
 
 Q_SIGNALS:
@@ -133,7 +129,7 @@ private:
     QSizeF m_physicalSize;
     qreal m_refreshRate;
     float m_scale;
-    MirFormFactor m_formFactor;
+    qtmir::FormFactor m_formFactor;
     uint32_t m_currentModeIndex;
     QList<PlatformScreen::Mode> m_availableModes;
     bool m_isActive;

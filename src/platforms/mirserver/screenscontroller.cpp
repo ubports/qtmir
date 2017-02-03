@@ -74,7 +74,7 @@ bool ScreensController::setConfiguration(const CustomScreenConfigurationList &ne
                     outputConfig.power_mode = config.powerMode;
 //                    outputConfig.orientation = config.orientation; // disabling for now
                     outputConfig.scale = config.scale;
-                    outputConfig.form_factor = config.formFactor;
+                    outputConfig.form_factor = static_cast<MirFormFactor>(config.formFactor);
                 }
             });
     }
@@ -104,7 +104,7 @@ CustomScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputId
                 config.powerMode = outputConfig.power_mode;
                 config.orientation = outputConfig.orientation;
                 config.scale = outputConfig.scale;
-                config.formFactor = outputConfig.form_factor;
+                config.formFactor = static_cast<qtmir::FormFactor>(outputConfig.form_factor);
             }
     });
     return config;
@@ -128,7 +128,7 @@ bool ScreensController::setOutputConfiguration(const CustomScreenConfiguration &
                 outputConfig.power_mode = newConfig.powerMode;
 //              outputConfig.orientation = newConfig.orientation; // disabling for now
                 outputConfig.scale = newConfig.scale;
-                outputConfig.form_factor = newConfig.formFactor;
+                outputConfig.form_factor = static_cast<MirFormFactor>(newConfig.formFactor);
             }
         });
 

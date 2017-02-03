@@ -44,7 +44,8 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Unity.Screens"));
 
         qRegisterMetaType<Screen*>("Screen*");
-        qRegisterMetaType<qtmir::ScreenMode*>("Screen*");
+        qRegisterMetaType<qtmir::ScreenMode*>("ScreenMode*");
+        qRegisterMetaType<ScreenConfig*>("ScreenConfig*");
         qmlRegisterUncreatableType<qtmir::ScreenMode>(uri, 0, 1, "ScreenMode", "ScreenMode is not creatable.");
 
         qmlRegisterSingletonType<qtmir::Screens>(uri, 0, 1, "Screens", screensSingleton);
