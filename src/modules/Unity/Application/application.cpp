@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -28,6 +28,7 @@
 
 // QPA mirserver
 #include "logging.h"
+#include "initialsurfacesizes.h"
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
@@ -104,6 +105,11 @@ Application::~Application()
         m_session->setApplication(nullptr);
         delete m_session;
     }
+
+    if (m_pid != 0) {
+        InitialSurfaceSizes::remove(m_pid);
+    }
+
     delete m_stopTimer;
 }
 
@@ -454,7 +460,15 @@ void Application::close()
 
 void Application::setPid(pid_t pid)
 {
+    if (m_pid != 0) {
+        InitialSurfaceSizes::remove(m_pid);
+    }
+
     m_pid = pid;
+
+    if (m_initialSurfaceSize.isValid() && m_pid != 0) {
+        InitialSurfaceSizes::set(m_pid, m_initialSurfaceSize);
+    }
 }
 
 void Application::setArguments(const QStringList &arguments)
@@ -834,6 +848,9 @@ void Application::setInitialSurfaceSize(const QSize &size)
 
     if (size != m_initialSurfaceSize) {
         m_initialSurfaceSize = size;
+        if (m_pid != 0 && m_initialSurfaceSize.isValid()) {
+            InitialSurfaceSizes::set(m_pid, size);
+        }
         Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
 }

@@ -140,6 +140,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     DEBUG_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
+        << ",size=(" << m_size.width() << "," << m_size.height() << ")"
         << ",parentSurface=" << m_parentSurface
         << ")";
 
