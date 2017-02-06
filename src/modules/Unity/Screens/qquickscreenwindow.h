@@ -20,27 +20,30 @@
 #include <QQuickWindow>
 #include <QPointer>
 
-class Screen;
+class ScreenAdapter;
 
 namespace qtmir {
 
+/*
+ * QQuickScreenWindow - wrapper of QQuickWindow to enable QML to specify destination screen.
+**/
 class QQuickScreenWindow : public QQuickWindow
 {
     Q_OBJECT
-    Q_PROPERTY(Screen *screen READ screenWrapper WRITE setScreenWrapper NOTIFY screenWrapperChanged)
+    Q_PROPERTY(ScreenAdapter *screen READ screenWrapper WRITE setScreenWrapper NOTIFY screenWrapperChanged)
     Q_PROPERTY(int winId READ winId CONSTANT)
 public:
     explicit QQuickScreenWindow(QQuickWindow *parent = 0);
     ~QQuickScreenWindow();
 
-    Screen *screenWrapper() const;
-    void setScreenWrapper(Screen *screen);
+    ScreenAdapter *screenWrapper() const;
+    void setScreenWrapper(ScreenAdapter *screen);
 
 Q_SIGNALS:
     void screenWrapperChanged();
 
 private:
-    QPointer<Screen> m_screen;
+    QPointer<ScreenAdapter> m_screen;
 };
 
 } //namespace qtmir

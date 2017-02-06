@@ -14,7 +14,11 @@ class QScreen;
 class ScreenConfig;
 class ScreensController;
 
-class Screen : public QObject
+/*
+ * Screen - Adapter for a QScreen exposed to qml which allows user to read screen properties,
+ * as well as configure the screen properties in a transactional manner.
+**/
+class ScreenAdapter : public QObject
 {
     Q_OBJECT
 
@@ -31,8 +35,8 @@ class Screen : public QObject
     Q_PROPERTY(QSizeF physicalSize READ physicalSize NOTIFY physicalSizeChanged)
 
 public:
-    explicit Screen(QScreen* screen, QObject* parent = 0);
-    ~Screen();
+    explicit ScreenAdapter(QScreen* screen, QObject* parent = 0);
+    ~ScreenAdapter();
 
     qtmir::OutputId outputId() const;
     bool used() const;
@@ -89,7 +93,7 @@ public:
 
     ScreenConfig &operator=(const CustomScreenConfiguration& other);
 
-    friend class Screen;
+    friend class ScreenAdapter;
 };
 
 #endif // SCREEN_H

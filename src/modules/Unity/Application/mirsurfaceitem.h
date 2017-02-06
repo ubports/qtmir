@@ -166,11 +166,9 @@ private:
 
     int m_surfaceWidth;
     int m_surfaceHeight;
-    QPoint m_topLeft;
     Mir::OrientationAngle *m_orientationAngle;
 
     bool m_consumesInput;
-    bool m_positionSet;
 
     FillMode m_fillMode;
 };

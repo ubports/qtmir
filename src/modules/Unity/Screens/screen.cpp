@@ -11,7 +11,7 @@
 #include <QDebug>
 #include <QGuiApplication>
 
-Screen::Screen(QScreen* screen, QObject* parent)
+ScreenAdapter::ScreenAdapter(QScreen* screen, QObject* parent)
     : QObject(parent)
     , m_screen(screen)
     , m_screensController(static_cast<ScreensController*>(qGuiApp->platformNativeInterface()
@@ -23,28 +23,28 @@ Screen::Screen(QScreen* screen, QObject* parent)
 
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
     if (platformScreen) {
-        connect(platformScreen, &PlatformScreen::usedChanged, this, &Screen::usedChanged);
-        connect(platformScreen, &PlatformScreen::nameChanged, this, &Screen::nameChanged);
-        connect(platformScreen, &PlatformScreen::outputTypeChanged, this, &Screen::outputTypeChanged);
-        connect(platformScreen, &PlatformScreen::scaleChanged, this, &Screen::scaleChanged);
-        connect(platformScreen, &PlatformScreen::formFactorChanged, this, &Screen::formFactorChanged);
-        connect(platformScreen, &PlatformScreen::physicalSizeChanged, this, &Screen::physicalSizeChanged);
-        connect(platformScreen, &PlatformScreen::positionChanged, this, &Screen::positionChanged);
-        connect(platformScreen, &PlatformScreen::activeChanged, this, &Screen::activeChanged);
-        connect(platformScreen, &PlatformScreen::currentModeIndexChanged, this, &Screen::currentModeIndexChanged);
-        connect(platformScreen, &PlatformScreen::availableModesChanged, this, &Screen::updateScreenModes);
+        connect(platformScreen, &PlatformScreen::usedChanged, this, &ScreenAdapter::usedChanged);
+        connect(platformScreen, &PlatformScreen::nameChanged, this, &ScreenAdapter::nameChanged);
+        connect(platformScreen, &PlatformScreen::outputTypeChanged, this, &ScreenAdapter::outputTypeChanged);
+        connect(platformScreen, &PlatformScreen::scaleChanged, this, &ScreenAdapter::scaleChanged);
+        connect(platformScreen, &PlatformScreen::formFactorChanged, this, &ScreenAdapter::formFactorChanged);
+        connect(platformScreen, &PlatformScreen::physicalSizeChanged, this, &ScreenAdapter::physicalSizeChanged);
+        connect(platformScreen, &PlatformScreen::positionChanged, this, &ScreenAdapter::positionChanged);
+        connect(platformScreen, &PlatformScreen::activeChanged, this, &ScreenAdapter::activeChanged);
+        connect(platformScreen, &PlatformScreen::currentModeIndexChanged, this, &ScreenAdapter::currentModeIndexChanged);
+        connect(platformScreen, &PlatformScreen::availableModesChanged, this, &ScreenAdapter::updateScreenModes);
     }
     updateScreenModes();
 }
 
-Screen::~Screen()
+ScreenAdapter::~ScreenAdapter()
 {
     qDebug() << "delete screens";
     qDeleteAll(m_modes);
     m_modes.clear();
 }
 
-qtmir::OutputId Screen::outputId() const
+qtmir::OutputId ScreenAdapter::outputId() const
 {
     if (!m_screen) return qtmir::OutputId(-1);
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -53,7 +53,7 @@ qtmir::OutputId Screen::outputId() const
     return platformScreen->outputId();
 }
 
-bool Screen::used() const
+bool ScreenAdapter::used() const
 {
     if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -62,7 +62,7 @@ bool Screen::used() const
     return platformScreen->used();
 }
 
-QString Screen::name() const
+QString ScreenAdapter::name() const
 {
     if (!m_screen) return QString();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -71,7 +71,7 @@ QString Screen::name() const
     return platformScreen->name();
 }
 
-float Screen::scale() const
+float ScreenAdapter::scale() const
 {
     if (!m_screen) return 1.0;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -80,7 +80,7 @@ float Screen::scale() const
     return platformScreen->scale();
 }
 
-QSizeF Screen::physicalSize() const
+QSizeF ScreenAdapter::physicalSize() const
 {
     if (!m_screen) return QSizeF();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -89,7 +89,7 @@ QSizeF Screen::physicalSize() const
     return platformScreen->physicalSize();
 }
 
-qtmir::FormFactor Screen::formFactor() const
+qtmir::FormFactor ScreenAdapter::formFactor() const
 {
     if (!m_screen) return qtmir::FormFactorUnknown;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -98,7 +98,7 @@ qtmir::FormFactor Screen::formFactor() const
     return static_cast<qtmir::FormFactor>(platformScreen->formFactor()); // needs compile time check
 }
 
-qtmir::OutputTypes Screen::outputType() const
+qtmir::OutputTypes ScreenAdapter::outputType() const
 {
     if (!m_screen) return qtmir::Unknown;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -107,7 +107,7 @@ qtmir::OutputTypes Screen::outputType() const
     return platformScreen->outputType();
 }
 
-QPoint Screen::position() const
+QPoint ScreenAdapter::position() const
 {
     if (!m_screen) return QPoint();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -116,12 +116,12 @@ QPoint Screen::position() const
     return platformScreen->geometry().topLeft();
 }
 
-QQmlListProperty<ScreenMode> Screen::availableModes()
+QQmlListProperty<ScreenMode> ScreenAdapter::availableModes()
 {
     return QQmlListProperty<ScreenMode>(this, m_modes);
 }
 
-uint Screen::currentModeIndex() const
+uint ScreenAdapter::currentModeIndex() const
 {
     if (!m_screen) return -1;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -130,7 +130,7 @@ uint Screen::currentModeIndex() const
     return platformScreen->currentModeIndex();
 }
 
-bool Screen::isActive() const
+bool ScreenAdapter::isActive() const
 {
     if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -139,12 +139,12 @@ bool Screen::isActive() const
     return platformScreen->isActive();
 }
 
-QScreen *Screen::screen() const
+QScreen *ScreenAdapter::screen() const
 {
     return m_screen.data();
 }
 
-ScreenConfig *Screen::beginConfiguration() const
+ScreenConfig *ScreenAdapter::beginConfiguration() const
 {
     auto newConfig = new ScreenConfig();
     auto config = m_screensController->outputConfiguration(this->outputId());
@@ -153,7 +153,7 @@ ScreenConfig *Screen::beginConfiguration() const
     return newConfig;
 }
 
-bool Screen::applyConfiguration(ScreenConfig *configuration)
+bool ScreenAdapter::applyConfiguration(ScreenConfig *configuration)
 {
     if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -162,7 +162,7 @@ bool Screen::applyConfiguration(ScreenConfig *configuration)
     return m_screensController->setOutputConfiguration(*configuration);
 }
 
-void Screen::setActive(bool active)
+void ScreenAdapter::setActive(bool active)
 {
     if (!m_screen) return;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
@@ -171,7 +171,7 @@ void Screen::setActive(bool active)
     platformScreen->setActive(active);
 }
 
-void Screen::updateScreenModes()
+void ScreenAdapter::updateScreenModes()
 {
     if (!m_screen) return;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());

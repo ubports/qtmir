@@ -22,7 +22,7 @@
 #include <QAbstractListModel>
 
 class QScreen;
-class Screen;
+class ScreenAdapter;
 
 namespace qtmir {
 
@@ -54,15 +54,15 @@ public Q_SLOTS:
 Q_SIGNALS:
     void countChanged();
     void activeScreenChanged();
-    void screenAdded(Screen *screen);
-    void screenRemoved(Screen *screen);
+    void screenAdded(ScreenAdapter *screen);
+    void screenRemoved(ScreenAdapter *screen);
 
 private Q_SLOTS:
     void onScreenAdded(QScreen *screen);
     void onScreenRemoved(QScreen *screen);
 
 private:
-    QList<Screen *> m_screenList;
+    QList<ScreenAdapter *> m_screenList;
 };
 
 } // namespace qtmir

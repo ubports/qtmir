@@ -43,7 +43,7 @@ Screens::Screens(QObject *parent) :
     connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &Screens::activeScreenChanged);
 
     Q_FOREACH(QScreen* screen, QGuiApplication::screens()) {
-        m_screenList.push_back(new Screen(screen));
+        m_screenList.push_back(new ScreenAdapter(screen));
     }
     DEBUG_MSG << "(" << m_screenList << ")";
 }
@@ -93,7 +93,7 @@ void Screens::activateScreen(const QVariant& vindex)
     int index = vindex.toInt(&ok);
     if (!ok || index < 0 || m_screenList.count() <= index) return;
 
-    auto screen = static_cast<Screen*>(m_screenList.at(index));
+    auto screen = static_cast<ScreenAdapter*>(m_screenList.at(index));
     screen->setActive(true);
 }
 
@@ -105,7 +105,7 @@ void Screens::onScreenAdded(QScreen *screen)
     DEBUG_MSG << "(screen=" << screen << ")";
 
     beginInsertRows(QModelIndex(), count(), count());
-    auto screenWrapper(new Screen(screen));
+    auto screenWrapper(new ScreenAdapter(screen));
     m_screenList.push_back(screenWrapper);
     endInsertRows();
     Q_EMIT screenAdded(screenWrapper);
@@ -117,7 +117,7 @@ void Screens::onScreenRemoved(QScreen *screen)
     DEBUG_MSG << "(screen=" << screen << ")";
 
     int index = 0;
-    QMutableListIterator<Screen*> iter(m_screenList);
+    QMutableListIterator<ScreenAdapter*> iter(m_screenList);
     while(iter.hasNext()) {
         auto screenWrapper = iter.next();
         if (screenWrapper->screen() == screen) {

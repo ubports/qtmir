@@ -46,12 +46,12 @@ QQuickScreenWindow::~QQuickScreenWindow()
     DEBUG_MSG << "()";
 }
 
-Screen *QQuickScreenWindow::screenWrapper() const
+ScreenAdapter *QQuickScreenWindow::screenWrapper() const
 {
     return m_screen.data();
 }
 
-void QQuickScreenWindow::setScreenWrapper(Screen *screen)
+void QQuickScreenWindow::setScreenWrapper(ScreenAdapter *screen)
 {
     DEBUG_MSG << "(screen=" << screen << ")";
     if (m_screen != screen) {
