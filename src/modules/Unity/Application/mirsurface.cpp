@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -269,24 +269,47 @@ void MirSurface::dropPendingBuffer()
 
     const void* const userId = (void*)123;  // TODO: Multimonitor support
 
-    const int framesPending = m_surface->buffers_ready_for_compositor(userId);
-    if (framesPending > 0) {
-        m_textureUpdated = false;
-
-        locker.unlock();
-        if (updateTexture()) {
-            DEBUG_MSG << "() dropped=1 left=" << framesPending-1;
-        } else {
-            // If we haven't managed to update the texture, don't keep banging away.
-            m_frameDropperTimer.stop();
-            DEBUG_MSG << "() dropped=0" << " left=" << framesPending << " - failed to upate texture";
-        }
-        Q_EMIT frameDropped();
-    } else {
+    int framesPending = m_surface->buffers_ready_for_compositor(userId);
+    if (framesPending == 0) {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
         // client provides any new frames, the timer will get restarted
         // via scheduleTextureUpdate()...
+        m_frameDropperTimer.stop();
+        return;
+    }
+
+    m_textureUpdated = false;
+    auto texture = static_cast<MirBufferSGTexture*>(m_texture.data());
+
+    auto renderables = m_surface->generate_renderables(userId);
+    if (renderables.size() > 0) {
+        ++m_currentFrameNumber;
+        if (texture) {
+            texture->freeBuffer();
+            texture->setBuffer(renderables[0]->buffer());
+            if (texture->textureSize() != size()) {
+                m_size = texture->textureSize();
+                QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+            }
+            m_textureUpdated = true;
+
+            framesPending = m_surface->buffers_ready_for_compositor(userId);
+            if (framesPending > 0) {
+                // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+                // queued since the timer lives in a different thread
+                DEBUG_MSG << "() - there are still buffers ready for compositor. starting frame dropper";
+                QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+            }
+        } else {
+            // Just get a pointer to the buffer. This tells mir we consumed it.
+            renderables[0]->buffer();
+        }
+
+        Q_EMIT frameDropped();
+
+    } else {
+        WARNING_MSG << "() - failed. Giving up.";
         m_frameDropperTimer.stop();
     }
 }
