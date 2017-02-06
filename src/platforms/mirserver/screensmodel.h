@@ -17,9 +17,10 @@
 #ifndef SCREENCONTROLLER_H
 #define SCREENCONTROLLER_H
 
+#include "mirdisplayconfigurationobserver.h"
+
 #include <QObject>
 #include <QPoint>
-#include <QMutex>
 
 // Mir
 #include <mir/graphics/display_configuration.h>
@@ -55,7 +56,7 @@ class QtCompositor;
  * All other methods must be called on the Qt GUI thread.
  */
 
-class ScreensModel : public QObject
+class ScreensModel : public MirDisplayConfigurationObserver
 {
     Q_OBJECT
 public:
@@ -98,7 +99,6 @@ private:
     std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
     QList<PlatformScreen*> m_screenList;
     bool m_compositing;
-    QMutex m_mutex;
 };
 
 #endif // SCREENCONTROLLER_H

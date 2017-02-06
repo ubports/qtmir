@@ -16,7 +16,7 @@
 
 #include "screensmodel.h"
 
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 #include "qtcompositor.h"
 #include "logging.h"
 #include "mirserverintegration.h"
@@ -42,7 +42,7 @@ namespace mg = mir::graphics;
 #define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreensModel[" << this <<"]::" << __func__
 
 ScreensModel::ScreensModel(QObject *parent)
-    : QObject(parent)
+    : MirDisplayConfigurationObserver(parent)
     , m_compositing(false)
 {
     DEBUG_MSG << "()";
@@ -66,6 +66,9 @@ void ScreensModel::init(
             this, &ScreensModel::onCompositorStarting);
     connect(qtCompositor, &QtCompositor::stopping,
             this, &ScreensModel::onCompositorStopping, Qt::BlockingQueuedConnection);
+
+    connect(this, &MirDisplayConfigurationObserver::configurationApplied,
+            this, &ScreensModel::update, Qt::BlockingQueuedConnection);
 }
 
 // terminate before shutting down the Mir server, or else liable to deadlock with the blocking connection above
@@ -100,8 +103,6 @@ void ScreensModel::onCompositorStopping()
 
 void ScreensModel::update()
 {
-    QMutexLocker lock(&m_mutex);
-
     DEBUG_MSG << "()";
     auto display = m_display.lock();
     if (!display)
@@ -111,7 +112,7 @@ void ScreensModel::update()
     // Mir only tells us something changed, it is up to us to figure out what.
     QList<PlatformScreen*> newScreenList;
     QList<PlatformScreen*> oldScreenList = m_screenList;
-    QHash<ScreenWindow*, PlatformScreen*> windowMoveList;
+    QHash<ScreenPlatformWindow*, PlatformScreen*> windowMoveList;
     m_screenList.clear();
 
     displayConfig->for_each_output(
@@ -133,10 +134,12 @@ void ScreensModel::update()
                         newScreenList.append(newScreen);
 
                         // if Window on this Screen, arrange to move it to the new Screen
-                        Q_FOREACH (ScreenWindow* window, screen->windows()) {
+                        Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
                             windowMoveList.insert(window, newScreen);
                         }
                         m_screenList.append(newScreen);
+                        // Announce to mir
+                        m_displayListener->add_display(qtmir::toMirRectangle(newScreen->geometry()));
                     }
                 } else {
                     DEBUG_MSG << "() - new screen for output=" << output.id.as_value();
@@ -149,39 +152,8 @@ void ScreensModel::update()
         }
     );
 
-    // Announce new Screens to Qt
-    Q_FOREACH (auto screen, newScreenList) {
-        Q_EMIT screenAdded(screen);
-        m_displayListener->add_display(qtmir::toMirRectangle(screen->geometry()));
-    }
-
-    // Move Windows from about-to-be-deleted Screens to new Screen
-    auto i = windowMoveList.constBegin();
-    while (i != windowMoveList.constEnd()) {
-        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<PlatformScreen*>(i.key()->screen()) << " to " << i.value();
-        i.key()->setScreen(i.value());
-        i++;
-    }
-
-    // Delete any old & unused Screens
-    Q_FOREACH (auto screen, oldScreenList) {
-        DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
-                               << " and geometry " << screen->geometry();
-
-        Q_FOREACH (ScreenWindow* window, screen->windows()) {
-            if (window->window() && window->isExposed()) {
-                window->window()->hide();
-            }
-        }
-        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
-        if (!ok) {
-            DEBUG_MSG << "() - Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
-        }
-        m_displayListener->remove_display(qtmir::toMirRectangle(screen->geometry()));
-        Q_EMIT screenRemoved(screen); // should delete the backing Screen
-    }
-
     // Match up the new Mir DisplayBuffers with each Screen
+    // Do this first so that the buffers are valid before we announce to Qt.
     display->for_each_display_sync_group([&](mg::DisplaySyncGroup &group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer &buffer) {
             // only way to match Screen to a DisplayBuffer is by matching the geometry
@@ -198,6 +170,37 @@ void ScreensModel::update()
             }
         });
     });
+
+    // Announce new Screens to Qt
+    Q_FOREACH (auto screen, newScreenList) {
+        Q_EMIT screenAdded(screen);
+    }
+
+    // Move Windows from about-to-be-deleted Screens to new Screen
+    auto i = windowMoveList.constBegin();
+    while (i != windowMoveList.constEnd()) {
+        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<PlatformScreen*>(i.key()->screen()) << " to " << i.value();
+        i.key()->setScreen(i.value());
+        i++;
+    }
+
+    // Delete any old & unused Screens
+    Q_FOREACH (auto screen, oldScreenList) {
+        DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
+                               << " and geometry " << screen->geometry();
+
+        Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
+            if (window->window() && window->isExposed()) {
+                window->window()->hide();
+            }
+        }
+        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
+        if (!ok) {
+            DEBUG_MSG << "() - Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
+        }
+        m_displayListener->remove_display(qtmir::toMirRectangle(screen->geometry()));
+        Q_EMIT screenRemoved(screen); // should delete the backing Screen
+    }
 
     qCDebug(QTMIR_SCREENS) << "=======================================";
     Q_FOREACH (auto screen, m_screenList) {
@@ -228,7 +231,7 @@ bool ScreensModel::canUpdateExistingScreen(const PlatformScreen *screen, const m
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
     Q_FOREACH (const auto screen, m_screenList) {
-        Q_FOREACH (ScreenWindow* window, screen->windows()) {
+        Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
             window->setExposed(exposed);
         }
     }

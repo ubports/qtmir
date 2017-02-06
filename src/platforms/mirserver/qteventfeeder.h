@@ -22,6 +22,8 @@
 #include <QObject>
 #include <qpa/qwindowsysteminterface.h>
 
+#include <memory>
+
 class QTouchDevice;
 class ScreensModel;
 
@@ -37,7 +39,7 @@ public:
     class QtWindowSystemInterface {
         public:
         virtual ~QtWindowSystemInterface() {}
-        virtual void setScreensModel(const QSharedPointer<ScreensModel> &sc) = 0;
+        virtual void setScreensModel(const std::shared_ptr<ScreensModel> &sc) = 0;
         virtual QWindow* getWindowForTouchPoint(const QPoint &point) = 0;
         virtual QWindow* focusedWindow() = 0;
         virtual void registerTouchDevice(QTouchDevice *device) = 0;
@@ -52,8 +54,8 @@ public:
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
     };
 
-    QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel);
-    QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
+    QtEventFeeder(const std::shared_ptr<ScreensModel> &screensModel);
+    QtEventFeeder(const std::shared_ptr<ScreensModel> &screensModel,
                   QtWindowSystemInterface *windowSystem);
     virtual ~QtEventFeeder();
 

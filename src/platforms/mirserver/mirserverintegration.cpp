@@ -42,7 +42,7 @@
 #include "qmirserver.h"
 #include "platformscreen.h"
 #include "screensmodel.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 #include "services.h"
 #include "ubuntutheme.h"
 #include "logging.h"
@@ -103,11 +103,11 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 
     auto screens = m_mirServer->screensModel();
     if (!screens) {
-        qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
+        qCritical("Screens are not initialized, unable to create a new QWindow/ScreenPlatformWindow");
         return nullptr;
     }
 
-    return new ScreenWindow(window, screens->compositing());
+    return new ScreenPlatformWindow(window, screens->compositing());
 }
 
 QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow */*window*/) const
@@ -138,9 +138,9 @@ void MirServerIntegration::initialize()
     // need to create the screens before the integration initialises.
     screens->update();
 
-    QObject::connect(screens.data(), &ScreensModel::screenAdded,
+    QObject::connect(screens.get(), &ScreensModel::screenAdded,
             [this](PlatformScreen *screen) { this->screenAdded(screen); });
-    QObject::connect(screens.data(), &ScreensModel::screenRemoved,
+    QObject::connect(screens.get(), &ScreensModel::screenRemoved,
             [this](PlatformScreen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;

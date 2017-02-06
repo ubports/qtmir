@@ -30,7 +30,7 @@
 
 // local
 #include "cursor.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 #include "screentypes.h"
 
 class QOrientationSensor;
@@ -74,8 +74,8 @@ public:
     typedef QPair<qreal, QSize> Mode;
     QList<Mode> availableModes() const;
 
-    const QVector<ScreenWindow*>& windows() const { return m_screenWindows; }
-    ScreenWindow* primaryWindow() const;
+    const QVector<ScreenPlatformWindow*>& windows() const { return m_screenWindows; }
+    ScreenPlatformWindow* primaryWindow() const;
 
     // QObject methods.
     void customEvent(QEvent* event) override;
@@ -87,7 +87,7 @@ public:
     void setActive(bool active);
 
 Q_SIGNALS:
-    void primaryWindowChanged(ScreenWindow* window);
+    void primaryWindowChanged(ScreenPlatformWindow* window);
 
     void usedChanged();
     void nameChanged();
@@ -108,8 +108,8 @@ public Q_SLOTS:
     void activate();
 
 protected:
-    void addWindow(ScreenWindow *window);
-    void removeWindow(ScreenWindow *window);
+    void addWindow(ScreenPlatformWindow *window);
+    void removeWindow(ScreenPlatformWindow *window);
 
     void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
@@ -144,14 +144,14 @@ private:
     Qt::ScreenOrientation m_currentOrientation;
     QOrientationSensor *m_orientationSensor;
 
-    QVector<ScreenWindow*> m_screenWindows;
+    QVector<ScreenPlatformWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
     ScreensController *m_screensController;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 
     friend class ScreensModel;
-    friend class ScreenWindow;
+    friend class ScreenPlatformWindow;
 };
 
 #endif // QTMIR_PLATFORMSCREEN_H

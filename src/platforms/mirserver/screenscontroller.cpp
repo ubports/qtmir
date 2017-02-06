@@ -25,7 +25,7 @@
 
 namespace mg = mir::graphics;
 
-ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
+ScreensController::ScreensController(const std::shared_ptr<ScreensModel> &model,
         const std::shared_ptr<mir::graphics::Display> &display,
         const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
         QObject *parent)

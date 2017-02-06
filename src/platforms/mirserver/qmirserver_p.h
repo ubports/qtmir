@@ -52,7 +52,7 @@ class QMirServerPrivate
 {
 public:
     QMirServerPrivate(int &argc, char* argv[]);
-    const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
+    const std::shared_ptr<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
     QSharedPointer<QtEventFeeder> eventFeeder{new QtEventFeeder(screensModel)};
     MirServerThread *serverThread;

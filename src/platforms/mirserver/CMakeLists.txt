@@ -98,12 +98,13 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qmirserver_p.cpp
     surfaceobserver.cpp
     platformscreen.cpp
-    screenwindow.cpp
+    screenplatformwindow.cpp
     screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     offscreensurface.cpp
     inputdeviceobserver.cpp
+    mirdisplayconfigurationobserver.cpp
     promptsessionmanager.cpp promptsessionmanager.h promptsession.h
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h

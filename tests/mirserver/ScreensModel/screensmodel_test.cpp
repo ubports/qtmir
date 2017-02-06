@@ -27,7 +27,7 @@
 
 #include "testable_screensmodel.h"
 #include "platformscreen.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 
 #include <QGuiApplication>
 #include <QLoggingCategory>

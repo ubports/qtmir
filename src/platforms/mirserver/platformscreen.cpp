@@ -39,9 +39,9 @@
 
 namespace mg = mir::geometry;
 
-#define DEBUG_MSG_SCREENS qCDebug(QTMIR_SCREENS).nospace() << "Screen[" << (void*)this <<"]::" << __func__
-#define DEBUG_MSG_SENSORS qCDebug(QTMIR_SENSOR_MESSAGES).nospace() << "Screen[" << (void*)this <<"]::" << __func__
-#define WARNING_MSG_SENSORS qCWarning(QTMIR_SENSOR_MESSAGES).nospace() << "Screen[" << (void*)this <<"]::" << __func__
+#define DEBUG_MSG_SCREENS qCDebug(QTMIR_SCREENS).nospace() << "PlatformScreen[" << (void*)this <<"]::" << __func__
+#define DEBUG_MSG_SENSORS qCDebug(QTMIR_SENSOR_MESSAGES).nospace() << "PlatformScreen[" << (void*)this <<"]::" << __func__
+#define WARNING_MSG_SENSORS qCWarning(QTMIR_SENSOR_MESSAGES).nospace() << "PlatformScreen[" << (void*)this <<"]::" << __func__
 
 namespace {
 bool isLittleEndian() {
@@ -194,7 +194,7 @@ PlatformScreen::PlatformScreen(const mir::graphics::DisplayConfigurationOutput &
 PlatformScreen::~PlatformScreen()
 {
     //if a ScreenWindow associated with this screen, kill it
-    Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+    Q_FOREACH (ScreenPlatformWindow* window, m_screenWindows) {
         window->window()->destroy(); // ends up destroying window
     }
 }
@@ -270,7 +270,7 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     m_geometry.setLeft(screen.top_left.x.as_int());
 
     // Mode = current resolution & refresh rate
-    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
+    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(screen.current_mode_index);
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
 
@@ -282,7 +282,7 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
             QWindowSystemInterface::handleScreenGeometryChange(this->screen(), m_geometry, m_geometry);
         }
 
-        Q_FOREACH (ScreenWindow* window, m_screenWindows) {
+        Q_FOREACH (ScreenPlatformWindow* window, m_screenWindows) {
             window->setGeometry(m_geometry);
         }
         if (oldGeometry.topLeft() != m_geometry.topLeft()) {
@@ -409,8 +409,8 @@ QString PlatformScreen::name() const
 
 QWindow *PlatformScreen::topLevelAt(const QPoint &point) const
 {
-    QVector<ScreenWindow*>::const_iterator screen = m_screenWindows.constBegin();
-    QVector<ScreenWindow*>::const_iterator end = m_screenWindows.constEnd();
+    QVector<ScreenPlatformWindow*>::const_iterator screen = m_screenWindows.constBegin();
+    QVector<ScreenPlatformWindow*>::const_iterator end = m_screenWindows.constEnd();
 
     while (screen != end) {
         QWindow* window = (*screen)->window();
@@ -427,12 +427,12 @@ QList<PlatformScreen::Mode> PlatformScreen::availableModes() const
     return m_availableModes;
 }
 
-ScreenWindow *PlatformScreen::primaryWindow() const
+ScreenPlatformWindow *PlatformScreen::primaryWindow() const
 {
     return m_screenWindows.value(0, nullptr);
 }
 
-void PlatformScreen::addWindow(ScreenWindow *window)
+void PlatformScreen::addWindow(ScreenPlatformWindow *window)
 {
     if (!window || m_screenWindows.contains(window)) return;
     DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
@@ -448,7 +448,7 @@ void PlatformScreen::addWindow(ScreenWindow *window)
     }
 }
 
-void PlatformScreen::removeWindow(ScreenWindow *window)
+void PlatformScreen::removeWindow(ScreenPlatformWindow *window)
 {
     int index = m_screenWindows.indexOf(window);
     if (index >= 0) {
