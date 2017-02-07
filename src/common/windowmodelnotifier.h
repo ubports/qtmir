@@ -46,10 +46,10 @@ public:
 struct ExtraWindowInfo {
     QString persistentId;
 
-    // FIXME Use MirSurfaceState when possible.
+    // FIXME Use MirWindowState when possible.
     Mir::State previousState{Mir::UnknownState};
 
-    // FIXME: Remove when possible. This exists just because MirSurfaceState has no equivalent
+    // FIXME: Remove when possible. This exists just because MirWindowState has no equivalent
     //        for the following states:
     // Mir::MaximizedLeftState:
     // Mir::MaximizedRightState:
@@ -90,6 +90,6 @@ private:
 Q_DECLARE_METATYPE(qtmir::NewWindow)
 Q_DECLARE_METATYPE(miral::WindowInfo)
 Q_DECLARE_METATYPE(std::vector<miral::Window>)
-Q_DECLARE_METATYPE(MirSurfaceState)
+Q_DECLARE_METATYPE(MirWindowState)
 
 #endif // WINDOWMODELNOTIFIER_H

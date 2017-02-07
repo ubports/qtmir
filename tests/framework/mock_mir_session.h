@@ -20,6 +20,7 @@
 #include <mir/scene/session.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/scene/surface_creation_parameters.h>
+#include <mir/input/mir_input_config.h>
 #include <mir/version.h>
 #include <gmock/gmock.h>
 
@@ -55,7 +56,8 @@ struct MockSession : public Session
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
+    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirWindowAttrib, int));
 
     void start_prompt_session() override;
     void stop_prompt_session() override;
@@ -67,10 +69,6 @@ struct MockSession : public Session
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
     void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;
-
-    MOCK_METHOD1(send_input_device_change, void(std::vector<std::shared_ptr<mir::input::Device>> const&));
-    //void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
-
 
     void send_error(ClientVisibleError const&) override;
 

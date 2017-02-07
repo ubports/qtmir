@@ -782,7 +782,7 @@ Application *ApplicationManager::findClosingApplication(const QString &inputAppI
 void ApplicationManager::onSessionAboutToCreateSurface(
         const std::shared_ptr<mir::scene::Session> &session, int type, QSize &size)
 {
-    if (type == mir_surface_type_normal) {
+    if (type == mir_window_type_normal) {
         Application* application = findApplicationWithSession(session);
 
         if (application) {

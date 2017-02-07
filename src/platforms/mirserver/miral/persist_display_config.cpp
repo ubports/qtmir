@@ -102,6 +102,10 @@ struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayCo
     {
         save_config(*base_config);
     }
+
+    void session_configuration_applied(std::shared_ptr<mir::frontend::Session> const&,
+                                       std::shared_ptr<mg::DisplayConfiguration> const&){}
+    void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&)  {}
 #endif
 };
 
