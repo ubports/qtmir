@@ -102,11 +102,11 @@ public:
     void unregisterView(qintptr viewId) override;
 
     // methods called from the rendering (scene graph) thread:
-    QSharedPointer<QSGTexture> texture() override;
-    QSGTexture *weakTexture() const override;
-    bool updateTexture() override;
-    unsigned int currentFrameNumber() const override;
-    bool numBuffersReadyForCompositor() override;
+    QSharedPointer<QSGTexture> texture(qintptr) override;
+    QSGTexture *weakTexture(qintptr) const override;
+    bool updateTexture(qintptr) override;
+    unsigned int currentFrameNumber(qintptr) const override;
+    bool numBuffersReadyForCompositor(qintptr) override;
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;

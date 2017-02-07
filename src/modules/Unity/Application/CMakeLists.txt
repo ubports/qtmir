@@ -53,6 +53,7 @@ set(QMLMIRPLUGIN_SRC
     tracepoints.c
     settings.cpp
     windowmodel.cpp
+    compositortextureprovider.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h
