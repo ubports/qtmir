@@ -35,6 +35,7 @@
 namespace unityapp = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
+#define INFO_MSG qCInfo(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::" << __func__
 
 namespace qtmir
 {
@@ -58,7 +59,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_proxySurfaceList(new ProxySurfaceListModel(this))
     , m_proxyPromptSurfaceList(new ProxySurfaceListModel(this))
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     // Because m_state is InternalState::Starting
     acquireWakelock();
@@ -74,7 +75,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
 
 Application::~Application()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     // (ricmm) -- To be on the safe side, better wipe the application QML compile cache if it crashes on startup
     if (m_processState == Application::ProcessUnknown) {
@@ -270,7 +271,7 @@ void Application::setRequestedState(RequestedState value)
         return;
     }
 
-    DEBUG_MSG << "(requestedState=" << applicationStateToStr(value) << ")";
+    INFO_MSG << "(requestedState=" << applicationStateToStr(value) << ")";
 
     m_requestedState = value;
     Q_EMIT requestedStateChanged(m_requestedState);
@@ -428,7 +429,7 @@ pid_t Application::pid() const
 
 void Application::close()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     switch (m_state) {
     case InternalState::Starting:
@@ -468,7 +469,7 @@ void Application::setArguments(const QStringList &arguments)
 
 void Application::setSession(SessionInterface *newSession)
 {
-    DEBUG_MSG << "(session=" << newSession << ")";
+    INFO_MSG << "(session=" << newSession << ")";
 
     if (newSession == m_session)
         return;
@@ -533,7 +534,7 @@ void Application::setInternalState(Application::InternalState state)
         return;
     }
 
-    DEBUG_MSG << "(state=" << internalStateToStr(state) << ")";
+    INFO_MSG << "(state=" << internalStateToStr(state) << ")";
 
     auto oldPublicState = this->state();
     m_state = state;
@@ -628,7 +629,7 @@ void Application::setProcessState(ProcessState newProcessState)
 
 void Application::suspend()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     Q_ASSERT(m_state == InternalState::Running);
     Q_ASSERT(m_session != nullptr);
@@ -646,7 +647,7 @@ void Application::suspend()
 
 void Application::resume()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     if (m_state == InternalState::Suspended || m_state == InternalState::SuspendingWaitProcess) {
         Q_EMIT resumeProcessRequested();
@@ -667,7 +668,7 @@ void Application::resume()
 
 void Application::respawn()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     setInternalState(InternalState::Starting);
 
@@ -676,7 +677,7 @@ void Application::respawn()
 
 void Application::stop()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     Q_EMIT stopProcessRequested();
 }
@@ -695,7 +696,7 @@ void Application::setExemptFromLifecycle(bool exemptFromLifecycle)
 {
     if (m_exemptFromLifecycle != exemptFromLifecycle)
     {
-        DEBUG_MSG << "(" << exemptFromLifecycle << ")";
+        INFO_MSG << "(" << exemptFromLifecycle << ")";
         // We don't adjust current suspension state, we only care about exempt
         // status going into a suspend.
         m_exemptFromLifecycle = exemptFromLifecycle;
@@ -851,10 +852,10 @@ unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
 void Application::requestFocus()
 {
     if (m_proxySurfaceList->rowCount() > 0) {
-        DEBUG_MSG << "() - Requesting focus for most recent app surface";
+        INFO_MSG << "() - Requesting focus for most recent app surface";
         m_proxySurfaceList->get(0)->requestFocus();
     } else {
-        DEBUG_MSG << "() - emitting focusRequested()";
+        INFO_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();
     }
 }

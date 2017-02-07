@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -16,9 +16,9 @@
 
 #include "logging.h"
 
-Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
+Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications", QtInfoMsg)
 Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
-Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
+Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces", QtInfoMsg)
 Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
 Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
 Q_LOGGING_CATEGORY(QTMIR_CLIPBOARD, "qtmir.clipboard")
