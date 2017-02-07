@@ -50,6 +50,7 @@ using namespace qtmir;
 namespace unityapi = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
+#define INFO_MSG qCInfo(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 #define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 
 namespace {
@@ -137,7 +138,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_parentSurface(parentSurface)
     , m_childSurfaceList(new MirSurfaceListModel(this))
 {
-    DEBUG_MSG << "("
+    INFO_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
         << ",size=(" << m_size.width() << "," << m_size.height() << ")"
@@ -203,7 +204,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
 
 MirSurface::~MirSurface()
 {
-    DEBUG_MSG << "() viewCount=" << m_views.count();
+    INFO_MSG << "() viewCount=" << m_views.count();
 
     Q_ASSERT(m_views.isEmpty());
 
@@ -406,7 +407,7 @@ void MirSurface::setFocused(bool value)
     if (m_focused == value)
         return;
 
-    DEBUG_MSG << "(" << value << ")";
+    INFO_MSG << "(" << value << ")";
 
     m_focused = value;
     Q_EMIT focusedChanged(value);
@@ -437,7 +438,7 @@ void MirSurface::updateActiveFocus()
     // Temporary hotfix for http://pad.lv/1483752
     if (m_session->childSessions()->rowCount() > 0) {
         // has child trusted session, ignore any focus change attempts
-        DEBUG_MSG << "() has child trusted session, ignore any focus change attempts";
+        INFO_MSG << "() has child trusted session, ignore any focus change attempts";
         return;
     }
 
@@ -471,7 +472,7 @@ void MirSurface::close()
         return;
     }
 
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     m_closingState = Closing;
     Q_EMIT closeRequested();
@@ -574,14 +575,14 @@ QString MirSurface::persistentId() const
 
 void MirSurface::requestState(Mir::State state)
 {
-    DEBUG_MSG << "(" << unityapiMirStateToStr(state) << ")";
+    INFO_MSG << "(" << unityapiMirStateToStr(state) << ")";
     m_controller->requestState(m_window, state);
 }
 
 void MirSurface::setLive(bool value)
 {
     if (value != m_live) {
-        DEBUG_MSG << "(" << value << ")";
+        INFO_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
         if (m_views.isEmpty() && !m_live) {
@@ -699,7 +700,7 @@ bool MirSurface::isBeingDisplayed() const
 void MirSurface::registerView(qintptr viewId)
 {
     m_views.insert(viewId, MirSurface::View{false});
-    DEBUG_MSG << "(" << viewId << ")" << " after=" << m_views.count();
+    INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count();
     if (m_views.count() == 1) {
         Q_EMIT isBeingDisplayedChanged();
     }
@@ -708,7 +709,7 @@ void MirSurface::registerView(qintptr viewId)
 void MirSurface::unregisterView(qintptr viewId)
 {
     m_views.remove(viewId);
-    DEBUG_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
+    INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
     if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
         if (m_session.isNull() || !m_live) {
@@ -745,7 +746,7 @@ void MirSurface::updateExposure()
     const bool oldExposed = (m_surface->query(mir_window_attrib_visibility) == mir_window_visibility_exposed);
 
     if (newExposed != oldExposed) {
-        DEBUG_MSG << "(" << newExposed << ")";
+        INFO_MSG << "(" << newExposed << ")";
 
         m_surface->configure(mir_window_attrib_visibility,
                              newExposed ? mir_window_visibility_exposed : mir_window_visibility_occluded);
@@ -790,7 +791,7 @@ void MirSurface::setKeymap(const QString &layoutPlusVariant)
         return;
     }
 
-    DEBUG_MSG << "(" << layoutPlusVariant << ")";
+    INFO_MSG << "(" << layoutPlusVariant << ")";
 
     m_keymap = layoutPlusVariant;
     Q_EMIT keymapChanged(m_keymap);
@@ -864,7 +865,7 @@ void MirSurface::updateState(Mir::State newState)
     if (newState == m_state) {
         return;
     }
-    DEBUG_MSG << "(" << unityapiMirStateToStr(newState) << ")";
+    INFO_MSG << "(" << unityapiMirStateToStr(newState) << ")";
 
     m_state = newState;
     Q_EMIT stateChanged(state());
@@ -876,7 +877,7 @@ void MirSurface::updateState(Mir::State newState)
 void MirSurface::setReady()
 {
     if (!m_ready) {
-        DEBUG_MSG << "()";
+        INFO_MSG << "()";
         m_ready = true;
         updateVisible(); // as Mir can change m_surface->visible() to true after first frame swap
         Q_EMIT ready();
@@ -886,7 +887,7 @@ void MirSurface::setReady()
 
 void MirSurface::setCursor(const QCursor &cursor)
 {
-    DEBUG_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
+    INFO_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
 
     m_cursor = cursor;
     Q_EMIT cursorChanged(m_cursor);
@@ -939,7 +940,7 @@ bool MirSurface::confinesMousePointer() const
 
 void MirSurface::activate()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
     if (m_live) {
         m_controller->activate(m_window);
     }
@@ -949,7 +950,7 @@ void MirSurface::onCloseTimedOut()
 {
     Q_ASSERT(m_closingState == Closing);
 
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
 
     m_closingState = CloseOverdue;
 
@@ -1209,7 +1210,7 @@ QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const m
 
 void MirSurface::requestFocus()
 {
-    DEBUG_MSG << "()";
+    INFO_MSG << "()";
     Q_EMIT focusRequested();
 }
 
