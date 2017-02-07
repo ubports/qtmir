@@ -22,12 +22,20 @@
 // mirserver
 #include "nativeinterface.h"
 
+// common
+#include <debughelpers.h>
+#include <mirqtconversion.h>
+
+// Mir
+#include <mir/scene/surface.h>
+
 // Qt
 #include <QGuiApplication>
 
 Q_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER, "qtmir.surfacemanager", QtInfoMsg)
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACEMANAGER).nospace().noquote() << __func__
+#define WARNING_MSG qCWarning(QTMIR_SURFACEMANAGER).nospace().noquote() << __func__
 
 using namespace qtmir;
 namespace unityapi = unity::shell::application;
@@ -78,13 +86,33 @@ void SurfaceManager::forgetMirSurface(const miral::Window &window)
         }
     }
 }
+
 void SurfaceManager::onWindowAdded(const NewWindow &window)
 {
+    {
+        std::shared_ptr<mir::scene::Surface> surface = window.surface;
+        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(surface->type())
+            << ",parent=" << (void*)(surface->parent().get())
+            << ",state=" << mirSurfaceStateToStr(surface->state())
+            << ",top_left=" << toQPoint(surface->top_left())
+            << "]";
+    }
+
     auto mirSession = window.windowInfo.window().application();
     SessionInterface* session = m_sessionManager->findSession(mirSession.get());
 
-    auto surface = new MirSurface(window, m_windowController, session);
+    MirSurface *parentSurface;
+    {
+        std::shared_ptr<mir::scene::Surface> surface = window.windowInfo.window();
+        parentSurface = find(surface->parent());
+    }
+
+    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
+
+    if (parentSurface) {
+        static_cast<MirSurfaceListModel*>(parentSurface->childSurfaceList())->prependSurface(surface);
+    }
 
     if (session)
         session->registerSurface(surface);
@@ -108,6 +136,16 @@ MirSurface *SurfaceManager::find(const miral::Window &window) const
 {
     Q_FOREACH(const auto surface, m_allSurfaces) {
         if (surface->window() == window) {
+            return surface;
+        }
+    }
+    return nullptr;
+}
+
+MirSurface *SurfaceManager::find(const std::shared_ptr<mir::scene::Surface> &needle) const
+{
+    Q_FOREACH(const auto surface, m_allSurfaces) {
+        if (surface->window() == needle) {
             return surface;
         }
     }
@@ -145,11 +183,19 @@ void SurfaceManager::onWindowStateChanged(const miral::WindowInfo &windowInfo, M
 void SurfaceManager::onWindowsRaised(const std::vector<miral::Window> &windows)
 {
     // sad inefficiency when crossing API boundaries (from miral to qt)
+
     const int raiseCount = windows.size();
+
+    DEBUG_MSG << "() raiseCount = " << raiseCount;
+
     QVector<unityapi::MirSurfaceInterface*> surfaces(raiseCount);
     for (int i = 0; i < raiseCount; i++) {
         auto mirSurface = find(windows[i]);
-        surfaces.append(mirSurface);
+        if (mirSurface) {
+            surfaces[i] = mirSurface;
+        } else {
+            WARNING_MSG << " Could not find qml surface for " << windows[i];
+        }
     }
     Q_EMIT surfacesRaised(surfaces);
 }
@@ -163,6 +209,7 @@ void SurfaceManager::onWindowsRequestedRaise(const miral::WindowInfo &windowInfo
 
 void SurfaceManager::raise(unityapi::MirSurfaceInterface *surface)
 {
+    DEBUG_MSG << "(" << surface << ")";
     auto qtmirSurface = static_cast<qtmir::MirSurface*>(surface);
     m_windowController->raise(qtmirSurface->window());
 }
