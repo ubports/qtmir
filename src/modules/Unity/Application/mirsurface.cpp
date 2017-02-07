@@ -132,7 +132,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_position(toQPoint(m_window.top_left()))
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
-    , m_shellChrome(Mir::NormalChrome)
+    , m_shellChrome(toQtShellChrome(newWindowInfo.windowInfo.shell_chrome()))
 {
     DEBUG_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
@@ -141,8 +141,6 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
 
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
-
-    //m_shellChrome = creationHints.shellChrome; TODO - where will this come from now?
 
     connect(m_surfaceObserver.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
     connect(m_surfaceObserver.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
