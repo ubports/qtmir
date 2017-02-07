@@ -28,17 +28,11 @@ namespace qtmir {
 class Screens : public QAbstractListModel
 {
     Q_OBJECT
-    Q_ENUMS(OutputTypes)
-    Q_ENUMS(FormFactor)
-
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     enum ItemRoles {
-        ScreenRole = Qt::UserRole + 1,
-        OutputTypeRole,
-        ScaleRole,
-        FormFactorRole,
+        ScreenRole = Qt::UserRole + 1
     };
 
     explicit Screens(QObject *parent = 0);

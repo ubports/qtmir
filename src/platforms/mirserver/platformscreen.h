@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREEN_H
-#define SCREEN_H
+#ifndef QTMIR_PLATFORMSCREEN_H
+#define QTMIR_PLATFORMSCREEN_H
 
 // Qt
 #include <QObject>
@@ -29,7 +29,7 @@
 
 // local
 #include "cursor.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 #include "screentypes.h"
 
 class QOrientationSensor;
@@ -38,12 +38,13 @@ namespace mir {
     namespace renderer { namespace gl { class RenderTarget; }}
 }
 
-class Screen : public QObject, public QPlatformScreen
+class PlatformScreen : public QObject,
+                       public QPlatformScreen
 {
     Q_OBJECT
 public:
-    Screen(const mir::graphics::DisplayConfigurationOutput &);
-    ~Screen();
+    PlatformScreen(const mir::graphics::DisplayConfigurationOutput &);
+    ~PlatformScreen();
 
     // QPlatformScreen methods.
     QRect geometry() const override { return m_geometry; }
@@ -56,15 +57,22 @@ public:
     Qt::ScreenOrientation orientation() const override { return m_currentOrientation; }
     QPlatformCursor *cursor() const override;
     QString name() const override;
+    QWindow *topLevelAt(const QPoint &point) const;
 
+    bool used() const { return m_used; }
     float scale() const { return m_scale; }
-    MirFormFactor formFactor() const { return m_formFactor; }
+    qtmir::FormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
     qtmir::OutputId outputId() const { return m_outputId; }
     qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
+    bool isActive() const { return m_isActive; }
 
-    ScreenWindow* window() const;
+    typedef QPair<qreal, QSize> Mode;
+    QList<Mode> availableModes() const;
+
+    const QVector<ScreenPlatformWindow*>& windows() const { return m_screenWindows; }
+    ScreenPlatformWindow* primaryWindow() const;
 
     // QObject methods.
     void customEvent(QEvent* event) override;
@@ -73,12 +81,32 @@ public:
     static bool skipDBusRegistration;
     bool orientationSensorEnabled();
 
+    void setActive(bool active);
+
+Q_SIGNALS:
+    void primaryWindowChanged(ScreenPlatformWindow* window);
+
+    void usedChanged();
+    void nameChanged();
+    void outputTypeChanged();
+    void scaleChanged();
+    void formFactorChanged();
+    void currentModeIndexChanged();
+    void positionChanged();
+    void modeChanged();
+    void physicalSizeChanged();
+    void availableModesChanged();
+    void activeChanged(bool active);
+
 public Q_SLOTS:
    void onDisplayPowerStateChanged(int, int);
    void onOrientationReadingChanged();
 
+    void activate();
+
 protected:
-    void setWindow(ScreenWindow *window);
+    void addWindow(ScreenPlatformWindow *window);
+    void removeWindow(ScreenPlatformWindow *window);
 
     void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
@@ -90,6 +118,7 @@ private:
     void toggleSensors(const bool enable) const;
     bool internalDisplay() const;
 
+    bool m_used;
     QRect m_geometry;
     int m_depth;
     QImage::Format m_format;
@@ -97,8 +126,10 @@ private:
     QSizeF m_physicalSize;
     qreal m_refreshRate;
     float m_scale;
-    MirFormFactor m_formFactor;
+    qtmir::FormFactor m_formFactor;
     uint32_t m_currentModeIndex;
+    QList<PlatformScreen::Mode> m_availableModes;
+    bool m_isActive;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
@@ -110,13 +141,13 @@ private:
     Qt::ScreenOrientation m_currentOrientation;
     QOrientationSensor *m_orientationSensor;
 
-    ScreenWindow *m_screenWindow;
+    QVector<ScreenPlatformWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 
     friend class ScreensModel;
-    friend class ScreenWindow;
+    friend class ScreenPlatformWindow;
 };
 
-#endif // SCREEN_H
+#endif // QTMIR_PLATFORMSCREEN_H

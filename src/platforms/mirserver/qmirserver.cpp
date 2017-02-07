@@ -101,6 +101,8 @@ void *QMirServer::nativeResourceForIntegration(const QByteArray &resource) const
         result = d->windowModelNotifier();
     else if (resource == "ScreensController")
         result = d->screensController.data();
+    else if (resource == "InputDispatcher")
+        result = d->eventFeeder.data();
 
     return result;
 }

@@ -15,7 +15,7 @@
  */
 
 #include "screenscontroller.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screensmodel.h"
 
 // Mir
@@ -71,7 +71,7 @@ bool ScreensController::setConfiguration(const CustomScreenConfigurationList &ne
                     outputConfig.power_mode = config.powerMode;
 //                    outputConfig.orientation = config.orientation; // disabling for now
                     outputConfig.scale = config.scale;
-                    outputConfig.form_factor = config.formFactor;
+                    outputConfig.form_factor = static_cast<MirFormFactor>(config.formFactor);
                 }
             });
     }

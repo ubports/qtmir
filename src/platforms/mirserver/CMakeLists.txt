@@ -77,6 +77,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     mirserverhooks.cpp mirserverhooks.h
     setqtcompositor.cpp setqtcompositor.h
     tracepoints.c
+    screentypes.h
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
@@ -95,8 +96,8 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qmirserver.cpp
     qmirserver_p.cpp
     surfaceobserver.cpp
-    screen.cpp
-    screenwindow.cpp
+    platformscreen.cpp
+    screenplatformwindow.cpp
     screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp

@@ -17,13 +17,16 @@
 #include "screens.h"
 
 // mirserver
-#include "screen.h"
+#include "platformscreen.h"
+#include "logging.h"
 
 // Qt
 #include <QGuiApplication>
 #include <QScreen>
 
 Q_DECLARE_METATYPE(QScreen*)
+
+#define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "Screens[" << (void*)this <<"]::" << __func__
 
 namespace qtmir {
 
@@ -38,15 +41,13 @@ Screens::Screens(QObject *parent) :
     connect(app, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
 
     m_screenList = QGuiApplication::screens();
+    DEBUG_MSG << "(" << m_screenList << ")";
 }
 
 QHash<int, QByteArray> Screens::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[ScreenRole] = "screen";
-    roles[OutputTypeRole] = "outputType";
-    roles[ScaleRole] = "scale";
-    roles[FormFactorRole] = "formFactor";
     return roles;
 }
 
@@ -59,30 +60,6 @@ QVariant Screens::data(const QModelIndex &index, int role) const
     switch(role) {
     case ScreenRole:
         return QVariant::fromValue(m_screenList.at(index.row()));
-    case OutputTypeRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
-        if (screen) {
-            return QVariant(screen->outputType());
-        } else {
-            return OutputTypes::Unknown;
-        }
-    }
-    case ScaleRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
-        if (screen) {
-            return QVariant(screen->scale());
-        } else {
-            return 1.0;
-        }
-    }
-    case FormFactorRole: {
-        auto screen = static_cast<Screen*>(m_screenList.at(index.row())->handle());
-        if (screen) {
-            return QVariant(static_cast<FormFactor>(screen->formFactor())); //FIXME: cheeky
-        } else {
-            return FormFactor::FormFactorUnknown;
-        }
-    }
     } // switch
 
     return QVariant();
@@ -102,6 +79,7 @@ void Screens::onScreenAdded(QScreen *screen)
 {
     if (m_screenList.contains(screen))
         return;
+    DEBUG_MSG << "(screen=" << screen << ")";
 
     beginInsertRows(QModelIndex(), count(), count());
     m_screenList.push_back(screen);
@@ -115,6 +93,7 @@ void Screens::onScreenRemoved(QScreen *screen)
     int index = m_screenList.indexOf(screen);
     if (index < 0)
         return;
+    DEBUG_MSG << "(screen=" << screen << ")";
 
     beginRemoveRows(QModelIndex(), index, index);
     m_screenList.removeAt(index);

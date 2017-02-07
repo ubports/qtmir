@@ -25,6 +25,15 @@
 
 using namespace qtmir;
 
+namespace {
+QObject* screensSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    return new qtmir::Screens();
+}
+}
+
+
 class UnityScreensPlugin : public QQmlExtensionPlugin {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QQmlExtensionInterface/1.0")
@@ -35,10 +44,11 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
 
         qRegisterMetaType<QScreen*>("QScreen*");
 
-        qmlRegisterType<qtmir::Screens>(uri, 0, 1, "Screens");
+        qmlRegisterSingletonType<qtmir::Screens>(uri, 0, 1, "Screens", screensSingleton);
         qRegisterMetaType<qtmir::FormFactor>("qtmir::FormFactor");
 
         qmlRegisterType<qtmir::QQuickScreenWindow>(uri, 0, 1, "ScreenWindow");
+        qmlRegisterRevision<QWindow,1>(uri, 0, 1);
     }
 };
 

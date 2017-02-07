@@ -17,15 +17,15 @@
 #ifndef STUBSCREEN_H
 #define STUBSCREEN_H
 
-#include "screen.h"
+#include "platformscreen.h"
 
-class StubScreen : public Screen
+class StubScreen : public PlatformScreen
 {
     Q_OBJECT
 public:
-    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : Screen(output) {}
+    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : PlatformScreen(output) {}
 
-    void makeCurrent() { Screen::makeCurrent(); }
+    void makeCurrent() { PlatformScreen::makeCurrent(); }
 };
 
 #endif // STUBSCREEN_H
