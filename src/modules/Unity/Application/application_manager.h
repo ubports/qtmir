@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -109,8 +109,6 @@ Q_SIGNALS:
 
 private Q_SLOTS:
     void onAppDataChanged(const int role);
-    void onSessionAboutToCreateSurface(const std::shared_ptr<mir::scene::Session> &session,
-                                       int type, QSize &size);
     void onApplicationClosing(Application *application);
 
 private:

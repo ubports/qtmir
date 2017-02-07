@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2017 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,32 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOCK_MIR_GRAPHICS_RENDERABLE_H
-#define MOCK_MIR_GRAPHICS_RENDERABLE_H
+#ifndef STUB_MIR_GRAPHICS_BUFFER_H
+#define STUB_MIR_GRAPHICS_BUFFER_H
 
-#include <mir/graphics/renderable.h>
-#include <gmock/gmock.h>
+#include <mir/graphics/buffer.h>
 
 namespace mir {
 namespace graphics {
 
-struct MockRenderable : public Renderable
+class StubBuffer : public Buffer
 {
-    MockRenderable();
-    virtual ~MockRenderable();
+public:
+    StubBuffer() {}
 
-    MOCK_CONST_METHOD0(id, ID());
-    MOCK_CONST_METHOD0(buffer, std::shared_ptr<Buffer>());
-    MOCK_CONST_METHOD0(alpha_enabled, bool());
-    MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
-    MOCK_CONST_METHOD0(alpha, float() );
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
-    MOCK_CONST_METHOD0(shaped, bool());
-    MOCK_CONST_METHOD0(swap_interval, unsigned int());
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const override { return std::shared_ptr<NativeBuffer>(); }
+    BufferID id() const override { return BufferID(); }
+    geometry::Size size() const override { return geometry::Size(); }
+    MirPixelFormat pixel_format() const override { return mir_pixel_format_invalid; }
+
+    NativeBufferBase* native_buffer_base() override { return nullptr; }
 };
 
 } // namespace graphics
 } // namespace mir
 
-#endif // MOCK_MIR_GRAPHICS_RENDERABLE_H
-
+#endif // STUB_MIR_GRAPHICS_BUFFER_H

@@ -61,6 +61,7 @@ private:
     void forgetMirSurface(const miral::Window &window);
     MirSurface* find(const miral::WindowInfo &needle) const;
     MirSurface* find(const miral::Window &needle) const;
+    MirSurface* find(const std::shared_ptr<mir::scene::Surface> &needle) const;
 
     QVector<MirSurface*> m_allSurfaces;
 
