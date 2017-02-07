@@ -18,6 +18,9 @@
 #define QQUICKSCREENWINDOW_H
 
 #include <QQuickWindow>
+#include <QPointer>
+
+class ScreenAdapter;
 
 namespace qtmir {
 
@@ -27,14 +30,20 @@ namespace qtmir {
 class QQuickScreenWindow : public QQuickWindow
 {
     Q_OBJECT
-    Q_PROPERTY(QScreen *screen READ screen WRITE setScreen NOTIFY screenChanged)
-
+    Q_PROPERTY(ScreenAdapter *screen READ screenWrapper WRITE setScreenWrapper NOTIFY screenWrapperChanged)
+    Q_PROPERTY(int winId READ winId CONSTANT)
 public:
     explicit QQuickScreenWindow(QQuickWindow *parent = 0);
+    ~QQuickScreenWindow();
+
+    ScreenAdapter *screenWrapper() const;
+    void setScreenWrapper(ScreenAdapter *screen);
 
 Q_SIGNALS:
-    void screenChanged(QScreen* screen);
+    void screenWrapperChanged();
 
+private:
+    QPointer<ScreenAdapter> m_screen;
 };
 
 } //namespace qtmir

@@ -79,7 +79,7 @@ protected:
 void QtEventFeederTest::SetUp()
 {
     mockWindowSystem = new MockQtWindowSystem;
-    auto screens = QSharedPointer<ScreensModel>();
+    auto screens = std::shared_ptr<ScreensModel>();
 
     ASSERT_TRUE(mockWindowSystem->m_devices.count() == 0);
 
@@ -104,9 +104,6 @@ void QtEventFeederTest::TearDown()
 
 void QtEventFeederTest::setIrrelevantMockWindowSystemExpectations()
 {
-    EXPECT_CALL(*mockWindowSystem, getWindowForPoint(_))
-        .Times(AnyNumber())
-        .WillRepeatedly(Return(window));
     EXPECT_CALL(*mockWindowSystem, focusedWindow())
         .Times(AnyNumber())
         .WillRepeatedly(Return(window));

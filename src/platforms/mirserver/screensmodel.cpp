@@ -42,7 +42,7 @@ namespace mg = mir::graphics;
 #define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "ScreensModel[" << this <<"]::" << __func__
 
 ScreensModel::ScreensModel(QObject *parent)
-    : QObject(parent)
+    : MirDisplayConfigurationObserver(parent)
     , m_compositing(false)
 {
     DEBUG_MSG << "()";
@@ -66,6 +66,9 @@ void ScreensModel::init(
             this, &ScreensModel::onCompositorStarting);
     connect(qtCompositor, &QtCompositor::stopping,
             this, &ScreensModel::onCompositorStopping, Qt::BlockingQueuedConnection);
+
+    connect(this, &MirDisplayConfigurationObserver::configurationApplied,
+            this, &ScreensModel::update, Qt::BlockingQueuedConnection);
 }
 
 // terminate before shutting down the Mir server, or else liable to deadlock with the blocking connection above

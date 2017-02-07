@@ -12,7 +12,9 @@ include_directories(
 set(SCREENSPLUGIN_SRC
     plugin.cpp
     screens.cpp
+    screen.cpp
     qquickscreenwindow.cpp
+    types.h
     )
 
 add_library(unityscreensplugin SHARED

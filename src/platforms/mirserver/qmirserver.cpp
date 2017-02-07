@@ -72,7 +72,7 @@ bool QMirServer::isRunning() const
     return d->serverThread->isRunning();
 }
 
-QSharedPointer<ScreensModel> QMirServer::screensModel() const
+std::shared_ptr<ScreensModel> QMirServer::screensModel() const
 {
     Q_D(const QMirServer);
     return d->screensModel;

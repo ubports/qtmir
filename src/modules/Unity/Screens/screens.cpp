@@ -15,6 +15,7 @@
  */
 
 #include "screens.h"
+#include "screen.h"
 
 // mirserver
 #include "platformscreen.h"
@@ -33,14 +34,17 @@ namespace qtmir {
 Screens::Screens(QObject *parent) :
     QAbstractListModel(parent)
 {
-    auto app = static_cast<QGuiApplication *>(QGuiApplication::instance());
-    if (!app) {
-        return;
+    if (qGuiApp->platformName() != QLatin1String("mirserver")) {
+        qCritical("Not using 'mirserver' QPA plugin. Using Screens may produce unknown results.");
     }
-    connect(app, &QGuiApplication::screenAdded, this, &Screens::onScreenAdded);
-    connect(app, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
 
-    m_screenList = QGuiApplication::screens();
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, &Screens::onScreenAdded);
+    connect(qGuiApp, &QGuiApplication::screenRemoved, this, &Screens::onScreenRemoved);
+    connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &Screens::activeScreenChanged);
+
+    Q_FOREACH(QScreen* screen, QGuiApplication::screens()) {
+        m_screenList.push_back(new ScreenAdapter(screen));
+    }
     DEBUG_MSG << "(" << m_screenList << ")";
 }
 
@@ -75,31 +79,62 @@ int Screens::count() const
     return m_screenList.size();
 }
 
+QVariant Screens::activeScreen() const
+{
+    for (int i = 0; i < m_screenList.count(); i++) {
+        if (m_screenList[i]->isActive()) return i;
+    }
+    return QVariant();
+}
+
+void Screens::activateScreen(const QVariant& vindex)
+{
+    bool ok = false;
+    int index = vindex.toInt(&ok);
+    if (!ok || index < 0 || m_screenList.count() <= index) return;
+
+    auto screen = static_cast<ScreenAdapter*>(m_screenList.at(index));
+    screen->setActive(true);
+}
+
 void Screens::onScreenAdded(QScreen *screen)
 {
-    if (m_screenList.contains(screen))
-        return;
+    Q_FOREACH(auto screenWrapper, m_screenList) {
+        if (screenWrapper->screen() == screen) return;
+    }
     DEBUG_MSG << "(screen=" << screen << ")";
 
     beginInsertRows(QModelIndex(), count(), count());
-    m_screenList.push_back(screen);
+    auto screenWrapper(new ScreenAdapter(screen));
+    m_screenList.push_back(screenWrapper);
     endInsertRows();
-    Q_EMIT screenAdded(screen);
+    Q_EMIT screenAdded(screenWrapper);
     Q_EMIT countChanged();
 }
 
 void Screens::onScreenRemoved(QScreen *screen)
 {
-    int index = m_screenList.indexOf(screen);
-    if (index < 0)
-        return;
     DEBUG_MSG << "(screen=" << screen << ")";
 
-    beginRemoveRows(QModelIndex(), index, index);
-    m_screenList.removeAt(index);
-    endRemoveRows();
-    Q_EMIT screenRemoved(screen);
-    Q_EMIT countChanged();
+    int index = 0;
+    QMutableListIterator<ScreenAdapter*> iter(m_screenList);
+    while(iter.hasNext()) {
+        auto screenWrapper = iter.next();
+        if (screenWrapper->screen() == screen) {
+
+            beginRemoveRows(QModelIndex(), index, index);
+            auto screenWrapper = m_screenList.takeAt(index);
+            endRemoveRows();
+
+            Q_EMIT screenRemoved(screenWrapper);
+            Q_EMIT countChanged();
+
+            iter.remove();
+            screenWrapper->deleteLater();
+            break;
+        }
+        index++;
+    }
 }
 
 } // namespace qtmir

@@ -17,6 +17,8 @@
 #ifndef SCREENCONTROLLER_H
 #define SCREENCONTROLLER_H
 
+#include "mirdisplayconfigurationobserver.h"
+
 #include <QObject>
 #include <QPoint>
 
@@ -54,7 +56,7 @@ class QtCompositor;
  * All other methods must be called on the Qt GUI thread.
  */
 
-class ScreensModel : public QObject
+class ScreensModel : public MirDisplayConfigurationObserver
 {
     Q_OBJECT
 public:

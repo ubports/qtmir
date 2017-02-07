@@ -386,7 +386,7 @@ public:
         qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
-    void setScreensModel(const QSharedPointer<ScreensModel> &sc) override
+    void setScreensModel(const std::shared_ptr<ScreensModel> &sc) override
     {
         m_screensModel = sc;
     }
@@ -453,17 +453,17 @@ public:
     }
 
 private:
-    QSharedPointer<ScreensModel> m_screensModel;
+    std::shared_ptr<ScreensModel> m_screensModel;
 };
 
 } // anonymous namespace
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel)
+QtEventFeeder::QtEventFeeder(const std::shared_ptr<ScreensModel> &screensModel)
     : QtEventFeeder(screensModel, new QtWindowSystem)
 {
 }
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
+QtEventFeeder::QtEventFeeder(const std::shared_ptr<ScreensModel> &screensModel,
                              QtEventFeeder::QtWindowSystemInterface *windowSystem)
     : mQtWindowSystem(windowSystem)
 {

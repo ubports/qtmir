@@ -138,9 +138,9 @@ void MirServerIntegration::initialize()
     // need to create the screens before the integration initialises.
     screens->update();
 
-    QObject::connect(screens.data(), &ScreensModel::screenAdded,
+    QObject::connect(screens.get(), &ScreensModel::screenAdded,
             [this](PlatformScreen *screen) { this->screenAdded(screen); });
-    QObject::connect(screens.data(), &ScreensModel::screenRemoved,
+    QObject::connect(screens.get(), &ScreensModel::screenRemoved,
             [this](PlatformScreen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;

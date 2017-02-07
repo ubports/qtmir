@@ -17,6 +17,7 @@
 #include "qquickscreenwindow.h"
 
 // mirserver
+#include "screen.h"
 #include "screenscontroller.h"
 #include "logging.h"
 
@@ -36,7 +37,26 @@ QQuickScreenWindow::QQuickScreenWindow(QQuickWindow *parent)
     if (qGuiApp->platformName() != QLatin1String("mirserver")) {
         qCritical("Not using 'mirserver' QPA plugin. Using ScreenWindow may produce unknown results.");
     }
-    connect(this, &QWindow::screenChanged, this, &QQuickScreenWindow::screenChanged);
 
     DEBUG_MSG << "()";
+}
+
+QQuickScreenWindow::~QQuickScreenWindow()
+{
+    DEBUG_MSG << "()";
+}
+
+ScreenAdapter *QQuickScreenWindow::screenWrapper() const
+{
+    return m_screen.data();
+}
+
+void QQuickScreenWindow::setScreenWrapper(ScreenAdapter *screen)
+{
+    DEBUG_MSG << "(screen=" << screen << ")";
+    if (m_screen != screen) {
+        m_screen = screen;
+        Q_EMIT screenWrapperChanged();
+    }
+    QQuickWindow::setScreen(screen->screen());
 }

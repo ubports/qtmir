@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,32 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CUSTOMSCREENCONFIGURATION_H
-#define CUSTOMSCREENCONFIGURATION_H
+#ifndef UNITY_SCREEN_TYPES_H
+#define UNITY_SCREEN_TYPES_H
 
-#include <QPoint>
-#include <QVector>
+#include <QObject>
+#include <QSize>
 
-#include "screentypes.h"
-#include <mir_toolkit/common.h>
-
-
-struct CustomScreenConfiguration
+class ScreenMode : public QObject
 {
-    bool valid{false};
-    qtmir::OutputId id;
+    Q_OBJECT
+    Q_PROPERTY(qreal refreshRate MEMBER refreshRate CONSTANT)
+    Q_PROPERTY(QSize size MEMBER size CONSTANT)
+public:
+    ScreenMode():refreshRate(-1) {}
+    ScreenMode(const ScreenMode& other)
+        : QObject(nullptr),
+          refreshRate{other.refreshRate},size{other.size}
+    {}
 
-    bool used;
-    QPoint topLeft;
-    uint32_t currentModeIndex;
-    MirPowerMode powerMode;
-    MirOrientation orientation;
-    float scale;
-    qtmir::FormFactor formFactor;
-
-    // To read additional readonly state, consult the Screen
+    qreal refreshRate;
+    QSize size;
 };
 
-typedef QVector<CustomScreenConfiguration> CustomScreenConfigurationList;
+Q_DECLARE_METATYPE(ScreenMode)
 
-#endif // CUSTOMSCREENCONFIGURATION_H
+#endif //UNITY_SCREEN_TYPES_H

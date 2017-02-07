@@ -44,7 +44,7 @@ public:
     Q_SLOT void stop();
     bool isRunning() const;
 
-    QSharedPointer<ScreensModel> screensModel() const;
+    std::shared_ptr<ScreensModel> screensModel() const;
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
     void *nativeResourceForIntegration(const QByteArray &resource) const;
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;

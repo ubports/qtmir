@@ -42,6 +42,7 @@ include_directories(
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${QT5_PLATFORMSUPPORT_INCLUDE_DIRS}
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Qml_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
 
@@ -103,6 +104,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     miropenglcontext.cpp
     offscreensurface.cpp
     inputdeviceobserver.cpp
+    mirdisplayconfigurationobserver.cpp
     promptsessionmanager.cpp promptsessionmanager.h promptsession.h
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
@@ -138,6 +140,7 @@ target_link_libraries(
     Qt5::DBus
     Qt5::Quick
     Qt5::Sensors
+    Qt5::Qml
 )
 
 include(UseLttngGenTp)

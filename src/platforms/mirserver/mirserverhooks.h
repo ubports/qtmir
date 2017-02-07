@@ -45,7 +45,7 @@ public:
     std::shared_ptr<mir::graphics::Display> theMirDisplay() const;
     std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
 
-    QSharedPointer<ScreensController> createScreensController(QSharedPointer<ScreensModel> const &screensModel) const;
+    QSharedPointer<ScreensController> createScreensController(std::shared_ptr<ScreensModel> const &screensModel) const;
     void createInputDeviceObserver();
 
 private:

@@ -26,6 +26,7 @@
 
 namespace qtmir {
 
+
 class Cursor : public MirPlatformCursor
 {
     Q_OBJECT
