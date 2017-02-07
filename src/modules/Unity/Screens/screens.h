@@ -34,7 +34,7 @@ class Screens : public QAbstractListModel
 
 public:
     enum ItemRoles {
-        ScreenRole = Qt::UserRole + 1,
+        ScreenRole = Qt::UserRole + 1
     };
 
     explicit Screens(QObject *parent = 0);
@@ -42,7 +42,7 @@ public:
 
     /* QAbstractItemModel */
     QHash<int, QByteArray> roleNames() const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex &index, int role = ScreenRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     int count() const;

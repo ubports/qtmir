@@ -23,7 +23,6 @@
 #include <QTimer>
 #include <QtDBus/QDBusInterface>
 #include <qpa/qplatformscreen.h>
-#include <QQmlListProperty>
 
 // Mir
 #include <mir_toolkit/common.h>
@@ -34,8 +33,6 @@
 #include "screentypes.h"
 
 class QOrientationSensor;
-class ScreensController;
-
 namespace mir {
     namespace graphics { class DisplayBuffer; class DisplaySyncGroup; class DisplayConfigurationOutput; }
     namespace renderer { namespace gl { class RenderTarget; }}
@@ -146,7 +143,6 @@ private:
 
     QVector<ScreenPlatformWindow*> m_screenWindows;
     QDBusInterface *m_unityScreen;
-    ScreensController *m_screensController;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 

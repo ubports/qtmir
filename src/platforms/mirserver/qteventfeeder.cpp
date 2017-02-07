@@ -587,7 +587,7 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 
         auto type = action == mir_pointer_action_motion ? QEvent::MouseMove
                                                         : action == mir_pointer_action_button_up ? QEvent::MouseButtonRelease
-                                                                                                 : QEvent::MouseButtonRelease;
+                                                                                                 : QEvent::MouseButtonPress;
 
         Qt::MouseButtons stateChange = m_buttons ^ buttons;
         Qt::MouseButton button = Qt::NoButton;
@@ -753,6 +753,7 @@ bool QtEventFeeder::event(QEvent *e)
         QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
+
     case QEvent::MouseMove:
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
@@ -765,6 +766,7 @@ bool QtEventFeeder::event(QEvent *e)
         QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
         return true;
     } break;
+
     default:
         break;
     }

@@ -18,7 +18,6 @@
 #include "platformscreen.h"
 #include "logging.h"
 #include "nativeinterface.h"
-#include "screenscontroller.h"
 
 // Mir
 #include "mir/geometry/size.h"
@@ -256,6 +255,22 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     }
 
     // Screen capabilities
+    uint32_t oldCurrentModeIndex = m_currentModeIndex;
+    m_currentModeIndex = screen.current_mode_index;
+
+    // available modes
+    QList<PlatformScreen::Mode> availableModes;
+    Q_FOREACH(auto mode, screen.modes) {
+        availableModes.append(PlatformScreen::Mode{mode.vrefresh_hz,  QSize{mode.size.width.as_int(), mode.size.height.as_int()}});
+    }
+    if (m_availableModes != availableModes) {
+        m_availableModes = availableModes;
+        Q_EMIT availableModesChanged();
+    }
+
+    if (m_currentModeIndex != oldCurrentModeIndex) {
+        Q_EMIT currentModeIndexChanged();
+    }
 
     // Current Pixel Format & depth
     m_format = qImageFormatFromMirPixelFormat(screen.current_format);
@@ -270,7 +285,7 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     m_geometry.setLeft(screen.top_left.x.as_int());
 
     // Mode = current resolution & refresh rate
-    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(screen.current_mode_index);
+    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
     m_geometry.setWidth(mode.size.width.as_int());
     m_geometry.setHeight(mode.size.height.as_int());
 
@@ -296,21 +311,6 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
         if (notify) {
             QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
         }
-    }
-
-    // available modes
-    QList<PlatformScreen::Mode> availableModes;
-    Q_FOREACH(auto mode, screen.modes) {
-        availableModes.append(PlatformScreen::Mode{mode.vrefresh_hz,  QSize{mode.size.width.as_int(), mode.size.height.as_int()}});
-    }
-    if (m_availableModes != availableModes) {
-        m_availableModes = availableModes;
-        Q_EMIT availableModesChanged();
-    }
-
-    if (m_currentModeIndex != screen.current_mode_index) {
-        m_currentModeIndex = screen.current_mode_index;
-        Q_EMIT currentModeIndexChanged();
     }
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
@@ -386,7 +386,7 @@ void PlatformScreen::onOrientationReadingChanged()
     // Make sure to switch to the main Qt thread context
     QCoreApplication::postEvent(this, new OrientationReadingEvent(
                                               OrientationReadingEvent::m_type,
-                                    m_orientationSensor->reading()->orientation()));
+                                              m_orientationSensor->reading()->orientation()));
 }
 
 void PlatformScreen::activate()

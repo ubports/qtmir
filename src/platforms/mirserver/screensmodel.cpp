@@ -244,7 +244,7 @@ PlatformScreen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput 
 
 PlatformScreen* ScreensModel::findScreenWithId(const QList<PlatformScreen *> &list, const mg::DisplayConfigurationOutputId id)
 {
-    for (PlatformScreen *screen : list) {
+    Q_FOREACH (auto screen, list) {
         if (screen->m_outputId == id) {
             return screen;
         }
