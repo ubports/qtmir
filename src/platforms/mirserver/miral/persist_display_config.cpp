@@ -152,12 +152,15 @@ void PersistDisplayConfigPolicy::apply_to(
 {
     default_policy.apply_to(conf);
 
-    if (!storage) return;
+    if (!storage) {
+        throw std::runtime_error("No display configuration storage supplied.");
+    }
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
 
         try {
             miral::Edid edid;
+            // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
             edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
 
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
@@ -173,6 +176,7 @@ void PersistDisplayConfigPolicy::apply_to(
                     for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
                         if ((*iter).size == config.size.value()) {
                             mode_index = i;
+                            break;
                         }
                     }
                     output.current_mode_index = mode_index;
@@ -225,7 +229,6 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
             storage->save(edid, config);
         } catch (std::runtime_error const&) {
-
         }
     });
 }
