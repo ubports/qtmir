@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -47,6 +47,7 @@
 #include <limits>
 
 using namespace qtmir;
+namespace unityapi = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 #define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
@@ -108,7 +109,8 @@ private:
 
 MirSurface::MirSurface(NewWindow newWindowInfo,
         WindowControllerInterface* controller,
-        SessionInterface *session)
+        SessionInterface *session,
+        MirSurface *parentSurface)
     : MirSurfaceInterface()
     , m_window{newWindowInfo.windowInfo.window()}
     , m_extraInfo{getExtraInfo(newWindowInfo.windowInfo)}
@@ -128,15 +130,20 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_visible(newWindowInfo.windowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
-    , m_position(toQPoint(m_window.top_left()))
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
+    , m_parentSurface(parentSurface)
+    , m_childSurfaceList(new MirSurfaceListModel(this))
 {
     DEBUG_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
+        << ",size=(" << m_size.width() << "," << m_size.height() << ")"
+        << ",parentSurface=" << m_parentSurface
         << ")";
+
+    m_position = convertDisplayToLocalCoords(toQPoint(m_window.top_left()));
 
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
@@ -282,16 +289,15 @@ void MirSurface::dropPendingBuffer()
                 DEBUG_MSG << "() dropped=0" << " left=" << framesPending << " - failed to upate texture";
             }
             Q_EMIT frameDropped();
-        } else {
-            // The client can't possibly be blocked in swap buffers if the
-            // queue is empty. So we can safely enter deep sleep now. If the
-            // client provides any new frames, the timer will get restarted
-            // via scheduleTextureUpdate()...
         }
     });
 
     // only stop if all textures are updated
     if (allStop) {
+        // The client can't possibly be blocked in swap buffers if the
+        // queue is empty. So we can safely enter deep sleep now. If the
+        // client provides any new frames, the timer will get restarted
+        // via scheduleTextureUpdate()...
         m_frameDropperTimer.stop();
     }
 }
@@ -487,8 +493,9 @@ QPoint MirSurface::position() const
     return m_position;
 }
 
-void MirSurface::setPosition(const QPoint newPosition)
+void MirSurface::setPosition(const QPoint newDisplayPosition)
 {
+    QPoint newPosition = convertDisplayToLocalCoords(newDisplayPosition);
     if (m_position != newPosition) {
         m_position = newPosition;
         Q_EMIT positionChanged(newPosition);
@@ -991,11 +998,12 @@ QPoint MirSurface::requestedPosition() const
 void MirSurface::setRequestedPosition(const QPoint &point)
 {
     if (point != m_requestedPosition) {
+        DEBUG_MSG << "(" << point << ")";
         m_requestedPosition = point;
         Q_EMIT requestedPositionChanged(m_requestedPosition);
 
         if (m_live) {
-            m_controller->move(m_window, m_requestedPosition);
+            m_controller->move(m_window, convertLocalToDisplayCoords(m_requestedPosition));
         }
     }
 }
@@ -1202,4 +1210,40 @@ void MirSurface::requestFocus()
 {
     DEBUG_MSG << "()";
     Q_EMIT focusRequested();
+}
+
+QPoint MirSurface::convertDisplayToLocalCoords(const QPoint &displayPos) const
+{
+    QPoint localPos = displayPos;
+
+    if (m_surface->parent()) {
+        auto parentPos = m_surface->parent()->top_left();
+        localPos.rx() -= parentPos.x.as_int();
+        localPos.ry() -= parentPos.y.as_int();
+    }
+
+    return localPos;
+}
+
+QPoint MirSurface::convertLocalToDisplayCoords(const QPoint &localPos) const
+{
+    QPoint displayPos = localPos;
+
+    if (m_surface->parent()) {
+        auto parentPos = m_surface->parent()->top_left();
+        displayPos.rx() += parentPos.x.as_int();
+        displayPos.ry() += parentPos.y.as_int();
+    }
+
+    return displayPos;
+}
+
+unityapi::MirSurfaceInterface *MirSurface::parentSurface() const
+{
+    return m_parentSurface;
+}
+
+unityapi::MirSurfaceListInterface *MirSurface::childSurfaceList() const
+{
+    return m_childSurfaceList;
 }
