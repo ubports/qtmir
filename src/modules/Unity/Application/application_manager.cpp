@@ -128,10 +128,6 @@ ApplicationManager* ApplicationManager::create()
 
     connectToSessionAuthorizer(appManager, sessionAuthorizer);
     connectToTaskController(appManager, taskController.data());
-//    TODO - re-implement this functionality using the new Mir WindowManagement API
-//    connect(windowManager, &MirWindowManager::sessionAboutToCreateSurface,
-//            appManager, &ApplicationManager::onSessionAboutToCreateSurface,
-//            Qt::BlockingQueuedConnection);
 
     // Emit signal to notify Upstart that Mir is ready to receive client connections
     // see http://upstart.ubuntu.com/cookbook/#expect-stop
@@ -778,25 +774,6 @@ Application *ApplicationManager::findClosingApplication(const QString &inputAppI
         }
     }
     return nullptr;
-}
-
-void ApplicationManager::onSessionAboutToCreateSurface(
-        const std::shared_ptr<mir::scene::Session> &session, int type, QSize &size)
-{
-    if (type == mir_window_type_normal) {
-        Application* application = findApplicationWithSession(session);
-
-        if (application) {
-            qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface appId="
-                << application->appId();
-            size = application->initialSurfaceSize();
-        } else {
-            qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface unknown app";
-        }
-    } else {
-        qCDebug(QTMIR_APPLICATIONS).nospace() << "ApplicationManager::onSessionAboutToCreateSurface type=" << type
-            << " NOOP";
-    }
 }
 
 Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* surface)
