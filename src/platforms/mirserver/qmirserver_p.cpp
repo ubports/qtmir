@@ -121,10 +121,10 @@ std::shared_ptr<qtmir::SessionAuthorizer> QMirServerPrivate::theApplicationAutho
 }
 
 QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
-    : m_displayConfigurationPolicy(&buildDisplayConfigurationPolicy)
-    , m_windowManagementPolicy(&buildWindowManagementPolicy)
-    , m_displayConfigurationStorage(&buildDisplayConfigurationStorage)
-    , m_wrappedSessionAuthorizer(&buildSessionAuthorizer)
+    : m_displayConfigurationPolicy(buildDisplayConfigurationPolicy)
+    , m_windowManagementPolicy(buildWindowManagementPolicy)
+    , m_displayConfigurationStorage(buildDisplayConfigurationStorage)
+    , m_wrappedSessionAuthorizer(buildSessionAuthorizer)
     , runner(argc, const_cast<const char **>(argv))
     , argc{argc}, argv{argv}
 {
