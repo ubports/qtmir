@@ -64,6 +64,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     ubuntutheme.cpp
     clipboard.cpp
     openglcontextfactory.cpp openglcontextfactory.h
+    initialsurfacesizes.cpp initialsurfacesizes.h
     mircursorimages.cpp
     mirdisplayconfigurationpolicy.cpp
     mirsingleton.cpp
