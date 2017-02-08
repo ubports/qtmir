@@ -17,11 +17,15 @@
 #ifndef MIRDISPLAYCONFIGURATIONPOLICY_H
 #define MIRDISPLAYCONFIGURATIONPOLICY_H
 
-namespace mir { class Server; }
+#include <memory>
+
+namespace mir { namespace graphics { class DisplayConfigurationPolicy; }}
 
 namespace qtmir
 {
-void setDisplayConfigurationPolicy(mir::Server& server);
+
+auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
+-> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
 }
 
 

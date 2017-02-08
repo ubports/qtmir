@@ -2,6 +2,8 @@
 # And also not anymore as pkgconfig module since Qt 5.6.
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 
+add_subdirectory(miral)
+
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
 add_definitions(-DQ_FONTCONFIGDATABASE)
@@ -108,6 +110,8 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
     ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
     inputdeviceobserver.cpp
+    $<TARGET_OBJECTS:miral-prototypes>
+# We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
 )
 
