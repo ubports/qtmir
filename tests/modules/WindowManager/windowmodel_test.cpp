@@ -76,7 +76,7 @@ public:
         const miral::Window window{app, stubSurface};
 
         ms::SurfaceCreationParameters windowSpec;
-        windowSpec.of_type(mir_surface_type_inputmethod);
+        windowSpec.of_type(mir_window_type_inputmethod);
         miral::WindowInfo windowInfo{window, windowSpec};
         return NewWindow{windowInfo};
     }

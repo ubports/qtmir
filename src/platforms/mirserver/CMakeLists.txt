@@ -56,6 +56,7 @@ add_library(qtmirserver-nomirserver OBJECT
     ubuntutheme.cpp
     clipboard.cpp
     openglcontextfactory.cpp openglcontextfactory.h
+    initialsurfacesizes.cpp initialsurfacesizes.h
     mircursorimages.cpp
     displayconfigurationpolicy.cpp
     mirsingleton.cpp

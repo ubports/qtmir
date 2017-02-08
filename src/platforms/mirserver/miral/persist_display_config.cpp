@@ -26,10 +26,8 @@
 #include <mir/server.h>
 #include <mir/version.h>
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/observer_registrar.h>
-#endif
 
 namespace mg = mir::graphics;
 
@@ -84,7 +82,6 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
     std::shared_ptr<miral::DisplayConfigurationPolicy> const custom_policy;
 };
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
 struct DisplayConfigurationObserver : mg::DisplayConfigurationObserver
 {
     void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& /*config*/) override {}
@@ -99,9 +96,6 @@ struct DisplayConfigurationObserver : mg::DisplayConfigurationObserver
         std::shared_ptr<mg::DisplayConfiguration const> const& /*failed_fallback*/,
         std::exception const& /*error*/) override {}
 };
-#else
-struct DisplayConfigurationObserver { };
-#endif
 }
 
 struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
@@ -113,12 +107,14 @@ struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayCo
 
     DisplayConfigurationPolicyWrapper const custom_wrapper;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
     void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const& base_config) override
     {
         save_config(*base_config);
     }
-#endif
+
+    void session_configuration_applied(std::shared_ptr<mir::frontend::Session> const&,
+                                       std::shared_ptr<mg::DisplayConfiguration> const&){}
+    void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&)  {}
 };
 
 miral::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<DisplayConfigurationStorage> const& storage,
@@ -145,15 +141,8 @@ void miral::PersistDisplayConfig::operator()(mir::Server& server)
                                                                        custom_wrapper);
         });
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
     server.add_init_callback([this, &server]
         { server.the_display_configuration_observer_registrar()->register_interest(self); });
-#else
-    // Up to Mir-0.25 detecting changes to the base display config is only possible client-side
-    // (and gives a different configuration API)
-    // If we decide implementing this is necessary for earlier Mir versions then this is where to plumb it in.
-    (void)&PersistDisplayConfigPolicy::save_config; // Fake "using" the function for now
-#endif
 }
 
 void PersistDisplayConfigPolicy::apply_to(
@@ -166,13 +155,15 @@ void PersistDisplayConfigPolicy::apply_to(
     // then apply the custom policy
     custom_policy.apply_to(conf);
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
-    if (!storage) return;
+    if (!storage) {
+        throw std::runtime_error("No display configuration storage supplied.");
+    }
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
 
         try {
             miral::Edid edid;
+            // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
             edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
 
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
@@ -188,6 +179,7 @@ void PersistDisplayConfigPolicy::apply_to(
                     for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
                         if ((*iter).size == config.size.value()) {
                             mode_index = i;
+                            break;
                         }
                     }
                     output.current_mode_index = mode_index;
@@ -209,10 +201,8 @@ void PersistDisplayConfigPolicy::apply_to(
         } catch (std::runtime_error const&) {
         }
     });
-#endif
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 26, 0)
 void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& conf)
 {
     if (!storage) return;
@@ -242,12 +232,6 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
             storage->save(edid, config);
         } catch (std::runtime_error const&) {
-
         }
     });
 }
-#else
-void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const&)
-{
-}
-#endif

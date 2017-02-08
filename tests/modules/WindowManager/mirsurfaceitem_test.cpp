@@ -182,33 +182,33 @@ TEST_F(MirSurfaceItemTest, NoSurfaceActiveFocusIfItemDoesNotConsumeInput)
     surfaceItem->setConsumesInput(true);
     surfaceItemPrivate->activeFocus = true;
 
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(AtLeast(1));
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(0);
 
     surfaceItem->setSurface(surface);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(0);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(AtLeast(1));
 
     surfaceItem->setConsumesInput(false);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(AtLeast(1));
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(0);
 
     surfaceItem->setConsumesInput(true);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(0);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(AtLeast(1));
 
     delete surfaceItem;
@@ -235,27 +235,27 @@ TEST_F(MirSurfaceItemTest, AggregateSurfaceActiveFocus)
     MirSurfaceItem *surfaceItem1 = new MirSurfaceItem;
     QQuickItemPrivate *surfaceItem1Private = QQuickItemPrivate::get(surfaceItem1);
 
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(0);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused));
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused));
 
     surfaceItem1->setConsumesInput(true);
     surfaceItem1Private->activeFocus = false;
     surfaceItem1->setSurface(surface);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(AtLeast(1));
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(0);
 
     surfaceItem1Private->activeFocus = true;
     Q_EMIT surfaceItem1->activeFocusChanged(true);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(AtLeast(0)); // no harm in calling it unnecessarily
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(0);
 
     MirSurfaceItem *surfaceItem2 = new MirSurfaceItem;
@@ -271,9 +271,9 @@ TEST_F(MirSurfaceItemTest, AggregateSurfaceActiveFocus)
     Q_EMIT surfaceItem1->activeFocusChanged(false);
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(AtLeast(0)); // no harm in calling it unnecessarily
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(0);
 
     surfaceItem1Private->activeFocus = true;
@@ -283,9 +283,9 @@ TEST_F(MirSurfaceItemTest, AggregateSurfaceActiveFocus)
     delete surfaceItem1;
 
     Mock::VerifyAndClearExpectations(&mockShell);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_focused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_focused))
         .Times(0);
-    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_surface_attrib_focus, (int)mir_surface_unfocused))
+    EXPECT_CALL(mockShell, set_surface_attribute(fakeSession->session(), mockSurface, mir_window_attrib_focus, (int)mir_window_focus_state_unfocused))
         .Times(AtLeast(1));
 
     delete surfaceItem2;

@@ -1,3 +1,20 @@
+qtmir (0.5.1+17.04.20170206-0ubuntu1) zesty; urgency=medium
+
+  [ Daniel d'Andrada ]
+  * WindowManagementPolicy: Avoid activating windows unnecessarily
+  * MirSurface: Make frame dropper work even when there's no texture
+    around
+  * Changes need for child windows support (LP: #1656727)
+  * Fix initialSurfaceSize
+
+ -- Albert Astals Cid <albert.astals@canonical.com>  Mon, 06 Feb 2017 09:11:47 +0000
+
+qtmir (0.5.1+17.04.20170127-0ubuntu1) zesty; urgency=medium
+
+  * Mir 0.26 compatibility branch for QtMir.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Fri, 27 Jan 2017 04:56:16 +0000
+
 qtmir (0.5.1+17.04.20170124-0ubuntu1) zesty; urgency=medium
 
   [ Gerry Boland ]
