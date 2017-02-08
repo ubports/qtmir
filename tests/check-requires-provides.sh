@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # don't run the test on the gles build
-dummy=`grep qtmir-desktop debian/control`
+dummy=`grep "Package: qtmir-desktop" debian/control`
 if [ $? -ne 0 ]; then
     exit 0
 fi
