@@ -11,6 +11,6 @@ provides=`grep unity-application-impl- debian/control | sed -E 's/.*unity-applic
 if [ "$requires" -eq "$provides" ]; then
     exit 0
 else
-    echo "Error: We require unity-shell-application=$requires but only provide unity-application-impl-$provides"
+    echo "Error: We require unity-shell-application=$requires but provide unity-application-impl-$provides"
     exit 1
 fi
