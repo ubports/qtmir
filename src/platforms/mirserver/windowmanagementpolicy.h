@@ -87,6 +87,8 @@ public:
 Q_SIGNALS:
 
 private:
+    void ensureWindowIsActive(const miral::Window &window);
+
     miral::WindowManagerTools m_tools;
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
