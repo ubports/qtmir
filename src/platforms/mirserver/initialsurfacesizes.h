@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,15 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "logging.h"
+#include <QMutex>
+#include <QMap>
+#include <QSize>
 
-Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
-Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
-Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
-Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
-Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
-Q_LOGGING_CATEGORY(QTMIR_MIR_KEYMAP, "qtmir.mir.keymap")
-Q_LOGGING_CATEGORY(QTMIR_CLIPBOARD, "qtmir.clipboard")
-Q_LOGGING_CATEGORY(QTMIR_SENSOR_MESSAGES, "qtmir.sensor")
-Q_LOGGING_CATEGORY(QTMIR_SCREENS, "qtmir.screens")
-Q_LOGGING_CATEGORY(QTMIR_DBUS, "qtmir.dbus", QtWarningMsg)
+/*
+  The size that the first frame of the first top-level surface of an application with the given pid should have.
+
+  Qt GUI thread fills it with data and mir/miral thread queries it
+ */
+class InitialSurfaceSizes
+{
+public:
+    static void set(pid_t, const QSize &);
+    static void remove(pid_t);
+    static QSize get(pid_t);
+private:
+    static QMap<pid_t, QSize> sizeForSession;
+    static QMutex mutex;
+};

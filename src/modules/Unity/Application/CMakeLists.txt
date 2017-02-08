@@ -75,6 +75,7 @@ add_library(unityapplicationplugin SHARED
 string(REPLACE ";" " -I" QTMIR_ADD_MIRSERVER "-I ${MIRSERVER_INCLUDE_DIRS}")
 set_source_files_properties(mirsurface.cpp         PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(mirbuffersgtexture.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
+set_source_files_properties(surfacemanager.cpp     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 
 target_link_libraries(
     unityapplicationplugin

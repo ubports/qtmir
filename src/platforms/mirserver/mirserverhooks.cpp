@@ -22,11 +22,13 @@
 #include "promptsessionlistener.h"
 #include "screenscontroller.h"
 #include "logging.h"
+#include "inputdeviceobserver.h"
 
 // mir
 #include <mir/server.h>
 #include <mir/graphics/cursor.h>
 #include <mir/scene/prompt_session_listener.h>
+#include <mir/input/input_device_hub.h>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -73,6 +75,7 @@ struct qtmir::MirServerHooks::Self
     std::weak_ptr<mir::graphics::Display> m_mirDisplay;
     std::weak_ptr<mir::shell::DisplayConfigurationController> m_mirDisplayConfigurationController;
     std::weak_ptr<mir::scene::PromptSessionManager> m_mirPromptSessionManager;
+    std::weak_ptr<mir::input::InputDeviceHub> m_inputDeviceHub;
 };
 
 qtmir::MirServerHooks::MirServerHooks() :
@@ -100,6 +103,7 @@ void qtmir::MirServerHooks::operator()(mir::Server& server)
             self->m_mirDisplay = server.the_display();
             self->m_mirDisplayConfigurationController = server.the_display_configuration_controller();
             self->m_mirPromptSessionManager = server.the_prompt_session_manager();
+            self->m_inputDeviceHub = server.the_input_device_hub();
         });
 }
 
@@ -127,10 +131,23 @@ std::shared_ptr<mir::graphics::Display> qtmir::MirServerHooks::theMirDisplay() c
     throw std::logic_error("No display available. Server not running?");
 }
 
+std::shared_ptr<mir::input::InputDeviceHub> qtmir::MirServerHooks::theInputDeviceHub() const
+{
+    if (auto result = self->m_inputDeviceHub.lock())
+        return result;
+
+    throw std::logic_error("No input device hub available. Server not running?");
+}
+
 QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController(QSharedPointer<ScreensModel> const &screensModel) const
 {
     return QSharedPointer<ScreensController>(
         new ScreensController(screensModel, theMirDisplay(), self->m_mirDisplayConfigurationController.lock()));
+}
+
+void qtmir::MirServerHooks::createInputDeviceObserver()
+{
+    theInputDeviceHub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>());
 }
 
 PromptSessionListenerImpl::~PromptSessionListenerImpl() = default;

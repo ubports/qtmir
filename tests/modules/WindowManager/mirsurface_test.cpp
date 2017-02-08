@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -38,7 +38,9 @@ struct MirEvent {}; // otherwise won't compile otherwise due to incomplete type
 #include <mir/test/doubles/stub_surface.h>
 
 // tests/framework
+#include "stub_buffer.h"
 #include "stub_windowcontroller.h"
+#include "mock_renderable.h"
 
 // tests/modules/common
 #include <surfaceobserver.h>
@@ -61,6 +63,9 @@ using namespace testing;
 struct MockSurface : public StubSurface
 {
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
+    MOCK_CONST_METHOD0(visible, bool());
+    MOCK_CONST_METHOD0(state, MirWindowState());
+    MOCK_CONST_METHOD1(generate_renderables,mir::graphics::RenderableList(mir::compositor::CompositorID id));
 };
 
 class MirSurfaceTest : public ::testing::Test
@@ -86,9 +91,16 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     miral::Window mockWindow(stubSession, mockSurface);
     ms::SurfaceCreationParameters spec;
     miral::WindowInfo mockWindowInfo(mockWindow, spec);
+    auto mockRenderable = std::make_shared<NiceMock<mir::graphics::MockRenderable>>();
 
     EXPECT_CALL(*mockSurface.get(),buffers_ready_for_compositor(_))
         .WillRepeatedly(Return(1));
+
+    EXPECT_CALL(*mockSurface.get(),generate_renderables(_))
+        .WillRepeatedly(Return(mir::graphics::RenderableList{mockRenderable}));
+
+    EXPECT_CALL(*mockRenderable.get(),buffer())
+        .WillRepeatedly(Return(std::make_shared<mir::graphics::StubBuffer>()));
 
     MirSurface surface(mockWindowInfo, nullptr);
     surface.surfaceObserver()->frame_posted(1, mir::geometry::Size{1,1});
@@ -156,6 +168,34 @@ TEST_F(MirSurfaceTest, DISABLED_DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
 
     QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     EXPECT_FALSE(surfaceDeleted);
+}
+
+/*
+ * Test that MirSurface.visible is recalculated after the client swaps the first frame.
+ * A surface is not considered visible unless it has a non-hidden & non-minimized state, and
+ * it has drawn at least one frame.
+ */
+TEST_F(MirSurfaceTest, EnsureVisiblePropertyRecalculatedAfterFrameSwap)
+{
+    auto mockSurface = std::make_shared<NiceMock<MockSurface>>();
+    miral::Window mockWindow(stubSession, mockSurface);
+    ms::SurfaceCreationParameters spec;
+    miral::WindowInfo mockWindowInfo(mockWindow, spec);
+
+    EXPECT_CALL(*mockSurface.get(),state())
+        .WillRepeatedly(Return(mir_window_state_maximized));
+    EXPECT_CALL(*mockSurface.get(),visible())
+        .WillOnce(Return(false));
+
+    MirSurface surface(mockWindowInfo, nullptr);
+
+    EXPECT_FALSE(surface.visible());
+
+    EXPECT_CALL(*mockSurface.get(),visible())
+        .WillOnce(Return(true));
+
+    surface.setReady();
+    EXPECT_TRUE(surface.visible());
 }
 
 /*

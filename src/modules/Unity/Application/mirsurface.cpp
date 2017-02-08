@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -47,6 +47,7 @@
 #include <limits>
 
 using namespace qtmir;
+namespace unityapi = unity::shell::application;
 
 #define DEBUG_MSG qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
 #define WARNING_MSG qCWarning(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::" << __func__
@@ -75,7 +76,7 @@ public:
 
     void setListener(QObject *listener);
 
-    void attrib_changed(MirSurfaceAttrib, int) override;
+    void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
     void moved_to(mir::geometry::Point const&) override {}
     void hidden_set_to(bool) override {}
@@ -89,8 +90,8 @@ public:
     void cursor_image_set_to(mir::graphics::CursorImage const&) override;
     void orientation_set_to(MirOrientation) override {}
     void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
+    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+                        std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
@@ -108,7 +109,8 @@ private:
 
 MirSurface::MirSurface(NewWindow newWindowInfo,
         WindowControllerInterface* controller,
-        SessionInterface *session)
+        SessionInterface *session,
+        MirSurface *parentSurface)
     : MirSurfaceInterface()
     , m_window{newWindowInfo.windowInfo.window()}
     , m_extraInfo{getExtraInfo(newWindowInfo.windowInfo)}
@@ -129,15 +131,20 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_visible(newWindowInfo.windowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
-    , m_position(toQPoint(m_window.top_left()))
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
+    , m_parentSurface(parentSurface)
+    , m_childSurfaceList(new MirSurfaceListModel(this))
 {
     DEBUG_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
+        << ",size=(" << m_size.width() << "," << m_size.height() << ")"
+        << ",parentSurface=" << m_parentSurface
         << ")";
+
+    m_position = convertDisplayToLocalCoords(toQPoint(m_window.top_left()));
 
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
@@ -216,11 +223,11 @@ void MirSurface::onFramesPostedObserved()
     Q_EMIT framesPosted();
 }
 
-void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int /*value*/)
+void MirSurface::onAttributeChanged(const MirWindowAttrib attribute, const int /*value*/)
 {
     switch (attribute) {
-    case mir_surface_attrib_type:
-        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(state());
+    case mir_window_attrib_type:
+        DEBUG_MSG << " type = " << mirSurfaceTypeToStr(type());
         Q_EMIT typeChanged(type());
         break;
     default:
@@ -231,31 +238,31 @@ void MirSurface::onAttributeChanged(const MirSurfaceAttrib attribute, const int 
 Mir::Type MirSurface::type() const
 {
     switch (m_type) {
-    case mir_surface_type_normal:
+    case mir_window_type_normal:
         return Mir::NormalType;
 
-    case mir_surface_type_utility:
+    case mir_window_type_utility:
         return Mir::UtilityType;
 
-    case mir_surface_type_dialog:
+    case mir_window_type_dialog:
         return Mir::DialogType;
 
-    case mir_surface_type_gloss:
+    case mir_window_type_gloss:
         return Mir::GlossType;
 
-    case mir_surface_type_freestyle:
+    case mir_window_type_freestyle:
         return Mir::FreeStyleType;
 
-    case mir_surface_type_menu:
+    case mir_window_type_menu:
         return Mir::MenuType;
 
-    case mir_surface_type_inputmethod:
+    case mir_window_type_inputmethod:
         return Mir::InputMethodType;
 
-    case mir_surface_type_satellite:
+    case mir_window_type_satellite:
         return Mir::SatelliteType;
 
-    case mir_surface_type_tip:
+    case mir_window_type_tip:
         return Mir::TipType;
 
     default:
@@ -269,24 +276,47 @@ void MirSurface::dropPendingBuffer()
 
     const void* const userId = (void*)123;  // TODO: Multimonitor support
 
-    const int framesPending = m_surface->buffers_ready_for_compositor(userId);
-    if (framesPending > 0) {
-        m_textureUpdated = false;
-
-        locker.unlock();
-        if (updateTexture()) {
-            DEBUG_MSG << "() dropped=1 left=" << framesPending-1;
-        } else {
-            // If we haven't managed to update the texture, don't keep banging away.
-            m_frameDropperTimer.stop();
-            DEBUG_MSG << "() dropped=0" << " left=" << framesPending << " - failed to upate texture";
-        }
-        Q_EMIT frameDropped();
-    } else {
+    int framesPending = m_surface->buffers_ready_for_compositor(userId);
+    if (framesPending == 0) {
         // The client can't possibly be blocked in swap buffers if the
         // queue is empty. So we can safely enter deep sleep now. If the
         // client provides any new frames, the timer will get restarted
         // via scheduleTextureUpdate()...
+        m_frameDropperTimer.stop();
+        return;
+    }
+
+    m_textureUpdated = false;
+    auto texture = static_cast<MirBufferSGTexture*>(m_texture.data());
+
+    auto renderables = m_surface->generate_renderables(userId);
+    if (renderables.size() > 0) {
+        ++m_currentFrameNumber;
+        if (texture) {
+            texture->freeBuffer();
+            texture->setBuffer(renderables[0]->buffer());
+            if (texture->textureSize() != size()) {
+                m_size = texture->textureSize();
+                QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+            }
+            m_textureUpdated = true;
+
+            framesPending = m_surface->buffers_ready_for_compositor(userId);
+            if (framesPending > 0) {
+                // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+                // queued since the timer lives in a different thread
+                DEBUG_MSG << "() - there are still buffers ready for compositor. starting frame dropper";
+                QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+            }
+        } else {
+            // Just get a pointer to the buffer. This tells mir we consumed it.
+            renderables[0]->buffer();
+        }
+
+        Q_EMIT frameDropped();
+
+    } else {
+        WARNING_MSG << "() - failed. Giving up.";
         m_frameDropperTimer.stop();
     }
 }
@@ -473,8 +503,9 @@ QPoint MirSurface::position() const
     return m_position;
 }
 
-void MirSurface::setPosition(const QPoint newPosition)
+void MirSurface::setPosition(const QPoint newDisplayPosition)
 {
+    QPoint newPosition = convertDisplayToLocalCoords(newDisplayPosition);
     if (m_position != newPosition) {
         m_position = newPosition;
         Q_EMIT positionChanged(newPosition);
@@ -711,13 +742,13 @@ void MirSurface::updateExposure()
         newExposed |= i.value().exposed;
     }
 
-    const bool oldExposed = (m_surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed);
+    const bool oldExposed = (m_surface->query(mir_window_attrib_visibility) == mir_window_visibility_exposed);
 
     if (newExposed != oldExposed) {
         DEBUG_MSG << "(" << newExposed << ")";
 
-        m_surface->configure(mir_surface_attrib_visibility,
-                             newExposed ? mir_surface_visibility_exposed : mir_surface_visibility_occluded);
+        m_surface->configure(mir_window_attrib_visibility,
+                             newExposed ? mir_window_visibility_exposed : mir_window_visibility_occluded);
     }
 }
 
@@ -745,6 +776,8 @@ QString MirSurface::appId() const
 
     if (m_session && m_session->application()) {
         appId = m_session->application()->appId();
+    } else if (m_session) {
+        appId = m_session->name();
     } else {
         appId.append("-");
     }
@@ -845,6 +878,7 @@ void MirSurface::setReady()
     if (!m_ready) {
         DEBUG_MSG << "()";
         m_ready = true;
+        updateVisible(); // as Mir can change m_surface->visible() to true after first frame swap
         Q_EMIT ready();
         updateExposure();
     }
@@ -900,7 +934,7 @@ QRect MirSurface::inputBounds() const
 
 bool MirSurface::confinesMousePointer() const
 {
-    return m_surface->confine_pointer_state() == mir_pointer_confined_to_surface;
+    return m_surface->confine_pointer_state() == mir_pointer_confined_to_window;
 }
 
 void MirSurface::activate()
@@ -965,11 +999,12 @@ QPoint MirSurface::requestedPosition() const
 void MirSurface::setRequestedPosition(const QPoint &point)
 {
     if (point != m_requestedPosition) {
+        DEBUG_MSG << "(" << point << ")";
         m_requestedPosition = point;
         Q_EMIT requestedPositionChanged(m_requestedPosition);
 
         if (m_live) {
-            m_controller->move(m_window, m_requestedPosition);
+            m_controller->move(m_window, convertLocalToDisplayCoords(m_requestedPosition));
         }
     }
 }
@@ -1122,7 +1157,7 @@ void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle c
 }
 #endif
 
-void MirSurface::SurfaceObserverImpl::attrib_changed(MirSurfaceAttrib attribute, int value)
+void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
 {
     if (m_listener) {
         Q_EMIT attributeChanged(attribute, value);
@@ -1138,12 +1173,6 @@ void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::C
 {
     QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
     Q_EMIT cursorChanged(qcursor);
-}
-
-void MirSurface::SurfaceObserverImpl::keymap_changed(MirInputDeviceId, const std::string &, const std::string &layout,
-                                                     const std::string &variant, const std::string &)
-{
-    Q_EMIT keymapChanged(QString::fromStdString(layout), QString::fromStdString(variant));
 }
 
 QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage) {
@@ -1182,4 +1211,40 @@ void MirSurface::requestFocus()
 {
     DEBUG_MSG << "()";
     Q_EMIT focusRequested();
+}
+
+QPoint MirSurface::convertDisplayToLocalCoords(const QPoint &displayPos) const
+{
+    QPoint localPos = displayPos;
+
+    if (m_surface->parent()) {
+        auto parentPos = m_surface->parent()->top_left();
+        localPos.rx() -= parentPos.x.as_int();
+        localPos.ry() -= parentPos.y.as_int();
+    }
+
+    return localPos;
+}
+
+QPoint MirSurface::convertLocalToDisplayCoords(const QPoint &localPos) const
+{
+    QPoint displayPos = localPos;
+
+    if (m_surface->parent()) {
+        auto parentPos = m_surface->parent()->top_left();
+        displayPos.rx() += parentPos.x.as_int();
+        displayPos.ry() += parentPos.y.as_int();
+    }
+
+    return displayPos;
+}
+
+unityapi::MirSurfaceInterface *MirSurface::parentSurface() const
+{
+    return m_parentSurface;
+}
+
+unityapi::MirSurfaceListInterface *MirSurface::childSurfaceList() const
+{
+    return m_childSurfaceList;
 }

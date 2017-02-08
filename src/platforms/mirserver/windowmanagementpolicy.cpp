@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,6 +17,7 @@
 #include "windowmanagementpolicy.h"
 
 #include "eventdispatch.h"
+#include "initialsurfacesizes.h"
 #include "screensmodel.h"
 #include "surfaceobserver.h"
 
@@ -34,6 +35,7 @@ namespace qtmir {
 }
 
 using namespace qtmir;
+using namespace mir::geometry;
 
 WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
@@ -53,11 +55,22 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
 }
 
 /* Following are hooks to allow custom policy be imposed */
-miral::WindowSpecification WindowManagementPolicy::place_new_surface(
-    const miral::ApplicationInfo &app_info,
-    const miral::WindowSpecification &request_parameters)
+miral::WindowSpecification WindowManagementPolicy::place_new_window(
+    const miral::ApplicationInfo &appInfo,
+    const miral::WindowSpecification &requestParameters)
 {
-    auto parameters = CanonicalWindowManagerPolicy::place_new_surface(app_info, request_parameters);
+    auto parameters = CanonicalWindowManagerPolicy::place_new_window(appInfo, requestParameters);
+
+    if (!requestParameters.parent().is_set() || requestParameters.parent().value().lock().get() == nullptr) {
+
+        int surfaceType = requestParameters.type().is_set() ? requestParameters.type().value() : -1;
+
+        QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
+
+        if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
+            parameters.size() = Size{Width(initialSize.width()), Height(initialSize.height())};
+        }
+    }
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
 
@@ -144,15 +157,15 @@ void WindowManagementPolicy::advise_delete_app(const miral::ApplicationInfo &app
     Q_EMIT m_appNotifier.appRemoved(application);
 }
 
-void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &windowInfo, MirSurfaceState state)
+void WindowManagementPolicy::advise_state_change(const miral::WindowInfo &windowInfo, MirWindowState state)
 {
     auto extraWinInfo = getExtraInfo(windowInfo);
 
-    // FIXME: Remove this mess once MirSurfaceState matches Mir::State
-    if (state == mir_surface_state_restored && extraWinInfo->state != Mir::RestoredState
+    // FIXME: Remove this mess once MirWindowState matches Mir::State
+    if (state == mir_window_state_restored && extraWinInfo->state != Mir::RestoredState
             && toMirState(extraWinInfo->state) == state) {
-        // Ignore. That MirSurfaceState is just a placeholder for a Mir::State value that has no counterpart
-        // in MirSurfaceState.
+        // Ignore. That MirWindowState is just a placeholder for a Mir::State value that has no counterpart
+        // in MirWindowState.
     } else {
         extraWinInfo->state = toQtState(state);
     }
@@ -193,13 +206,22 @@ void WindowManagementPolicy::advise_end()
     Q_EMIT m_windowModel.modificationsEnded();
 }
 
+void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
+{
+    m_tools.invoke_under_lock([&window, this]() {
+        if (m_tools.active_window() != window) {
+            m_tools.select_active_window(window);
+        }
+    });
+}
+
 /* Following methods all called from the Qt GUI thread to deliver events to clients */
 void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
                                                     const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.select_active_window(window);
-    });
+    if (mir_keyboard_event_action(event) == mir_keyboard_action_down) {
+        ensureWindowIsActive(window);
+    }
 
     dispatchInputEvent(window, mir_keyboard_event_input_event(event));
 }
@@ -207,9 +229,7 @@ void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *even
 void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
                                                  const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.select_active_window(window);
-    });
+    ensureWindowIsActive(window);
 
     dispatchInputEvent(window, mir_touch_event_input_event(event));
 }
@@ -219,9 +239,7 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
 {
     // Prevent mouse hover events causing window focus to change
     if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
-        m_tools.invoke_under_lock([&window, this]() {
-            m_tools.select_active_window(window);
-        });
+        ensureWindowIsActive(window);
     }
 
     dispatchInputEvent(window, mir_pointer_event_input_event(event));
@@ -236,7 +254,7 @@ void WindowManagementPolicy::activate(const miral::Window &window)
         auto &windowInfo = m_tools.info_for(window);
 
         // restore from minimized if needed
-        if (windowInfo.state() == mir_surface_state_minimized) {
+        if (windowInfo.state() == mir_window_state_minimized) {
             auto extraInfo = getExtraInfo(windowInfo);
             Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
             requestState(window, extraInfo->previousState);

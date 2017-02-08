@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,15 +14,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "logging.h"
+#include "initialsurfacesizes.h"
 
-Q_LOGGING_CATEGORY(QTMIR_APPLICATIONS, "qtmir.applications")
-Q_LOGGING_CATEGORY(QTMIR_SESSIONS, "qtmir.sessions")
-Q_LOGGING_CATEGORY(QTMIR_SURFACES, "qtmir.surfaces")
-Q_LOGGING_CATEGORY(QTMIR_MIR_INPUT, "qtmir.mir.input", QtWarningMsg)
-Q_LOGGING_CATEGORY(QTMIR_MIR_MESSAGES, "qtmir.mir")
-Q_LOGGING_CATEGORY(QTMIR_MIR_KEYMAP, "qtmir.mir.keymap")
-Q_LOGGING_CATEGORY(QTMIR_CLIPBOARD, "qtmir.clipboard")
-Q_LOGGING_CATEGORY(QTMIR_SENSOR_MESSAGES, "qtmir.sensor")
-Q_LOGGING_CATEGORY(QTMIR_SCREENS, "qtmir.screens")
-Q_LOGGING_CATEGORY(QTMIR_DBUS, "qtmir.dbus", QtWarningMsg)
+#include <QMutexLocker>
+
+QMap<pid_t, QSize> InitialSurfaceSizes::sizeForSession;
+QMutex InitialSurfaceSizes::mutex;
+
+void InitialSurfaceSizes::set(pid_t pid, const QSize &size)
+{
+    QMutexLocker locker(&mutex);
+
+    sizeForSession[pid] = size;
+}
+
+void InitialSurfaceSizes::remove(pid_t pid)
+{
+    QMutexLocker locker(&mutex);
+
+    sizeForSession.remove(pid);
+}
+
+QSize InitialSurfaceSizes::get(pid_t pid)
+{
+    QMutexLocker locker(&mutex);
+
+    if (sizeForSession.contains(pid)) {
+        return sizeForSession[pid];
+    } else {
+        return QSize();
+    }
+}

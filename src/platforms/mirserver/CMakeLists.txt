@@ -67,6 +67,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     windowcontroller.cpp
     tracepoints.c
     surfaceobserver.cpp
+    initialsurfacesizes.cpp
 )
 
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
@@ -106,7 +107,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
     ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
-    # We need to run moc on these headers
+    inputdeviceobserver.cpp
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
 )
 
