@@ -128,7 +128,6 @@ namespace qtmir {
 WrappedSessionAuthorizer::WrappedSessionAuthorizer(const qtmir::SessionAuthorizerBuilder &builder)
     : impl(builder())
 {
-    qDebug() << "WrappedSessionAuthorizer" << (void*)impl.get();
 }
 
 bool WrappedSessionAuthorizer::connection_is_allowed(const miral::ApplicationCredentials &creds)

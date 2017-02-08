@@ -43,7 +43,6 @@ GuiServerApplication::GuiServerApplication(int &argc,
     : QGuiApplication((init(argc, argv, options), argc), argv) // comma operator to ensure init called before QGuiApplication
 {
     Q_UNUSED(options);
-    qDebug() << "CREATED APPLICATION" << qApp;
 }
 
 GuiServerApplication::~GuiServerApplication()
