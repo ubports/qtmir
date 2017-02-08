@@ -39,9 +39,24 @@ QMirServer::~QMirServer()
     stop();
 }
 
+QSharedPointer<QMirServer> QMirServer::create(int &argc, char **argv)
+{
+    static QWeakPointer<QMirServer> server;
+    if (server.isNull()) {
+        QSharedPointer<QMirServer> newServer(new QMirServer(argc, argv));
+        server = newServer.toWeakRef();
+        return newServer;
+    }
+    return server.toStrongRef();
+}
+
 void QMirServer::start()
 {
     Q_D(QMirServer);
+
+    if (d->serverThread->isRunning()) {
+        return;
+    }
 
     d->serverThread->start(QThread::TimeCriticalPriority);
 
@@ -109,4 +124,48 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServer::thePromptSessionManager
 {
     Q_D(const QMirServer);
     return d->promptSessionManager();
+}
+
+qtmir::WindowModelNotifier *QMirServer::windowModelNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->windowModelNotifier();
+}
+
+qtmir::AppNotifier *QMirServer::appNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->appNotifier();
+}
+
+void QMirServer::wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy)
+{
+    qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";
+
+    Q_D(QMirServer);
+    d->m_displayConfigurationPolicy = setDisplayConfigurationPolicy;
+}
+
+void QMirServer::overrideSessionAuthorizer(qtmir::SessionAuthorizerBuilder const& setApplicationAuthorizer)
+{
+    qDebug() << "OVERRIDE overrideSessionAuthorizer";
+
+    Q_D(QMirServer);
+    d->m_wrappedSessionAuthorizer = miral::SetApplicationAuthorizer<WrappedSessionAuthorizer>(setApplicationAuthorizer);
+}
+
+void QMirServer::overrideWindowManagementPolicy(const qtmir::WindowManagmentPolicyBuilder &wmPolicyCreator)
+{
+    qDebug() << "OVERRIDE wrapDisplayConfigurationPolicy";
+
+    Q_D(QMirServer);
+    d->m_windowManagementPolicy = wmPolicyCreator;
+}
+
+void QMirServer::overrideDisplayConfigurationStorage(const qtmir::BasicSetDisplayConfigurationStorage &setDisplayConfigStorage)
+{
+    qDebug() << "OVERRIDE overrideDisplayConfigurationStorage";
+
+    Q_D(QMirServer);
+    d->m_displayConfigurationStorage = setDisplayConfigStorage;
 }

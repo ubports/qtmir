@@ -19,7 +19,6 @@
 #include "screenwindow.h"
 #include "qtcompositor.h"
 #include "logging.h"
-#include "mirserverintegration.h"
 #include "screen.h"
 #include "mirqtconversion.h"
 
@@ -169,7 +168,7 @@ void ScreensModel::update()
         if (window && window->window() && window->isExposed()) {
             window->window()->hide();
         }
-        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
+        bool ok = QMetaObject::invokeMethod(qApp, "screenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
         if (!ok) {
             qCWarning(QTMIR_SCREENS) << "Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }

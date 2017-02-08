@@ -19,11 +19,11 @@
 
 #include "windowcontrollerinterface.h"
 
-class WindowManagementPolicy;
-
 namespace qtmir {
 
-class WindowController : public WindowControllerInterface
+class WindowManagementPolicy;
+
+class WindowController : public qtmir::WindowControllerInterface
 {
 public:
     WindowController();

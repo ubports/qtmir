@@ -14,7 +14,7 @@ include_directories(
   ${MIRAL_INCLUDE_DIRS}
   ${MIRSERVER_INCLUDE_DIRS}
   ${Qt5Core_INCLUDE_DIRS}
-  ${Qt5GUI_INCLUDE_DIRS}
+  ${Qt5Gui_INCLUDE_DIRS}
   ${Qt5Quick_INCLUDE_DIRS}
   ${Qt5DBus_INCLUDE_DIRS}
 )

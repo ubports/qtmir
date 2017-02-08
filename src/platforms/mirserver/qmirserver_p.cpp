@@ -15,14 +15,19 @@
  */
 
 #include "qmirserver_p.h"
+#include "qtmir/miral/display_configuration_storage.h"
 
 // local
 #include "logging.h"
-#include "mirdisplayconfigurationpolicy.h"
-#include "windowmanagementpolicy.h"
+#include "wrappedwindowmanagementpolicy.h"
 #include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
+#include "qteventfeeder.h"
+#include "qtmir/sessionauthorizer.h"
+
+// prototyping for later incorporation in miral
+#include <miral/persist_display_config.h>
 
 // miral
 #include <miral/add_init_callback.h>
@@ -33,6 +38,50 @@
 // Qt
 #include <QCoreApplication>
 #include <QOpenGLContext>
+
+namespace
+{
+
+class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
+{
+public:
+    DefaultWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+        : qtmir::WindowManagementPolicy(tools, dd)
+    {}
+};
+
+struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::Edid&, const miral::DisplayOutputOptions&) override {}
+
+    bool load(const miral::Edid&, miral::DisplayOutputOptions&) const override { return false; }
+};
+
+auto buildDisplayConfigurationPolicy()
+-> std::shared_ptr<miral::DisplayConfigurationPolicy>
+{
+    return std::make_shared<qtmir::DisplayConfigurationPolicy>();
+}
+
+auto buildDisplayConfigurationStorage()
+-> std::shared_ptr<miral::DisplayConfigurationStorage>
+{
+    return std::make_shared<DefaultDisplayConfigurationStorage>();
+}
+
+auto buildWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+-> std::shared_ptr<qtmir::WindowManagementPolicy>
+{
+    return std::make_shared<DefaultWindowManagementPolicy>(tools, dd);
+}
+
+auto buildSessionAuthorizer()
+-> std::shared_ptr<qtmir::SessionAuthorizer>
+{
+    return std::make_shared<qtmir::SessionAuthorizer>();
+}
+
+}
 
 void MirServerThread::run()
 {
@@ -65,9 +114,19 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
-QMirServerPrivate::QMirServerPrivate(int &argc, char *argv[]) :
-    runner(argc, const_cast<const char **>(argv)),
-    argc{argc}, argv{argv}
+std::shared_ptr<qtmir::SessionAuthorizer> QMirServerPrivate::theApplicationAuthorizer() const
+{
+    auto wrapped = m_wrappedSessionAuthorizer.the_custom_application_authorizer();
+    return wrapped ? wrapped->wrapper() : nullptr;
+}
+
+QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
+    : m_displayConfigurationPolicy(&buildDisplayConfigurationPolicy)
+    , m_windowManagementPolicy(&buildWindowManagementPolicy)
+    , m_displayConfigurationStorage(&buildDisplayConfigurationStorage)
+    , m_wrappedSessionAuthorizer(&buildSessionAuthorizer)
+    , runner(argc, const_cast<const char **>(argv))
+    , argc{argc}, argv{argv}
 {
 }
 
@@ -80,7 +139,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 {
     bool unknownArgsFound = false;
 
-    miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
+    ::miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
     {
         unknownArgsFound = true;
         // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
@@ -88,7 +147,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
     }};
 
-    miral::AddInitCallback addInitCallback{[&, this]
+    ::miral::AddInitCallback addInitCallback{[&, this]
     {
         if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
             argc = 1;
@@ -128,18 +187,25 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         screensController.clear();
     });
 
+    auto eventFeeder = std::make_shared<QtEventFeeder>(screensModel);
+    auto displayStorageBuilder = m_displayConfigurationStorage.builder();
+
     runner.run_with(
         {
-            m_sessionAuthorizer,
+            m_wrappedSessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_managment_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                    m_appNotifier, screensModel),
-            qtmir::setDisplayConfigurationPolicy,
+            miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
+                                                                              m_windowController,
+                                                                              m_appNotifier,
+                                                                              eventFeeder,
+                                                                              m_windowManagementPolicy),
             setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
+            miral::PersistDisplayConfig{displayStorageBuilder(),
+                                        m_displayConfigurationPolicy}
         });
 }
 
