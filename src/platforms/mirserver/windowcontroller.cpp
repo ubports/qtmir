@@ -15,8 +15,8 @@
  */
 
 #include "windowcontroller.h"
+#include "qtmir/windowmanagementpolicy.h"
 
-#include "windowmanagementpolicy.h"
 #include "mirqtconversion.h"
 
 using namespace qtmir;

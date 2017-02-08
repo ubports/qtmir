@@ -14,35 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mirdisplayconfigurationpolicy.h"
+// qtmir
+#include "qtmir/displayconfigurationpolicy.h"
+#include "qmirserver.h"
 
-#include <mir/graphics/display_configuration_policy.h>
-#include <mir/graphics/display_configuration.h>
+// mir
 #include <mir/geometry/point.h>
-#include <mir/server.h>
+#include <mir/graphics/display_configuration.h>
 
 #include <qglobal.h>
 #include <QByteArray>
 
-namespace mg = mir::graphics;
-
 #define ENV_GRID_UNIT_PX "GRID_UNIT_PX"
 #define DEFAULT_GRID_UNIT_PX 8
 
-namespace {
-class MirDisplayConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
+namespace mg = mir::graphics;
+
+namespace qtmir
 {
-public:
-    MirDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped);
+namespace
+{
 
-    void apply_to(mir::graphics::DisplayConfiguration &conf) override;
-
-private:
-    const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> m_wrapped;
-    float m_defaultScale;
-};
-
-static float getenvFloat(const char* name, float defaultValue)
+float getenvFloat(const char* name, float defaultValue)
 {
     QByteArray stringValue = qgetenv(name);
     bool ok;
@@ -50,22 +43,30 @@ static float getenvFloat(const char* name, float defaultValue)
     return ok ? value : defaultValue;
 }
 
-MirDisplayConfigurationPolicy::MirDisplayConfigurationPolicy(
-        const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
-    : m_wrapped(wrapped)
+} // namespace
+
+struct DisplayConfigurationPolicy::Private
 {
-    float gridUnit = DEFAULT_GRID_UNIT_PX;
-    if (qEnvironmentVariableIsSet(ENV_GRID_UNIT_PX)) {
-        gridUnit = getenvFloat(ENV_GRID_UNIT_PX, DEFAULT_GRID_UNIT_PX);
+    Private()
+    {
+        float gridUnit = DEFAULT_GRID_UNIT_PX;
+        if (qEnvironmentVariableIsSet(ENV_GRID_UNIT_PX)) {
+            gridUnit = getenvFloat(ENV_GRID_UNIT_PX, DEFAULT_GRID_UNIT_PX);
+        }
+        m_defaultScale = gridUnit / DEFAULT_GRID_UNIT_PX;
     }
-    m_defaultScale = gridUnit / DEFAULT_GRID_UNIT_PX;
+
+    float m_defaultScale;
+};
+
+DisplayConfigurationPolicy::DisplayConfigurationPolicy() :
+    d(new DisplayConfigurationPolicy::Private)
+{
 }
 
-void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
+void DisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
 {
     int nextTopLeftPosition = 0;
-
-    m_wrapped->apply_to(conf);
 
     //TODO: scan through saved configurations and select matching one to apply
 
@@ -101,26 +102,35 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
             if (phoneDetected) {
                 if (screenCount == 1 || output.type == mg::DisplayConfigurationOutputType::lvds) {
                     output.form_factor = mir_form_factor_phone;
-                    output.scale = m_defaultScale;
+                    output.scale = d->m_defaultScale;
                 } else { // screenCount > 1 && output.type != lvds
                     output.form_factor = mir_form_factor_monitor;
                     output.scale = 1;
                 }
             } else { // desktop
                 output.form_factor = mir_form_factor_monitor;
-                output.scale = m_defaultScale; // probably 1 on desktop anyway.
+                output.scale = d->m_defaultScale; // probably 1 on desktop anyway.
             }
         });
 }
-} //namespace
 
-void qtmir::setDisplayConfigurationPolicy(mir::Server& server)
+
+struct BasicSetDisplayConfigurationPolicy::Self
 {
-    server.wrap_display_configuration_policy(
-        [](const std::shared_ptr<mg::DisplayConfigurationPolicy> &wrapped)
-            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
-            {
-                return std::make_shared<MirDisplayConfigurationPolicy>(wrapped);
-            });
+    Self(DisplayConfigurationPolicyWrapper const& builder) :
+        builder{builder} {}
 
+    DisplayConfigurationPolicyWrapper builder;
+};
+
+BasicSetDisplayConfigurationPolicy::BasicSetDisplayConfigurationPolicy(DisplayConfigurationPolicyWrapper const& builder)
+    : self(std::make_shared<Self>(builder))
+{
 }
+
+void BasicSetDisplayConfigurationPolicy::operator()(QMirServer& server)
+{
+    server.wrapDisplayConfigurationPolicy(self->builder);
+}
+
+} // namespace qtmir

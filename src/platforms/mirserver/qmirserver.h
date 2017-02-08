@@ -19,12 +19,23 @@
 
 // Qt
 #include <QObject>
-#include <QWeakPointer>
+#include <QSharedPointer>
 
 #include <memory>
 
+// local
+#include "qtmir/sessionauthorizer.h"
+#include "qtmir/windowmanagementpolicy.h"
+#include "qtmir/displayconfigurationpolicy.h"
+#include "qtmir/displayconfigurationstorage.h"
+
 // qtmir
-namespace qtmir { class PromptSessionManager; }
+namespace qtmir {
+    class PromptSessionManager;
+    class WindowModelNotifier;
+    class AppNotifier;
+}
+namespace mir { class Server; }
 
 class QMirServerPrivate;
 class ScreensController;
@@ -37,8 +48,10 @@ class QMirServer: public QObject
     Q_OBJECT
 
 public:
-    QMirServer(int &argc, char **argv, QObject* parent=0);
     virtual ~QMirServer();
+
+    static QSharedPointer<QMirServer> create(int &argc,
+                                           char **argv);
 
     void start();
     Q_SLOT void stop();
@@ -49,6 +62,14 @@ public:
     void *nativeResourceForIntegration(const QByteArray &resource) const;
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
 
+    qtmir::WindowModelNotifier *windowModelNotifier() const;
+    qtmir::AppNotifier *appNotifier() const;
+
+    void wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy);
+    void overrideSessionAuthorizer(qtmir::SessionAuthorizerBuilder const& setApplicationAuthorizer);
+    void overrideWindowManagementPolicy(qtmir::WindowManagmentPolicyBuilder const& wmPolicyCreator);
+    void overrideDisplayConfigurationStorage(qtmir::BasicSetDisplayConfigurationStorage const& setDisplayConfigStorage);
+
 Q_SIGNALS:
     void started();
     void stopped();
@@ -57,6 +78,7 @@ protected:
     QMirServerPrivate * const d_ptr;
 
 private:
+    QMirServer(int &argc, char **argv, QObject* parent=0);
     Q_DISABLE_COPY(QMirServer)
     Q_DECLARE_PRIVATE(QMirServer)
 };

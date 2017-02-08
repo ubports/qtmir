@@ -23,11 +23,11 @@
 #include "sessionmanager.h"
 
 // QPA mirserver
-#include "appnotifier.h"
 #include "logging.h"
 #include "nativeinterface.h"
 #include "promptsessionlistener.h"
 #include "promptsession.h"
+#include "qtmir/appnotifier.h"
 
 
 namespace qtmir {
