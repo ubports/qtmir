@@ -20,10 +20,12 @@ add_executable(ScreenTest ${SCREEN_TEST_SOURCES})
 
 target_link_libraries(
   ScreenTest
-  qpa-mirserver
+  qtmirserver
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
+
+  Qt5::Sensors
 )
 
 add_test(Screen, ScreenTest)

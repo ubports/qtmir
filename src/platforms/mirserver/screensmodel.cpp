@@ -19,7 +19,6 @@
 #include "screenplatformwindow.h"
 #include "qtcompositor.h"
 #include "logging.h"
-#include "mirserverintegration.h"
 #include "platformscreen.h"
 #include "mirqtconversion.h"
 
@@ -191,7 +190,7 @@ void ScreensModel::update()
                 window->window()->hide();
             }
         }
-        bool ok = QMetaObject::invokeMethod(qApp, "onScreenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
+        bool ok = QMetaObject::invokeMethod(qApp, "screenAboutToBeRemoved", Qt::DirectConnection, Q_ARG(QScreen*, screen->screen()));
         if (!ok) {
             DEBUG_MSG << "() - Failed to invoke QGuiApplication::onScreenAboutToBeRemoved(QScreen*) slot.";
         }

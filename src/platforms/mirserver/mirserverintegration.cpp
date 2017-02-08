@@ -54,7 +54,7 @@ MirServerIntegration::MirServerIntegration(int &argc, char **argv)
     : m_accessibility(new QPlatformAccessibility())
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
-    , m_mirServer(new QMirServer(argc, argv))
+    , m_mirServer(QMirServer::create(argc, argv))
     , m_nativeInterface(nullptr)
 {
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the

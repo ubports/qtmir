@@ -22,7 +22,7 @@ add_library(unityscreensplugin SHARED
 target_link_libraries(
     unityscreensplugin
 
-    qpa-mirserver
+    qtmirserver
 
     Qt5::Gui
     Qt5::Qml

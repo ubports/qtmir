@@ -29,7 +29,7 @@
 
 // mirserver
 #include "nativeinterface.h"
-#include "sessionauthorizer.h"
+#include "qtmir/sessionauthorizer.h"
 #include "logging.h"
 
 //miral
@@ -107,7 +107,7 @@ ApplicationManager* ApplicationManager::create()
         return nullptr;
     }
 
-    SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
+    auto *sessionAuthorizer = static_cast<qtmir::SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
     QSharedPointer<TaskController> taskController(new upstart::TaskController());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());

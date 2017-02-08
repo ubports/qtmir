@@ -20,6 +20,8 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/version.h>
 
+#include <vector>
+
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 

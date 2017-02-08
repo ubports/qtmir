@@ -1,4 +1,5 @@
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/common
 )
@@ -73,8 +74,7 @@ add_library(unityapplicationplugin SHARED
     ${QMLMIRPLUGIN_SRC}
 )
 
-target_link_libraries(
-    unityapplicationplugin
+target_link_libraries(unityapplicationplugin
 
     ${CMAKE_THREAD_LIBS_INIT}
 
@@ -93,7 +93,7 @@ target_link_libraries(
     Qt5::Qml
     Qt5::Quick
 
-    qpa-mirserver
+    qtmirserver
 )
 
 # Generate tracepoints.c and .h from tracepoints.tp

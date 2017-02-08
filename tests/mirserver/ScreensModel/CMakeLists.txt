@@ -27,7 +27,7 @@ set_property(TARGET ScreensModelTest PROPERTY CXX_STANDARD 14)
 
 target_link_libraries(
   ScreensModelTest
-  qpa-mirserver
+  qtmirserver
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

@@ -14,15 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WINDOWMANAGEMENTPOLICY_H
-#define WINDOWMANAGEMENTPOLICY_H
+#ifndef WRAPPEDWINDOWMANAGEMENTPOLICY_H
+#define WRAPPEDWINDOWMANAGEMENTPOLICY_H
 
-#include "miral/canonical_window_manager.h"
-
-#include "appnotifier.h"
+#include "qtmir/windowmanagementpolicy.h"
+#include "qtmir/appnotifier.h"
+#include "qtmir/windowmodelnotifier.h"
 #include "qteventfeeder.h"
 #include "windowcontroller.h"
-#include "windowmodelnotifier.h"
 
 #include <QSharedPointer>
 #include <QSize>
@@ -31,14 +30,15 @@ using namespace mir::geometry;
 
 class QtEventFeeder;
 
-class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy
+class WrappedWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
-    WindowManagementPolicy(const miral::WindowManagerTools &tools,
-                           qtmir::WindowModelNotifier &windowModel,
-                           qtmir::WindowController &windowController,
-                           qtmir::AppNotifier &appNotifier,
-                           const QSharedPointer<QtEventFeeder> eventFeeder);
+    WrappedWindowManagementPolicy(const miral::WindowManagerTools &tools,
+                                  qtmir::WindowModelNotifier &windowModel,
+                                  qtmir::WindowController &windowController,
+                                  qtmir::AppNotifier &appNotifier,
+                                  const std::shared_ptr<QtEventFeeder>& eventFeeder,
+                                  const qtmir::WindowManagmentPolicyBuilder& wmBuilder);
 
     // From WindowManagementPolicy
     auto place_new_window(const miral::ApplicationInfo &app_info,
@@ -71,28 +71,21 @@ public:
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
     // Methods for consumption by WindowControllerInterface
-    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
-    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
-    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
+    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window) override;
+    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window) override;
+    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window) override;
 
-    void activate(const miral::Window &window);
-    void resize(const miral::Window &window, const Size size);
-    void move  (const miral::Window &window, const Point topLeft);
-    void raise(const miral::Window &window);
-    void requestState(const miral::Window &window, const Mir::State state);
+    void activate(const miral::Window &window) override;
+    void resize(const miral::Window &window, const Size size) override;
+    void move  (const miral::Window &window, const Point topLeft) override;
+    void raise(const miral::Window &window) override;
+    void requestState(const miral::Window &window, const Mir::State state) override;
 
-    void ask_client_to_close(const miral::Window &window);
-    void forceClose(const miral::Window &window);
-
-Q_SIGNALS:
+    void ask_client_to_close(const miral::Window &window) override;
+    void forceClose(const miral::Window &window) override;
 
 private:
-    void ensureWindowIsActive(const miral::Window &window);
-
-    miral::WindowManagerTools m_tools;
-    qtmir::WindowModelNotifier &m_windowModel;
-    qtmir::AppNotifier &m_appNotifier;
-    const QSharedPointer<QtEventFeeder> m_eventFeeder;
+    std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;
 };
 
-#endif // WINDOWMANAGEMENTPOLICY_H
+#endif // WRAPPEDWINDOWMANAGEMENTPOLICY_H
