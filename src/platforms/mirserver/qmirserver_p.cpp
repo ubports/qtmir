@@ -186,7 +186,6 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         screensController.clear();
     });
 
-    auto eventFeeder = std::make_shared<QtEventFeeder>(screensModel);
     auto displayStorageBuilder = m_displayConfigurationStorage.builder();
 
     runner.run_with(

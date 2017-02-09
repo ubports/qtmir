@@ -58,7 +58,7 @@ public:
     QMirServerPrivate(int &argc, char* argv[]);
     const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
-    QSharedPointer<QtEventFeeder> eventFeeder{new QtEventFeeder(screensModel)};
+    std::shared_ptr<QtEventFeeder> eventFeeder{new QtEventFeeder(screensModel)};
     MirServerThread *serverThread;
 
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
