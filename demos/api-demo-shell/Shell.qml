@@ -64,8 +64,8 @@ Rectangle {
         color: "black"
         width: 6
         height: 10
-        x: PointerPosition.x
-        y: PointerPosition.y
+        x: PointerPosition.x - window.screen.position.x
+        y: PointerPosition.y - window.screen.position.y
     }
 
     Button {
