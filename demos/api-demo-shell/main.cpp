@@ -82,9 +82,15 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
         QJsonObject json;
         if (display.used.is_set()) json.insert("used", display.used.value());
         if (display.clone_output_index.is_set()) json.insert("clone_output_index", static_cast<int>(display.clone_output_index.value()));
-        if (display.size.is_set()) {
-            QString sz(QString("%1x%2").arg(display.size.value().width.as_int()).arg(display.size.value().height.as_int()));
-            json.insert("size", sz);
+        if (display.mode.is_set()) {
+            auto const& mode = display.mode.value();
+
+            QString sz(QString("%1x%2").arg(mode.size.width.as_int()).arg(mode.size.height.as_int()));
+            QJsonObject jsonMode({
+                {"size", sz},
+                {"refresh_rate", mode.refresh_rate }
+            });
+            json.insert("mode", jsonMode);
         }
         if (display.orientation.is_set()) json.insert("orientation", static_cast<int>(display.orientation.value()));
         if (display.form_factor.is_set()) json.insert("form_factor", static_cast<int>(display.form_factor.value()));
@@ -108,16 +114,25 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
             QJsonObject json(loadDoc.object());
             if (json.contains("used")) display.used = json["used"].toBool();
             if (json.contains("clone_output_index")) display.clone_output_index = json["clone_output_index"].toInt();
-            if (json.contains("size")) {
-                QString sz(json["size"].toString());
-                QStringList geo = sz.split("x", QString::SkipEmptyParts);
-                if (geo.count() == 2) {
-                    display.size = mir::geometry::Size(geo[0].toInt(), geo[1].toInt());
+            if (json.contains("mode")) {
+                QJsonObject jsonMode = json["mode"].toObject();
+
+                if (jsonMode.contains("size") && jsonMode.contains("refresh_rate")) {
+                    QString sz(jsonMode["size"].toString());
+                    QStringList geo = sz.split("x", QString::SkipEmptyParts);
+                    if (geo.count() == 2) {
+                        miral::DisplayOutputOptions::DisplayMode mode;
+                        mode.size = mir::geometry::Size(geo[0].toInt(), geo[1].toInt());
+                        mode.refresh_rate = jsonMode["refresh_rate"].toDouble();
+                        display.mode = mode;
+                    }
                 }
             }
             if (json.contains("orientation")) display.orientation = static_cast<MirOrientation>(json["orientation"].toInt());
             if (json.contains("form_factor")) display.form_factor = static_cast<MirFormFactor>(json["form_factor"].toInt());
             if (json.contains("scale")) display.scale = json["form_factor"].toDouble();
+
+            return true;
         }
 
         return false;
