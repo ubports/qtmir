@@ -32,7 +32,12 @@ struct DisplayOutputOptions
 {
     mir::optional_value<bool> used;
     mir::optional_value<uint> clone_output_index;
-    mir::optional_value<mir::geometry::Size> size;
+    struct DisplayMode
+    {
+        mir::geometry::Size size;
+        double refresh_rate{-1};
+    };
+    mir::optional_value<DisplayMode> mode;
     mir::optional_value<MirOrientation> orientation;
     mir::optional_value<MirFormFactor> form_factor;
     mir::optional_value<float> scale;
