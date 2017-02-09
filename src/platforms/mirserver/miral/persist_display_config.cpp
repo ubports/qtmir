@@ -96,6 +96,17 @@ struct DisplayConfigurationObserver : mg::DisplayConfigurationObserver
         std::shared_ptr<mg::DisplayConfiguration const> const& /*failed_fallback*/,
         std::exception const& /*error*/) override {}
 };
+
+miral::DisplayOutputOptions::DisplayMode current_mode_of(mg::DisplayConfigurationOutput const& output)
+{
+    miral::DisplayOutputOptions::DisplayMode mode;
+    if (output.current_mode_index >= output.modes.size()) return mode;
+
+    auto const& current_mode = output.modes[output.current_mode_index];
+    mode.size = current_mode.size;
+    mode.refresh_rate = current_mode.vrefresh_hz;
+    return mode;
+}
 }
 
 struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
@@ -172,12 +183,14 @@ void PersistDisplayConfigPolicy::apply_to(
             miral::DisplayOutputOptions config;
             if (storage->load(edid, config)) {
 
-                if (config.size.is_set()) {
+                if (config.mode.is_set()) {
                     int mode_index = output.current_mode_index;
                     int i = 0;
                     // Find the mode index which supports the saved size.
                     for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
-                        if ((*iter).size == config.size.value()) {
+                        auto const& mode = *iter;
+                        auto const& newMode = config.mode.value();
+                        if (mode.size == newMode.size && mode.vrefresh_hz == newMode.refresh_rate) {
                             mode_index = i;
                             break;
                         }
@@ -224,7 +237,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
                 output_index++;
             });
 
-            config.size = output.extents().size;
+            config.mode = current_mode_of(output);
             config.form_factor = output.form_factor;
             config.orientation = output.orientation;
             config.scale = output.scale;

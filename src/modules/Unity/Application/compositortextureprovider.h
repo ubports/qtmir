@@ -45,7 +45,7 @@ public:
         m_texture = texture;
     }
 
-    int curentFrame() const { return m_currentFrameNumber; }
+    unsigned int currentFrame() const { return m_currentFrameNumber; }
     void incrementFrame() { m_currentFrameNumber++; }
 
     bool isUpToDate() const { return m_textureUpdated; }
@@ -53,7 +53,7 @@ public:
 
 private:
     QWeakPointer<QSGTexture> m_texture;
-    int m_currentFrameNumber;
+    unsigned int m_currentFrameNumber;
     bool m_textureUpdated;
 };
 
