@@ -15,7 +15,7 @@ include_directories(
 
 add_executable(${API_DEMO_SHELL}
     main.cpp
-    ${CMAKE_SOURCE_DIR}/demos/qml-demo-shell/pointerposition.cpp
+    ../qml-demo-shell/pointerposition.cpp
 )
 
 target_link_libraries(${API_DEMO_SHELL}
@@ -29,6 +29,9 @@ target_link_libraries(${API_DEMO_SHELL}
 )
 
 file(GLOB QML_JS_FILES *.qml *.js *.png)
+
+add_custom_target(${API_DEMO_SHELL}-qmlfiles
+                  SOURCES ${QML_JS_FILES})
 
 # install binaries
 install(TARGETS ${API_DEMO_SHELL}
