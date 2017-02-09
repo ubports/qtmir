@@ -52,5 +52,8 @@ PointerPosition::PointerPosition()
 
 PointerPosition::~PointerPosition()
 {
-    qGuiApp->removeEventFilter(this);
+    // If this is a singleton the qApp probably won't exist.
+    if (qGuiApp) {
+        qGuiApp->removeEventFilter(this);
+    }
 }
