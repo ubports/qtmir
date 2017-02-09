@@ -142,6 +142,7 @@ void PersistDisplayConfigPolicy::apply_to(
     }
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
+        if (!output.connected) return;
 
         try {
             miral::Edid edid;
@@ -190,6 +191,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
     if (!storage) return;
 
     conf.for_each_output([this, &conf](mg::DisplayConfigurationOutput const& output) {
+        if (!output.connected) return;
 
         try {
             miral::Edid edid;
