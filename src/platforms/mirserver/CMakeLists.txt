@@ -3,6 +3,8 @@
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 include(FindQt5PlatformSupport)
 
+set(QTMIRSERVER_ABI 1)
+
 add_subdirectory(miral)
 
 # Hacks for the QPA privates monster.
@@ -145,14 +147,10 @@ target_link_libraries(qtmirserver
         ${Qt5PlatformSupport_LIBRARIES}
 )
 
-#set_target_properties(qtmirserver PROPERTIES COMPILE_FLAGS -fvisibility=hidden)
-
-#set_target_properties(qtmirserver
-#  PROPERTIES
-#  SOVERSION ${QTMIRSERVER_ABI}
-#  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
-#  LINK_DEPENDS ${symbol_map}
-#)
+set_target_properties(qtmirserver
+  PROPERTIES
+  SOVERSION ${QTMIRSERVER_ABI}
+)
 
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/qtmir")
