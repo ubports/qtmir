@@ -171,6 +171,7 @@ void PersistDisplayConfigPolicy::apply_to(
     }
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
+        if (!output.connected) return;
 
         try {
             miral::Edid edid;
@@ -211,7 +212,8 @@ void PersistDisplayConfigPolicy::apply_to(
                 if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
                 if (config.scale.is_set()) {output.scale = config.scale.value(); }
             }
-        } catch (std::runtime_error const&) {
+        } catch (std::runtime_error const& e) {
+            printf("Failed to parse EDID - %s\n", e.what());
         }
     });
 }
@@ -221,6 +223,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
     if (!storage) return;
 
     conf.for_each_output([this, &conf](mg::DisplayConfigurationOutput const& output) {
+        if (!output.connected) return;
 
         try {
             miral::Edid edid;
@@ -244,7 +247,8 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
             config.used = output.used;
 
             storage->save(edid, config);
-        } catch (std::runtime_error const&) {
+        } catch (std::runtime_error const& e) {
+            printf("Failed to parse EDID - %s\n", e.what());
         }
     });
 }
