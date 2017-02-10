@@ -22,27 +22,100 @@
 #include <QDebug>
 #include <libintl.h>
 #include "../paths.h"
-
 #include "pointerposition.h"
 
-// REMOVEME - Should be able to use qmlscene, but in order to use the mir benchmarking we need
-// to parse command line switches. Wait until MIR_SOCKET supported by the benchmark framework.
+#include <qtmir/guiserverapplication.h>
+#include <qtmir/displayconfigurationpolicy.h>
+#include <qtmir/sessionauthorizer.h>
+#include <qtmir/windowmanagementpolicy.h>
+#include <qtmir/displayconfigurationstorage.h>
+
+struct DemoDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
+{
+    void apply_to(mir::graphics::DisplayConfiguration& conf)
+    {
+        qDebug() << "OVERRIDE qtmir::DisplayConfigurationPolicy::apply_to";
+        qtmir::DisplayConfigurationPolicy::apply_to(conf);
+    }
+};
+
+class DemoWindowManagementPolicy : public qtmir::WindowManagementPolicy
+{
+public:
+    DemoWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+        : qtmir::WindowManagementPolicy(tools, dd)
+    {}
+
+    bool handle_keyboard_event(const MirKeyboardEvent *event) override
+    {
+        qDebug() << "OVERRIDE qtmir::WindowManagementPolicy::handle_keyboard_event" << event;
+        return qtmir::WindowManagementPolicy::handle_keyboard_event(event);
+    }
+};
+
+struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::Edid&, const miral::DisplayOutputOptions&) override
+    {
+        qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::save";
+    }
+
+    bool load(const miral::Edid&, miral::DisplayOutputOptions&) const override
+    {
+        qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::load";
+        return false;
+    }
+};
+
+struct DemoSessionAuthorizer : qtmir::SessionAuthorizer
+{
+    bool connectionIsAllowed(miral::ApplicationCredentials const& creds) override
+    {
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::connectionIsAllowed";
+        return qtmir::SessionAuthorizer::connectionIsAllowed(creds);
+    }
+    bool configureDisplayIsAllowed(miral::ApplicationCredentials const& creds) override
+    {
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::configureDisplayIsAllowed";
+        return qtmir::SessionAuthorizer::configureDisplayIsAllowed(creds);
+    }
+    bool setBaseDisplayConfigurationIsAllowed(miral::ApplicationCredentials const& creds) override
+    {
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::setBaseDisplayConfigurationIsAllowed";
+        return qtmir::SessionAuthorizer::setBaseDisplayConfigurationIsAllowed(creds);
+    }
+    bool screencastIsAllowed(miral::ApplicationCredentials const& creds) override
+    {
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::screencastIsAllowed";
+        return qtmir::SessionAuthorizer::screencastIsAllowed(creds);
+    }
+    bool promptSessionIsAllowed(miral::ApplicationCredentials const& creds) override
+    {
+        qDebug() << "OVERRIDE qtmir::SessionAuthorizer::promptSessionIsAllowed";
+        return qtmir::SessionAuthorizer::promptSessionIsAllowed(creds);
+    }
+};
 
 int main(int argc, const char *argv[])
 {
+    qtmir::SetSessionAuthorizer<DemoSessionAuthorizer> sessionAuth;
+    qtmir::SetDisplayConfigurationPolicy<DemoDisplayConfigurationPolicy> displayConfig;
+    qtmir::SetWindowManagementPolicy<DemoWindowManagementPolicy> wmPolicy;
+
+    qtmir::SetDisplayConfigurationStorage<DemoDisplayConfigurationStorage> displayStorage;
+
     setenv("QT_QPA_PLATFORM_PLUGIN_PATH", qPrintable(::qpaPluginDirectory()), 1 /* overwrite */);
-    setenv("QT_QPA_PLATFORM", "mirserver", 1 /* overwrite */);
 
-    QGuiApplication::setApplicationName("qml-demo-shell");
-    QGuiApplication *application;
+    qtmir::GuiServerApplication::setApplicationName("api-demo-shell");
+    qtmir::GuiServerApplication *application;
 
-    application = new QGuiApplication(argc, (char**)argv);
+    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy, displayStorage });
     QQuickView* view = new QQuickView();
     view->engine()->addImportPath(::qmlPluginDirectory());
     view->setResizeMode(QQuickView::SizeRootObjectToView);
     view->setColor("lightgray");
     view->setTitle("Demo Shell");
-    
+
     qmlRegisterSingletonType<PointerPosition>("Mir.Pointer", 0, 1, "PointerPosition",
         [](QQmlEngine*, QJSEngine*) -> QObject* { return PointerPosition::instance(); });
 
