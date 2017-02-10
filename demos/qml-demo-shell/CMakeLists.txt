@@ -2,6 +2,12 @@ set(DEMO_SHELL qtmir-demo-shell)
 
 include_directories(
     SYSTEM
+
+    ${CMAKE_SOURCE_DIR}/include
+
+    ${MIRSERVER_INCLUDE_DIRS}
+    ${MIRAL_INCLUDE_DIRS}
+
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
     ${Qt5Qml_PRIVATE_INCLUDE_DIRS}
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
@@ -14,6 +20,9 @@ add_executable(${DEMO_SHELL}
 
 target_link_libraries(
     ${DEMO_SHELL}
+
+    qtmirserver
+
     Qt5::Core
     Qt5::DBus
     Qt5::Qml

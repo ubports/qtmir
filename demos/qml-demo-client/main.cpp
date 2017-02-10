@@ -57,8 +57,8 @@ int main(int argc, char **argv)
     view->setResizeMode(QQuickView::SizeRootObjectToView);
     view->setColor("black");
     view->setTitle("Demo Client");
-    
-    QUrl source(::qmlDirectory() + "qtmir-demo-client/qml-demo-client.qml");
+
+    QUrl source(::qmlDirectory() + "qml-demo-client/qml-demo-client.qml");
 
     view->setSource(source);
     QObject::connect(view->engine(), SIGNAL(quit()), application, SLOT(quit()));
