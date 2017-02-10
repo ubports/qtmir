@@ -746,7 +746,7 @@ unsigned int MirSurface::currentFrameNumber(qintptr userId) const
 {
     QMutexLocker locker(&m_mutex);
     auto compositorTexure = m_textures->compositorTextureForId(userId);
-    return compositorTexure ? compositorTexure->curentFrame() : 0;
+    return compositorTexure ? compositorTexure->currentFrame() : 0;
 }
 
 void MirSurface::onSessionDestroyed()
@@ -973,7 +973,7 @@ std::shared_ptr<SurfaceObserver> MirSurface::surfaceObserver() const
     return m_surfaceObserver;
 }
 
-void MirSurface::setTexturePorvider(CompositorTextureProvider *textureProvider)
+void MirSurface::setTextureProvider(CompositorTextureProvider *textureProvider)
 {
     if (m_textures) {
         delete m_textures;

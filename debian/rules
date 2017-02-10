@@ -66,3 +66,4 @@ endif
 	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-desktop
 	dh_install --sourcedir=$(TMP2_DIR) -pqtdeclarative5-qtmir-plugin
 	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-tests
+	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-dev

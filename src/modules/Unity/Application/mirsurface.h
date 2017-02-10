@@ -175,7 +175,7 @@ public:
     // useful for tests
     void setCloseTimer(AbstractTimer *timer);
     std::shared_ptr<SurfaceObserver> surfaceObserver() const;
-    void setTexturePorvider(CompositorTextureProvider *textureProvider);
+    void setTextureProvider(CompositorTextureProvider *textureProvider);
 
 public Q_SLOTS:
     ////
