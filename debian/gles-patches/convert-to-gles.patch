@@ -1,7 +1,7 @@
-Index: qtmir.api/debian/control
+Index: multiwindow.screenwindow/debian/control
 ===================================================================
---- qtmir.api.orig/debian/control
-+++ qtmir.api/debian/control
+--- multiwindow.screenwindow.orig/debian/control
++++ multiwindow.screenwindow/debian/control
 @@ -1,4 +1,4 @@
 -Source: qtmir
 +Source: qtmir-gles
@@ -76,10 +76,11 @@ Index: qtmir.api/debian/control
  
  Package: qtmir-dev
  Section: libdevel
-@@ -103,40 +92,3 @@ Description: Developer files for the Qt
+@@ -102,41 +91,3 @@ Description: Developer files for the Qt
+  Mir server.
   .
   Contains header files required for development using QtMir.
- 
+-
 -Package: qtdeclarative5-qtmir-plugin
 -Architecture: any
 -Multi-Arch: same
@@ -92,7 +93,7 @@ Index: qtmir.api/debian/control
 -Conflicts: libqtmir,
 -           libunity-mir1,
 -Provides: unity-application-impl,
--          unity-application-impl-23,
+-          unity-application-impl-27,
 -Description: Qt plugin for Unity specific Mir APIs
 - QtMir provides Qt/QML bindings for Mir features that are exposed through the
 - qtmir-desktop or qtmir-android QPA plugin such as Application management
@@ -117,10 +118,10 @@ Index: qtmir.api/debian/control
 -Description: QtMir tests and demos
 - This package provides benchmark tests and a simple shell and client using the
 - QtMir QPA.
-Index: qtmir.api/debian/rules
+Index: multiwindow.screenwindow/debian/rules
 ===================================================================
---- qtmir.api.orig/debian/rules
-+++ qtmir.api/debian/rules
+--- multiwindow.screenwindow.orig/debian/rules
++++ multiwindow.screenwindow/debian/rules
 @@ -3,67 +3,32 @@
  
  export DPKG_GENSYMBOLS_CHECK_LEVEL=4
