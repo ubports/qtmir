@@ -1,182 +1,136 @@
 import QtQuick 2.4
 import Unity.Application 0.1
+import Mir.Pointer 0.1
 
-Rectangle {
+FocusScope {
     id: root
-
     focus: true
-    Keys.onVolumeUpPressed: {
-        console.log("\"Volume Up\" pressed");
-    }
-    Keys.onVolumeDownPressed: {
-        console.log("\"Volume Down\" pressed");
-    }
 
-    property bool resizeModeStretch: true
-
-    gradient: Gradient {
-        GradientStop { position: 0.0; color: "lightsteelblue" }
-        GradientStop { position: 1.0; color: "pink" }
-    }
-
-    property bool thumbFriendlyBorders: false
-
-    MultiPointTouchArea {
-        anchors.fill: parent
-        mouseEnabled: false
-        onPressed: {
-            root.thumbFriendlyBorders = true;
-        }
-        onReleased: {
-            root.thumbFriendlyBorders = false;
-        }
-    }
-
-    Image {
-        id: unityLogo
-        source: "UnityLogo.png"
-        fillMode: Image.PreserveAspectFit
-        anchors.centerIn: parent
-        width: 600
-        height: 600
-
-        RotationAnimation {
-            id: logoAnimation
-            target: unityLogo
-            from: 0
-            to: 359
-            duration: 3000
-            easing.type: Easing.Linear
-            loops: Animation.Infinite
-        }
-
-        MultiPointTouchArea {
-            anchors.fill: parent
-            minimumTouchPoints:1
-            maximumTouchPoints:1
-            onPressed: {
-                if (logoAnimation.paused) {
-                    logoAnimation.resume();
-                } else if (logoAnimation.running) {
-                    logoAnimation.pause();
-                } else {
-                    logoAnimation.start();
-                }
-            }
-        }
+    WindowModel {
+        id: windowModel;
     }
 
     Item {
-        id: windowContainer
-        anchors.fill: root
+        id: windowViewContainer
+        anchors.fill: parent
+
+        Repeater {
+            model: windowModel
+
+            delegate: MirSurfaceItem {
+                id: surfaceItem
+                surface: model.surface
+                consumesInput: true // QUESTION: why is this non-default?
+                x: surface.position.x
+                y: surface.position.y
+                width: surface.size.width
+                height: surface.size.height
+                focus: surface.focused
+                visible: surface.visible
+
+                Rectangle {
+                    anchors { top: parent.bottom; right: parent.right }
+                    width: childrenRect.width
+                    height: childrenRect.height
+                    color: surface.focused ? "red" : "lightsteelblue"
+                    opacity: 0.8
+                    Text {
+                        text: surface.position.x + "," + surface.position.y + " " + surface.size.width + "x" + surface.size.height
+                        font.pixelSize: 10
+                    }
+                }
+
+                Rectangle { anchors.fill: parent; z: -1; color: "black"; opacity: 0.3 }
+            }
+        }
     }
 
-    Rectangle {
-        id: quitButton
-        width: 60
-        height: 40
-        color: "red"
+    Button {
+        anchors { right: parent.right; top: parent.top }
+        height: 30
+        width: 80
+        text: "Quit"
+        onClicked: Qt.quit()
+    }
+
+    WindowModelDebugView {
         anchors { right: parent.right; bottom: parent.bottom }
-        Text {
-            anchors.centerIn: parent
-            text: "Quit"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Qt.quit()
-        }
+        model: windowModel
+    }
+
+    Text {
+        anchors { left: parent.left; bottom: parent.bottom }
+        text: "Move window: Ctrl+click\n
+Resize window: Ctrl+Right click"
     }
 
     Rectangle {
-        id: resizeButton
-        width: 90
-        height: 40
-        color: "blue"
-        anchors { right: quitButton.left; bottom: parent.bottom }
-        Text {
-            anchors.centerIn: parent
-            text: root.resizeModeStretch ? "Stretch" : "Wait Resize"
-            color: "white"
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { root.resizeModeStretch = !root.resizeModeStretch; }
-        }
+        id: mousePointer
+        color: "black"
+        width: 6
+        height: 10
+        x: PointerPosition.x - window.screen.position.x
+        y: PointerPosition.y - window.screen.position.y
     }
 
-    Rectangle {
-        width: 40
-        height: 40
-        color: "green"
-        anchors { right: resizeButton.left; bottom: parent.bottom }
-        Text {
-            anchors.centerIn: parent
-            text: "⟳"
-            color: "white"
-            font.pixelSize: 35
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { root.rotation += 180; }
-        }
-    }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        hoverEnabled: false
+        property variant window: null
+        property int initialWindowXPosition
+        property int initialWindowYPosition
+        property int initialWindowWidth
+        property int initialWindowHeight
+        property int initialMouseXPosition
+        property int initialMouseYPosition
+        property var action
 
-    Component {
-        id: windowStretchComponent
-        Window {
-            x: 50
-            y: 50
-            //width: 200
-            //height: 200
-            touchMode: root.thumbFriendlyBorders
+        function moveWindowBy(window, delta) {
+            window.surface.requestedPosition = Qt.point(initialWindowXPosition + delta.x,
+                                                        initialWindowYPosition + delta.y);
+        }
+        function resizeWindowBy(window, delta) {
+            window.surface.resize(Qt.size(initialWindowWidth + delta.x,
+                                          initialWindowHeight + delta.y))
+        }
 
-            onCloneRequested: {
-                var window = windowStretchComponent.createObject(windowContainer);
-                window.cloned = true;
-                window.surface = surface;
+        onPressed: {
+            if (mouse.modifiers & Qt.ControlModifier) {
+                window = windowViewContainer.childAt(mouse.x, mouse.y)
+                if (!window) return;
+
+                if (mouse.button == Qt.LeftButton) {
+                    initialWindowXPosition = window.surface.position.x
+                    initialWindowYPosition = window.surface.position.y
+                    action = moveWindowBy
+                } else if (mouse.button == Qt.RightButton) {
+                    initialWindowHeight = window.surface.size.height
+                    initialWindowWidth = window.surface.size.width
+                    action = resizeWindowBy
+                }
+                initialMouseXPosition = mouse.x
+                initialMouseYPosition = mouse.y
+            } else {
+                mouse.accepted = false
             }
         }
-    }
 
-    Component {
-        id: windowWaitResizeComponent
-        WindowBufferSized {
-            x: 50
-            y: 50
-            touchMode: root.thumbFriendlyBorders
-
-            onCloneRequested: {
-                var window = windowStretchComponent.createObject(windowContainer);
-                window.cloned = true;
-                window.surface = surface;
-            }
-        }
-    }
-
-    property var windowComponent: resizeModeStretch ? windowStretchComponent : windowWaitResizeComponent
-
-    Connections {
-        target: SurfaceManager
-        onSurfaceCreated: {
-            print("new surface", surface.name)
-
-            var window = windowComponent.createObject(windowContainer);
+        onPositionChanged: {
             if (!window) {
-                console.warn(windowComponent.errorString());
-                return;
+                mouse.accepted = false
+                return
             }
-
-            window.surface = surface;
-
-            openAnimation.target = window;
-            openAnimation.start();
+            action(window, Qt.point(mouse.x - initialMouseXPosition, mouse.y - initialMouseYPosition))
         }
-    }
 
-    NumberAnimation {
-        id: openAnimation
-        property: "x";
-        from: root.width; to: 10;
-        duration: 1200; easing.type: Easing.InOutQuad
+        onReleased: {
+            if (!window) {
+                mouse.accepted = false
+                return
+            }
+            action(window, Qt.point(mouse.x - initialMouseXPosition, mouse.y - initialMouseYPosition))
+            window = null;
+        }
     }
 }

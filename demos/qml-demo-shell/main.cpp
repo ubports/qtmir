@@ -17,7 +17,7 @@
 // Qt
 #include <QtQuick/QQuickView>
 #include <QtGui/QGuiApplication>
-#include <QtQml/QQmlEngine>
+#include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
 #include <QJsonObject>
 #include <QJsonDocument>
@@ -183,24 +183,17 @@ int main(int argc, const char *argv[])
     qtmir::GuiServerApplication *application;
 
     application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy, displayStorage });
-    QQuickView* view = new QQuickView();
-    view->engine()->addImportPath(::qmlPluginDirectory());
-    view->setResizeMode(QQuickView::SizeRootObjectToView);
-    view->setColor("lightgray");
-    view->setTitle("Demo Shell");
+    auto qmlEngine = new QQmlApplicationEngine(application);
+    qmlEngine->setBaseUrl(QUrl::fromLocalFile(::qmlDirectory() + "api-demo-shell"));
+    qmlEngine->addImportPath(::qmlPluginDirectory());
+    QObject::connect(qmlEngine, &QQmlEngine::quit, application, &QGuiApplication::quit);
 
     qmlRegisterSingletonType<PointerPosition>("Mir.Pointer", 0, 1, "PointerPosition",
         [](QQmlEngine*, QJSEngine*) -> QObject* { return PointerPosition::instance(); });
 
-    QUrl source(::qmlDirectory() + "qml-demo-shell/windowModel.qml");
+    qmlEngine->load(::qmlDirectory() + "qml-demo-shell/qml-demo-shell.qml");
 
-    view->setSource(source);
-    QObject::connect(view->engine(), SIGNAL(quit()), application, SLOT(quit()));
-
-    view->showFullScreen();
     int result = application->exec();
-
-    delete view;
     delete application;
 
     return result;
