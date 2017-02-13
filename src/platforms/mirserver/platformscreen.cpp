@@ -156,7 +156,9 @@ PlatformScreen::PlatformScreen(const mir::graphics::DisplayConfigurationOutput &
     , m_unityScreen(nullptr)
 {
     setMirDisplayConfiguration(screen, false);
-    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value() << ", geometry=" << geometry() << ")";
+    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value()
+                      << ", used=" << (m_used ? "true" : "false")
+                      << ", geometry=" << geometry() << ")";
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())

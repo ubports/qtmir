@@ -118,6 +118,9 @@ bool ScreensController::setOutputConfiguration(const CustomScreenConfiguration &
 
     auto displayConfiguration = m_display->configuration();
 
+    // FIXME - probably need to enforce some policy here.
+    // Dont disable all sreens
+
     displayConfiguration->for_each_output(
         [newConfig](mg::UserDisplayConfigurationOutput &outputConfig)
         {

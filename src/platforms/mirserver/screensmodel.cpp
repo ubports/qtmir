@@ -116,7 +116,7 @@ void ScreensModel::update()
 
     displayConfig->for_each_output(
         [this, &oldScreenList, &newScreenList, &windowMoveList](const mg::DisplayConfigurationOutput &output) {
-            if (output.used && output.connected) {
+            if (output.connected) {
                 PlatformScreen *screen = findScreenWithId(oldScreenList, output.id);
                 if (screen) { // we've already set up this display before
 
@@ -146,6 +146,14 @@ void ScreensModel::update()
                     screen = createScreen(output);
                     newScreenList.append(screen);
                     m_screenList.append(screen);
+                }
+
+                if (!output.used) {
+                    Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
+                        if (window->window() && window->isExposed()) {
+                            window->window()->hide();
+                        }
+                    }
                 }
             }
         }
@@ -230,6 +238,10 @@ bool ScreensModel::canUpdateExistingScreen(const PlatformScreen *screen, const m
 void ScreensModel::allWindowsSetExposed(bool exposed)
 {
     Q_FOREACH (const auto screen, m_screenList) {
+
+        // don't expose unused screen windows.
+        if (!screen->used() && exposed) continue;
+
         Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
             window->setExposed(exposed);
         }
