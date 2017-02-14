@@ -75,16 +75,16 @@ public:
 
 struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 {
-    void save(const miral::Edid& edid, const miral::DisplayOutputOptions& display) override
+    void save(const miral::DisplayId& displayId, const miral::DisplayConfigurationOptions& options) override
     {
-        QFile f(stringFromEdid(edid) + ".edid");
+        QFile f(stringFromEdid(displayId.edid) + ".edid");
         qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::save" << f.fileName();
 
         QJsonObject json;
-        if (display.used.is_set()) json.insert("used", display.used.value());
-        if (display.clone_output_index.is_set()) json.insert("clone_output_index", static_cast<int>(display.clone_output_index.value()));
-        if (display.mode.is_set()) {
-            auto const& mode = display.mode.value();
+        if (options.used.is_set()) json.insert("used", options.used.value());
+        if (options.clone_output_index.is_set()) json.insert("clone_output_index", static_cast<int>(options.clone_output_index.value()));
+        if (options.mode.is_set()) {
+            auto const& mode = options.mode.value();
 
             QString sz(QString("%1x%2").arg(mode.size.width.as_int()).arg(mode.size.height.as_int()));
             QJsonObject jsonMode({
@@ -93,9 +93,9 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
             });
             json.insert("mode", jsonMode);
         }
-        if (display.orientation.is_set()) json.insert("orientation", static_cast<int>(display.orientation.value()));
-        if (display.form_factor.is_set()) json.insert("form_factor", static_cast<int>(display.form_factor.value()));
-        if (display.scale.is_set()) json.insert("scale", display.scale.value());
+        if (options.orientation.is_set()) json.insert("orientation", static_cast<int>(options.orientation.value()));
+        if (options.form_factor.is_set()) json.insert("form_factor", static_cast<int>(options.form_factor.value()));
+        if (options.scale.is_set()) json.insert("scale", options.scale.value());
 
         if (f.open(QIODevice::WriteOnly)) {
             QJsonDocument saveDoc(json);
@@ -103,9 +103,9 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
         }
     }
 
-    bool load(const miral::Edid& edid, miral::DisplayOutputOptions& display) const override
+    bool load(const miral::DisplayId& displayId, miral::DisplayConfigurationOptions& options) const override
     {
-        QFile f(stringFromEdid(edid) + ".edid");
+        QFile f(stringFromEdid(displayId.edid) + ".edid");
         qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::load" << f.fileName();
 
         if (f.open(QIODevice::ReadOnly)) {
@@ -113,8 +113,8 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
             QJsonDocument loadDoc(QJsonDocument::fromJson(saveData));
 
             QJsonObject json(loadDoc.object());
-            if (json.contains("used")) display.used = json["used"].toBool();
-            if (json.contains("clone_output_index")) display.clone_output_index = json["clone_output_index"].toInt();
+            if (json.contains("used")) options.used = json["used"].toBool();
+            if (json.contains("clone_output_index")) options.clone_output_index = json["clone_output_index"].toInt();
             if (json.contains("mode")) {
                 QJsonObject jsonMode = json["mode"].toObject();
 
@@ -122,16 +122,16 @@ struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
                     QString sz(jsonMode["size"].toString());
                     QStringList geo = sz.split("x", QString::SkipEmptyParts);
                     if (geo.count() == 2) {
-                        miral::DisplayOutputOptions::DisplayMode mode;
+                        miral::DisplayConfigurationOptions::DisplayMode mode;
                         mode.size = mir::geometry::Size(geo[0].toInt(), geo[1].toInt());
                         mode.refresh_rate = jsonMode["refresh_rate"].toDouble();
-                        display.mode = mode;
+                        options.mode = mode;
                     }
                 }
             }
-            if (json.contains("orientation")) display.orientation = static_cast<MirOrientation>(json["orientation"].toInt());
-            if (json.contains("form_factor")) display.form_factor = static_cast<MirFormFactor>(json["form_factor"].toInt());
-            if (json.contains("scale")) display.scale = json["form_factor"].toDouble();
+            if (json.contains("orientation")) options.orientation = static_cast<MirOrientation>(json["orientation"].toInt());
+            if (json.contains("form_factor")) options.form_factor = static_cast<MirFormFactor>(json["form_factor"].toInt());
+            if (json.contains("scale")) options.scale = json["form_factor"].toDouble();
 
             return true;
         }
