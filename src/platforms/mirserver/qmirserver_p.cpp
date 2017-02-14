@@ -42,9 +42,9 @@ namespace
 {
 struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 {
-    void save(const miral::Edid&, const miral::DisplayOutputOptions&) override {}
+    void save(const miral::DisplayId&, const miral::DisplayConfigurationOptions&) override {}
 
-    bool load(const miral::Edid&, miral::DisplayOutputOptions&) const override { return false; }
+    bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override { return false; }
 };
 }
 

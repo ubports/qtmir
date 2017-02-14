@@ -145,15 +145,16 @@ void PersistDisplayConfigPolicy::apply_to(
         if (!output.connected) return;
 
         try {
-            miral::Edid edid;
+            miral::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.output_id = output.id.as_value();
 
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
             // TODO Otherwise...
 
-            miral::DisplayOutputOptions config;
-            if (storage->load(edid, config)) {
+            miral::DisplayConfigurationOptions config;
+            if (storage->load(display_id, config)) {
 
                 if (config.size.is_set()) {
                     int mode_index = output.current_mode_index;
@@ -195,11 +196,12 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
         if (!output.connected) return;
 
         try {
-            miral::Edid edid;
+            miral::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
-            edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
+            display_id.output_id = output.id.as_value();
 
-            miral::DisplayOutputOptions config;
+            miral::DisplayConfigurationOptions config;
 
             uint output_index = 0;
             conf.for_each_output([this, output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
@@ -215,7 +217,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
             config.scale = output.scale;
             config.used = output.used;
 
-            storage->save(edid, config);
+            storage->save(display_id, config);
         } catch (std::runtime_error const& e) {
             printf("Failed to parse EDID - %s\n", e.what());
         }
