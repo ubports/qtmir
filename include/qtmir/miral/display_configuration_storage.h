@@ -23,12 +23,19 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
+#include "edid.h"
+
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
-class Edid;
 
-struct DisplayOutputOptions
+struct DisplayId
+{
+    Edid edid;
+    int output_id; // helps to identify a monitor if we have two of the same.
+};
+
+struct DisplayConfigurationOptions
 {
     mir::optional_value<bool> used;
     mir::optional_value<uint> clone_output_index;
@@ -48,8 +55,8 @@ class DisplayConfigurationStorage
 public:
     virtual ~DisplayConfigurationStorage() = default;
 
-    virtual void save(const Edid&, const DisplayOutputOptions&) = 0;
-    virtual bool load(const Edid&, DisplayOutputOptions&) const = 0;
+    virtual void save(const DisplayId&, const DisplayConfigurationOptions&) = 0;
+    virtual bool load(const DisplayId&, DisplayConfigurationOptions&) const = 0;
 };
 
 }

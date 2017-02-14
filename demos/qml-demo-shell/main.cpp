@@ -55,12 +55,12 @@ public:
 
 struct DemoDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 {
-    void save(const miral::Edid&, const miral::DisplayOutputOptions&) override
+    void save(const miral::DisplayId&, const miral::DisplayConfigurationOptions&) override
     {
         qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::save";
     }
 
-    bool load(const miral::Edid&, miral::DisplayOutputOptions&) const override
+    bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override
     {
         qDebug() << "OVERRIDE miral::DisplayConfigurationStorage::load";
         return false;
