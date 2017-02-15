@@ -90,7 +90,8 @@ protected Q_SLOTS:
 private:
     Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
     bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
-    void allWindowsSetExposed(bool exposed);
+    void startRenderer();
+    void haltRenderer();
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<QtCompositor> m_compositor;
