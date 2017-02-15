@@ -90,11 +90,6 @@ void MirBufferSGTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
-    // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
-    GLint alignment = 4; // default value in Qt
-    glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
-
     auto const texture_source =
         dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
     if (!texture_source)
@@ -102,5 +97,7 @@ void MirBufferSGTexture::bind()
 
     texture_source->gl_bind_to_texture();
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
+    // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
+    // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // 4 is the default which Qt uses
 }
