@@ -1,3 +1,12 @@
+qtmir (0.5.1+17.04.20170206-0ubuntu2) zesty; urgency=medium
+
+  * Update unity-application-impl Provides to -26, which was forgotten before.
+    This should stop unity8-tests being pulled in on upgrades (which is a
+    component-mismatch), and should restore unity8 to the desktop images. (LP:
+    #1662608)
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Wed, 15 Feb 2017 12:43:39 +0000
+
 qtmir (0.5.1+17.04.20170206-0ubuntu1) zesty; urgency=medium
 
   [ Daniel d'Andrada ]
