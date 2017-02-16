@@ -50,7 +50,7 @@ public:
     uint currentModeIndex() const;
     bool isActive() const;
 
-    QScreen *screen() const;
+    QScreen *qscreen() const;
 
     Q_INVOKABLE ScreenConfig *beginConfiguration() const;
     Q_INVOKABLE bool applyConfiguration(ScreenConfig *configuration);

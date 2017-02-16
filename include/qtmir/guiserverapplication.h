@@ -22,12 +22,24 @@
 // std
 #include <functional>
 
+#if defined(qApp)
+#undef qApp
+#endif
+#define qApp (static_cast<qtmir::GuiServerApplication *>(QCoreApplication::instance()))
+
+#if defined(qGuiApp)
+#undef qGuiApp
+#endif
+#define qGuiApp (static_cast<qtmir::GuiServerApplication *>(QCoreApplication::instance()))
+
 class QMirServer;
 
-namespace qtmir {
+namespace qtmir
+{
 
 class WindowModelNotifier;
 class AppNotifier;
+class ScreenModel;
 
 class GuiServerApplication : public QGuiApplication
 {
@@ -35,6 +47,7 @@ class GuiServerApplication : public QGuiApplication
 
     Q_PROPERTY(qtmir::AppNotifier* appNotifier READ appNotifier CONSTANT)
     Q_PROPERTY(qtmir::WindowModelNotifier* windowModelNotifier READ windowModelNotifier CONSTANT)
+    Q_PROPERTY(qtmir::ScreenModel* screenModel READ screenModel CONSTANT)
 
 public:
     explicit GuiServerApplication(int &argc,
@@ -44,10 +57,15 @@ public:
 
     qtmir::AppNotifier* appNotifier() const;
     qtmir::WindowModelNotifier* windowModelNotifier() const;
+    qtmir::ScreenModel* screenModel() const;
 
 Q_SIGNALS:
     // invoked by screen model
     void screenAboutToBeRemoved(QScreen *screen);
+
+private:
+    class Private;
+    QScopedPointer<Private> d;
 };
 
 } // namespace qtmir

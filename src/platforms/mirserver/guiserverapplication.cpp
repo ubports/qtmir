@@ -16,12 +16,14 @@
 
 #include "qtmir/guiserverapplication.h"
 #include "qmirserver.h"
+#include "screenadaptormodel.h"
 
 #include <QDebug>
 
-namespace qtmir {
-
-namespace {
+namespace qtmir
+{
+namespace
+{
 
 QSharedPointer<QMirServer> mirServer;
 
@@ -37,10 +39,16 @@ void init(int &argc, char **argv, std::initializer_list<std::function<void(QMirS
 
 }
 
+struct GuiServerApplication::Private
+{
+    QScopedPointer<ScreenAdaptorModel> screenModel{new ScreenAdaptorModel()};
+};
+
 GuiServerApplication::GuiServerApplication(int &argc,
                                            char **argv,
                                            std::initializer_list<std::function<void(QMirServer&)>> options)
     : QGuiApplication((init(argc, argv, options), argc), argv) // comma operator to ensure init called before QGuiApplication
+    , d(new Private)
 {
     Q_UNUSED(options);
 }
@@ -58,6 +66,11 @@ AppNotifier *GuiServerApplication::appNotifier() const
 WindowModelNotifier *GuiServerApplication::windowModelNotifier() const
 {
     return mirServer->windowModelNotifier();
+}
+
+ScreenModel *GuiServerApplication::screenModel() const
+{
+    return d->screenModel.data();
 }
 
 }

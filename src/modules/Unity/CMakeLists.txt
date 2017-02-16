@@ -1,2 +1,2 @@
 add_subdirectory(Application)
-add_subdirectory(Screens)
+#add_subdirectory(Screens)
