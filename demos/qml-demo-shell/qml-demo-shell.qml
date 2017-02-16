@@ -11,6 +11,12 @@ Instantiator {
         visible: true
         screen: model.screen
 
+        Binding {
+            target: model.screen
+            property: "active"
+            value: index == 0
+        }
+
         Row {
             x: 10
             y: 10
