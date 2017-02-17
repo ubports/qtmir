@@ -279,7 +279,10 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     m_depth = 8 * MIR_BYTES_PER_PIXEL(screen.current_format);
 
     // Power mode
-    m_powerMode = screen.power_mode;
+    if (m_powerMode != screen.power_mode) {
+        m_powerMode = screen.power_mode;
+        Q_EMIT powerModeChanged();
+    }
 
     QRect oldGeometry = m_geometry;
     // Position of screen in virtual desktop coordinate space

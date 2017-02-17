@@ -38,18 +38,19 @@ ScreenAdaptor::ScreenAdaptor(QScreen* screen, QObject* parent)
     }
 
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (platformScreen) {
-        connect(platformScreen, &PlatformScreen::usedChanged, this, &ScreenAdaptor::usedChanged);
-        connect(platformScreen, &PlatformScreen::nameChanged, this, &ScreenAdaptor::nameChanged);
-        connect(platformScreen, &PlatformScreen::outputTypeChanged, this, &ScreenAdaptor::outputTypeChanged);
-        connect(platformScreen, &PlatformScreen::scaleChanged, this, &ScreenAdaptor::scaleChanged);
-        connect(platformScreen, &PlatformScreen::formFactorChanged, this, &ScreenAdaptor::formFactorChanged);
-        connect(platformScreen, &PlatformScreen::physicalSizeChanged, this, &ScreenAdaptor::physicalSizeChanged);
-        connect(platformScreen, &PlatformScreen::positionChanged, this, &ScreenAdaptor::positionChanged);
-        connect(platformScreen, &PlatformScreen::activeChanged, this, &ScreenAdaptor::activeChanged);
-        connect(platformScreen, &PlatformScreen::currentModeIndexChanged, this, &ScreenAdaptor::currentModeIndexChanged);
-        connect(platformScreen, &PlatformScreen::availableModesChanged, this, &ScreenAdaptor::updateScreenModes);
-    }
+    connect(platformScreen, &PlatformScreen::usedChanged, this, &ScreenAdaptor::usedChanged);
+    connect(platformScreen, &PlatformScreen::nameChanged, this, &ScreenAdaptor::nameChanged);
+    connect(platformScreen, &PlatformScreen::outputTypeChanged, this, &ScreenAdaptor::outputTypeChanged);
+    connect(platformScreen, &PlatformScreen::scaleChanged, this, &ScreenAdaptor::scaleChanged);
+    connect(platformScreen, &PlatformScreen::formFactorChanged, this, &ScreenAdaptor::formFactorChanged);
+    connect(platformScreen, &PlatformScreen::powerModeChanged, this, &ScreenAdaptor::powerModeChanged);
+    connect(platformScreen, &PlatformScreen::physicalSizeChanged, this, &ScreenAdaptor::physicalSizeChanged);
+    connect(platformScreen, &PlatformScreen::positionChanged, this, &ScreenAdaptor::positionChanged);
+    connect(platformScreen, &PlatformScreen::activeChanged, this, &ScreenAdaptor::activeChanged);
+    connect(platformScreen, &PlatformScreen::currentModeIndexChanged, this, &ScreenAdaptor::currentModeIndexChanged);
+    connect(platformScreen, &PlatformScreen::availableModesChanged, this, &ScreenAdaptor::updateScreenModes);
+    connect(screen, &QScreen::orientationChanged, this, &ScreenAdaptor::orientationChanged);
+
     updateScreenModes();
 }
 
@@ -61,73 +62,61 @@ ScreenAdaptor::~ScreenAdaptor()
 
 qtmir::OutputId ScreenAdaptor::outputId() const
 {
-    if (!m_screen) return qtmir::OutputId(-1);
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return qtmir::OutputId(-1);
-
     return platformScreen->outputId();
 }
 
 bool ScreenAdaptor::used() const
 {
-    if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return false;
-
     return platformScreen->used();
 }
 
 QString ScreenAdaptor::name() const
 {
-    if (!m_screen) return QString();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return QString();
-
     return platformScreen->name();
 }
 
 float ScreenAdaptor::scale() const
 {
-    if (!m_screen) return 1.0;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return 1.0;
-
     return platformScreen->scale();
 }
 
 QSizeF ScreenAdaptor::physicalSize() const
 {
-    if (!m_screen) return QSizeF();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return QSizeF();
-
     return platformScreen->physicalSize();
 }
 
 qtmir::FormFactor ScreenAdaptor::formFactor() const
 {
-    if (!m_screen) return qtmir::FormFactorUnknown;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return qtmir::FormFactorUnknown;
-
     return static_cast<qtmir::FormFactor>(platformScreen->formFactor()); // needs compile time check
 }
 
 qtmir::OutputTypes ScreenAdaptor::outputType() const
 {
-    if (!m_screen) return qtmir::Unknown;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return qtmir::Unknown;
-
     return platformScreen->outputType();
+}
+
+MirPowerMode ScreenAdaptor::powerMode() const
+{
+    auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
+    return platformScreen->powerMode();
+}
+
+Qt::ScreenOrientation ScreenAdaptor::orientation() const
+{
+    auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
+    return platformScreen->orientation();
 }
 
 QPoint ScreenAdaptor::position() const
 {
-    if (!m_screen) return QPoint();
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return QPoint();
-
     return platformScreen->geometry().topLeft();
 }
 
@@ -138,19 +127,13 @@ QQmlListProperty<qtmir::ScreenMode> ScreenAdaptor::availableModes()
 
 uint ScreenAdaptor::currentModeIndex() const
 {
-    if (!m_screen) return -1;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return -1;
-
     return platformScreen->currentModeIndex();
 }
 
 bool ScreenAdaptor::isActive() const
 {
-    if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return false;
-
     return platformScreen->isActive();
 }
 
@@ -167,35 +150,24 @@ qtmir::ScreenConfiguration *ScreenAdaptor::beginConfiguration() const
 
 bool ScreenAdaptor::applyConfiguration(qtmir::ScreenConfiguration *configuration)
 {
-    if (!m_screen) return false;
-    auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return false;
-
     return m_screensController->setOutputConfiguration(*configuration);
 }
 
 void ScreenAdaptor::setActive(bool active)
 {
-    if (!m_screen) return;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return;
-
     platformScreen->setActive(active);
 }
 
 void ScreenAdaptor::updateScreenModes()
 {
-    if (!m_screen) return;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    if (!platformScreen) return;
 
     qDeleteAll(m_modes);
     m_modes.clear();
     Q_FOREACH(auto mode, platformScreen->availableModes()) {
-        auto newMode(new qtmir::ScreenMode);
+        auto newMode(new qtmir::ScreenMode(mode.first, mode.second));
         QQmlEngine::setObjectOwnership(newMode, QQmlEngine::CppOwnership);
-        newMode->refreshRate = mode.first;
-        newMode->size = mode.second;
         m_modes.append(newMode);
     }
 

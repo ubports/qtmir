@@ -41,6 +41,8 @@ public:
     QSizeF physicalSize() const override;
     qtmir::FormFactor formFactor() const override;
     qtmir::OutputTypes outputType() const override;
+    MirPowerMode powerMode() const override;
+    Qt::ScreenOrientation orientation() const override;
     QPoint position() const override;
     QQmlListProperty<qtmir::ScreenMode> availableModes() override;
     uint currentModeIndex() const override;

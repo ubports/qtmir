@@ -91,6 +91,8 @@ Q_SIGNALS:
     void outputTypeChanged();
     void scaleChanged();
     void formFactorChanged();
+    void orientationChanged();
+    void powerModeChanged();
     void currentModeIndexChanged();
     void positionChanged();
     void modeChanged();

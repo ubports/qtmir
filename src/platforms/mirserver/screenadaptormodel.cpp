@@ -78,7 +78,7 @@ void ScreenAdaptorModel::onScreenRemoved(QScreen *qscreen)
             Q_EMIT screenRemoved(adaptor);
 
             iter.remove();
-            adaptor->deleteLater();
+            delete adaptor;
             break;
         }
         index++;

@@ -46,6 +46,8 @@ class Screen : public QObject
     Q_PROPERTY(qtmir::OutputTypes outputType READ outputType NOTIFY outputTypeChanged)
     Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
     Q_PROPERTY(qtmir::FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
+    Q_PROPERTY(MirPowerMode powerMode READ powerMode NOTIFY powerModeChanged)
+    Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
     Q_PROPERTY(QPoint position READ position NOTIFY positionChanged)
     Q_PROPERTY(uint currentModeIndex READ currentModeIndex NOTIFY currentModeIndexChanged)
     Q_PROPERTY(QQmlListProperty<qtmir::ScreenMode> availableModes READ availableModes NOTIFY availableModesChanged)
@@ -59,6 +61,8 @@ public:
     virtual QSizeF physicalSize() const = 0;
     virtual qtmir::FormFactor formFactor() const = 0;
     virtual qtmir::OutputTypes outputType() const = 0;
+    virtual MirPowerMode powerMode() const = 0;
+    virtual Qt::ScreenOrientation orientation() const = 0;
     virtual QPoint position() const = 0;
     virtual QQmlListProperty<qtmir::ScreenMode> availableModes() = 0;
     virtual uint currentModeIndex() const = 0;
@@ -76,6 +80,8 @@ Q_SIGNALS:
     void outputTypeChanged();
     void scaleChanged();
     void formFactorChanged();
+    void powerModeChanged();
+    void orientationChanged();
     void positionChanged();
     void currentModeIndexChanged();
     void physicalSizeChanged();
@@ -93,9 +99,8 @@ class ScreenMode : public QObject
     Q_PROPERTY(QSize size MEMBER size CONSTANT)
 public:
     ScreenMode():refreshRate(-1) {}
-    ScreenMode(const ScreenMode& other)
-        : QObject(nullptr),
-          refreshRate{other.refreshRate},size{other.size}
+    ScreenMode(qreal refreshRate, const QSize& size)
+          : refreshRate{refreshRate},size{size}
     {}
 
     qreal refreshRate;
@@ -123,5 +128,7 @@ typedef QVector<ScreenConfiguration> ScreenConfigurationList;
 Q_DECLARE_METATYPE(qtmir::Screen*)
 Q_DECLARE_METATYPE(qtmir::ScreenMode*)
 Q_DECLARE_METATYPE(qtmir::ScreenConfiguration*)
+
+Q_DECLARE_METATYPE(MirPowerMode)
 
 #endif // SCREEN_H
