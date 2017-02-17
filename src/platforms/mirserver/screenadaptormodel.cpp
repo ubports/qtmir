@@ -27,10 +27,10 @@
 #define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "Screens[" << (void*)this <<"]::" << __func__
 
 ScreenAdaptorModel::ScreenAdaptorModel(QObject *parent)
-    : qtmir::ScreenModel(parent)
+    : qtmir::Screens(parent)
 {
     if (qGuiApp->platformName() != QLatin1String("mirserver")) {
-        qCritical("Not using 'mirserver' QPA plugin. Using Screens may produce unknown results.");
+        qFatal("Can't use the ScreenAdaptorModel model without using 'mirserver' QPA plugin.");
     }
 
     connect(qGuiApp, &QGuiApplication::screenAdded, this, &ScreenAdaptorModel::onScreenAdded);
@@ -40,6 +40,11 @@ ScreenAdaptorModel::ScreenAdaptorModel(QObject *parent)
         m_screenList.push_back(new ScreenAdaptor(screen));
     }
     DEBUG_MSG << "(" << m_screenList << ")";
+
+    // Register types.
+    qRegisterMetaType<qtmir::ScreenConfiguration*>("qtmir::ScreenConfiguration*");
+    qRegisterMetaType<qtmir::FormFactor>("qtmir::FormFactor");
+    qRegisterMetaType<qtmir::OutputTypes>("qtmir::OutputTypes");
 }
 
 ScreenAdaptorModel::~ScreenAdaptorModel()

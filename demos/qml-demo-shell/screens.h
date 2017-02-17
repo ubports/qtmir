@@ -14,24 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREENS_H
-#define SCREENS_H
-
-#include "screentypes.h"
+#ifndef UNITY_SCREENS_H
+#define UNITY_SCREENS_H
 
 #include <QAbstractListModel>
+#include <QSharedPointer>
 
-class QScreen;
-class ScreenAdapter;
-
-namespace qtmir {
+namespace qtmir
+{
+class Screen;
+class Screens;
+}
 
 class Screens : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(QVariant activeScreen READ activeScreen WRITE activateScreen NOTIFY activeScreenChanged)
-
 public:
     enum ItemRoles {
         ScreenRole = Qt::UserRole + 1
@@ -45,26 +42,17 @@ public:
     QVariant data(const QModelIndex &index, int role = ScreenRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    int count() const;
-    QVariant activeScreen() const;
-
-public Q_SLOTS:
-    void activateScreen(const QVariant& index);
-
 Q_SIGNALS:
-    void countChanged();
-    void activeScreenChanged();
-    void screenAdded(ScreenAdapter *screen);
-    void screenRemoved(ScreenAdapter *screen);
+    void screenAdded(qtmir::Screen* screen);
+    void screenRemoved(qtmir::Screen* screen);
 
 private Q_SLOTS:
-    void onScreenAdded(QScreen *screen);
-    void onScreenRemoved(QScreen *screen);
+    void onScreenAdded(qtmir::Screen *screen);
+    void onScreenRemoved(qtmir::Screen *screen);
 
 private:
-    QList<ScreenAdapter *> m_screenList;
+    QList<qtmir::Screen*> m_screenList;
+    QSharedPointer<qtmir::Screens> m_wrapped;
 };
-
-} // namespace qtmir
 
 #endif // SCREENS_H

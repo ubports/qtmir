@@ -1,5 +1,5 @@
 import QtQuick 2.5
-import Unity.Screens 0.1
+import QtMir 0.1
 
 Instantiator {
     id: root

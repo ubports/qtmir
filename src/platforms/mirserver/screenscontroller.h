@@ -23,7 +23,7 @@
 #include <QVector>
 
 // local
-#include "customscreenconfiguration.h"
+#include "qtmir/screen.h"
 
 #include <memory>
 
@@ -45,11 +45,11 @@ public:
                                const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
                                QObject *parent = 0);
 
-    CustomScreenConfigurationList configuration();
-    bool setConfiguration(const CustomScreenConfigurationList &newConfig);
+    qtmir::ScreenConfigurationList configuration();
+    bool setConfiguration(const qtmir::ScreenConfigurationList &newConfig);
 
-    CustomScreenConfiguration outputConfiguration(qtmir::OutputId outputId);
-    bool setOutputConfiguration(const CustomScreenConfiguration &newConfig);
+    qtmir::ScreenConfiguration outputConfiguration(qtmir::OutputId outputId);
+    bool setOutputConfiguration(const qtmir::ScreenConfiguration &newConfig);
 
 private:
     const std::shared_ptr<ScreensModel> m_screensModel;

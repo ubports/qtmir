@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,28 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UNITY_SCREEN_TYPES_H
-#define UNITY_SCREEN_TYPES_H
+#ifndef QTMIR_SCREENS_H
+#define QTMIR_SCREENS_H
 
 #include <QObject>
-#include <QSize>
+#include <QVector>
 
-class ScreenMode : public QObject
+class QScreen;
+
+namespace qtmir
+{
+class Screen;
+
+class Screens : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal refreshRate MEMBER refreshRate CONSTANT)
-    Q_PROPERTY(QSize size MEMBER size CONSTANT)
 public:
-    ScreenMode():refreshRate(-1) {}
-    ScreenMode(const ScreenMode& other)
-        : QObject(nullptr),
-          refreshRate{other.refreshRate},size{other.size}
-    {}
+    Screens(QObject *parent = 0): QObject(parent) {}
+    ~Screens() = default;
 
-    qreal refreshRate;
-    QSize size;
+    virtual QVector<qtmir::Screen*> screens() const = 0;
+
+Q_SIGNALS:
+    void screenAdded(qtmir::Screen *screen);
+    void screenRemoved(qtmir::Screen *screen);
 };
 
-Q_DECLARE_METATYPE(ScreenMode)
+} // namespace qtmir
 
-#endif //UNITY_SCREEN_TYPES_H
+#endif // QTMIR_SCREENS_H

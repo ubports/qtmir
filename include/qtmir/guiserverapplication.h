@@ -39,7 +39,7 @@ namespace qtmir
 
 class WindowModelNotifier;
 class AppNotifier;
-class ScreenModel;
+class Screens;
 
 class GuiServerApplication : public QGuiApplication
 {
@@ -47,7 +47,7 @@ class GuiServerApplication : public QGuiApplication
 
     Q_PROPERTY(qtmir::AppNotifier* appNotifier READ appNotifier CONSTANT)
     Q_PROPERTY(qtmir::WindowModelNotifier* windowModelNotifier READ windowModelNotifier CONSTANT)
-    Q_PROPERTY(qtmir::ScreenModel* screenModel READ screenModel CONSTANT)
+    Q_PROPERTY(qtmir::Screens* screenModel READ screenModel CONSTANT)
 
 public:
     explicit GuiServerApplication(int &argc,
@@ -57,7 +57,7 @@ public:
 
     qtmir::AppNotifier* appNotifier() const;
     qtmir::WindowModelNotifier* windowModelNotifier() const;
-    qtmir::ScreenModel* screenModel() const;
+    qtmir::Screens* screenModel() const;
 
 Q_SIGNALS:
     // invoked by screen model

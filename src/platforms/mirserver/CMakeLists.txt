@@ -78,12 +78,12 @@ add_library(qtmirserver-nomirserver OBJECT
     screenadaptor.cpp
     screenadaptormodel.cpp
     tracepoints.c
-    screentypes.h
+    qtmir.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
 
-    ${CMAKE_SOURCE_DIR}/include/qtmir/screenmodel.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/screens.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
@@ -91,6 +91,8 @@ add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/include/qtmir/appnotifier.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/screen.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/types.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/qtmir.h
 )
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 

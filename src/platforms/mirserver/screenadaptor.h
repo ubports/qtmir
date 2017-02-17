@@ -47,10 +47,10 @@ public:
     bool isActive() const override;
     void setActive(bool active) override;
 
-    qtmir::ScreenConfig *beginConfiguration() const override;
-    bool applyConfiguration(qtmir::ScreenConfig *configuration) override;
+    QScreen *qscreen() const override;
 
-    QScreen *qscreen() const;
+    qtmir::ScreenConfiguration *beginConfiguration() const override;
+    bool applyConfiguration(qtmir::ScreenConfiguration *configuration) override;
 
 private Q_SLOTS:
     void updateScreenModes();

@@ -28,9 +28,9 @@
 #include <mir_toolkit/common.h>
 
 // local
+#include "qtmir/types.h"
 #include "cursor.h"
 #include "screenplatformwindow.h"
-#include "screentypes.h"
 
 class QOrientationSensor;
 namespace mir {

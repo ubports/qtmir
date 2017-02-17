@@ -16,7 +16,7 @@
 
 #include "qtmir/guiserverapplication.h"
 #include "qmirserver.h"
-#include "screenadaptormodel.h"
+#include "qtmir/qtmir.h"
 
 #include <QDebug>
 
@@ -41,7 +41,7 @@ void init(int &argc, char **argv, std::initializer_list<std::function<void(QMirS
 
 struct GuiServerApplication::Private
 {
-    QScopedPointer<ScreenAdaptorModel> screenModel{new ScreenAdaptorModel()};
+    QSharedPointer<qtmir::Screens> screenModel{qtmir::get_screen_model()};
 };
 
 GuiServerApplication::GuiServerApplication(int &argc,
@@ -68,7 +68,7 @@ WindowModelNotifier *GuiServerApplication::windowModelNotifier() const
     return mirServer->windowModelNotifier();
 }
 
-ScreenModel *GuiServerApplication::screenModel() const
+qtmir::Screens *GuiServerApplication::screenModel() const
 {
     return d->screenModel.data();
 }

@@ -20,17 +20,12 @@
 #include "platformscreen.h"
 #include "screenscontroller.h"
 #include "nativeinterface.h"
-#include "customscreenconfiguration.h"
 
 // Qt
 #include <QScreen>
 #include <QQmlEngine>
 #include <QDebug>
 #include <QGuiApplication>
-
-namespace
-{
-}
 
 ScreenAdaptor::ScreenAdaptor(QScreen* screen, QObject* parent)
     : qtmir::Screen(parent)
@@ -164,20 +159,19 @@ QScreen *ScreenAdaptor::qscreen() const
     return m_screen.data();
 }
 
-qtmir::ScreenConfig *ScreenAdaptor::beginConfiguration() const
+qtmir::ScreenConfiguration *ScreenAdaptor::beginConfiguration() const
 {
     auto config = m_screensController->outputConfiguration(this->outputId());
-    return new ScreenConfiguration(config);
+    return new qtmir::ScreenConfiguration(config);
 }
 
-bool ScreenAdaptor::applyConfiguration(qtmir::ScreenConfig *configuration)
+bool ScreenAdaptor::applyConfiguration(qtmir::ScreenConfiguration *configuration)
 {
     if (!m_screen) return false;
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
     if (!platformScreen) return false;
 
-    auto newConfig = std::make_unique<ScreenConfiguration>(*configuration);
-    return m_screensController->setOutputConfiguration(*newConfig);
+    return m_screensController->setOutputConfiguration(*configuration);
 }
 
 void ScreenAdaptor::setActive(bool active)

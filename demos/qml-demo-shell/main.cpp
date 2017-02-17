@@ -25,6 +25,8 @@
 #include <libintl.h>
 #include "../paths.h"
 #include "pointerposition.h"
+#include "screenwindow.h"
+#include "screens.h"
 
 #include <qtmir/guiserverapplication.h>
 #include <qtmir/displayconfigurationpolicy.h>
@@ -190,6 +192,14 @@ int main(int argc, const char *argv[])
 
     qmlRegisterSingletonType<PointerPosition>("Mir.Pointer", 0, 1, "PointerPosition",
         [](QQmlEngine*, QJSEngine*) -> QObject* { return PointerPosition::instance(); });
+
+    qmlRegisterType<ScreenWindow>("QtMir", 0, 1, "ScreenWindow");
+    qmlRegisterSingletonType<Screens>("QtMir", 0, 1, "Screens",
+        [](QQmlEngine*, QJSEngine*) -> QObject* {
+            static Screens* screens = new Screens();
+            return screens;
+    });
+    qmlRegisterUncreatableType<qtmir::ScreenMode>("QtMir", 0, 1, "ScreenMode", "ScreenMode is not creatable.");
 
     qmlEngine->load(::qmlDirectory() + "qml-demo-shell/qml-demo-shell.qml");
 
