@@ -19,7 +19,7 @@
 
 #include "promptsession.h"
 #include <Unity/Application/application.h>
-#include <Unity/Application/mirsurfaceitem.h>
+#include <Unity/Application/session.h>
 
 #include <QSignalSpy>
 

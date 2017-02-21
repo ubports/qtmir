@@ -99,7 +99,7 @@ public:
 
     virtual pid_t pid() const = 0;
 
-    // For SessionManager use
+    // For TaskController use
 
     virtual void addChildSession(SessionInterface* session) = 0;
     virtual void insertChildSession(uint index, SessionInterface* session) = 0;
