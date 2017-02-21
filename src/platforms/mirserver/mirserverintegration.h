@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -27,7 +27,7 @@ class QMirServer;
 class MirServerIntegration : public QPlatformIntegration
 {
 public:
-    MirServerIntegration(int &argc, char **argv);
+    MirServerIntegration();
     ~MirServerIntegration();
 
     bool hasCapability(QPlatformIntegration::Capability cap) const override;

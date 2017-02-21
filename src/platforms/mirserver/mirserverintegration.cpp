@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -50,11 +50,11 @@
 namespace mg = mir::graphics;
 using qtmir::Clipboard;
 
-MirServerIntegration::MirServerIntegration(int &argc, char **argv)
+MirServerIntegration::MirServerIntegration()
     : m_accessibility(new QPlatformAccessibility())
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
-    , m_mirServer(new QMirServer(argc, argv))
+    , m_mirServer(new QMirServer)
     , m_nativeInterface(nullptr)
 {
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the
