@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,6 +20,8 @@
 #include "promptsession.h"
 #include <Unity/Application/application.h>
 #include <Unity/Application/mirsurfaceitem.h>
+
+#include <QSignalSpy>
 
 using namespace qtmir;
 using mir::scene::MockSession;
@@ -340,4 +342,56 @@ TEST_F(SessionTests, CloseAllSurfaceOnSessionClose)
 
     delete surface2;
     delete surface1;
+}
+
+TEST_F(SessionTests, EmitFocusedChangedWhenAddingAlreadyFocusedSurface)
+{
+    using namespace testing;
+
+    const QString appId("test-app");
+    const pid_t procId = 5551;
+
+    auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
+
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    surface->setFocused(true);
+    surface->setReady();
+
+    QSignalSpy spy(session.get(), SIGNAL(focusedChanged(bool)));
+
+    session->registerSurface(surface);
+
+    EXPECT_EQ(spy.count(), 1);
+    EXPECT_EQ(spy.takeFirst().at(0).toBool(), true);
+
+    delete surface;
+}
+
+TEST_F(SessionTests, AlsoKillClosingSurfacesWhenKilled)
+{
+    using namespace testing;
+
+    const QString appId("test-app");
+    const pid_t procId = 5551;
+
+    auto mirSession = std::make_shared<MockSession>(appId.toStdString(), procId);
+
+    auto session = std::make_shared<qtmir::Session>(mirSession, promptSessionManager);
+
+    FakeMirSurface *surface = new FakeMirSurface;
+    surface->setReady();
+
+    session->registerSurface(surface);
+
+    surface->close();
+
+    ASSERT_EQ(surface->live(), true);
+
+    session->setLive(false);
+
+    EXPECT_EQ(surface->live(), false);
+
+    delete surface;
 }
