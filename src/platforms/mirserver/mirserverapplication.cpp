@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "qtmir/guiserverapplication.h"
+#include "qtmir/mirserverapplication.h"
 #include "qmirserver.h"
 #include "qtmir/qtmir.h"
 
@@ -39,12 +39,12 @@ void init(int &argc, char **argv, std::initializer_list<std::function<void(QMirS
 
 }
 
-struct GuiServerApplication::Private
+struct MirServerApplication::Private
 {
     QSharedPointer<qtmir::Screens> screenModel{qtmir::get_screen_model()};
 };
 
-GuiServerApplication::GuiServerApplication(int &argc,
+MirServerApplication::MirServerApplication(int &argc,
                                            char **argv,
                                            std::initializer_list<std::function<void(QMirServer&)>> options)
     : QGuiApplication((init(argc, argv, options), argc), argv) // comma operator to ensure init called before QGuiApplication
@@ -53,22 +53,22 @@ GuiServerApplication::GuiServerApplication(int &argc,
     Q_UNUSED(options);
 }
 
-GuiServerApplication::~GuiServerApplication()
+MirServerApplication::~MirServerApplication()
 {
     mirServer.clear();
 }
 
-AppNotifier *GuiServerApplication::appNotifier() const
+AppNotifier *MirServerApplication::appNotifier() const
 {
     return mirServer->appNotifier();
 }
 
-WindowModelNotifier *GuiServerApplication::windowModelNotifier() const
+WindowModelNotifier *MirServerApplication::windowModelNotifier() const
 {
     return mirServer->windowModelNotifier();
 }
 
-qtmir::Screens *GuiServerApplication::screenModel() const
+qtmir::Screens *MirServerApplication::screenModel() const
 {
     return d->screenModel.data();
 }

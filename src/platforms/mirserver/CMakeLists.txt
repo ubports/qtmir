@@ -52,38 +52,69 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 # These files will compile without mirserver-dev
-add_library(qtmirserver-nomirserver OBJECT
+add_library(qpa-mirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     logging.cpp
+    plugin.cpp
     shelluuid.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    openglcontextfactory.cpp openglcontextfactory.h
-    initialsurfacesizes.cpp initialsurfacesizes.h
-    mircursorimages.cpp
-    displayconfigurationpolicy.cpp
     mirsingleton.cpp
+    wrappedsessionauthorizer.cpp
     promptsessionlistener.cpp
-    mirserverstatuslistener.cpp
-    screenscontroller.cpp
+    displayconfigurationstorage.cpp
     nativeinterface.cpp
-    qtcompositor.cpp
     services.cpp
     windowcontroller.cpp
-    wrappedwindowmanagementpolicy.cpp
-    wrappedsessionauthorizer.cpp
-    mirserverhooks.cpp mirserverhooks.h
-    setqtcompositor.cpp setqtcompositor.h
-    displayconfigurationstorage.cpp
+    tracepoints.c
+    surfaceobserver.cpp
+    initialsurfacesizes.cpp
     screenadaptor.cpp
     screenadaptormodel.cpp
-    tracepoints.c
     qtmir.cpp
-# We need to run moc on these headers
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+)
 
-    ${CMAKE_SOURCE_DIR}/include/qtmir/screens.h
+set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
+
+include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
+
+# These files will only compile with mirserver-dev
+add_library(qpa-mirserver-mirserver OBJECT
+    openglcontextfactory.cpp openglcontextfactory.h
+    mircursorimages.cpp
+    screenscontroller.cpp
+    qtcompositor.cpp
+    displayconfigurationpolicy.cpp
+    wrappedwindowmanagementpolicy.cpp
+    mirdisplayconfigurationobserver.cpp
+    mirserverhooks.cpp mirserverhooks.h
+    setqtcompositor.cpp setqtcompositor.h
+    eventdispatch.cpp eventdispatch.h
+    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+)
+
+# These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
+set(MIRSERVER_QPA_PLUGIN_SRC
+    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+    cursor.cpp
+    eventbuilder.cpp
+    qteventfeeder.cpp
+    qmirserver.cpp
+    qmirserver_p.cpp
+    platformscreen.cpp
+    screenplatformwindow.cpp
+    screensmodel.cpp
+    mirserverintegration.cpp
+    miropenglcontext.cpp
+    offscreensurface.cpp
+    inputdeviceobserver.cpp
+    mirserverapplication.cpp
+
+# We need to run moc on these headers
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+
+    ${CMAKE_SOURCE_DIR}/include/qtmir/mirserverapplication.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
@@ -91,42 +122,18 @@ add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/include/qtmir/appnotifier.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/screen.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/screens.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/types.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/qtmir.h
-)
-set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 
-include(UseLttngGenTp)
-add_lttng_gen_tp(NAME tracepoints)
-
-set(QTMIRSERVER_PLUGIN_SRC
-    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
-    cursor.cpp
-    eventbuilder.cpp
-    guiserverapplication.cpp
-    inputdeviceobserver.cpp
-    miropenglcontext.cpp
-    mirserverintegration.cpp
-    offscreensurface.cpp
-    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
-    qmirserver.cpp
-    qmirserver_p.cpp
-    qteventfeeder.cpp
-    screensmodel.cpp
-    platformscreen.cpp
-    screenplatformwindow.cpp
-    surfaceobserver.cpp
-    mirdisplayconfigurationobserver.cpp
-    $<TARGET_OBJECTS:miral-prototypes>
-
-# We need to run moc on these headers
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
-    ${CMAKE_SOURCE_DIR}/include/qtmir/guiserverapplication.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
 )
 
 add_library(qtmirserver SHARED
-    ${QTMIRSERVER_PLUGIN_SRC}
-    $<TARGET_OBJECTS:qtmirserver-nomirserver>
+    ${MIRSERVER_QPA_PLUGIN_SRC}
+    $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
+    $<TARGET_OBJECTS:qpa-mirserver-mirserver>
+    $<TARGET_OBJECTS:miral-prototypes>
 )
 
 target_link_libraries(qtmirserver
@@ -165,6 +172,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qtmirserver.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
     @ONLY
 )
+
+include(UseLttngGenTp)
+add_lttng_gen_tp(NAME tracepoints)
 
 install(
   TARGETS qtmirserver
