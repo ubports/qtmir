@@ -10,7 +10,6 @@ include_directories(
     ${GIO_INCLUDE_DIRS}
     ${GIO_UNIX_INCLUDE_DIRS}
     ${MIRAL_INCLUDE_DIRS}
-    ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${PROCESS_CPP_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_API_INCLUDE_DIRS}
@@ -74,7 +73,14 @@ add_library(unityapplicationplugin SHARED
     ${QMLMIRPLUGIN_SRC}
 )
 
-target_link_libraries(unityapplicationplugin
+# Frig for files that still rely on mirserver-dev
+string(REPLACE ";" " -I" QTMIR_ADD_MIRSERVER "-I ${MIRSERVER_INCLUDE_DIRS}")
+set_source_files_properties(mirsurface.cpp         PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
+set_source_files_properties(mirbuffersgtexture.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
+set_source_files_properties(surfacemanager.cpp     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
+
+target_link_libraries(
+    unityapplicationplugin
 
     ${CMAKE_THREAD_LIBS_INIT}
 

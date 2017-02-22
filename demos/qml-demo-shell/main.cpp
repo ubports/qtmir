@@ -26,7 +26,7 @@
 #include "../paths.h"
 #include "pointerposition.h"
 
-#include <qtmir/guiserverapplication.h>
+#include <qtmir/mirserverapplication.h>
 #include <qtmir/displayconfigurationpolicy.h>
 #include <qtmir/sessionauthorizer.h>
 #include <qtmir/windowmanagementpolicy.h>
@@ -179,10 +179,10 @@ int main(int argc, const char *argv[])
 
     setenv("QT_QPA_PLATFORM_PLUGIN_PATH", qPrintable(::qpaPluginDirectory()), 1 /* overwrite */);
 
-    qtmir::GuiServerApplication::setApplicationName("api-demo-shell");
-    qtmir::GuiServerApplication *application;
+    qtmir::MirServerApplication::setApplicationName("api-demo-shell");
+    qtmir::MirServerApplication *application;
 
-    application = new qtmir::GuiServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy, displayStorage });
+    application = new qtmir::MirServerApplication(argc, (char**)argv, { displayConfig, sessionAuth, wmPolicy, displayStorage });
     auto qmlEngine = new QQmlApplicationEngine(application);
     qmlEngine->setBaseUrl(QUrl::fromLocalFile(::qmlDirectory() + "api-demo-shell"));
     qmlEngine->addImportPath(::qmlPluginDirectory());

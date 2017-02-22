@@ -82,10 +82,9 @@ void ScreensModel::onCompositorStarting()
     DEBUG_MSG << "()";
     m_compositing = true;
 
-    update();
+    update(); // must handle all hardware changes before starting the renderer
 
-    // (Re)Start Qt's render thread by setting all windows with a corresponding screen to exposed.
-    allWindowsSetExposed(true);
+    startRenderer();
 }
 
 void ScreensModel::onCompositorStopping()
@@ -93,9 +92,7 @@ void ScreensModel::onCompositorStopping()
     DEBUG_MSG << "()";
     m_compositing = false;
 
-    // Stop Qt's render threads by setting all its windows it obscured. Must
-    // block until all windows have their GL contexts released.
-    allWindowsSetExposed(false);
+    haltRenderer(); // must stop all rendering before handling any hardware changes
 
     update();
 }
@@ -235,15 +232,35 @@ bool ScreensModel::canUpdateExistingScreen(const PlatformScreen *screen, const m
     return canUpdateExisting;
 }
 
-void ScreensModel::allWindowsSetExposed(bool exposed)
+/*
+ * ScreensModel::startRenderer()
+ * (Re)Start Qt's render thread by setting all windows with a corresponding screen to exposed.
+ * It is asynchronous, it returns before the render thread(s) have started.
+ */
+void ScreensModel::startRenderer()
+{
+    Q_FOREACH (const auto screen, m_screenList) {
+        // Only set windows exposed on displays which are used and turned on, as the GL context Mir provided
+        // is invalid in that situation
+        if (screen->used() && screen->powerMode() == mir_power_mode_on) {
+            Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
+                window->setExposed(true);
+            }
+        }
+    }
+}
+
+/*
+ * ScreensModel::haltRenderer()
+ * Stop Qt's render thread(s) by setting all windows with a corresponding screen to not exposed.
+ * It is blocking, it returns after the render thread(s) have all stopped.
+ */
+void ScreensModel::haltRenderer()
 {
     Q_FOREACH (const auto screen, m_screenList) {
 
-        // don't expose unused screen windows.
-        if (!screen->used() && exposed) continue;
-
         Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
-            window->setExposed(exposed);
+            window->setExposed(false);
         }
     }
 }

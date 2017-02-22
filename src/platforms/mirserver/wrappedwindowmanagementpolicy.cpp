@@ -16,6 +16,7 @@
 
 #include "wrappedwindowmanagementpolicy.h"
 
+#include "eventdispatch.h"
 #include "initialsurfacesizes.h"
 #include "screensmodel.h"
 #include "surfaceobserver.h"
@@ -25,8 +26,8 @@
 
 #include "mirqtconversion.h"
 #include "qmirserver.h"
+#include "tracepoints.h"
 
-#include <mir/scene/surface.h>
 #include <QDebug>
 
 using namespace mir::geometry;
@@ -243,11 +244,7 @@ namespace qtmir
             });
         }
 
-        auto e = reinterpret_cast<MirEvent const*>(event); // naughty
-
-        if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-            surface->consume(e);
-        }
+        dispatchInputEvent(window, mir_keyboard_event_input_event(event));
     }
 
     void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
@@ -259,11 +256,7 @@ namespace qtmir
             }
         });
 
-        auto e = reinterpret_cast<MirEvent const*>(event); // naughty
-
-        if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-            surface->consume(e);
-        }
+        dispatchInputEvent(window, mir_touch_event_input_event(event));
     }
 
     void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
@@ -277,11 +270,8 @@ namespace qtmir
                 }
             });
         }
-        auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
-        if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-            surface->consume(e);
-        }
+        dispatchInputEvent(window, mir_pointer_event_input_event(event));
     }
 
     /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
