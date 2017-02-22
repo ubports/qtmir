@@ -18,7 +18,8 @@
 #define QTMIR_WINDOWMANAGEMENTPOLICY_H
 
 // miral
-#include "miral/canonical_window_manager.h"
+#include <miral/canonical_window_manager.h>
+#include <miral/workspace_policy.h>
 #include <miral/set_window_managment_policy.h>
 
 // Unity API
@@ -37,7 +38,8 @@ class WindowManagementPolicyPrivate;
 /*
     Provides window management callbacks for window behaviour customization
  */
-class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy
+class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy,
+                               public miral::WorkspacePolicy
 {
 public:
 

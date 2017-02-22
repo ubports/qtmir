@@ -552,3 +552,15 @@ void WrappedWindowManagementPolicy::forceClose(const miral::Window &window)
 {
     m_wrapper->forceClose(window);
 }
+
+void WrappedWindowManagementPolicy::advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                               const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_adding_to_workspace(workspace, windows);
+}
+
+void WrappedWindowManagementPolicy::advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                                   const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_removing_from_workspace(workspace, windows);
+}
