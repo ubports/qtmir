@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "compositortextureprovider.h"
 #include "mirsurface.h"
 #include "mirsurfacelistmodel.h"
 #include "namedcursor.h"
 #include "session_interface.h"
 #include "timer.h"
 #include "timestamp.h"
-#include "compositortextureprovider.h"
 
 // from common dir
 #include <debughelpers.h>
@@ -340,6 +340,43 @@ bool MirSurface::updateTexture(qintptr userId)
     return updateTextureLocked(userId, compositorTexure);
 }
 
+bool MirSurface::updateTextureLocked(qintptr userId, CompositorTexture *compositorTexture)
+{
+    auto texture = qWeakPointerCast<MirBufferSGTexture, QSGTexture>(compositorTexture->texture()).lock();
+    if (!texture) return false;
+
+    if (compositorTexture->isUpToDate()) {
+        return texture->hasBuffer();
+    }
+
+    auto renderables = m_surface->generate_renderables((void*)userId);
+
+    if (renderables.size() > 0 &&
+            (m_surface->buffers_ready_for_compositor((void*)userId) > 0 || !texture->hasBuffer())
+        ) {
+        // Avoid holding two buffers for the compositor at the same time. Thus free the current
+        // before acquiring the next
+        texture->freeBuffer();
+        texture->setBuffer(renderables[0]->buffer());
+        compositorTexture->incrementFrame();
+
+        if (texture->textureSize() != m_size) {
+            m_size = texture->textureSize();
+            QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+        }
+
+        compositorTexture->setUpToDate(true);
+    }
+
+    if (m_surface->buffers_ready_for_compositor((void*)userId) > 0) {
+        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+        // queued since the timer lives in a different thread
+        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+    }
+
+    return texture->hasBuffer();
+}
+
 bool MirSurface::numBuffersReadyForCompositor(qintptr userId)
 {
     QMutexLocker locker(&m_mutex);
@@ -417,43 +454,6 @@ void MirSurface::updateVisible()
         m_visible = visible;
         Q_EMIT visibleChanged(visible);
     }
-}
-
-bool MirSurface::updateTextureLocked(qintptr userId, CompositorTexture *compositorTexture)
-{
-    auto texture = qWeakPointerCast<MirBufferSGTexture, QSGTexture>(compositorTexture->texture()).lock();
-    if (!texture) return false;
-
-    if (compositorTexture->isUpToDate()) {
-        return texture->hasBuffer();
-    }
-
-    auto renderables = m_surface->generate_renderables((void*)userId);
-
-    if (renderables.size() > 0 &&
-            (m_surface->buffers_ready_for_compositor((void*)userId) > 0 || !texture->hasBuffer())
-        ) {
-        // Avoid holding two buffers for the compositor at the same time. Thus free the current
-        // before acquiring the next
-        texture->freeBuffer();
-        texture->setBuffer(renderables[0]->buffer());
-        compositorTexture->incrementFrame();
-
-        if (texture->textureSize() != m_size) {
-            m_size = texture->textureSize();
-            QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
-        }
-
-        compositorTexture->setUpToDate(true);
-    }
-
-    if (m_surface->buffers_ready_for_compositor((void*)userId) > 0) {
-        // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
-        // queued since the timer lives in a different thread
-        QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
-    }
-
-    return texture->hasBuffer();
 }
 
 void MirSurface::close()
