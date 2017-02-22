@@ -103,13 +103,13 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     miropenglcontext.cpp
     offscreensurface.cpp
     inputdeviceobserver.cpp
-    guiserverapplication.cpp
+    mirserverapplication.cpp
 
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
 
-    ${CMAKE_SOURCE_DIR}/include/qtmir/guiserverapplication.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/mirserverapplication.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
