@@ -32,8 +32,6 @@ include_directories(
 include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
-    ${MIRCOMMON_INCLUDE_DIRS}
-    ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
@@ -63,33 +61,36 @@ add_library(qpa-mirserver-nomirserver OBJECT
     shelluuid.cpp
     ubuntutheme.cpp
     clipboard.cpp
-    openglcontextfactory.cpp openglcontextfactory.h
-    initialsurfacesizes.cpp initialsurfacesizes.h
-    mircursorimages.cpp
-    mirdisplayconfigurationpolicy.cpp
     mirsingleton.cpp
     sessionauthorizer.cpp
     promptsessionlistener.cpp
-    mirserverstatuslistener.cpp
-    screenscontroller.cpp
     nativeinterface.cpp
-    qtcompositor.cpp
     services.cpp
     windowcontroller.cpp
-    windowmanagementpolicy.cpp
-    mirserverhooks.cpp mirserverhooks.h
-    setqtcompositor.cpp setqtcompositor.h
     tracepoints.c
-# We need to run moc on these headers
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
-    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
+    surfaceobserver.cpp
+    initialsurfacesizes.cpp
 )
+
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 
 include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
 
+# These files will only compile with mirserver-dev
+add_library(qpa-mirserver-mirserver OBJECT
+    openglcontextfactory.cpp openglcontextfactory.h
+    mircursorimages.cpp
+    mirdisplayconfigurationpolicy.cpp
+    screenscontroller.cpp
+    qtcompositor.cpp
+    windowmanagementpolicy.cpp
+    mirserverhooks.cpp mirserverhooks.h
+    setqtcompositor.cpp setqtcompositor.h
+    eventdispatch.cpp eventdispatch.h
+    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+)
+
+# These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
 set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     cursor.cpp
@@ -97,15 +98,18 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     qteventfeeder.cpp
     qmirserver.cpp
     qmirserver_p.cpp
-    surfaceobserver.cpp
     screen.cpp
     screenwindow.cpp
     screensmodel.cpp
     mirserverintegration.cpp
     miropenglcontext.cpp
     offscreensurface.cpp
+    # We need to run moc on these headers
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
     inputdeviceobserver.cpp
-    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
     $<TARGET_OBJECTS:miral-prototypes>
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
@@ -114,6 +118,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
 add_library(qpa-mirserver SHARED
     ${MIRSERVER_QPA_PLUGIN_SRC}
     $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
+    $<TARGET_OBJECTS:qpa-mirserver-mirserver>
 )
 
 target_link_libraries(

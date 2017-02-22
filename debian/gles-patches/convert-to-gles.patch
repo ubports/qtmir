@@ -84,7 +84,7 @@ Index: inline-gles-quilt/debian/control
 -Conflicts: libqtmir,
 -           libunity-mir1,
 -Provides: unity-application-impl,
--          unity-application-impl-23,
+-          unity-application-impl-26,
 -Description: Qt plugin for Unity specific Mir APIs
 - QtMir provides Qt/QML bindings for Mir features that are exposed through the
 - qtmir-desktop or qtmir-android QPA plugin such as Application management
