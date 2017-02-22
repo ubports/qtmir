@@ -74,11 +74,11 @@ Index: qtmir.api/debian/control
 + This variant of the package is for Android-based phones and tablets (built
 + against the OpenGLES variant of qtbase).
  
- Package: qtmir-dev
+ Package: libqtmirserver-dev
  Section: libdevel
-@@ -103,40 +92,3 @@ Description: Developer files for the Qt
+@@ -104,40 +93,3 @@ Description: Header files for QtMir
   .
-  Contains header files required for development using QtMir.
+  This package contains the library headers for developers.
  
 -Package: qtdeclarative5-qtmir-plugin
 -Architecture: any
@@ -189,5 +189,5 @@ Index: qtmir.api/debian/rules
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-desktop
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtdeclarative5-qtmir-plugin
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-tests
--	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-dev
-+	dh_install --sourcedir=$(TMP1_DIR) -pqtmir-dev
+-	dh_install --sourcedir=$(TMP2_DIR) -plibqtmirserver-dev
++	dh_install --sourcedir=$(TMP1_DIR) -plibqtmirserver-dev
