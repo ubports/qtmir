@@ -35,6 +35,7 @@
 #include <mir/scene/surface.h>
 #include <mir/scene/surface_observer.h>
 #include <mir/version.h>
+#include <mir_toolkit/cursors.h>
 
 // mirserver
 #include <logging.h>
@@ -1076,6 +1077,27 @@ MirSurface::SurfaceObserverImpl::SurfaceObserverImpl()
     : m_listener(nullptr)
     , m_framesPosted(false)
 {
+    // mir cursor names, used by the mir protocol
+
+    m_cursorNameToShape[mir_default_cursor_name] = Qt::ArrowCursor;
+    m_cursorNameToShape[mir_arrow_cursor_name] = Qt::ArrowCursor;
+    m_cursorNameToShape[mir_crosshair_cursor_name] = Qt::CrossCursor;
+    m_cursorNameToShape[mir_busy_cursor_name] =  Qt::WaitCursor;
+    m_cursorNameToShape[mir_caret_cursor_name] = Qt::IBeamCursor;
+    m_cursorNameToShape[mir_vertical_resize_cursor_name] = Qt::SizeVerCursor;
+    m_cursorNameToShape[mir_horizontal_resize_cursor_name] = Qt::SizeHorCursor;
+    m_cursorNameToShape[mir_diagonal_resize_bottom_to_top_cursor_name] = Qt::SizeBDiagCursor;
+    m_cursorNameToShape[mir_diagonal_resize_top_to_bottom_cursor_name] = Qt::SizeFDiagCursor;
+    m_cursorNameToShape[mir_omnidirectional_resize_cursor_name] = Qt::SizeAllCursor;
+    m_cursorNameToShape[mir_disabled_cursor_name] = Qt::BlankCursor;
+    m_cursorNameToShape[mir_vsplit_resize_cursor_name] = Qt::SplitVCursor;
+    m_cursorNameToShape[mir_hsplit_resize_cursor_name] = Qt::SplitHCursor;
+    m_cursorNameToShape[mir_pointing_hand_cursor_name] = Qt::PointingHandCursor;
+    m_cursorNameToShape[mir_open_hand_cursor_name] = Qt::OpenHandCursor;
+    m_cursorNameToShape[mir_closed_hand_cursor_name] = Qt::ClosedHandCursor;
+
+    // xcursor names, used by our cursor themes
+
     m_cursorNameToShape["left_ptr"] = Qt::ArrowCursor;
     m_cursorNameToShape["up_arrow"] = Qt::UpArrowCursor;
     m_cursorNameToShape["cross"] = Qt::CrossCursor;
@@ -1098,25 +1120,6 @@ MirSurface::SurfaceObserverImpl::SurfaceObserverImpl()
     m_cursorNameToShape["dnd-copy"] = Qt::DragCopyCursor;
     m_cursorNameToShape["dnd-move"] = Qt::DragMoveCursor;
     m_cursorNameToShape["dnd-link"] = Qt::DragLinkCursor;
-
-    // Used by Mir client API (mir_*_cursor_name strings)
-    m_cursorNameToShape["default"] = Qt::ArrowCursor;
-    m_cursorNameToShape["disabled"] = Qt::BlankCursor;
-    m_cursorNameToShape["arrow"] = Qt::ArrowCursor;
-    m_cursorNameToShape["busy"] = Qt::WaitCursor;
-    m_cursorNameToShape["caret"] = Qt::IBeamCursor;
-    m_cursorNameToShape["pointing-hand"] = Qt::PointingHandCursor;
-    m_cursorNameToShape["open-hand"] = Qt::OpenHandCursor;
-    m_cursorNameToShape["closed-hand"] = Qt::ClosedHandCursor;
-    m_cursorNameToShape["horizontal-resize"] = Qt::SizeHorCursor;
-    m_cursorNameToShape["vertical-resize"] = Qt::SizeVerCursor;
-    m_cursorNameToShape["diagonal-resize-bottom-to-top"] = Qt::SizeBDiagCursor;
-    m_cursorNameToShape["diagonal-resize-top_to_bottom"] = Qt::SizeFDiagCursor; // current string with typo
-    m_cursorNameToShape["diagonal-resize-top-to-bottom"] = Qt::SizeFDiagCursor; // how it will be when they fix it (if ever)
-    m_cursorNameToShape["omnidirectional-resize"] = Qt::SizeAllCursor;
-    m_cursorNameToShape["vsplit-resize"] = Qt::SplitVCursor;
-    m_cursorNameToShape["hsplit-resize"] = Qt::SplitHCursor;
-    m_cursorNameToShape["crosshair"] = Qt::CrossCursor;
 
     qRegisterMetaType<MirShellChrome>("MirShellChrome");
 }

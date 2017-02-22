@@ -5,6 +5,47 @@ qtmir (0.6.0) UNRELEASED; urgency=medium
 
  -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 10 Feb 2017 09:09:09 +0000
 
+qtmir (0.5.1+17.04.20170215.1-0ubuntu1) zesty; urgency=medium
+
+  [ Michał Sawicz ]
+  * We're at provides 26 already (LP: #1662608)
+
+  [ Alan Griffiths ]
+  * Identify the code that depends directly on mirserver-dev headers
+
+  [ Albert Astals Cid ]
+  * Check we provide the same unity-application-impl that we require
+
+  [ Daniel d'Andrada ]
+  * Resolve mir cursor names using mir symbols instead of plain strings
+    (LP: #1662827)
+
+  [ Gerry Boland ]
+  * ScreenModel: Only expose windows on displays that are turned on (LP:
+    #1521403, #1638611, #1656250)
+  * Restore lost LTTng tracepoints, and delete unused ones (LP:
+    #1658084)
+
+  [ Nick Dedekind ]
+  * Added Extended Display Information Data (EDID) parsing.
+
+  [ Alan Griffiths, Nick Dedekind ]
+  * Iteration 0 of miral::PersistDisplayConfig. This does nothing yet
+    (and breaks nothing in the process). This MP creates a place (miral-
+    prototypes) to build prototype miral features and sketches out what
+    will need to be implemented for PersistDisplayConfig. (LP: #1644189)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 15 Feb 2017 13:23:17 +0000
+
+qtmir (0.5.1+17.04.20170206-0ubuntu2) zesty; urgency=medium
+
+  * Update unity-application-impl Provides to -26, which was forgotten before.
+    This should stop unity8-tests being pulled in on upgrades (which is a
+    component-mismatch), and should restore unity8 to the desktop images. (LP:
+    #1662608)
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Wed, 15 Feb 2017 12:43:39 +0000
+
 qtmir (0.5.1+17.04.20170206-0ubuntu1) zesty; urgency=medium
 
   [ Daniel d'Andrada ]
