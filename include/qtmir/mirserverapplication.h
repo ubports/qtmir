@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_GUISERVERAPPLICATION_H
-#define QTMIR_GUISERVERAPPLICATION_H
+#ifndef QTMIR_MIRSERVERAPPLICATION_H
+#define QTMIR_MIRSERVERAPPLICATION_H
 
 #include <QtGui/QGuiApplication>
 
@@ -29,7 +29,7 @@ namespace qtmir {
 class WindowModelNotifier;
 class AppNotifier;
 
-class GuiServerApplication : public QGuiApplication
+class MirServerApplication : public QGuiApplication
 {
     Q_OBJECT
 
@@ -37,10 +37,10 @@ class GuiServerApplication : public QGuiApplication
     Q_PROPERTY(qtmir::WindowModelNotifier* windowModelNotifier READ windowModelNotifier CONSTANT)
 
 public:
-    explicit GuiServerApplication(int &argc,
+    explicit MirServerApplication(int &argc,
                                   char **argv,
                                   std::initializer_list<std::function<void(QMirServer&)>> options);
-    ~GuiServerApplication();
+    ~MirServerApplication();
 
     qtmir::AppNotifier* appNotifier() const;
     qtmir::WindowModelNotifier* windowModelNotifier() const;
@@ -52,4 +52,4 @@ Q_SIGNALS:
 
 } // namespace qtmir
 
-#endif // QTMIR_GUISERVERAPPLICATION_H
+#endif // QTMIR_MIRSERVERAPPLICATION_H
