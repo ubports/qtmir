@@ -17,7 +17,7 @@
 #ifndef MIRBUFFERSGTEXTURE_H
 #define MIRBUFFERSGTEXTURE_H
 
-#include <memory>
+#include "graphics_buffer.h"
 
 #include <QSGTexture>
 
@@ -44,7 +44,7 @@ public:
     void bind() override;
 
 private:
-    std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
+    qtmir::MirBuffer m_mirBuffer;
     int m_width;
     int m_height;
     GLuint m_textureId;
