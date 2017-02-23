@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "graphics_buffer.h"
+#include "mirbuffer.h"
 
 #include <mir/graphics/buffer.h>
 #include <mir/renderer/gl/texture_source.h>

@@ -17,7 +17,7 @@
 #ifndef MIRBUFFERSGTEXTURE_H
 #define MIRBUFFERSGTEXTURE_H
 
-#include "graphics_buffer.h"
+#include "mirbuffer.h"
 
 #include <QSGTexture>
 

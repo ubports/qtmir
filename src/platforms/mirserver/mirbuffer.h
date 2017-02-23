@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef QTMIR_GRAPHICS_BUFFER_H
-#define QTMIR_GRAPHICS_BUFFER_H
+#ifndef QTMIR_MIR_BUFFER_H
+#define QTMIR_MIR_BUFFER_H
 
 #include <mir/geometry/size.h>
 
@@ -47,4 +47,4 @@ private:
 };
 }
 
-#endif //QTMIR_GRAPHICS_BUFFER_H
+#endif //QTMIR_MIR_BUFFER_H
