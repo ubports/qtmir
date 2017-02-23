@@ -887,7 +887,7 @@ void MirSurface::setReady()
 
 void MirSurface::setCursor(const QCursor &cursor)
 {
-    INFO_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
+    DEBUG_MSG << "(" << qtCursorShapeToStr(cursor.shape()) << ")";
 
     m_cursor = cursor;
     Q_EMIT cursorChanged(m_cursor);
