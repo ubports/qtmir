@@ -16,13 +16,12 @@
 
 #include "mirbuffersgtexture.h"
 
+#include <graphics_buffer.h>
+
 // Mir
-#include <mir/graphics/buffer.h>
 #include <mir/geometry/size.h>
-#include <mir/renderer/gl/texture_source.h>
 
 namespace mg = mir::geometry;
-namespace mrg = mir::renderer::gl;
 
 MirBufferSGTexture::MirBufferSGTexture()
     : QSGTexture()
@@ -54,7 +53,7 @@ void MirBufferSGTexture::freeBuffer()
 void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>& buffer)
 {
     m_mirBuffer = buffer;
-    mg::Size size = buffer->size();
+    mg::Size size = qtmir::size(*buffer);
     m_height = size.height.as_int();
     m_width = size.width.as_int();
 }
@@ -76,12 +75,7 @@ QSize MirBufferSGTexture::textureSize() const
 
 bool MirBufferSGTexture::hasAlphaChannel() const
 {
-    if (hasBuffer()) {
-        return m_mirBuffer->pixel_format() == mir_pixel_format_abgr_8888
-            || m_mirBuffer->pixel_format() == mir_pixel_format_argb_8888;
-    } else {
-        return false;
-    }
+    return hasBuffer() && qtmir::hasAlphaChannel(*m_mirBuffer);
 }
 
 void MirBufferSGTexture::bind()
@@ -90,10 +84,5 @@ void MirBufferSGTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    auto const texture_source =
-        dynamic_cast<mrg::TextureSource*>(m_mirBuffer->native_buffer_base());
-    if (!texture_source)
-        throw std::logic_error("Buffer does not support GL rendering");
-
-    texture_source->gl_bind_to_texture();
+    qtmir::glBindToTexture(*m_mirBuffer);
 }
