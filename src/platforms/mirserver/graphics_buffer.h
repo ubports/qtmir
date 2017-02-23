@@ -21,13 +21,30 @@
 
 #include <mir/geometry/size.h>
 
+#include <memory>
+
 namespace mir { namespace graphics { class Buffer; }}
 
 namespace qtmir
 {
-bool hasAlphaChannel(mir::graphics::Buffer const &buffer);
-mir::geometry::Size size(mir::graphics::Buffer const &buffer);
-void glBindToTexture(mir::graphics::Buffer& buffer);
+class MirBuffer
+{
+public:
+    MirBuffer();
+    ~MirBuffer();
+    explicit MirBuffer(std::shared_ptr<mir::graphics::Buffer> const &buffer);
+    MirBuffer& operator=(std::shared_ptr<mir::graphics::Buffer> const &buffer);
+
+    bool hasBuffer() const;
+    bool hasAlphaChannel() const;
+    mir::geometry::Size size() const;
+
+    void reset();
+    void glBindToTexture();
+
+private:
+    std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
+};
 }
 
 #endif //QTMIR_GRAPHICS_BUFFER_H

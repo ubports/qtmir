@@ -16,8 +16,6 @@
 
 #include "mirbuffersgtexture.h"
 
-#include <graphics_buffer.h>
-
 // Mir
 #include <mir/geometry/size.h>
 
@@ -53,14 +51,14 @@ void MirBufferSGTexture::freeBuffer()
 void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>& buffer)
 {
     m_mirBuffer = buffer;
-    mg::Size size = qtmir::size(*buffer);
+    mg::Size size = m_mirBuffer.size();
     m_height = size.height.as_int();
     m_width = size.width.as_int();
 }
 
 bool MirBufferSGTexture::hasBuffer() const
 {
-    return !!m_mirBuffer;
+    return m_mirBuffer.hasBuffer();
 }
 
 int MirBufferSGTexture::textureId() const
@@ -75,7 +73,7 @@ QSize MirBufferSGTexture::textureSize() const
 
 bool MirBufferSGTexture::hasAlphaChannel() const
 {
-    return hasBuffer() && qtmir::hasAlphaChannel(*m_mirBuffer);
+    return m_mirBuffer.hasAlphaChannel();
 }
 
 void MirBufferSGTexture::bind()
@@ -84,5 +82,5 @@ void MirBufferSGTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    qtmir::glBindToTexture(*m_mirBuffer);
+    m_mirBuffer.glBindToTexture();
 }
