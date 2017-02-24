@@ -78,6 +78,15 @@ public:
     virtual void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
     virtual void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
 
+    // From miral::WorkspacePolicy
+    virtual void advise_adding_to_workspace(
+            std::shared_ptr<miral::Workspace> const& workspace,
+            std::vector<miral::Window> const& windows) override;
+
+    virtual void advise_removing_from_workspace(
+        std::shared_ptr<miral::Workspace> const& workspace,
+        std::vector<miral::Window> const& windows) override;
+
     virtual void activate(const miral::Window &window);
     virtual void resize(const miral::Window &window, const Size size);
     virtual void move  (const miral::Window &window, const Point topLeft);

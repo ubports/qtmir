@@ -39,8 +39,9 @@ class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
     Q_OBJECT
 
 public:
-    explicit SurfaceManager(QObject *parent = 0);
-    virtual ~SurfaceManager() {}
+    virtual ~SurfaceManager() = default;
+
+    static SurfaceManager *instance();
 
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
@@ -56,6 +57,8 @@ private Q_SLOTS:
     void onWindowsRequestedRaise(const miral::WindowInfo &windowInfo);
 
 private:
+    explicit SurfaceManager(QObject *parent = 0);
+
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);

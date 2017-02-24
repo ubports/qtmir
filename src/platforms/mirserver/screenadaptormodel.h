@@ -32,6 +32,8 @@ public:
 
     QVector<qtmir::Screen*> screens() const { return m_screenList; }
 
+    qtmir::Screen* activeScreen() const;
+
 private Q_SLOTS:
     void onScreenAdded(QScreen *screen);
     void onScreenRemoved(QScreen *screen);

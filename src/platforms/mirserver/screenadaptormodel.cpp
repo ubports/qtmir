@@ -23,6 +23,7 @@
 // Qt
 #include <QGuiApplication>
 #include <QScreen>
+#include <QWindow>
 
 #define DEBUG_MSG qCDebug(QTMIR_SCREENS).nospace() << "Screens[" << (void*)this <<"]::" << __func__
 
@@ -35,6 +36,7 @@ ScreenAdaptorModel::ScreenAdaptorModel(QObject *parent)
 
     connect(qGuiApp, &QGuiApplication::screenAdded, this, &ScreenAdaptorModel::onScreenAdded);
     connect(qGuiApp, &QGuiApplication::screenRemoved, this, &ScreenAdaptorModel::onScreenRemoved);
+    connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &ScreenAdaptorModel::activeScreenChanged);
 
     Q_FOREACH(QScreen* screen, QGuiApplication::screens()) {
         m_screenList.push_back(new ScreenAdaptor(screen));
@@ -51,6 +53,17 @@ ScreenAdaptorModel::~ScreenAdaptorModel()
 {
     qDeleteAll(m_screenList);
     m_screenList.clear();
+}
+
+qtmir::Screen *ScreenAdaptorModel::activeScreen() const
+{
+    QWindow* window = qGuiApp->focusWindow();
+    if (!window || !window->screen()) return nullptr;
+
+    Q_FOREACH(auto screen, m_screenList) {
+        if (screen && screen->qscreen() == window->screen()) return screen;
+    }
+    return nullptr;
 }
 
 void ScreenAdaptorModel::onScreenAdded(QScreen *qscreen)

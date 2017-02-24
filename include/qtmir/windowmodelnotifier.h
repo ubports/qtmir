@@ -22,6 +22,7 @@
 #include <QSize>
 
 #include <miral/window_info.h>
+#include <miral/workspace_policy.h>
 
 // Unity API
 #include <unity/shell/application/Mir.h>
@@ -78,6 +79,8 @@ Q_SIGNALS: // **Must used Queued Connection or else events will be out of order*
     void windowFocusChanged(const miral::WindowInfo &window, bool focused);
     void windowsRaised(const std::vector<miral::Window> &windows); // results in deep copy when passed over Queued connection:(
     void windowRequestedRaise(const miral::WindowInfo &window);
+    void windowsAddedToWorkspace(const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows);
+    void windowsRemovedFromWorkspace(const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows);
     void modificationsStarted();
     void modificationsEnded();
 

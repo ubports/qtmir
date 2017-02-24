@@ -29,15 +29,20 @@ class Screen;
 class Screens : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(qtmir::Screen* activeScreen READ activeScreen NOTIFY activeScreenChanged)
 public:
     Screens(QObject *parent = 0): QObject(parent) {}
     ~Screens() = default;
 
     virtual QVector<qtmir::Screen*> screens() const = 0;
 
+    virtual qtmir::Screen* activeScreen() const = 0;
+
 Q_SIGNALS:
     void screenAdded(qtmir::Screen *screen);
     void screenRemoved(qtmir::Screen *screen);
+
+    void activeScreenChanged();
 };
 
 } // namespace qtmir

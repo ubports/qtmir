@@ -75,6 +75,12 @@ public:
     void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window) override;
     void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window) override;
 
+    void advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                    std::vector<miral::Window> const& windows) override;
+
+    void advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                        std::vector<miral::Window> const& windows) override;
+
     void activate(const miral::Window &window) override;
     void resize(const miral::Window &window, const Size size) override;
     void move  (const miral::Window &window, const Point topLeft) override;
@@ -83,13 +89,6 @@ public:
 
     void ask_client_to_close(const miral::Window &window) override;
     void forceClose(const miral::Window &window) override;
-
-    // From miral::WorkspacePolicy
-    void advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
-                                    std::vector<miral::Window> const& windows) override;
-
-    void advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
-                                        std::vector<miral::Window> const& windows) override;
 
 private:
     std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;

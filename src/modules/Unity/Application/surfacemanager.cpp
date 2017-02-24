@@ -41,6 +41,15 @@ Q_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER, "qtmir.surfacemanager", QtInfoMsg)
 using namespace qtmir;
 namespace unityapi = unity::shell::application;
 
+SurfaceManager *SurfaceManager::instance()
+{
+    static SurfaceManager* instance{nullptr};
+    if (!instance) {
+        instance = new SurfaceManager;
+    }
+    return instance;
+}
+
 SurfaceManager::SurfaceManager(QObject *)
 {
     DEBUG_MSG << "()";

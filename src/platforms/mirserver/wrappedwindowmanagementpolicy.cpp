@@ -274,6 +274,22 @@ namespace qtmir
         dispatchInputEvent(window, mir_pointer_event_input_event(event));
     }
 
+    void WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                            std::vector<miral::Window> const& windows)
+    {
+        miral::WorkspacePolicy::advise_adding_to_workspace(workspace, windows);
+
+        Q_EMIT d->m_windowModel.windowsAddedToWorkspace(workspace, windows);
+    }
+
+    void WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                                std::vector<miral::Window> const& windows)
+    {
+        miral::WorkspacePolicy::advise_removing_from_workspace(workspace, windows);
+
+        Q_EMIT d->m_windowModel.windowsRemovedFromWorkspace(workspace, windows);
+    }
+
     /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
 
     // raises the window tree and focus it.
@@ -518,6 +534,18 @@ void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent 
     m_wrapper->deliver_pointer_event(event, window);
 }
 
+void WrappedWindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                               std::vector<miral::Window> const& windows)
+{
+    m_wrapper->advise_adding_to_workspace(workspace, windows);
+}
+
+void WrappedWindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                                   std::vector<miral::Window> const& windows)
+{
+    m_wrapper->advise_removing_from_workspace(workspace, windows);
+}
+
 void WrappedWindowManagementPolicy::activate(const miral::Window &window)
 {
     m_wrapper->activate(window);
@@ -551,16 +579,4 @@ void WrappedWindowManagementPolicy::ask_client_to_close(const miral::Window &win
 void WrappedWindowManagementPolicy::forceClose(const miral::Window &window)
 {
     m_wrapper->forceClose(window);
-}
-
-void WrappedWindowManagementPolicy::advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
-                                                               const std::vector<miral::Window> &windows)
-{
-    m_wrapper->advise_adding_to_workspace(workspace, windows);
-}
-
-void WrappedWindowManagementPolicy::advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
-                                                                   const std::vector<miral::Window> &windows)
-{
-    m_wrapper->advise_removing_from_workspace(workspace, windows);
 }
