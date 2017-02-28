@@ -537,6 +537,9 @@ bool QtEventFeeder::dispatch(MirEvent const& event)
         return false;
 
     auto iev = mir_event_get_input_event(&event);
+    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
+        std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
 
     switch (mir_input_event_get_type(iev)) {
     case mir_input_event_type_key:
@@ -616,8 +619,6 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
     case mir_pointer_action_button_down:
     case mir_pointer_action_motion:
     {
-        EventBuilder::instance()->store(pev, timestamp.count());
-
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 

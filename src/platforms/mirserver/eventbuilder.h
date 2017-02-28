@@ -46,7 +46,7 @@ public:
 
     /* Stores information that cannot be carried by QInputEvents so that it can be fully
        reconstructed later given the same qtTimestamp */
-    void store(const MirPointerEvent *mirPointerEvent, ulong qtTimestamp);
+    void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
 
     /*
         Builds a MirEvent version of the given QInputEvent using also extra data from the
@@ -58,7 +58,10 @@ public:
     mir::EventUPtr reconstructMirEvent(QHoverEvent *qtEvent);
 
     /*
-        Makes a MirEvent version of the given QInputEvent
+        Makes a MirEvent version of the given QInputEvent using also extra data from the
+        MirInputEvent that caused it.
+
+        See also: store()
      */
     mir::EventUPtr makeMirEvent(QWheelEvent *qtEvent);
     mir::EventUPtr makeMirEvent(QKeyEvent *qtEvent);
@@ -69,8 +72,10 @@ public:
 private:
     class EventInfo {
     public:
-        void store(const MirPointerEvent *mirPointerEvent, ulong qtTimestamp);
+        void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
         ulong qtTimestamp;
+        MirInputDeviceId deviceId;
+        std::vector<uint8_t> cookie;
         float relativeX{0};
         float relativeY{0};
     };
@@ -85,8 +90,8 @@ private:
 
       When MirInputEvents are dispatched through a QML scene, not all of its information can be carried
       by QInputEvents. Some information is lost. Thus further on, if we want to transform a QInputEvent back into
-      its original MirInputEvent so that it can be consumed by a mir::scene::Surface, we have to reach out to
-      this EventRegistry to get the missing bits.
+      its original MirInputEvent so that it can be consumed by a mir::scene::Surface and properly handled by mir clients
+      we have to reach out to this EventRegistry to get the missing bits.
 
       Given the objective of this EventRegistry (MirInputEvent reconstruction after having gone through QQuickWindow input dispatch
       as a QInputEvent), it stores information only about the most recent MirInputEvents.
