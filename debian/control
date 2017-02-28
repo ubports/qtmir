@@ -40,6 +40,7 @@ Build-Depends: cmake,
                qtdeclarative5-dev,
                qtdeclarative5-private-dev,
                quilt,
+               valgrind,
 # libmirserver-dev should have brought this dep. Bug lp:1617435
                uuid-dev,
 # mirtest pkgconfig requires these, but doesn't have a deb dependency. Bug lp:1633537
