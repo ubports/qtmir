@@ -88,7 +88,7 @@ add_library(qpa-mirserver-mirserver OBJECT
     setqtcompositor.cpp setqtcompositor.h
     eventdispatch.cpp eventdispatch.h
     promptsessionmanager.cpp promptsessionmanager.h promptsession.h
-        mirbuffer.cpp mirbuffer.h
+    mirbuffer.cpp mirbuffer.h
 )
 
 # These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
