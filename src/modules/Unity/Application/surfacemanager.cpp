@@ -54,6 +54,15 @@ SurfaceManager::SurfaceManager(QObject *)
     connectToWindowModelNotifier(windowModel);
 }
 
+SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
+                               WindowModelNotifier *windowModel,
+                               SessionManager *sessionManager)
+    : m_windowController(windowController)
+    , m_sessionManager(sessionManager)
+{
+    connectToWindowModelNotifier(windowModel);
+}
+
 void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
 {
     connect(notifier, &WindowModelNotifier::windowAdded,          this, &SurfaceManager::onWindowAdded,           Qt::QueuedConnection);

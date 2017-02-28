@@ -44,6 +44,12 @@ public:
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
 
+protected:
+    // for testing purposes
+    SurfaceManager(WindowControllerInterface *windowController,
+                   WindowModelNotifier *windowModel,
+                   SessionManager *sessionManager);
+
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
     void onWindowRemoved(const miral::WindowInfo &windowInfo);
