@@ -53,7 +53,7 @@ class MirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
-    MirSurface(NewWindow windowInfo,
+    MirSurface(const miral::WindowInfo &windowInfo,
                WindowControllerInterface *controller,
                SessionInterface *session = nullptr,
                MirSurface *parentSurface = nullptr);
@@ -198,6 +198,7 @@ private Q_SLOTS:
     void setInputBounds(const QRect &rect);
 
 private:
+    void connectToSurfaceManager();
     void syncSurfaceSizeWithItemSize();
     bool clientIsRunning() const;
     void updateExposure();

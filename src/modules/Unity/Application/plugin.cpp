@@ -71,6 +71,8 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<unity::shell::application::SurfaceManagerInterface*>("unity::shell::application::SurfaceManagerInterface*");
         qRegisterMetaType<MirWindowAttrib>("MirWindowAttrib");
 
+        qRegisterMetaType<std::shared_ptr<miral::Workspace>>("std::shared_ptr<miral::Workspace>");
+
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
                     uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
         qmlRegisterSingletonType<qtmir::ApplicationManager>(

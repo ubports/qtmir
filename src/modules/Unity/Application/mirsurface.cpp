@@ -21,6 +21,8 @@
 #include "timer.h"
 #include "timestamp.h"
 #include "compositortextureprovider.h"
+#include "surfacemanager.h"
+#include "tracepoints.h"
 
 // from common dir
 #include <debughelpers.h>
@@ -108,31 +110,31 @@ private:
 };
 
 
-MirSurface::MirSurface(NewWindow newWindowInfo,
+MirSurface::MirSurface(const miral::WindowInfo &newWindowInfo,
         WindowControllerInterface* controller,
         SessionInterface *session,
         MirSurface *parentSurface)
     : MirSurfaceInterface()
-    , m_window{newWindowInfo.windowInfo.window()}
-    , m_extraInfo{getExtraInfo(newWindowInfo.windowInfo)}
-    , m_name{QString::fromStdString(newWindowInfo.windowInfo.name())}
-    , m_type{newWindowInfo.windowInfo.type()}
-    , m_minWidth{newWindowInfo.windowInfo.min_width().as_int()}
-    , m_minHeight{newWindowInfo.windowInfo.min_height().as_int()}
-    , m_maxWidth{newWindowInfo.windowInfo.max_width().as_int()}
-    , m_maxHeight{newWindowInfo.windowInfo.max_height().as_int()}
-    , m_incWidth{newWindowInfo.windowInfo.width_inc().as_int()}
-    , m_incHeight{newWindowInfo.windowInfo.height_inc().as_int()}
-    , m_surface(newWindowInfo.surface)
+    , m_window{newWindowInfo.window()}
+    , m_extraInfo{getExtraInfo(newWindowInfo)}
+    , m_name{QString::fromStdString(newWindowInfo.name())}
+    , m_type{newWindowInfo.type()}
+    , m_minWidth{newWindowInfo.min_width().as_int()}
+    , m_minHeight{newWindowInfo.min_height().as_int()}
+    , m_maxWidth{newWindowInfo.max_width().as_int()}
+    , m_maxHeight{newWindowInfo.max_height().as_int()}
+    , m_incWidth{newWindowInfo.width_inc().as_int()}
+    , m_incHeight{newWindowInfo.height_inc().as_int()}
+    , m_surface(m_window)
     , m_session(session)
     , m_controller(controller)
     , m_orientationAngle(Mir::Angle0)
     , m_textures(new CompositorTextureProvider)
-    , m_visible(newWindowInfo.windowInfo.is_visible())
+    , m_visible(newWindowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
     , m_size(toQSize(m_window.size()))
-    , m_state(toQtState(newWindowInfo.windowInfo.state()))
+    , m_state(toQtState(newWindowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
     , m_parentSurface(parentSurface)
     , m_childSurfaceList(new MirSurfaceListModel(this))
@@ -199,6 +201,8 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
 
     m_requestedPosition.rx() = std::numeric_limits<int>::min();
     m_requestedPosition.ry() = std::numeric_limits<int>::min();
+
+    connectToSurfaceManager();
 }
 
 MirSurface::~MirSurface()
@@ -214,6 +218,38 @@ MirSurface::~MirSurface()
     delete m_textures;
 
     Q_EMIT destroyed(this); // Early warning, while MirSurface methods can still be accessed.
+}
+
+void MirSurface::connectToSurfaceManager()
+{
+    auto sMgr = SurfaceManager::instance();
+
+    connect(sMgr, &SurfaceManager::surfaceRemoved, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
+        if (this != surface) return;
+        setLive(false);
+        tracepoint(qtmir, surfaceDestroyed);
+    });
+    connect(sMgr, &SurfaceManager::surfaceReady, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
+        if (this != surface) return;
+        tracepoint(qtmir, firstFrameDrawn); // MirAL decides surface ready when it swaps its first frame
+        setReady();
+    });
+    connect(sMgr, &SurfaceManager::surfaceMoved, this, [this](unity::shell::application::MirSurfaceInterface *surface, const QPoint topLeft) {
+        if (this != surface) return;
+        setPosition(topLeft);
+    });
+    connect(sMgr, &SurfaceManager::surfaceStateChanged, this, [this](unity::shell::application::MirSurfaceInterface *surface, Mir::State state) {
+        if (this != surface) return;
+        updateState(state);
+    });
+    connect(sMgr, &SurfaceManager::surfaceFocusChanged,   this, [this](unity::shell::application::MirSurfaceInterface *surface, bool focused) {
+        if (this != surface) return;
+        setFocused(focused);
+    });
+    connect(sMgr, &SurfaceManager::surfaceRequestedRaise, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
+        if (this != surface) return;
+        requestFocus();
+    });
 }
 
 void MirSurface::onFramesPostedObserved()
