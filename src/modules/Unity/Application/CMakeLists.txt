@@ -32,6 +32,7 @@ set(QMLMIRPLUGIN_SRC
     application_manager.cpp
     application.cpp
     cgmanager.cpp
+    compositortextureprovider.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp
@@ -53,7 +54,6 @@ set(QMLMIRPLUGIN_SRC
     tracepoints.c
     settings.cpp
     windowmodel.cpp
-    compositortextureprovider.cpp
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationInfoInterface.h
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/ApplicationManagerInterface.h

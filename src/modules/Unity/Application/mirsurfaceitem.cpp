@@ -58,12 +58,9 @@ class SurfaceItemTextureProvider : public QSGTextureProvider
 {
     Q_OBJECT
 public:
-    SurfaceItemTextureProvider(QQuickItem* item, const QSharedPointer<QSGTexture> texture)
+    SurfaceItemTextureProvider(const QSharedPointer<QSGTexture> texture)
         : t(texture)
-        , m_item(item)
     {
-        updateSmooth();
-        connect(item, &QQuickItem::smoothChanged, this, &SurfaceItemTextureProvider::updateSmooth);
     }
     QSGTexture *texture() const override {
         return t.data();
@@ -75,21 +72,24 @@ public:
 
     void setTexture(const QSharedPointer<QSGTexture>& newTexture) {
         t = newTexture;
-        updateSmooth();
+        if (t) {
+            t->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
+        }
 
         Q_EMIT textureChanged();
     }
 
-private Q_SLOTS:
-    void updateSmooth() {
-        if (m_item && t) {
-            t->setFiltering(m_item->smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
+public Q_SLOTS:
+    void setSmooth(bool smooth) {
+        m_smooth = smooth;
+        if (t) {
+            t->setFiltering(m_smooth ? QSGTexture::Linear : QSGTexture::Nearest);
         }
     }
 
 private:
     QSharedPointer<QSGTexture> t;
-    QPointer<QQuickItem> m_item;
+    bool m_smooth;
 };
 
 MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
@@ -209,7 +209,9 @@ void MirSurfaceItem::ensureTextureProvider()
     if (!userId) return;
 
     if (!m_textureProvider) {
-        m_textureProvider = new SurfaceItemTextureProvider(this, m_surface->texture(userId));
+        m_textureProvider = new SurfaceItemTextureProvider(m_surface->texture(userId));
+        connect(this, &QQuickItem::smoothChanged, m_textureProvider, &SurfaceItemTextureProvider::setSmooth);
+        m_textureProvider->setSmooth(smooth());
 
     // Check that the item is indeed using the texture from the MirSurface it currently holds
     // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
