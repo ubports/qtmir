@@ -99,11 +99,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     auto mirSession = windowInfo.window().application();
     SessionInterface* session = m_sessionManager->findSession(mirSession.get());
 
-    MirSurface *parentSurface;
-    {
-        std::shared_ptr<mir::scene::Surface> surface = windowInfo.window();
-        parentSurface = find(windowInfo.parent());
-    }
+    MirSurface *const parentSurface = find(windowInfo.parent());
 
     auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
@@ -136,16 +132,6 @@ MirSurface *SurfaceManager::find(const miral::Window &window) const
 {
     Q_FOREACH(const auto surface, m_allSurfaces) {
         if (surface->window() == window) {
-            return surface;
-        }
-    }
-    return nullptr;
-}
-
-MirSurface *SurfaceManager::find(const std::shared_ptr<mir::scene::Surface> &needle) const
-{
-    Q_FOREACH(const auto surface, m_allSurfaces) {
-        if (surface->window() == needle) {
             return surface;
         }
     }
