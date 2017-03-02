@@ -126,7 +126,7 @@ void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
     connect(notifier, &WindowModelNotifier::modificationsStarted, this, &SurfaceManager::modificationsStarted,  Qt::QueuedConnection);
 }
 
-unity::shell::application::MirSurfaceInterface *SurfaceManager::surfaceFor(const miral::Window &window)
+unity::shell::application::MirSurfaceInterface *SurfaceManager::surfaceFor(const miral::Window &window) const
 {
     return find(window);
 }
