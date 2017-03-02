@@ -59,7 +59,7 @@ public:
     SurfaceManagerTests()
     {
         // We don't want the logging spam cluttering the test results
-        //QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));
+        QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));
 
         qRegisterMetaType<unity::shell::application::MirSurfaceInterface*>();
         qRegisterMetaType<QVector<unity::shell::application::MirSurfaceInterface*>>();
@@ -74,6 +74,9 @@ public:
     // Needed to create miral::WindowInfo
     const std::shared_ptr<StubSession> stubSession{std::make_shared<StubSession>()};
     const std::shared_ptr<StubSurface> stubSurface{std::make_shared<StubSurface>()};
+    const miral::Window window{stubSession, stubSurface};
+    const ms::SurfaceCreationParameters spec;
+    const miral::WindowInfo windowInfo{window, spec};
     FakeSession fakeSession;
 
 protected:
@@ -98,11 +101,6 @@ protected:
  */
 TEST_F(SurfaceManagerTests, miralWindowCreationCausesSignalEmission)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     QSignalSpy newMirSurfaceSpy(surfaceManager.data(), &SurfaceManager::surfaceCreated);
 
     // Test
@@ -120,11 +118,6 @@ TEST_F(SurfaceManagerTests, miralWindowCreationCausesSignalEmission)
  */
 TEST_F(SurfaceManagerTests, miralWindowCreationCausesMirSurfaceCreation)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     QSignalSpy newMirSurfaceSpy(surfaceManager.data(), &SurfaceManager::surfaceCreated);
 
     // Test
@@ -143,11 +136,6 @@ TEST_F(SurfaceManagerTests, miralWindowCreationCausesMirSurfaceCreation)
  */
 TEST_F(SurfaceManagerTests, miralWindowCreationAddsMirSurfaceToItsInternalList)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Test
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -164,10 +152,6 @@ TEST_F(SurfaceManagerTests, miralWindowCreationAddsMirSurfaceToItsInternalList)
 TEST_F(SurfaceManagerTests, createdMirSurfaceHasSessionSet)
 {
     // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     using namespace ::testing;
     EXPECT_CALL(sessionManager,findSession(_))
             .WillOnce(Return(&fakeSession));
@@ -189,7 +173,6 @@ TEST_F(SurfaceManagerTests, createdMirSurfaceHasSessionSet)
 TEST_F(SurfaceManagerTests, parentedMiralWindowGeneratesMirSurfaceWithCorrectParent)
 {
     // Setup
-    ms::SurfaceCreationParameters spec;
     miral::Window parentWindow(stubSession, stubSurface);
     miral::Window childWindow(stubSession, stubSurface);
     miral::WindowInfo parentWindowInfo(parentWindow, spec);
@@ -217,7 +200,6 @@ TEST_F(SurfaceManagerTests, parentedMiralWindowGeneratesMirSurfaceWithCorrectPar
 TEST_F(SurfaceManagerTests, miralWindowWithChildHasMirSurfaceWithCorrectChild)
 {
     // Setup
-    ms::SurfaceCreationParameters spec;
     miral::Window parentWindow(stubSession, stubSurface);
     miral::Window childWindow(stubSession, stubSurface);
     miral::WindowInfo parentWindowInfo(parentWindow, spec);
@@ -245,11 +227,6 @@ TEST_F(SurfaceManagerTests, miralWindowWithChildHasMirSurfaceWithCorrectChild)
  */
 TEST_F(SurfaceManagerTests, miralWindowReadyUpdatesMirSurfaceState)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -274,11 +251,6 @@ TEST_F(SurfaceManagerTests, miralWindowMoveUpdatesMirSurfacePosition)
 {
     QPoint newPosition(222,333);
 
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -302,11 +274,6 @@ TEST_F(SurfaceManagerTests, miralWindowMoveUpdatesMirSurfacePosition)
  */
 TEST_F(SurfaceManagerTests, miralWindowFocusChangeUpdatesMirSurfaceFocus)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -333,11 +300,6 @@ TEST_F(SurfaceManagerTests, miralWindowStateChangeUpdatesMirSurfaceState)
 {
     auto newState = Mir::FullscreenState;
 
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -362,7 +324,6 @@ TEST_F(SurfaceManagerTests, miralWindowStateChangeUpdatesMirSurfaceState)
 TEST_F(SurfaceManagerTests, miralsRaiseWindowListTransformedToVectorOfMirSurfaces)
 {
     // Setup
-    ms::SurfaceCreationParameters spec;
     miral::Window window1(stubSession, stubSurface);
     miral::Window window2(stubSession, stubSurface);
     miral::WindowInfo windowInfo1(window1, spec);
@@ -398,11 +359,6 @@ TEST_F(SurfaceManagerTests, miralsRaiseWindowListTransformedToVectorOfMirSurface
  */
 TEST_F(SurfaceManagerTests, focusRequestCausesMirSurfaceToFireFocusRequestedSignal)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -426,11 +382,6 @@ TEST_F(SurfaceManagerTests, focusRequestCausesMirSurfaceToFireFocusRequestedSign
  */
 TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntryAndMirSurface)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -455,11 +406,6 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
  */
 TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntryButNotMirSurface)
 {
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
-
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
@@ -488,11 +434,6 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
 TEST_F(SurfaceManagerTests, miralWindowRemovedSurfaceManagerDeletesMirSurfaceWhenItDoneWith)
 {
     int viewId = 99;
-
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
 
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
@@ -523,11 +464,6 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedSurfaceManagerDeletesMirSurfaceWhe
 TEST_F(SurfaceManagerTests, surfaceManagerDoesNotDeleteLiveMirSurfaceWhenStopsBeingDisplayed)
 {
     int viewId = 99;
-
-    // Setup
-    miral::Window window(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo windowInfo(window, spec);
 
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
