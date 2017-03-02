@@ -198,7 +198,6 @@ private Q_SLOTS:
     void setInputBounds(const QRect &rect);
 
 private:
-    void connectToSurfaceManager();
     void syncSurfaceSizeWithItemSize();
     bool clientIsRunning() const;
     void updateExposure();
@@ -254,6 +253,8 @@ private:
 
     class SurfaceObserverImpl;
     std::shared_ptr<SurfaceObserverImpl> m_surfaceObserver;
+    class WindowNotifierObserverImpl;
+    std::shared_ptr<WindowNotifierObserverImpl> m_windowModelObserver;
 
     QPoint m_position;
     QPoint m_requestedPosition;

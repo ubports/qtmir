@@ -37,7 +37,6 @@ class WindowControllerInterface;
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
 {
     Q_OBJECT
-
 public:
     virtual ~SurfaceManager() = default;
 

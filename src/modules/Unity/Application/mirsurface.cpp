@@ -109,6 +109,34 @@ private:
     QMap<QByteArray, Qt::CursorShape> m_cursorNameToShape;
 };
 
+class MirSurface::WindowNotifierObserverImpl : public WindowNotifierObserver
+{
+public:
+    WindowNotifierObserverImpl(MirSurface* surface, const miral::Window &window)
+        : WindowNotifierObserver(window)
+    {
+        connect(this, &WindowNotifierObserver::surfaceRemoved, this, [surface]() {
+            surface->setLive(false);
+        });
+        connect(this, &WindowNotifierObserver::surfaceReady, this, [surface]() {
+            tracepoint(qtmir, firstFrameDrawn); // MirAL decides surface ready when it swaps its first frame
+            surface->setReady();
+        });
+        connect(this, &WindowNotifierObserver::surfaceMoved, this, [surface](const QPoint topLeft) {
+            surface->setPosition(topLeft);
+        });
+        connect(this, &WindowNotifierObserver::surfaceStateChanged, this, [surface](Mir::State state) {
+            surface->updateState(state);
+        });
+        connect(this, &WindowNotifierObserver::surfaceFocusChanged,   this, [surface]( bool focused) {
+            surface->setFocused(focused);
+        });
+        connect(this, &WindowNotifierObserver::surfaceRequestedRaise, this, [surface]() {
+            surface->requestFocus();
+        });
+    }
+};
+
 
 MirSurface::MirSurface(const miral::WindowInfo &newWindowInfo,
         WindowControllerInterface* controller,
@@ -133,6 +161,7 @@ MirSurface::MirSurface(const miral::WindowInfo &newWindowInfo,
     , m_visible(newWindowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
+    , m_windowModelObserver(std::make_shared<WindowNotifierObserverImpl>(this, newWindowInfo.window()))
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
@@ -201,8 +230,6 @@ MirSurface::MirSurface(const miral::WindowInfo &newWindowInfo,
 
     m_requestedPosition.rx() = std::numeric_limits<int>::min();
     m_requestedPosition.ry() = std::numeric_limits<int>::min();
-
-    connectToSurfaceManager();
 }
 
 MirSurface::~MirSurface()
@@ -218,38 +245,6 @@ MirSurface::~MirSurface()
     delete m_textures;
 
     Q_EMIT destroyed(this); // Early warning, while MirSurface methods can still be accessed.
-}
-
-void MirSurface::connectToSurfaceManager()
-{
-    auto sMgr = SurfaceManager::instance();
-
-    connect(sMgr, &SurfaceManager::surfaceRemoved, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
-        if (this != surface) return;
-        setLive(false);
-        tracepoint(qtmir, surfaceDestroyed);
-    });
-    connect(sMgr, &SurfaceManager::surfaceReady, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
-        if (this != surface) return;
-        tracepoint(qtmir, firstFrameDrawn); // MirAL decides surface ready when it swaps its first frame
-        setReady();
-    });
-    connect(sMgr, &SurfaceManager::surfaceMoved, this, [this](unity::shell::application::MirSurfaceInterface *surface, const QPoint topLeft) {
-        if (this != surface) return;
-        setPosition(topLeft);
-    });
-    connect(sMgr, &SurfaceManager::surfaceStateChanged, this, [this](unity::shell::application::MirSurfaceInterface *surface, Mir::State state) {
-        if (this != surface) return;
-        updateState(state);
-    });
-    connect(sMgr, &SurfaceManager::surfaceFocusChanged,   this, [this](unity::shell::application::MirSurfaceInterface *surface, bool focused) {
-        if (this != surface) return;
-        setFocused(focused);
-    });
-    connect(sMgr, &SurfaceManager::surfaceRequestedRaise, this, [this](unity::shell::application::MirSurfaceInterface *surface) {
-        if (this != surface) return;
-        requestFocus();
-    });
 }
 
 void MirSurface::onFramesPostedObserved()

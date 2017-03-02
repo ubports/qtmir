@@ -94,12 +94,12 @@ void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
         Q_EMIT surfaceFocusChanged(find(windowInfo.window()), focused);
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowsRaised,              this, [this](const std::vector<miral::Window> &windows) {
-        Q_EMIT surfacesRaised(find(windows));
-    }, Qt::QueuedConnection);
-
     connect(notifier, &WindowModelNotifier::windowRequestedRaise,       this, [this](const miral::WindowInfo &windowInfo) {
         Q_EMIT surfaceRequestedRaise(find(windowInfo.window()));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowsRaised,              this, [this](const std::vector<miral::Window> &windows) {
+        Q_EMIT surfacesRaised(find(windows));
     }, Qt::QueuedConnection);
 
     connect(notifier, &WindowModelNotifier::windowsAddedToWorkspace,    this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
@@ -172,7 +172,6 @@ void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
     if (!surface) return;
 
     forgetMirSurface(windowInfo.window());
-    surface->setLive(false);
     tracepoint(qtmir, surfaceDestroyed);
 
     Q_EMIT surfaceRemoved(surface);

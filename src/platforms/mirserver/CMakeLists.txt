@@ -109,6 +109,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     offscreensurface.cpp
     inputdeviceobserver.cpp
     mirserverapplication.cpp
+    windowmodelnotifier.cpp
 
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h

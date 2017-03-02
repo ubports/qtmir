@@ -67,7 +67,7 @@ class WindowModelNotifier : public QObject
 {
     Q_OBJECT
 public:
-    WindowModelNotifier() = default;
+    WindowModelNotifier();
 
 Q_SIGNALS: // **Must used Queued Connection or else events will be out of order**
     void windowAdded(const qtmir::NewWindow &window);
@@ -86,6 +86,26 @@ Q_SIGNALS: // **Must used Queued Connection or else events will be out of order*
 
 private:
     Q_DISABLE_COPY(WindowModelNotifier)
+};
+
+class WindowNotifierObserver : public QObject
+{
+    Q_OBJECT
+public:
+    WindowNotifierObserver(const miral::Window &window);
+    virtual ~WindowNotifierObserver();
+
+    static void foreachObserverForWindow(const miral::Window &window, std::function<void(WindowNotifierObserver*)> fn);
+
+Q_SIGNALS:
+    void surfaceCreated();
+    void surfaceRemoved();
+    void surfaceReady();
+    void surfaceMoved(const QPoint &topLeft);
+    void surfaceResized(const QSize &size);
+    void surfaceStateChanged(Mir::State state);
+    void surfaceFocusChanged(bool focused);
+    void surfaceRequestedRaise();
 };
 
 } // namespace qtmir
