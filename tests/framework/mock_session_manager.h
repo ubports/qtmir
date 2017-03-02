@@ -21,13 +21,13 @@
 
 #include <gmock/gmock.h>
 
-class MockSessionManager : public qtmir::SessionManager
-{
-public:
-    MockSessionManager() {}
+namespace qtmir {
 
-    MOCK_CONST_METHOD1(findSession, qtmir::SessionInterface*(const miral::Application *));
+struct MockSessionManager : public qtmir::SessionManager
+{
+    MOCK_CONST_METHOD1(findSession, qtmir::SessionInterface*(const mir::scene::Session*));
 };
 
+} // namespace qtmir
 
 #endif // MOCK_SESSION_MANAGER_H
