@@ -112,7 +112,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
-    connect(surface, &MirSurface::isBeingDisplayedChanged, this, [this](MirSurfaceInterface *surface) {
+    connect(surface, &MirSurface::isBeingDisplayedChanged, this, [this, surface]() {
         if ((!surface->live() || !surface->session())
                 && !surface->isBeingDisplayed()) {
             forgetMirSurface(static_cast<MirSurface*>(surface)->window());

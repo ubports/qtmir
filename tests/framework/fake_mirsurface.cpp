@@ -142,7 +142,7 @@ void FakeMirSurface::registerView(qintptr viewId)
 {
     m_views.insert(viewId, false);
     if (m_views.count() == 1) {
-        Q_EMIT isBeingDisplayedChanged(this);
+        Q_EMIT isBeingDisplayedChanged();
     }
 }
 
@@ -150,7 +150,7 @@ void FakeMirSurface::unregisterView(qintptr viewId)
 {
     m_views.remove(viewId);
     if (m_views.count() == 0) {
-        Q_EMIT isBeingDisplayedChanged(this);
+        Q_EMIT isBeingDisplayedChanged();
     }
     updateVisibility();
 }

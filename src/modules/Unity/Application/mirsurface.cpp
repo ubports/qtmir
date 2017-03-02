@@ -697,7 +697,7 @@ void MirSurface::registerView(qintptr viewId)
     m_views.insert(viewId, MirSurface::View{false});
     INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count();
     if (m_views.count() == 1) {
-        Q_EMIT isBeingDisplayedChanged(this);
+        Q_EMIT isBeingDisplayedChanged();
     }
 }
 
@@ -706,7 +706,7 @@ void MirSurface::unregisterView(qintptr viewId)
     m_views.remove(viewId);
     INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
     if (m_views.count() == 0) {
-        Q_EMIT isBeingDisplayedChanged(this);
+        Q_EMIT isBeingDisplayedChanged();
     }
     updateExposure();
     setViewActiveFocus(viewId, false);
