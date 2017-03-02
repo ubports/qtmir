@@ -119,7 +119,7 @@ Q_SIGNALS:
     void cursorChanged(const QCursor &cursor);
     void raiseRequested();
     void framesPosted();
-    void isBeingDisplayedChanged();
+    void isBeingDisplayedChanged(MirSurfaceInterface *surface);
     void frameDropped();
 };
 

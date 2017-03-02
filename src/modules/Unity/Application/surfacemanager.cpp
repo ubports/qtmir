@@ -38,7 +38,8 @@ Q_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER, "qtmir.surfacemanager", QtInfoMsg)
 using namespace qtmir;
 namespace unityapi = unity::shell::application;
 
-SurfaceManager::SurfaceManager(QObject *)
+
+SurfaceManager::SurfaceManager()
 {
     DEBUG_MSG << "()";
 
@@ -60,6 +61,7 @@ SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
     : m_windowController(windowController)
     , m_sessionManager(sessionManager)
 {
+    DEBUG_MSG << "()";
     connectToWindowModelNotifier(windowModel);
 }
 
@@ -110,6 +112,15 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
+    connect(surface, &MirSurface::isBeingDisplayedChanged, this, [this](MirSurfaceInterface *surface) {
+        if ((!surface->live() || !surface->session())
+                && !surface->isBeingDisplayed()) {
+            forgetMirSurface(static_cast<MirSurface*>(surface)->window());
+            delete surface;
+            tracepoint(qtmir, surfaceDestroyed);
+        }
+    });
+
     if (parentSurface) {
         static_cast<MirSurfaceListModel*>(parentSurface->childSurfaceList())->prependSurface(surface);
     }
@@ -126,8 +137,12 @@ void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
     DEBUG_MSG << "()";
     MirSurface *surface = find(windowInfo);
     forgetMirSurface(windowInfo.window());
-    surface->setLive(false);
-    tracepoint(qtmir, surfaceDestroyed);
+    if (surface->isBeingDisplayed()) {
+        surface->setLive(false);
+    } else {
+        delete surface;
+        tracepoint(qtmir, surfaceDestroyed);
+    }
 }
 
 MirSurface *SurfaceManager::find(const miral::WindowInfo &needle) const

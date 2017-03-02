@@ -168,7 +168,6 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     connect(m_surfaceObserver.get(), &SurfaceObserver::confinesMousePointerChanged, this, &MirSurface::confinesMousePointerChanged);
     m_surfaceObserver->setListener(this);
 
-    //connect(session, &QObject::destroyed, this, &MirSurface::onSessionDestroyed); // TODO try using Shared pointer for lifecycle
     connect(session, &SessionInterface::stateChanged, this, [this]() {
         if (clientIsRunning() && m_pendingResize.isValid()) {
             resize(m_pendingResize.width(), m_pendingResize.height());
@@ -584,9 +583,6 @@ void MirSurface::setLive(bool value)
         INFO_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
-        if (m_views.isEmpty() && !m_live) {
-            deleteLater();
-        }
     }
 }
 
@@ -701,7 +697,7 @@ void MirSurface::registerView(qintptr viewId)
     m_views.insert(viewId, MirSurface::View{false});
     INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count();
     if (m_views.count() == 1) {
-        Q_EMIT isBeingDisplayedChanged();
+        Q_EMIT isBeingDisplayedChanged(this);
     }
 }
 
@@ -710,10 +706,7 @@ void MirSurface::unregisterView(qintptr viewId)
     m_views.remove(viewId);
     INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
     if (m_views.count() == 0) {
-        Q_EMIT isBeingDisplayedChanged();
-        if (m_session.isNull() || !m_live) {
-            deleteLater();
-        }
+        Q_EMIT isBeingDisplayedChanged(this);
     }
     updateExposure();
     setViewActiveFocus(viewId, false);
@@ -756,13 +749,6 @@ unsigned int MirSurface::currentFrameNumber() const
 {
     QMutexLocker locker(&m_mutex);
     return m_currentFrameNumber;
-}
-
-void MirSurface::onSessionDestroyed()
-{
-    if (m_views.isEmpty()) {
-        deleteLater();
-    }
 }
 
 void MirSurface::emitSizeChanged()
