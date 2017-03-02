@@ -87,7 +87,7 @@ void SurfaceManager::forgetMirSurface(const miral::Window &window)
 
 void SurfaceManager::onWindowAdded(const NewWindow &window)
 {
-    auto const &windowInfo = window.windowInfo;
+    const auto &windowInfo = window.windowInfo;
     {
         DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(windowInfo.type())
             << ",parent=" << (void*)(std::shared_ptr<mir::scene::Surface>{windowInfo.parent()}.get())
