@@ -70,44 +70,55 @@ SurfaceManager::SurfaceManager(QObject *)
 
 void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
 {
-    connect(notifier, &WindowModelNotifier::windowAdded,                this, &SurfaceManager::onWindowAdded, Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowAdded,
+            this, &SurfaceManager::onWindowAdded, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowRemoved,              this, &SurfaceManager::onWindowRemoved, Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowRemoved,
+            this, &SurfaceManager::onWindowRemoved, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowReady,                this, [this](const miral::WindowInfo &windowInfo) {
+    connect(notifier, &WindowModelNotifier::windowReady,
+            this, [this](const miral::WindowInfo &windowInfo) {
         Q_EMIT surfaceReady(find(windowInfo.window()));
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowMoved,                this, [this](const miral::WindowInfo &windowInfo, const QPoint &top_left) {
+    connect(notifier, &WindowModelNotifier::windowMoved,
+            this, [this](const miral::WindowInfo &windowInfo, const QPoint &top_left) {
         Q_EMIT surfaceMoved(find(windowInfo.window()), top_left);
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowResized,              this, [this](const miral::WindowInfo &windowInfo, const QSize &size) {
+    connect(notifier, &WindowModelNotifier::windowResized,
+            this, [this](const miral::WindowInfo &windowInfo, const QSize &size) {
         Q_EMIT surfaceResized(find(windowInfo.window()), size);
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowStateChanged,         this, [this](const miral::WindowInfo &windowInfo, Mir::State state) {
+    connect(notifier, &WindowModelNotifier::windowStateChanged,
+            this, [this](const miral::WindowInfo &windowInfo, Mir::State state) {
         Q_EMIT surfaceStateChanged(find(windowInfo.window()), state);
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowFocusChanged,         this, [this](const miral::WindowInfo &windowInfo, bool focused) {
+    connect(notifier, &WindowModelNotifier::windowFocusChanged,
+            this, [this](const miral::WindowInfo &windowInfo, bool focused) {
         Q_EMIT surfaceFocusChanged(find(windowInfo.window()), focused);
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowRequestedRaise,       this, [this](const miral::WindowInfo &windowInfo) {
+    connect(notifier, &WindowModelNotifier::windowRequestedRaise,
+            this, [this](const miral::WindowInfo &windowInfo) {
         Q_EMIT surfaceRequestedRaise(find(windowInfo.window()));
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowsRaised,              this, [this](const std::vector<miral::Window> &windows) {
+    connect(notifier, &WindowModelNotifier::windowsRaised,
+            this, [this](const std::vector<miral::Window> &windows) {
         Q_EMIT surfacesRaised(find(windows));
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowsAddedToWorkspace,    this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
+    connect(notifier, &WindowModelNotifier::windowsAddedToWorkspace,
+            this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
         Q_EMIT surfacesAddedToWorkspace(workspace, find(windows));
     }, Qt::QueuedConnection);
 
-    connect(notifier, &WindowModelNotifier::windowsRemovedFromWorkspace,this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
-        Q_EMIT surfacesRemovedFromWorkspace(workspace, find(windows));
+    connect(notifier, &WindowModelNotifier::windowsAboutToBeRemovedFromWorkspace,
+            this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
+        Q_EMIT surfacesAboutToBeRemovedFromWorkspace(workspace, find(windows));
     }, Qt::QueuedConnection);
 
     connect(notifier, &WindowModelNotifier::modificationsEnded,   this, &SurfaceManager::modificationsEnded,    Qt::QueuedConnection);

@@ -80,7 +80,8 @@ Q_SIGNALS: // **Must used Queued Connection or else events will be out of order*
     void windowsRaised(const std::vector<miral::Window> &windows); // results in deep copy when passed over Queued connection:(
     void windowRequestedRaise(const miral::WindowInfo &window);
     void windowsAddedToWorkspace(const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows);
-    void windowsRemovedFromWorkspace(const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows);
+    void windowsAboutToBeRemovedFromWorkspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                              const std::vector<miral::Window> &windows);
     void modificationsStarted();
     void modificationsEnded();
 

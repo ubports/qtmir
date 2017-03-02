@@ -287,7 +287,7 @@ namespace qtmir
     {
         miral::WorkspacePolicy::advise_removing_from_workspace(workspace, windows);
 
-        Q_EMIT d->m_windowModel.windowsRemovedFromWorkspace(workspace, windows);
+        Q_EMIT d->m_windowModel.windowsAboutToBeRemovedFromWorkspace(workspace, windows);
     }
 
     /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
