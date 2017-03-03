@@ -163,7 +163,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
         parentSurface = find(surface->parent());
     }
 
-    auto surface = new MirSurface(window.windowInfo, m_windowController, session, parentSurface);
+    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
     if (parentSurface) {

@@ -137,33 +137,32 @@ public:
     }
 };
 
-
-MirSurface::MirSurface(const miral::WindowInfo &newWindowInfo,
+MirSurface::MirSurface(NewWindow newWindowInfo,
         WindowControllerInterface* controller,
         SessionInterface *session,
         MirSurface *parentSurface)
     : MirSurfaceInterface()
-    , m_window{newWindowInfo.window()}
-    , m_extraInfo{getExtraInfo(newWindowInfo)}
-    , m_name{QString::fromStdString(newWindowInfo.name())}
-    , m_type{newWindowInfo.type()}
-    , m_minWidth{newWindowInfo.min_width().as_int()}
-    , m_minHeight{newWindowInfo.min_height().as_int()}
-    , m_maxWidth{newWindowInfo.max_width().as_int()}
-    , m_maxHeight{newWindowInfo.max_height().as_int()}
-    , m_incWidth{newWindowInfo.width_inc().as_int()}
-    , m_incHeight{newWindowInfo.height_inc().as_int()}
-    , m_surface(m_window)
+    , m_window{newWindowInfo.windowInfo.window()}
+    , m_extraInfo{getExtraInfo(newWindowInfo.windowInfo)}
+    , m_name{QString::fromStdString(newWindowInfo.windowInfo.name())}
+    , m_type{newWindowInfo.windowInfo.type()}
+    , m_minWidth{newWindowInfo.windowInfo.min_width().as_int()}
+    , m_minHeight{newWindowInfo.windowInfo.min_height().as_int()}
+    , m_maxWidth{newWindowInfo.windowInfo.max_width().as_int()}
+    , m_maxHeight{newWindowInfo.windowInfo.max_height().as_int()}
+    , m_incWidth{newWindowInfo.windowInfo.width_inc().as_int()}
+    , m_incHeight{newWindowInfo.windowInfo.height_inc().as_int()}
+    , m_surface(newWindowInfo.surface)
     , m_session(session)
     , m_controller(controller)
     , m_orientationAngle(Mir::Angle0)
     , m_textures(new CompositorTextureProvider)
-    , m_visible(newWindowInfo.is_visible())
+    , m_visible(newWindowInfo.windowInfo.is_visible())
     , m_live(true)
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
-    , m_windowModelObserver(std::make_shared<WindowNotifierObserverImpl>(this, newWindowInfo.window()))
+    , m_windowModelObserver(std::make_shared<WindowNotifierObserverImpl>(this, m_window))
     , m_size(toQSize(m_window.size()))
-    , m_state(toQtState(newWindowInfo.state()))
+    , m_state(toQtState(newWindowInfo.windowInfo.state()))
     , m_shellChrome(Mir::NormalChrome)
     , m_parentSurface(parentSurface)
     , m_childSurfaceList(new MirSurfaceListModel(this))

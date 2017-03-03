@@ -53,7 +53,7 @@ class MirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
-    MirSurface(const miral::WindowInfo &windowInfo,
+    MirSurface(qtmir::NewWindow windowInfo,
                WindowControllerInterface *controller,
                SessionInterface *session = nullptr,
                MirSurface *parentSurface = nullptr);

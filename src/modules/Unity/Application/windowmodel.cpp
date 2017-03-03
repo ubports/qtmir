@@ -71,7 +71,7 @@ void WindowModel::onWindowAdded(const NewWindow &window)
 
     const int index = m_windowModel.count();
     beginInsertRows(QModelIndex(), index, index);
-    m_windowModel.append(new MirSurface(window.windowInfo, m_windowController));
+    m_windowModel.append(new MirSurface(window, m_windowController));
     endInsertRows();
     Q_EMIT countChanged();
 }
@@ -97,7 +97,7 @@ void WindowModel::addInputMethodWindow(const NewWindow &window)
         qDebug("Multiple Input Method Surfaces created, removing the old one!");
         delete m_inputMethodSurface;
     }
-    m_inputMethodSurface = new MirSurface(window.windowInfo, m_windowController);
+    m_inputMethodSurface = new MirSurface(window, m_windowController);
     Q_EMIT inputMethodSurfaceChanged(m_inputMethodSurface);
 }
 
