@@ -537,9 +537,6 @@ bool QtEventFeeder::dispatch(MirEvent const& event)
         return false;
 
     auto iev = mir_event_get_input_event(&event);
-    auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-        std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
-    EventBuilder::instance()->store(iev, timestamp.count());
 
     switch (mir_input_event_get_type(iev)) {
     case mir_input_event_type_key:
@@ -601,9 +598,10 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
 void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 {
+    auto iev = mir_pointer_event_input_event(pev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_pointer_event_input_event(pev))));
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
 
@@ -638,9 +636,10 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 
 void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 {
+    auto iev = mir_keyboard_event_input_event(kev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_keyboard_event_input_event(kev))));
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
 
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
 
@@ -688,9 +687,10 @@ void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 
 void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
 {
+    auto iev = mir_touch_event_input_event(tev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_touch_event_input_event(tev))));
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
 
     tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 
