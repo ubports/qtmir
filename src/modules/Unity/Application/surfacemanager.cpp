@@ -99,9 +99,8 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     auto mirSession = windowInfo.window().application();
     SessionInterface* session = m_sessionManager->findSession(mirSession.get());
 
-    MirSurface *const parentSurface = find(windowInfo.parent());
-
-    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
+    const auto parentSurface = find(windowInfo.parent());
+    const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
     if (parentSurface) {
