@@ -97,6 +97,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: qtmir-desktop (= ${binary:Version}) | qtmir-android (= ${binary:Version}),
          ${misc:Depends},
+         libmiral-dev (>= 1.3.0),
 Description: Header files for QtMir
  QtMir is a set of Qt5 components to enable one to write a Mir server with Qt.
  It contains a QPA (Qt Platform Abstraction) plugin which creates and manages
