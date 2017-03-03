@@ -116,7 +116,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
         if ((!surface->live() || !surface->session())
                 && !surface->isBeingDisplayed()) {
             forgetMirSurface(static_cast<MirSurface*>(surface)->window());
-            delete surface;
+            surface->deleteLater(); // don't delete immediately, slot may be directly connected
             tracepoint(qtmir, surfaceDestroyed);
         }
     });

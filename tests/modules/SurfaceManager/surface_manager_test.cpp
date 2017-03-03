@@ -452,6 +452,10 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedSurfaceManagerDeletesMirSurfaceWhe
 
     // Test
     mirSurface->unregisterView(viewId);
+    // MirSurface is deleteLater()ed by SurfaceManager, so need to spin event loop.
+    // But DeferredDelete is special: likes to be called out specifically or it won't come out
+    qtApp->sendPostedEvents(mirSurface, QEvent::DeferredDelete);
+    qtApp->sendPostedEvents();
 
     // Check result
     ASSERT_EQ(2, mirSurfaceDestroyedSpy.count()); //FIXME - should be 1
