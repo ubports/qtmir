@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -29,7 +29,6 @@
 
 // mirserver
 #include "nativeinterface.h"
-#include "sessionauthorizer.h"
 #include "logging.h"
 
 //miral
@@ -73,28 +72,6 @@ QString toShortAppIdIfPossible(const QString &appId) {
     return appId;
 }
 
-void connectToSessionAuthorizer(ApplicationManager *manager, SessionAuthorizer *authorizer)
-{
-    QObject::connect(authorizer, &SessionAuthorizer::requestAuthorizationForSession,
-                     manager, &ApplicationManager::authorizeSession, Qt::BlockingQueuedConnection);
-}
-
-void connectToTaskController(ApplicationManager *manager, TaskController *controller)
-{
-    QObject::connect(controller, &TaskController::processStarting,
-                     manager, &ApplicationManager::onProcessStarting);
-    QObject::connect(controller, &TaskController::processStopped,
-                     manager, &ApplicationManager::onProcessStopped);
-    QObject::connect(controller, &TaskController::processSuspended,
-                     manager, &ApplicationManager::onProcessSuspended);
-    QObject::connect(controller, &TaskController::processFailed,
-                     manager, &ApplicationManager::onProcessFailed);
-    QObject::connect(controller, &TaskController::focusRequested,
-                     manager, &ApplicationManager::onFocusRequested);
-    QObject::connect(controller, &TaskController::resumeRequested,
-                     manager, &ApplicationManager::onResumeRequested);
-}
-
 } // namespace
 
 ApplicationManager* ApplicationManager::create()
@@ -106,8 +83,6 @@ ApplicationManager* ApplicationManager::create()
         QGuiApplication::quit();
         return nullptr;
     }
-
-    SessionAuthorizer *sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
 
     QSharedPointer<TaskController> taskController(new upstart::TaskController());
     QSharedPointer<ProcInfo> procInfo(new ProcInfo());
@@ -125,9 +100,6 @@ ApplicationManager* ApplicationManager::create()
                                              procInfo,
                                              settings
                                          );
-
-    connectToSessionAuthorizer(appManager, sessionAuthorizer);
-    connectToTaskController(appManager, taskController.data());
 
     // Emit signal to notify Upstart that Mir is ready to receive client connections
     // see http://upstart.ubuntu.com/cookbook/#expect-stop
@@ -166,6 +138,23 @@ ApplicationManager::ApplicationManager(
 {
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::ApplicationManager (this=%p)" << this;
     setObjectName(QStringLiteral("qtmir::ApplicationManager"));
+
+    QObject::connect(m_taskController.data(), &TaskController::processStarting,
+                     this, &ApplicationManager::onProcessStarting);
+    QObject::connect(m_taskController.data(), &TaskController::processStopped,
+                     this, &ApplicationManager::onProcessStopped);
+    QObject::connect(m_taskController.data(), &TaskController::processSuspended,
+                     this, &ApplicationManager::onProcessSuspended);
+    QObject::connect(m_taskController.data(), &TaskController::processFailed,
+                     this, &ApplicationManager::onProcessFailed);
+    QObject::connect(m_taskController.data(), &TaskController::focusRequested,
+                     this, &ApplicationManager::onFocusRequested);
+    QObject::connect(m_taskController.data(), &TaskController::resumeRequested,
+                     this, &ApplicationManager::onResumeRequested);
+    QObject::connect(m_taskController.data(), &TaskController::authorizationRequestedForSession,
+                     this, &ApplicationManager::authorizeSession);
+    QObject::connect(m_taskController.data(), &TaskController::sessionStarting,
+                     this, &ApplicationManager::onSessionStarting);
 }
 
 ApplicationManager::~ApplicationManager()
@@ -596,7 +585,7 @@ Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
         return nullptr;
 
     for (Application *app : m_applications) {
-        if (app->m_pid == pid) {
+        if (app->pid() == pid) {
             return app;
         }
     }
@@ -664,7 +653,6 @@ void ApplicationManager::add(Application* application)
         remove(application);
         application->deleteLater();
     });
-
 
     beginInsertRows(QModelIndex(), m_applications.count(), m_applications.count());
     m_applications.append(application);
@@ -783,6 +771,20 @@ Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* sur
         }
     }
     return nullptr;
+}
+
+
+void ApplicationManager::onSessionStarting(SessionInterface *qmlSession)
+{
+    Application* application = findApplicationWithSession(qmlSession->session());
+    if (application && application->state() != Application::Running) {
+        application->setSession(qmlSession);
+    }
+}
+
+SessionInterface *ApplicationManager::findSession(const mir::scene::Session* session) const
+{
+    return m_taskController->findSession(session);
 }
 
 } // namespace qtmir
