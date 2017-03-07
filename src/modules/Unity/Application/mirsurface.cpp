@@ -768,6 +768,7 @@ void MirSurface::onSessionDestroyed()
 
 void MirSurface::emitSizeChanged()
 {
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::sizeChanged(" << m_size << ")";
     Q_EMIT sizeChanged(m_size);
 }
 
@@ -936,6 +937,20 @@ QRect MirSurface::inputBounds() const
 bool MirSurface::confinesMousePointer() const
 {
     return m_surface->confine_pointer_state() == mir_pointer_confined_to_window;
+}
+
+bool MirSurface::allowClientResize() const
+{
+    return m_extraInfo->allowClientResize;
+}
+
+void MirSurface::setAllowClientResize(bool value)
+{
+    if (m_extraInfo->allowClientResize != value) {
+        QMutexLocker locker(&m_extraInfo->mutex);
+        m_extraInfo->allowClientResize = value;
+        Q_EMIT allowClientResizeChanged(value);
+    }
 }
 
 void MirSurface::activate()
