@@ -134,7 +134,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_surfaceObserver(std::make_shared<SurfaceObserverImpl>())
     , m_size(toQSize(m_window.size()))
     , m_state(toQtState(newWindowInfo.windowInfo.state()))
-    , m_shellChrome(Mir::NormalChrome)
+    , m_shellChrome(toQtShellChrome(newWindowInfo.windowInfo.shell_chrome()))
     , m_parentSurface(parentSurface)
     , m_childSurfaceList(new MirSurfaceListModel(this))
 {
@@ -150,8 +150,6 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     SurfaceObserver::registerObserverForSurface(m_surfaceObserver.get(), m_surface.get());
     m_surface->add_observer(m_surfaceObserver);
 
-    //m_shellChrome = creationHints.shellChrome; TODO - where will this come from now?
-
     connect(m_surfaceObserver.get(), &SurfaceObserver::framesPosted, this, &MirSurface::onFramesPostedObserved);
     connect(m_surfaceObserver.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::nameChanged, this, &MirSurface::onNameChanged);
@@ -163,7 +161,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     connect(m_surfaceObserver.get(), &SurfaceObserver::widthIncrementChanged, this, &MirSurface::onWidthIncrementChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::heightIncrementChanged, this, &MirSurface::onHeightIncrementChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::shellChromeChanged, this, [&](MirShellChrome shell_chrome) {
-        setShellChrome(static_cast<Mir::ShellChrome>(shell_chrome));
+        setShellChrome(toQtShellChrome(shell_chrome));
     });
     connect(m_surfaceObserver.get(), &SurfaceObserver::inputBoundsChanged, this, &MirSurface::setInputBounds);
     connect(m_surfaceObserver.get(), &SurfaceObserver::confinesMousePointerChanged, this, &MirSurface::confinesMousePointerChanged);
