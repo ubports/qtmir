@@ -102,7 +102,7 @@ void WindowManagementPolicy::handle_modify_window(
         }
     }
 
-    m_tools.modify_window(windowInfo, modifications);
+    CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
 
     // TODO Once Qt processes the request we probably don't want to notify from here
     std::shared_ptr<mir::scene::Surface> surface{windowInfo.window()};
