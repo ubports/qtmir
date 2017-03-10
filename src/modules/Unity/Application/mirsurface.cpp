@@ -279,18 +279,40 @@ void MirSurface::dropPendingBuffer()
 
     m_textures->forEachCompositorTexture([&allStop, this](qintptr userId, CompositorTexture* compositorTexture) {
         int framesPending = m_surface->buffers_ready_for_compositor((void*)userId);
-        if (framesPending > 0) {
-            compositorTexture->setUpToDate(false);
+        if (framesPending == 0) return;
 
-            if (updateTextureLocked(userId, compositorTexture)) {
-                allStop &= false;
-                DEBUG_MSG << "() dropped=1 left=" << framesPending-1;
-            } else {
-                // If we haven't managed to update the texture, don't keep banging away.
-                DEBUG_MSG << "() dropped=0" << " left=" << framesPending << " - failed to upate texture";
+        compositorTexture->setUpToDate(false);
+        auto renderables = m_surface->generate_renderables((void*)userId);
+
+        if (renderables.size() > 0) {
+            allStop &= false;
+            compositorTexture->incrementFrame();
+
+            auto texture = qWeakPointerCast<MirBufferSGTexture, QSGTexture>(compositorTexture->texture()).lock();
+            if (texture) {
+                // Avoid holding two buffers for the compositor at the same time. Thus free the current
+                // before acquiring the next
+                texture->freeBuffer();
+                texture->setBuffer(renderables[0]->buffer());
+                if (texture->textureSize() != m_size) {
+                    m_size = texture->textureSize();
+                    QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+                }
+                compositorTexture->setUpToDate(true);
+
+                framesPending = m_surface->buffers_ready_for_compositor((void*)userId);
+                if (framesPending > 0) {
+                    // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+                    // queued since the timer lives in a different thread
+                    DEBUG_MSG << "() - there are still buffers ready for compositor. starting frame dropper";
+                    QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
+                }
             }
-            Q_EMIT frameDropped();
+        } else {
+            // Just get a pointer to the buffer. This tells mir we consumed it.
+            renderables[0]->buffer();
         }
+        Q_EMIT frameDropped();
     });
 
     // only stop if all textures are updated

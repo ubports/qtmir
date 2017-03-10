@@ -21,7 +21,7 @@ Index: multiwindow.screenwindow/debian/control
 +               libqt5test5,
                 libqtdbusmock1-dev (>= 0.2),
                 libqtdbustest1-dev (>= 0.2),
-                libubuntu-app-launch2-dev (>= 0.9),
+                libubuntu-app-launch3-dev,
 @@ -35,8 +41,8 @@ Build-Depends: cmake,
  # lttng-gen-ts needs python3, but doesn't depend on it itself: bug 1359147
                 python3:any,
@@ -76,9 +76,9 @@ Index: multiwindow.screenwindow/debian/control
  
  Package: libqtmirserver-dev
  Section: libdevel
-@@ -104,40 +93,3 @@ Description: Header files for QtMir
+@@ -119,40 +108,3 @@ Description: QtMir server API shared lib
   .
-  This package contains the library headers for developers.
+  Contains the shared library containing QtMir server API.
  
 -Package: qtdeclarative5-qtmir-plugin
 -Architecture: any
@@ -121,14 +121,14 @@ Index: multiwindow.screenwindow/debian/rules
 ===================================================================
 --- multiwindow.screenwindow.orig/debian/rules
 +++ multiwindow.screenwindow/debian/rules
-@@ -3,67 +3,32 @@
+@@ -3,68 +3,34 @@
  
  export DPKG_GENSYMBOLS_CHECK_LEVEL=4
  
 -include /usr/share/dpkg/default.mk
 -
  ANDROID_DIR = build-android
--DESKTOP_DIR = build-desktop
+ DESKTOP_DIR = build-desktop
  TMP1_DIR = $(CURDIR)/debian/tmp1
 -TMP2_DIR = $(CURDIR)/debian/tmp2
 -
@@ -189,5 +189,7 @@ Index: multiwindow.screenwindow/debian/rules
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-desktop
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtdeclarative5-qtmir-plugin
 -	dh_install --sourcedir=$(TMP2_DIR) -pqtmir-tests
+-	dh_install --sourcedir=$(TMP2_DIR) -plibqtmirserver1
 -	dh_install --sourcedir=$(TMP2_DIR) -plibqtmirserver-dev
++	dh_install --sourcedir=$(TMP1_DIR) -plibqtmirserver1
 +	dh_install --sourcedir=$(TMP1_DIR) -plibqtmirserver-dev
