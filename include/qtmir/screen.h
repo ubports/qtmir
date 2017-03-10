@@ -38,21 +38,6 @@ class ScreenConfiguration;
 class Screen : public QObject
 {
     Q_OBJECT
-
-    Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged)
-
-    Q_PROPERTY(bool used READ used NOTIFY usedChanged)
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(qtmir::OutputTypes outputType READ outputType NOTIFY outputTypeChanged)
-    Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
-    Q_PROPERTY(qtmir::FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
-    Q_PROPERTY(MirPowerMode powerMode READ powerMode NOTIFY powerModeChanged)
-    Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
-    Q_PROPERTY(QPoint position READ position NOTIFY positionChanged)
-    Q_PROPERTY(uint currentModeIndex READ currentModeIndex NOTIFY currentModeIndexChanged)
-    Q_PROPERTY(QQmlListProperty<qtmir::ScreenMode> availableModes READ availableModes NOTIFY availableModesChanged)
-    Q_PROPERTY(QSizeF physicalSize READ physicalSize NOTIFY physicalSizeChanged)
-
 public:
     virtual qtmir::OutputId outputId() const = 0;
     virtual bool used() const = 0;
