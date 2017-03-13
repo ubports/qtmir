@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -41,6 +41,7 @@ public:
     QVariantMap windowProperties(QPlatformWindow *window) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name) const override;
     QVariant windowProperty(QPlatformWindow *window, const QString &name, const QVariant &defaultValue) const override;
+    void setWindowProperty(QPlatformWindow *window, const QString &name, const QVariant &value) override;
 
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;

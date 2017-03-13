@@ -19,6 +19,7 @@
 #include "eventdispatch.h"
 #include "initialsurfacesizes.h"
 #include "screensmodel.h"
+#include "screenwindow.h"
 #include "surfaceobserver.h"
 
 #include "miral/window_manager_tools.h"
@@ -28,6 +29,7 @@
 #include "tracepoints.h"
 
 #include <QDebug>
+#include <QMutexLocker>
 
 namespace qtmir {
     std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo) {
@@ -344,4 +346,70 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
             m_tools.modify_window(windowInfo, modifications);
         });
     }
+}
+
+Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
+{
+    ScreenWindow *screenWindow = ScreenWindow::findWithWId(getExtraInfo(windowInfo)->screenWindowId);
+    if (!screenWindow) {
+        return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
+    }
+
+    QRect availableRect = screenWindow->availableDesktopArea();
+    if (availableRect.isNull()) {
+        return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
+    }
+
+    QRect windowMargins;
+
+    // TODO: Consider margins for other window types
+    switch (windowInfo.type()) {
+    case mir_surface_type_normal:
+        windowMargins = screenWindow->normalWindowMargins();
+        break;
+    case mir_surface_type_dialog:
+        windowMargins = screenWindow->dialogWindowMargins();
+        break;
+    default:
+        // Use the default (0,0,0,0) QRect
+        break;
+    }
+
+    auto window = windowInfo.window();
+    int posX = window.top_left().x.as_int();
+    int posY = window.top_left().y.as_int();
+    int moveX = movement.dx.as_int();
+    int moveY = movement.dy.as_int();
+    int width = window.size().width.as_int();
+    int height = window.size().height.as_int();
+
+    // If the child window is already partially beyond the available desktop area (most likely because the user
+    // explicitly moved it there) we won't pull it back, unless the inherited movement is this direction, but also won't
+    // push it even further astray. But if it currently is completely within the available desktop area boundaries
+    // we won't let go beyond it.
+
+    // TODO: Consider left, right and bottom window margins. Right now I just care about the top one which only one
+    //       used by unity 8 (for its window title bar)
+
+    if (moveX > 0) {
+        if (posX + width < availableRect.right()) {
+            posX = qMin(posX + moveX, availableRect.right() - width);
+        }
+    } else {
+        if (posX > availableRect.left()) {
+            posX = qMax(posX + moveX, availableRect.left());
+        }
+    }
+
+    if (moveY > 0) {
+        if (posY + height < availableRect.bottom()) {
+            posY = qMin(posY + moveY, availableRect.bottom() - height);
+        }
+    } else {
+        if (posY - windowMargins.top() > availableRect.top()) {
+            posY = qMax(posY + moveY, availableRect.top() + windowMargins.top());
+        }
+    }
+
+    return Rectangle(Point(posX,posY), windowInfo.window().size());
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,6 +20,8 @@
 #include <QObject>
 #include <QPoint>
 #include <QSize>
+#include <QMutex>
+#include <QtGui/qwindowdefs.h> // For WId
 
 #include <miral/window_info.h>
 
@@ -58,6 +60,11 @@ struct ExtraWindowInfo {
     // Mir::MaximizedBottomLeftState:
     // Mir::MaximizedBottomRightState:
     Mir::State state{Mir::UnknownState};
+
+    // Id of the QPlatformWindow where this miral::WindowInfo is being displayed
+    WId screenWindowId;
+
+    QMutex mutex;
 };
 
 std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo);

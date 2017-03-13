@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,15 +19,20 @@
 
 #include <qpa/qplatformwindow.h>
 
+#include <QMap>
+#include <QMutex>
+#include <QRect>
+
 // ScreenWindow implements the basics of a QPlatformWindow.
 // QtMir enforces one Window per Screen, so Window and Screen are tightly coupled.
 // All Mir specifics live in the associated Screen object.
-
 class ScreenWindow : public QPlatformWindow
 {
 public:
     explicit ScreenWindow(QWindow *window);
     virtual ~ScreenWindow();
+
+    static ScreenWindow *findWithWId(WId);
 
     bool isExposed() const override;
     void setExposed(const bool exposed);
@@ -40,9 +45,24 @@ public:
     void makeCurrent();
     void doneCurrent();
 
+    QRect availableDesktopArea() const;
+    void setAvailableDesktopArea(const QRect &rect);
+
+    QRect normalWindowMargins() const;
+    void setNormalWindowMargins(const QRect &rect);
+
+    QRect dialogWindowMargins() const;
+    void setDialogWindowMargins(const QRect &rect);
+
 private:
     bool m_exposed;
     WId m_winId;
+    QRect m_availableDesktopArea;
+    QRect m_normalWindowMargins;
+    QRect m_dialogWindowMargins;
+    mutable QMutex m_mutex;
+
+    static QMap<WId, ScreenWindow*> m_idToWindowMap;
 };
 
 #endif // SCREENWINDOW_H

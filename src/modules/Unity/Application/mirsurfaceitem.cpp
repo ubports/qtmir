@@ -586,6 +586,7 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
     }
 
     if (m_surface) {
+        m_surface->setScreenWindowId(0);
         disconnect(m_surface, nullptr, this, nullptr);
         m_surface->unregisterView((qintptr)this);
         unsetCursor();
@@ -629,6 +630,8 @@ void MirSurfaceItem::setSurface(unity::shell::application::MirSurfaceInterface *
             Q_EMIT orientationAngleChanged(m_surface->orientationAngle());
         }
 
+        m_surface->setScreenWindowId(m_window ? m_window->winId() : 0);
+
         updateMirSurfaceActiveFocus();
     }
 
@@ -653,6 +656,10 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
                 Qt::DirectConnection);
+    }
+
+    if (m_surface) {
+        m_surface->setScreenWindowId(m_window ? m_window->winId() : 0);
     }
 }
 

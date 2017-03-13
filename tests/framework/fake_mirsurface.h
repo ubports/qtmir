@@ -144,6 +144,8 @@ public:
         Q_EMIT focusRequested();
     }
 
+    void setScreenWindowId(WId) override {}
+
 public Q_SLOTS:
     void requestState(Mir::State qmlState) override;
     void onCompositorSwappedBuffers() override;

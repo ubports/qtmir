@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -69,6 +69,9 @@ public:
     void advise_resize(const miral::WindowInfo &info, const Size &newSize) override;
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
+
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
 
     // Methods for consumption by WindowControllerInterface
     void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);

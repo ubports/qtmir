@@ -163,6 +163,8 @@ public:
 
     void requestFocus() override;
 
+    void setScreenWindowId(WId) override;
+
     ////
     // Own API
     void setPosition(const QPoint newPosition);
@@ -210,6 +212,7 @@ private:
     void onHeightIncrementChanged(int incHeight);
     QPoint convertDisplayToLocalCoords(const QPoint &displayPos) const;
     QPoint convertLocalToDisplayCoords(const QPoint &localPos) const;
+    void updatePosition();
 
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;

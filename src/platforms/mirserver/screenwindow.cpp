@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -27,8 +27,11 @@
 #include <QQuickWindow>
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QDebug>
+#include <QMutexLocker>
 
 #include "logging.h"
+
+QMap<WId, ScreenWindow*> ScreenWindow::m_idToWindowMap;
 
 static WId newWId()
 {
@@ -56,12 +59,21 @@ ScreenWindow::ScreenWindow(QWindow *window)
         window->setGeometry(screenGeometry);
     }
     window->setSurfaceType(QSurface::OpenGLSurface);
+
+    m_idToWindowMap[m_winId] = this;
 }
 
 ScreenWindow::~ScreenWindow()
 {
     qCDebug(QTMIR_SCREENS) << "Destroying ScreenWindow" << this;
+
+    m_idToWindowMap.remove(m_winId);
     static_cast<Screen *>(screen())->setWindow(nullptr);
+}
+
+ScreenWindow *ScreenWindow::findWithWId(WId id)
+{
+    return m_idToWindowMap.value(id, nullptr);
 }
 
 bool ScreenWindow::isExposed() const
@@ -126,4 +138,52 @@ void ScreenWindow::makeCurrent()
 void ScreenWindow::doneCurrent()
 {
     static_cast<Screen *>(screen())->doneCurrent();
+}
+
+QRect ScreenWindow::availableDesktopArea() const
+{
+    QRect result;
+    {
+        QMutexLocker locker(&m_mutex);
+        result = m_availableDesktopArea;
+    }
+    return result;
+}
+
+void ScreenWindow::setAvailableDesktopArea(const QRect &rect)
+{
+    QMutexLocker locker(&m_mutex);
+    m_availableDesktopArea = rect;
+}
+
+QRect ScreenWindow::normalWindowMargins() const
+{
+    QRect result;
+    {
+        QMutexLocker locker(&m_mutex);
+        result = m_normalWindowMargins;
+    }
+    return result;
+}
+
+void ScreenWindow::setNormalWindowMargins(const QRect &rect)
+{
+    QMutexLocker locker(&m_mutex);
+    m_normalWindowMargins = rect;
+}
+
+QRect ScreenWindow::dialogWindowMargins() const
+{
+    QRect result;
+    {
+        QMutexLocker locker(&m_mutex);
+        result = m_dialogWindowMargins;
+    }
+    return result;
+}
+
+void ScreenWindow::setDialogWindowMargins(const QRect &rect)
+{
+    QMutexLocker locker(&m_mutex);
+    m_dialogWindowMargins = rect;
 }
