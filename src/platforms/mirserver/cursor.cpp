@@ -155,11 +155,11 @@ void Cursor::registerMousePointer(MirMousePointerInterface *mousePointer)
 
     connect(d.data(), &Private::screenPositionChanged, mousePointer, updatePositionFunction, Qt::UniqueConnection);
     connect(d.data(), &Private::cursorChanged, mousePointer, [this, mousePointer](const QCursor& cursor, const QString& cursorName) {
-        mousePointer->setCursor(cursor);
+        mousePointer->setCustomCursor(cursor);
         mousePointer->setCursorName(cursorName);
     }, Qt::UniqueConnection);
 
-    mousePointer->setCursor(d->customCursor());
+    mousePointer->setCustomCursor(d->customCursor());
     mousePointer->setCursorName(d->cursorName());
 }
 
