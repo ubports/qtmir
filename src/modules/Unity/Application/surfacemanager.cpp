@@ -56,10 +56,8 @@ SurfaceManager::SurfaceManager()
 }
 
 SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
-                               WindowModelNotifier *windowModel,
-                               SessionManager *sessionManager)
+                               WindowModelNotifier *windowModel)
     : m_windowController(windowController)
-    , m_sessionManager(sessionManager)
 {
     DEBUG_MSG << "()";
     connectToWindowModelNotifier(windowModel);

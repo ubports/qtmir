@@ -47,8 +47,7 @@ public:
 protected:
     // for testing purposes
     SurfaceManager(WindowControllerInterface *windowController,
-                   WindowModelNotifier *windowModel,
-                   SessionManager *sessionManager);
+                   WindowModelNotifier *windowModel);
     MirSurface* find(const miral::WindowInfo &needle) const;
 
 private Q_SLOTS:
