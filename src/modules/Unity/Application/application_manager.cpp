@@ -502,7 +502,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
      * Hack: Allow applications to be launched without being managed by upstart, where AppManager
      * itself manages processes executed with a "--desktop_file_hint=/path/to/desktopFile.desktop"
      * parameter attached, or an environment variable "DESKTOP_FILE_HINT=/path/to/desktopFile.desktop".
-     * This exists until ubuntu-app-launch can notify shell any application is and so shell should allow it.
+     * This exists until all GUI applications are launched via ubuntu-app-launch.
      */
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
     if (!info) {
