@@ -1,3 +1,32 @@
+qtmir (0.5.1+17.04.20170307-0ubuntu1) zesty; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Fix clang build
+
+  [ Daniel d'Andrada ]
+  * Some qtmir::Session fixes
+  * Make TaskController absorb SessionManager
+  * Don't pass command line arguments to Mir
+  * Reduce default log verbosity (LP: #1664151)
+  * DBusFocusInfo: fix crash when trying to access a null session from
+    an application (LP: #1670710)
+
+  [ Gerry Boland ]
+  * Workaround for Mir changing GL state unexpectedly on Qt, breaking
+    font rendering. (LP: #1583088)
+
+  [ Lukáš Tinkl ]
+  * Use the shell chrome, as provided by miral window info (LP:
+    #1658117)
+
+ -- Lukáš Tinkl <lukas.tinkl@canonical.com>  Tue, 07 Mar 2017 23:43:16 +0000
+
+qtmir (0.5.1+17.04.20170221-0ubuntu1) zesty; urgency=medium
+
+  * Handle ubuntu-app-launch API bump to version 3
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Tue, 21 Feb 2017 13:21:58 +0000
+
 qtmir (0.5.1+17.04.20170215.1-0ubuntu1) zesty; urgency=medium
 
   [ Michał Sawicz ]

@@ -1,6 +1,6 @@
 set(
-  SESSION_MANAGER_TEST_SOURCES
-  session_manager_test.cpp
+  SESSION_TEST_SOURCES
+  taskcontroller_test.cpp
   session_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
 )
@@ -18,12 +18,12 @@ include_directories(
   ${MIRSERVER_INCLUDE_DIRS}
 )
 
-add_executable(sessionmanager_test ${SESSION_MANAGER_TEST_SOURCES})
+add_executable(session_test ${SESSION_TEST_SOURCES})
 
-add_dependencies(sessionmanager_test qtmir-test-framework-static)
+add_dependencies(session_test qtmir-test-framework-static)
 
 target_link_libraries(
-  sessionmanager_test
+  session_test
 
   unityapplicationplugin
 
@@ -36,4 +36,4 @@ target_link_libraries(
   ${GMOCK_LIBRARIES}
 )
 
-add_test(SessionManager, sessionmanager_test)
+add_test(Session, session_test)
