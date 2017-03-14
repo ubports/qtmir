@@ -19,9 +19,9 @@
 
 #include "windowcontrollerinterface.h"
 
-namespace qtmir {
+class WrappedWindowManagementPolicy;
 
-class WindowManagementPolicy;
+namespace qtmir {
 
 class WindowController : public qtmir::WindowControllerInterface
 {
@@ -43,10 +43,10 @@ public:
     void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) override;
     void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) override;
 
-    void setPolicy(WindowManagementPolicy *policy);
+    void setPolicy(WrappedWindowManagementPolicy *policy);
 
 protected:
-    WindowManagementPolicy *m_policy;
+    WrappedWindowManagementPolicy *m_policy;
 };
 
 } // namespace qtmir

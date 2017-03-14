@@ -195,6 +195,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_mirServerHooks,
             miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
                                                                               m_windowController,
+                                                                              m_workspaceController,
                                                                               m_appNotifier,
                                                                               eventFeeder,
                                                                               m_windowManagementPolicy),

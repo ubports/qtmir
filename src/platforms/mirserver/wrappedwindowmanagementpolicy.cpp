@@ -232,48 +232,6 @@ namespace qtmir
         Q_EMIT d->m_windowModel.windowsRaised(windows);
     }
 
-    /* Following methods all called from the Qt GUI thread to deliver events to clients */
-    void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
-                                                        const miral::Window &window)
-    {
-        if (mir_keyboard_event_action(event) == mir_keyboard_action_down) {
-            tools.invoke_under_lock([&]() {
-                if (tools.active_window() != window) {
-                    tools.select_active_window(window);
-                }
-            });
-        }
-
-        dispatchInputEvent(window, mir_keyboard_event_input_event(event));
-    }
-
-    void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
-                                                     const miral::Window &window)
-    {
-        tools.invoke_under_lock([&]() {
-            if (tools.active_window() != window) {
-                tools.select_active_window(window);
-            }
-        });
-
-        dispatchInputEvent(window, mir_touch_event_input_event(event));
-    }
-
-    void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
-                                                       const miral::Window &window)
-    {
-        // Prevent mouse hover events causing window focus to change
-        if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
-            tools.invoke_under_lock([&]() {
-                if (tools.active_window() != window) {
-                    tools.select_active_window(window);
-                }
-            });
-        }
-
-        dispatchInputEvent(window, mir_pointer_event_input_event(event));
-    }
-
     void WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
                                                             std::vector<miral::Window> const& windows)
     {
@@ -402,6 +360,7 @@ namespace qtmir
 WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
+                                               qtmir::WorkspaceController &workspaceController,
                                                qtmir::AppNotifier &appNotifier,
                                                const std::shared_ptr<QtEventFeeder>& eventFeeder,
                                                const qtmir::WindowManagmentPolicyBuilder& wmBuilder)
@@ -416,6 +375,7 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
     qRegisterMetaType<std::vector<miral::Window>>();
     qRegisterMetaType<miral::ApplicationInfo>();
     windowController.setPolicy(this);
+    workspaceController.setPolicy(this);
 }
 
 /* Following are hooks to allow custom policy be imposed */
@@ -519,19 +479,86 @@ void WrappedWindowManagementPolicy::advise_resize(const miral::WindowInfo &info,
     m_wrapper->advise_resize(info, newSize);
 }
 
-void WrappedWindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window)
+/* Following methods all called from the Qt GUI thread to deliver events to clients */
+void WrappedWindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
+                                                    const miral::Window &window)
 {
-    m_wrapper->deliver_keyboard_event(event, window);
+    if (mir_keyboard_event_action(event) == mir_keyboard_action_down) {
+        tools.invoke_under_lock([&]() {
+            if (tools.active_window() != window) {
+                tools.select_active_window(window);
+            }
+        });
+    }
+
+    qtmir::dispatchInputEvent(window, mir_keyboard_event_input_event(event));
 }
 
-void WrappedWindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event, const miral::Window &window)
+void WrappedWindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
+                                                        const miral::Window &window)
 {
-    m_wrapper->deliver_touch_event(event, window);
+    tools.invoke_under_lock([&]() {
+        if (tools.active_window() != window) {
+            tools.select_active_window(window);
+        }
+    });
+
+    qtmir::dispatchInputEvent(window, mir_touch_event_input_event(event));
 }
 
-void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event, const miral::Window &window)
+void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
+                                                          const miral::Window &window)
 {
-    m_wrapper->deliver_pointer_event(event, window);
+    // Prevent mouse hover events causing window focus to change
+    if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
+        tools.invoke_under_lock([&]() {
+            if (tools.active_window() != window) {
+                tools.select_active_window(window);
+            }
+        });
+    }
+
+    qtmir::dispatchInputEvent(window, mir_pointer_event_input_event(event));
+}
+
+void WrappedWindowManagementPolicy::for_each_window_in_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                                 std::function<void(miral::Window const&)> const& callback)
+{
+    tools.invoke_under_lock([&]() {
+        tools.for_each_window_in_workspace(workspace, callback);
+    });
+}
+
+void WrappedWindowManagementPolicy::move_worspace_content_to_workspace(const std::shared_ptr<miral::Workspace> &to,
+                                                                       const std::shared_ptr<miral::Workspace> &from)
+{
+    tools.invoke_under_lock([&]() {
+        tools.move_workspace_content_to_workspace(to, from);
+    });
+}
+
+void WrappedWindowManagementPolicy::move_window_to_workspace(const miral::Window &window,
+                                                             const std::shared_ptr<miral::Workspace> &workspace)
+{
+    tools.invoke_under_lock([&]() {
+        auto root = window;
+        auto const* info = &tools.info_for(root);
+
+        while (auto const& parent = info->parent())
+        {
+            root = parent;
+            info = &tools.info_for(root);
+        }
+
+        std::vector<std::shared_ptr<miral::Workspace>> workspaces;
+        tools.for_each_workspace_containing(root, [&](std::shared_ptr<miral::Workspace> const& from) {
+            workspaces.push_back(from);
+        });
+        for (auto wks : workspaces) {
+            tools.remove_tree_from_workspace(root, wks);
+        }
+        tools.add_tree_to_workspace(root, workspace);
+    });
 }
 
 void WrappedWindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,

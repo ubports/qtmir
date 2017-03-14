@@ -29,6 +29,7 @@
 #include "openglcontextfactory.h"
 #include "screensmodel.h"
 #include "windowcontroller.h"
+#include "workspacecontroller.h"
 #include "mirserverhooks.h"
 #include "wrappedsessionauthorizer.h"
 #include "qteventfeeder.h"
@@ -80,6 +81,9 @@ public:
     qtmir::WindowControllerInterface *windowController() const
         { return &m_windowController; }
 
+    qtmir::WorkspaceControllerInterface *workspaceController() const
+        { return &m_workspaceController; }
+
     qtmir::DisplayConfigurationPolicyWrapper m_displayConfigurationPolicy;
     qtmir::WindowManagmentPolicyBuilder m_windowManagementPolicy;
     qtmir::BasicSetDisplayConfigurationStorage m_displayConfigurationStorage;
@@ -93,6 +97,7 @@ private:
     mutable qtmir::AppNotifier m_appNotifier;
     mutable qtmir::WindowModelNotifier m_windowModelNotifier;
     mutable qtmir::WindowController m_windowController;
+    mutable qtmir::WorkspaceController m_workspaceController;
     int &argc;
     char **argv;
 };

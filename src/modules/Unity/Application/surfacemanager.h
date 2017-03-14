@@ -26,6 +26,8 @@
 #include <QVector>
 #include <QLoggingCategory>
 
+#include <boost/bimap.hpp>
+
 Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 
 namespace qtmir {
@@ -33,6 +35,7 @@ namespace qtmir {
 class MirSurface;
 class SessionManager;
 class WindowControllerInterface;
+class WorkspaceControllerInterface;
 
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
 {
@@ -42,10 +45,15 @@ public:
 
     static SurfaceManager *instance();
 
-    unity::shell::application::MirSurfaceInterface *surfaceFor(const miral::Window& window) const override;
-
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
+
+    void forEachSurfaceInWorkspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                   const std::function<void(unity::shell::application::MirSurfaceInterface*)> &callback) override;
+    void moveSurfaceToWorkspace(unity::shell::application::MirSurfaceInterface* surface,
+                                const std::shared_ptr<miral::Workspace> &workspace) override;
+    void moveWorkspaceContentToWorkspace(const std::shared_ptr<miral::Workspace> &to,
+                                         const std::shared_ptr<miral::Workspace> &from) override;
 
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
@@ -56,14 +64,17 @@ private:
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);
-    MirSurface* find(const miral::Window &window) const;
-    MirSurface* find(const std::shared_ptr<mir::scene::Surface> &surface) const;
-    QVector<unity::shell::application::MirSurfaceInterface*> find(const std::vector<miral::Window> &windows) const;
-
-    QHash<qintptr, MirSurface*> m_allSurfaces;
+    MirSurface* surfaceFor(const miral::Window &window) const;
+    QVector<unity::shell::application::MirSurfaceInterface*> surfacesFor(const std::vector<miral::Window> &windows) const;
+    miral::Window windowFor(MirSurface *surface) const;
 
     WindowControllerInterface *m_windowController;
+    WorkspaceControllerInterface *m_workspaceController;
     SessionManager* m_sessionManager;
+
+    friend class Workspace;
+    using swbimap_t = boost::bimap<MirSurface*, miral::Window>;
+    swbimap_t surface_to_window;
 };
 
 } // namespace qtmir

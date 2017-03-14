@@ -22,6 +22,7 @@
 #include "qtmir/windowmodelnotifier.h"
 #include "qteventfeeder.h"
 #include "windowcontroller.h"
+#include "workspacecontroller.h"
 
 #include <QSharedPointer>
 #include <QSize>
@@ -36,6 +37,7 @@ public:
     WrappedWindowManagementPolicy(const miral::WindowManagerTools &tools,
                                   qtmir::WindowModelNotifier &windowModel,
                                   qtmir::WindowController &windowController,
+                                  qtmir::WorkspaceController &workspaceController,
                                   qtmir::AppNotifier &appNotifier,
                                   const std::shared_ptr<QtEventFeeder>& eventFeeder,
                                   const qtmir::WindowManagmentPolicyBuilder& wmBuilder);
@@ -70,11 +72,6 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
-    // Methods for consumption by WindowControllerInterface
-    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window) override;
-    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window) override;
-    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window) override;
-
     void advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
                                     std::vector<miral::Window> const& windows) override;
 
@@ -89,6 +86,19 @@ public:
 
     void ask_client_to_close(const miral::Window &window) override;
     void forceClose(const miral::Window &window) override;
+
+    // Methods for consumption by WindowControllerInterface
+    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
+    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
+    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
+
+    // Methods for consumption by WorkspaceControllerInterface
+    void for_each_window_in_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                      std::function<void(miral::Window const&)> const& callback);
+    void move_worspace_content_to_workspace(const std::shared_ptr<miral::Workspace> &to,
+                                            const std::shared_ptr<miral::Workspace> &from);
+    void move_window_to_workspace(const miral::Window &window,
+                                  const std::shared_ptr<miral::Workspace> &workspace);
 
 private:
     std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;

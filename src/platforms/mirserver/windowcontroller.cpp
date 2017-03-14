@@ -15,7 +15,7 @@
  */
 
 #include "windowcontroller.h"
-#include "qtmir/windowmanagementpolicy.h"
+#include "wrappedwindowmanagementpolicy.h"
 
 #include "mirqtconversion.h"
 
@@ -97,7 +97,7 @@ void WindowController::deliverPointerEvent(const miral::Window &window, const Mi
     }
 }
 
-void WindowController::setPolicy(WindowManagementPolicy * const policy)
+void WindowController::setPolicy(WrappedWindowManagementPolicy * const policy)
 {
     m_policy = policy;
 }

@@ -73,11 +73,6 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
-    // Methods for consumption by WindowControllerInterface
-    virtual void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
-    virtual void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
-    virtual void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
-
     // From miral::WorkspacePolicy
     virtual void advise_adding_to_workspace(
             std::shared_ptr<miral::Workspace> const& workspace,

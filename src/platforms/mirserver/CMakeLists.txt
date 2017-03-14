@@ -66,6 +66,7 @@ add_library(qpa-mirserver-nomirserver OBJECT
     nativeinterface.cpp
     services.cpp
     windowcontroller.cpp
+    workspacecontroller.cpp
     tracepoints.c
     surfaceobserver.cpp
     initialsurfacesizes.cpp
@@ -128,6 +129,7 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/include/qtmir/qtmir.h
 
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/workspacecontrollerinterface.h
 )
 
 add_library(qtmirserver SHARED
