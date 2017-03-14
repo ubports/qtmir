@@ -22,9 +22,6 @@
 // std
 #include <memory>
 
-// boost
-#include <boost/optional.hpp>
-
 // Qt
 #include <QByteArray>
 #include <QStringList>
@@ -37,9 +34,7 @@ namespace qtmir
 class ProcInfo
 {
 public:
-    class CommandLine
-    {
-    public:
+    struct CommandLine {
         QByteArray m_command;
 
         bool startsWith(const char* prefix) const;
@@ -47,8 +42,17 @@ public:
         QString getParameter(const char* name) const;
         QStringList asStringList() const;
     };
+
+    struct Environment {
+        QByteArray m_environment;
+
+        bool contains(const char* prefix) const;
+        QString getParameter(const char* name) const;
+    };
+
     virtual std::unique_ptr<CommandLine> commandLine(pid_t pid);
-    virtual ~ProcInfo();
+    virtual std::unique_ptr<Environment> environment(pid_t pid);
+    virtual ~ProcInfo() = default;
 };
 
 } // namespace qtmir
