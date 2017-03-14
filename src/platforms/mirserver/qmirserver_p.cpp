@@ -57,7 +57,7 @@ void MirServerThread::run()
 
 bool MirServerThread::waitForMirStartup()
 {
-    const int timeout = RUNNING_ON_VALGRIND ? 10 : 100; // else timeout triggers before Mir ready
+    const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir ready
 
     std::unique_lock<decltype(mutex)> lock(mutex);
     started_cv.wait_for(lock, std::chrono::seconds{timeout}, [&]{ return mir_running; });

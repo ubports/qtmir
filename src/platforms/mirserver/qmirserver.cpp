@@ -61,7 +61,7 @@ void QMirServer::stop()
     if (d->serverThread->isRunning()) {
         d->stop();
 
-        const int timeout = RUNNING_ON_VALGRIND ? 10 : 100; // else timeout triggers before Mir done
+        const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir done
         if (!d->serverThread->wait(timeout * 1000)) {
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
