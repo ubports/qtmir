@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTMIR_MIR_BUFFER_H
-#define QTMIR_MIR_BUFFER_H
+#ifndef MIRAL_MIR_BUFFER_H
+#define MIRAL_MIR_BUFFER_H
 
 #include <mir/geometry/size.h>
 
@@ -23,7 +23,7 @@
 
 namespace mir { namespace graphics { class Buffer; }}
 
-namespace qtmir
+namespace miral
 {
 class MirBuffer
 {
@@ -33,16 +33,16 @@ public:
     explicit MirBuffer(std::shared_ptr<mir::graphics::Buffer> const &buffer);
     MirBuffer& operator=(std::shared_ptr<mir::graphics::Buffer> const &buffer);
 
-    bool hasBuffer() const;
-    bool hasAlphaChannel() const;
+    bool has_buffer() const;
+    bool has_alpha_channel() const;
     mir::geometry::Size size() const;
 
     void reset();
-    void glBindToTexture();
+    void gl_bind_to_texture();
 
 private:
     std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
 };
 }
 
-#endif //QTMIR_MIR_BUFFER_H
+#endif //MIRAL_MIR_BUFFER_H

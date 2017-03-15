@@ -21,42 +21,42 @@
 
 #include <stdexcept>
 
-qtmir::MirBuffer::MirBuffer() = default;
-qtmir::MirBuffer::~MirBuffer() = default;
-qtmir::MirBuffer::MirBuffer(std::shared_ptr<mir::graphics::Buffer> const &buffer) :
+miral::MirBuffer::MirBuffer() = default;
+miral::MirBuffer::~MirBuffer() = default;
+miral::MirBuffer::MirBuffer(std::shared_ptr<mir::graphics::Buffer> const &buffer) :
     m_mirBuffer(buffer)
 {
 }
 
-qtmir::MirBuffer& qtmir::MirBuffer::operator=(std::shared_ptr<mir::graphics::Buffer> const &buffer)
+miral::MirBuffer& miral::MirBuffer::operator=(std::shared_ptr<mir::graphics::Buffer> const &buffer)
 {
     m_mirBuffer = buffer;
     return *this;
 }
 
-bool qtmir::MirBuffer::hasBuffer() const
+bool miral::MirBuffer::has_buffer() const
 {
     return !!m_mirBuffer;
 }
 
-bool qtmir::MirBuffer::hasAlphaChannel() const
+bool miral::MirBuffer::has_alpha_channel() const
 {
-    return hasBuffer() && 
+    return has_buffer() &&
         (m_mirBuffer->pixel_format() == mir_pixel_format_abgr_8888
         || m_mirBuffer->pixel_format() == mir_pixel_format_argb_8888);
 }
 
-mir::geometry::Size qtmir::MirBuffer::size() const
+mir::geometry::Size miral::MirBuffer::size() const
 {
     return m_mirBuffer->size();
 }
 
-void qtmir::MirBuffer::reset()
+void miral::MirBuffer::reset()
 {
     m_mirBuffer.reset();
 }
 
-void qtmir::MirBuffer::glBindToTexture()
+void miral::MirBuffer::gl_bind_to_texture()
 {
     namespace mrg = mir::renderer::gl;
 

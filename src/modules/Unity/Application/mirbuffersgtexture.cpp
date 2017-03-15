@@ -58,7 +58,7 @@ void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>&
 
 bool MirBufferSGTexture::hasBuffer() const
 {
-    return m_mirBuffer.hasBuffer();
+    return m_mirBuffer.has_buffer();
 }
 
 int MirBufferSGTexture::textureId() const
@@ -73,7 +73,7 @@ QSize MirBufferSGTexture::textureSize() const
 
 bool MirBufferSGTexture::hasAlphaChannel() const
 {
-    return m_mirBuffer.hasAlphaChannel();
+    return m_mirBuffer.has_alpha_channel();
 }
 
 void MirBufferSGTexture::bind()
@@ -82,7 +82,7 @@ void MirBufferSGTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    m_mirBuffer.glBindToTexture();
+    m_mirBuffer.gl_bind_to_texture();
 
     // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
     // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
