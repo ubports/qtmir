@@ -50,7 +50,7 @@ void MirBufferSGTexture::freeBuffer()
 
 void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>& buffer)
 {
-    m_mirBuffer = buffer;
+    m_mirBuffer.reset(buffer);
     mg::Size size = m_mirBuffer.size();
     m_height = size.height.as_int();
     m_width = size.width.as_int();
@@ -58,7 +58,7 @@ void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>&
 
 bool MirBufferSGTexture::hasBuffer() const
 {
-    return m_mirBuffer.has_buffer();
+    return m_mirBuffer;
 }
 
 int MirBufferSGTexture::textureId() const

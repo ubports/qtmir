@@ -31,17 +31,17 @@ public:
     GLBuffer();
     ~GLBuffer();
     explicit GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
-    GLBuffer& operator=(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
-    bool has_buffer() const;
+    operator bool() const;
     bool has_alpha_channel() const;
     mir::geometry::Size size() const;
 
     void reset();
+    void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
     void bind_to_texture();
 
 private:
-    std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
+    std::shared_ptr<mir::graphics::Buffer> wrapped;
 };
 }
 
