@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,10 +23,36 @@
 #include <QString>
 #include <QStringList>
 
+// miral
+#include <miral/application.h>
+#include <miral/application_info.h>
+
+// mirserver
+#include "promptsessionmanager.h"
+
+namespace mir {
+    namespace scene {
+        class Session;
+        class PromptSession;
+    }
+}
+
+namespace unity {
+    namespace shell {
+        namespace application {
+            class MirSurfaceInterface;
+        }
+    }
+}
+
+class PromptSessionListener;
+
 namespace qtmir
 {
 
+class AppNotifier;
 class ApplicationInfo;
+class SessionInterface;
 
 class TaskController : public QObject
 {
@@ -39,7 +65,6 @@ public:
         APPLICATION_FAILED_TO_START
     };
 
-    TaskController(const TaskController&) = delete;
     virtual ~TaskController() = default;
 
     TaskController& operator=(const TaskController&) = delete;
@@ -54,6 +79,8 @@ public:
 
     virtual QSharedPointer<qtmir::ApplicationInfo> getInfoForApp(const QString &appId) const = 0;
 
+    SessionInterface *findSession(const mir::scene::Session* session) const;
+
 Q_SIGNALS:
     void processStarting(const QString &appId);
     void applicationStarted(const QString &appId);
@@ -64,8 +91,33 @@ Q_SIGNALS:
 
     void processFailed(const QString &appId, TaskController::Error error);
 
+    void authorizationRequestedForSession(const pid_t &pid, bool &authorized);
+
+    void sessionStarting(SessionInterface *session);
+
+public Q_SLOTS:
+    void onSessionStarting(const miral::ApplicationInfo &appInfo);
+    void onSessionStopping(const miral::ApplicationInfo &appInfo);
+
+    void onPromptSessionStarting(const PromptSession& promptSession);
+    void onPromptSessionStopping(const PromptSession& promptSession);
+    void onPromptProviderAdded(const qtmir::PromptSession &promptSession, const miral::Application &);
+    void onPromptProviderRemoved(const qtmir::PromptSession &promptSession, const miral::Application &);
+
+    void onAuthorizationForSessionRequested(const pid_t &pid, bool &authorized);
+
 protected:
-    TaskController() = default;
+    TaskController(QObject *parent = nullptr);
+    TaskController(std::shared_ptr<PromptSessionManager>&, QObject *parent = nullptr);
+
+private:
+    void connectToAppNotifier(AppNotifier *);
+    void connectToPromptSessionListener(PromptSessionListener *);
+
+    std::shared_ptr<PromptSessionManager> m_promptSessionManager;
+
+    QHash<const mir::scene::PromptSession *, SessionInterface *> m_mirPromptToSessionHash;
+    QList<SessionInterface*> m_sessionList;
 };
 
 } // namespace qtmir

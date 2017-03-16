@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,9 +23,9 @@
 #include "qmirserver_p.h"
 
 
-QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
+QMirServer::QMirServer(QObject *parent)
     : QObject(parent)
-    , d_ptr(new QMirServerPrivate(argc, argv))
+    , d_ptr(new QMirServerPrivate)
 {
     Q_D(QMirServer);
 
@@ -39,11 +39,11 @@ QMirServer::~QMirServer()
     stop();
 }
 
-QSharedPointer<QMirServer> QMirServer::create(int &argc, char **argv)
+QSharedPointer<QMirServer> QMirServer::create()
 {
     static QWeakPointer<QMirServer> server;
     if (server.isNull()) {
-        QSharedPointer<QMirServer> newServer(new QMirServer(argc, argv));
+        QSharedPointer<QMirServer> newServer(new QMirServer());
         server = newServer.toWeakRef();
         return newServer;
     }

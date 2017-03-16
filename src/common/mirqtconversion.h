@@ -113,6 +113,15 @@ inline MirWindowState toMirState(Mir::State state)
     }
 }
 
+inline Mir::ShellChrome toQtShellChrome(MirShellChrome chrome)
+{
+    switch (chrome) {
+    case mir_shell_chrome_normal: return Mir::NormalChrome;
+    case mir_shell_chrome_low:    return Mir::LowChrome;
+    default: Q_UNREACHABLE();
+    }
+}
+
 } // namespace qtmir
 
 #endif // MIRQTCONVERSION_H
