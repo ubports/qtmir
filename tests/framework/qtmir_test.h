@@ -25,7 +25,6 @@
 
 #include <Unity/Application/application.h>
 #include <Unity/Application/application_manager.h>
-#include <Unity/Application/sessionmanager.h>
 #include <Unity/Application/session_interface.h>
 #include <Unity/Application/sharedwakelock.h>
 #include <Unity/Application/proc_info.h>
@@ -67,9 +66,6 @@ public:
 
     Application* startApplication(pid_t procId, QString const& appId);
 
-
-    QSharedPointer<qtmir::TaskController> taskControllerSharedPointer{new testing::NiceMock<qtmir::MockTaskController>};
-    testing::NiceMock<qtmir::MockTaskController> *taskController{static_cast<testing::NiceMock<qtmir::MockTaskController>*>(taskControllerSharedPointer.data())};
     testing::NiceMock<MockProcInfo> procInfo;
     testing::NiceMock<MockSharedWakelock> sharedWakelock;
     testing::NiceMock<MockSettings> settings;
@@ -77,8 +73,9 @@ public:
     std::shared_ptr<qtmir::PromptSessionManager> promptSessionManager{std::make_shared<qtmir::PromptSessionManager>(stubPromptSessionManager)};
     std::shared_ptr<StubPersistentSurfaceStore> persistentSurfaceStore;
 
+    QSharedPointer<qtmir::TaskController> taskControllerSharedPointer{new testing::NiceMock<qtmir::MockTaskController>(promptSessionManager)};
+    testing::NiceMock<qtmir::MockTaskController> *taskController{static_cast<testing::NiceMock<qtmir::MockTaskController>*>(taskControllerSharedPointer.data())};
     ApplicationManager applicationManager;
-    SessionManager sessionManager;
 };
 } // namespace testing
 

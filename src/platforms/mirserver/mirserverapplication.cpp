@@ -25,11 +25,11 @@ namespace {
 
 QSharedPointer<QMirServer> mirServer;
 
-void init(int &argc, char **argv, std::initializer_list<std::function<void(QMirServer&)>> const& options)
+void init(std::initializer_list<std::function<void(QMirServer&)>> const& options)
 {
     setenv("QT_QPA_PLATFORM", "mirserver", 1 /* overwrite */);
 
-    mirServer = QMirServer::create(argc, argv);
+    mirServer = QMirServer::create();
     for (auto& option : options) {
         option(*mirServer.data());
     }
@@ -40,7 +40,7 @@ void init(int &argc, char **argv, std::initializer_list<std::function<void(QMirS
 MirServerApplication::MirServerApplication(int &argc,
                                            char **argv,
                                            std::initializer_list<std::function<void(QMirServer&)>> options)
-    : QGuiApplication((init(argc, argv, options), argc), argv) // comma operator to ensure init called before QGuiApplication
+    : QGuiApplication((init(options), argc), argv) // comma operator to ensure init called before QGuiApplication
 {
     Q_UNUSED(options);
 }

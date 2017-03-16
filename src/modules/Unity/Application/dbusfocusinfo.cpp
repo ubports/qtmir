@@ -112,20 +112,21 @@ MirSurfaceInterface *DBusFocusInfo::findQmlSurface(const QString &serializedId)
 {
     for (Application* application : m_applications) {
         auto session = application->session();
-
-        auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
-        for (int i = 0; i < surfaceList->count(); ++i) {
-            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
-            if (qmlSurface->persistentId() == serializedId) {
-                return qmlSurface;
+        if (session) {
+            auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
+            for (int i = 0; i < surfaceList->count(); ++i) {
+                auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+                if (qmlSurface->persistentId() == serializedId) {
+                    return qmlSurface;
+                }
             }
-        }
 
-        surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
-        for (int i = 0; i < surfaceList->count(); ++i) {
-            auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
-            if (qmlSurface->persistentId() == serializedId) {
-                return qmlSurface;
+            surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
+            for (int i = 0; i < surfaceList->count(); ++i) {
+                auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+                if (qmlSurface->persistentId() == serializedId) {
+                    return qmlSurface;
+                }
             }
         }
     }
