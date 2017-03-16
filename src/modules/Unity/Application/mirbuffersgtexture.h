@@ -42,7 +42,7 @@ public:
     void bind() override;
 
 private:
-    miral::MirBuffer m_mirBuffer;
+    miral::GLBuffer m_mirBuffer;
     int m_width;
     int m_height;
     GLuint m_textureId;

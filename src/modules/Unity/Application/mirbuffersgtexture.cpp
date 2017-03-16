@@ -82,7 +82,7 @@ void MirBufferSGTexture::bind()
     glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    m_mirBuffer.gl_bind_to_texture();
+    m_mirBuffer.bind_to_texture();
 
     // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
     // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
