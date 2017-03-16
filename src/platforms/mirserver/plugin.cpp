@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,10 +17,9 @@
 #include "plugin.h"
 #include "mirserverintegration.h"
 
-QPlatformIntegration *MirServerIntegrationPlugin::create(const QString &system, const QStringList &/*paramList*/,
-                                                         int &argc, char **argv)
+QPlatformIntegration *MirServerIntegrationPlugin::create(const QString &system, const QStringList &/*paramList*/)
 {
     if (system.toLower() == QLatin1String("mirserver"))
-        return new MirServerIntegration(argc, argv);
+        return new MirServerIntegration;
     return 0;
 }

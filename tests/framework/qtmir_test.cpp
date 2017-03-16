@@ -54,7 +54,7 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os)
     }
 }
 
-void PrintTo(const Session::State& state, ::std::ostream* os)
+void PrintTo(const SessionInterface::State& state, ::std::ostream* os)
 {
     switch (state) {
     case SessionInterface::Starting:
@@ -113,13 +113,11 @@ QtMirTest::QtMirTest()
                          QSharedPointer<MockSharedWakelock>(&sharedWakelock, [](MockSharedWakelock *){}),
                          QSharedPointer<ProcInfo>(&procInfo,[](ProcInfo *){}),
                          QSharedPointer<MockSettings>(&settings,[](MockSettings *){}))
-    , sessionManager(promptSessionManager, &applicationManager)
 {
 }
 
 QtMirTest::~QtMirTest()
 {
-
 }
 
 Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
@@ -142,7 +140,7 @@ Application *QtMirTest::startApplication(pid_t procId, const QString &appId)
 
     auto appSession = std::make_shared<mir::scene::MockSession>(appId.toStdString(), procId);
     miral::ApplicationInfo appInfo(appSession);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     Mock::VerifyAndClearExpectations(taskController);
     return application;

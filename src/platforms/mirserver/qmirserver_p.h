@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -55,7 +55,7 @@ class PromptSessionManager;
 class QMirServerPrivate
 {
 public:
-    QMirServerPrivate(int &argc, char* argv[]);
+    QMirServerPrivate();
     const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
     std::shared_ptr<QtEventFeeder> eventFeeder{new QtEventFeeder(screensModel)};
@@ -93,8 +93,6 @@ private:
     mutable qtmir::AppNotifier m_appNotifier;
     mutable qtmir::WindowModelNotifier m_windowModelNotifier;
     mutable qtmir::WindowController m_windowController;
-    int &argc;
-    char **argv;
 };
 
 class MirServerThread : public QThread

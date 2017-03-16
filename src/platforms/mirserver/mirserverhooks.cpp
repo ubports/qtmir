@@ -37,7 +37,6 @@ namespace
 {
 struct PromptSessionListenerImpl : PromptSessionListener, mir::scene::PromptSessionListener
 {
-    using PromptSessionListener::PromptSessionListener;
     ~PromptSessionListenerImpl();
 
     void starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
