@@ -86,7 +86,7 @@ public:
     void ask_client_to_close(const miral::Window &window);
     void forceClose(const miral::Window &window);
 
-    void set_window_position_boundaries(const QRegion &region);
+    void set_window_confinement_regions(const QVector<QRect> &regions);
     void set_window_margins(MirWindowType windowType, const QMargins &margins);
 
 private:
@@ -96,7 +96,7 @@ private:
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
     const QScopedPointer<QtEventFeeder> m_eventFeeder;
-    QRegion m_boundingRegion;
+    QVector<QRect> m_confinementRegions;
     QMargins m_windowMargins[mir_window_types];
 };
 

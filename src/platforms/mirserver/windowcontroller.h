@@ -19,16 +19,21 @@
 
 #include "windowcontrollerinterface.h"
 
+// Unity API
+#include <unity/shell/application/WindowManagementControllerInterface.h>
+
 class WindowManagementPolicy;
 
 namespace qtmir {
 
-class WindowController : public WindowControllerInterface
+class WindowController : public WindowControllerInterface,
+                         public unity::shell::application::WindowManagementControllerInterface
 {
 public:
     WindowController();
     virtual ~WindowController() = default;
 
+    // implements qtmir::WindowControllerInterface
     void activate(const miral::Window &window) override;
     void raise(const miral::Window &window) override;
     void resize(const miral::Window &window, const QSize &size) override;
@@ -43,8 +48,9 @@ public:
     void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) override;
     void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) override;
 
-    void setWindowPositionBoundaries(const QRegion &region) override;
-    void setWindowMargins(MirWindowType windowType, const QMargins &margins) override;
+    // implements ua::WindowManagementControllerInterface
+    void setWindowConfinementRegions(const QVector<QRect> &regions) override;
+    void setWindowMargins(Mir::Type windowType, const QMargins &margins) override;
 
     void setPolicy(WindowManagementPolicy *policy);
 

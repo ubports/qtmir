@@ -52,9 +52,6 @@ public:
     virtual void deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event) = 0;
     virtual void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) = 0;
     virtual void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) = 0;
-
-    virtual void setWindowPositionBoundaries(const QRegion &region) = 0;
-    virtual void setWindowMargins(MirWindowType windowType, const QMargins &margins) = 0;
 };
 
 } // namespace qtmir

@@ -97,17 +97,17 @@ void WindowController::deliverPointerEvent(const miral::Window &window, const Mi
     }
 }
 
-void WindowController::setWindowPositionBoundaries(const QRegion &region)
+void WindowController::setWindowConfinementRegions(const QVector<QRect> &regions)
 {
     if (m_policy) {
-        m_policy->set_window_position_boundaries(region);
+        m_policy->set_window_confinement_regions(regions);
     }
 }
 
-void WindowController::setWindowMargins(MirWindowType windowType, const QMargins &margins)
+void WindowController::setWindowMargins(Mir::Type windowType, const QMargins &margins)
 {
     if (m_policy) {
-        m_policy->set_window_margins(windowType, margins);
+        m_policy->set_window_margins(toMirType(windowType), margins);
     }
 }
 

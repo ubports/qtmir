@@ -322,9 +322,9 @@ void WindowManagementPolicy::forceClose(const miral::Window &window)
     });
 }
 
-void WindowManagementPolicy::set_window_position_boundaries(const QRegion &region)
+void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
 {
-    m_boundingRegion = region;
+    m_confinementRegions = regions;
 
     // TODO: update window positions to respect new boundary.
 }
@@ -332,6 +332,8 @@ void WindowManagementPolicy::set_window_position_boundaries(const QRegion &regio
 void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
 {
     m_windowMargins[windowType] = margins;
+
+    // TODO: update window positions/sizes to respect new margins.
 }
 
 void WindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
@@ -361,7 +363,7 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
 
 Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
 {
-    if (m_boundingRegion.isNull()) {
+    if (m_confinementRegions.isEmpty()) {
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
 
@@ -370,19 +372,19 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
     QRect geom(toQPoint(window.top_left()), toQSize(window.size()));
 
     QRect availableRect;
-    for (const QRect &rect : m_boundingRegion.rects()) {
+    for (const QRect &rect : m_confinementRegions) {
         if (rect.contains(geom)) {
             availableRect = rect;
         }
     }
-    // FIXME: Window could be outside boundingRegion, what do to then?
+    // FIXME: Window could be outside the m_confinementRegions, what do to then?
 
-    int posX = window.top_left().x.as_int();
-    int posY = window.top_left().y.as_int();
+    int posX = geom.x();
+    int posY = geom.y();
     int moveX = movement.dx.as_int();
     int moveY = movement.dy.as_int();
-    int width = window.size().width.as_int();
-    int height = window.size().height.as_int();
+    int width = geom.width();
+    int height = geom.height();
 
     // If the child window is already partially beyond the available desktop area (most likely because the user
     // explicitly moved it there) we won't pull it back, unless the inherited movement is this direction, but also won't
