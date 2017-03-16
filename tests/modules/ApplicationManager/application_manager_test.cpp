@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <QSignalSpy>
 
+#include <Unity/Application/session.h>
 #include <Unity/Application/timer.h>
 
 #include <fake_mirsurface.h>
@@ -44,7 +45,7 @@ public:
     inline void onSessionCreatedSurface(const miral::ApplicationInfo &appInfo,
             MirSurfaceInterface *qmlSurface) {
 
-        SessionInterface* qmlSession = sessionManager.findSession(appInfo.application().get());
+        SessionInterface* qmlSession = applicationManager.findSession(appInfo.application().get());
         if (qmlSession) {
             qmlSession->registerSurface(qmlSurface);
         }
@@ -96,7 +97,7 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     auto appInfo = createApplicationInfoFor(dialer_app_id, firstProcId);
     applicationManager.authorizeSession(firstProcId, authed);
     ASSERT_EQ(true, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
     onSessionCreatedSurface(appInfo, &surface);
     surface.setReady();
     Application * application = applicationManager.findApplication(dialer_app_id);
@@ -126,10 +127,10 @@ TEST_F(ApplicationManagerTests,application_dies_while_starting)
 
     auto appInfo = createApplicationInfoFor(app_id, procId);
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
     Application * beforeFailure = applicationManager.findApplication(app_id);
     applicationManager.onProcessStarting(app_id);
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     applicationManager.onProcessFailed(app_id, TaskController::Error::APPLICATION_FAILED_TO_START);
     Application * afterFailure = applicationManager.findApplication(app_id);
 
@@ -248,9 +249,9 @@ TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_
     applicationManager.authorizeSession(second_procId, authed);
     applicationManager.authorizeSession(third_procId, authed);
 
-    sessionManager.onSessionStarting(firstAppInfo);
-    sessionManager.onSessionStarting(secondAppInfo);
-    sessionManager.onSessionStarting(thirdAppInfo);
+    taskController->onSessionStarting(firstAppInfo);
+    taskController->onSessionStarting(secondAppInfo);
+    taskController->onSessionStarting(thirdAppInfo);
 
     Application * firstApp = applicationManager.findApplication(first_app_id);
     Application * secondApp = applicationManager.findApplication(second_app_id);
@@ -282,16 +283,16 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application)
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
     applicationManager.authorizeSession(a_procId, authed);
 
-    sessionManager.onSessionStarting(firstAppInfo);
-    sessionManager.onSessionStarting(secondAppInfo);
+    taskController->onSessionStarting(firstAppInfo);
+    taskController->onSessionStarting(secondAppInfo);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
 
     EXPECT_EQ(true, authed);
     EXPECT_EQ(secondAppInfo.application(), the_app->session()->session());
 
-    sessionManager.onSessionStopping(firstAppInfo);
-    sessionManager.onSessionStopping(secondAppInfo);
+    taskController->onSessionStopping(firstAppInfo);
+    taskController->onSessionStopping(secondAppInfo);
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
@@ -317,10 +318,10 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
     applicationManager.authorizeSession(a_procId, authed);
 
-    sessionManager.onSessionStarting(firstAppInfo);
+    taskController->onSessionStarting(firstAppInfo);
     onSessionCreatedSurface(firstAppInfo, &aSurface);
     aSurface.setReady();
-    sessionManager.onSessionStarting(secondAppInfo);
+    taskController->onSessionStarting(secondAppInfo);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
 
@@ -328,8 +329,8 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
     EXPECT_EQ(Application::Running, the_app->state());
     EXPECT_EQ(firstAppInfo.application(), the_app->session()->session());
 
-    sessionManager.onSessionStopping(firstAppInfo);
-    sessionManager.onSessionStopping(secondAppInfo);
+    taskController->onSessionStopping(firstAppInfo);
+    taskController->onSessionStopping(secondAppInfo);
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
@@ -350,7 +351,7 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
 
     auto appInfo = createApplicationInfoFor("Oo", procId);
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     Application * app = applicationManager.findApplication("app");
     app->setRequestedState(Application::RequestedSuspended);
@@ -401,9 +402,9 @@ TEST_F(ApplicationManagerTests,requestFocusApplication)
     applicationManager.authorizeSession(second_procId, authed);
     applicationManager.authorizeSession(third_procId, authed);
 
-    sessionManager.onSessionStarting(firstAppInfo);
-    sessionManager.onSessionStarting(secondAppInfo);
-    sessionManager.onSessionStarting(thirdAppInfo);
+    taskController->onSessionStarting(firstAppInfo);
+    taskController->onSessionStarting(secondAppInfo);
+    taskController->onSessionStarting(thirdAppInfo);
 
     QSignalSpy spy(&applicationManager, SIGNAL(focusRequested(const QString &)));
 
@@ -710,7 +711,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
     // Authorize session and emit Mir sessionStarting event
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     EXPECT_EQ(countSpy.count(), 0);
     EXPECT_EQ(applicationManager.count(), 1);
@@ -744,7 +745,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSurfaceCreatedE
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
 
@@ -778,7 +779,7 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
@@ -793,8 +794,8 @@ TEST_F(ApplicationManagerTests,shellStopsAppCorrectlyBeforeSurfaceCreated)
 
     // emulate mir session dying and taskController emitting processStopped(appId) in response
     // to the taskController->stop(appId) call from applicationManager
-    sessionManager.onSessionStopping(appInfo);
-    applicationManager.onProcessStopped(appId);
+    taskController->onSessionStopping(appInfo);
+    Q_EMIT taskController->processStopped(appId);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -821,7 +822,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
     onSessionCreatedSurface(appInfo, surface.data());
@@ -845,7 +846,7 @@ TEST_F(ApplicationManagerTests,shellStopsForegroundAppCorrectly)
     EXPECT_EQ(Application::InternalState::Closing, app->internalState());
 
     // Simulates that the application complied to the close() request and stopped itself
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     applicationManager.onProcessStopped(appId);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
@@ -873,7 +874,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);
@@ -881,7 +882,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfStoppingForegroundApp)
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
 
@@ -911,7 +912,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);
@@ -919,7 +920,7 @@ TEST_F(ApplicationManagerTests,upstartNotifiesOfUnexpectedStopOfRunningApp)
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     // Upstart notifies of crashing / OOM killed app
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_CRASHED);
@@ -955,7 +956,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);
@@ -967,7 +968,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundApp)
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
 
     // Mir reports disconnection
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     // Upstart notifies of crashing / OOM-killed app
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_CRASHED);
@@ -1007,7 +1008,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);
@@ -1019,7 +1020,7 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundAppCheckingUpstartBug)
     QSignalSpy focusSpy(&applicationManager, SIGNAL(focusedApplicationIdChanged()));
 
     // Mir reports disconnection
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     // Upstart notifies of crashing app
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_FAILED_TO_START);
@@ -1054,12 +1055,12 @@ TEST_F(ApplicationManagerTests,mirNotifiesStartingAppIsNowStopping)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -1086,7 +1087,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // Associate a surface so AppMan considers app Running, check focused
     FakeMirSurface surface;
@@ -1096,7 +1097,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingForegroundApp)
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -1123,7 +1124,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
     auto appInfo = createApplicationInfoFor("", procId);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // Associate a surface so AppMan considers app Running, check focused
     FakeMirSurface surface;
@@ -1133,7 +1134,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -1164,7 +1165,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     EXPECT_EQ(Application::Starting, app->state());
 
@@ -1189,7 +1190,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     EXPECT_EQ(0, countSpy.count());
     EXPECT_EQ(1, applicationManager.count());
@@ -1218,7 +1219,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = true;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     Mock::VerifyAndClearExpectations(taskController);
     EXPECT_CALL(*taskController, stop(appId))
@@ -1230,7 +1231,7 @@ TEST_F(ApplicationManagerTests,shellStoppedApp_upstartStoppingEventIgnored)
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // the mir session always ends before upstart notifies the process has stopped
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
@@ -1274,10 +1275,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
 
     bool authed = false;
     applicationManager.authorizeSession(procId1, authed);
-    sessionManager.onSessionStarting(appInfo1);
+    taskController->onSessionStarting(appInfo1);
     EXPECT_EQ(authed, true);
     applicationManager.authorizeSession(procId2, authed);
-    sessionManager.onSessionStarting(appInfo2);
+    taskController->onSessionStarting(appInfo2);
     EXPECT_EQ(authed, true);
     FakeMirSurface *surface = new FakeMirSurface;
     onSessionCreatedSurface(appInfo2, surface);
@@ -1286,8 +1287,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfForegroundWebapp)
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app/Session
-    sessionManager.onSessionStopping(appInfo2);
-    sessionManager.onSessionStopping(appInfo1);
+    taskController->onSessionStopping(appInfo2);
+    taskController->onSessionStopping(appInfo1);
 
     EXPECT_EQ(countSpy.count(), 2); //FIXME(greyback)
     EXPECT_EQ(applicationManager.count(), 0);
@@ -1333,10 +1334,10 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
 
     bool authed = false;
     applicationManager.authorizeSession(procId1, authed);
-    sessionManager.onSessionStarting(appInfo1);
+    taskController->onSessionStarting(appInfo1);
     EXPECT_EQ(authed, true);
     applicationManager.authorizeSession(procId2, authed);
-    sessionManager.onSessionStarting(appInfo2);
+    taskController->onSessionStarting(appInfo2);
     EXPECT_EQ(authed, true);
 
     // both sessions create surfaces, then get them all suspended
@@ -1352,8 +1353,8 @@ TEST_F(ApplicationManagerTests,unexpectedStopOfBackgroundWebapp)
     QSignalSpy countSpy(&applicationManager, SIGNAL(countChanged()));
 
     // Mir notifies of stopping app/Session
-    sessionManager.onSessionStopping(appInfo2);
-    sessionManager.onSessionStopping(appInfo1);
+    taskController->onSessionStopping(appInfo2);
+    taskController->onSessionStopping(appInfo1);
 
     EXPECT_EQ(0, countSpy.count());
 
@@ -1392,7 +1393,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // App creates surface, puts it in background, then is OOM killed.
     QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
@@ -1401,7 +1402,7 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
     suspend(app);
 
     surface->setLive(false);
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_CRASHED);
     applicationManager.onProcessStopped(appId);
 
@@ -1445,7 +1446,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // App creates surface, focuses it so state is running
     FakeMirSurface surface;
@@ -1509,7 +1510,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppHasWakelockReleasedOnAttempted
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // App creates surface, focuses it so state is running
     FakeMirSurface surface;
@@ -1547,7 +1548,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppStop)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // Create fake QML cache for this app
     QString path(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
@@ -1587,7 +1588,7 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // Have app in fully Running state
     FakeMirSurface *aSurface = new FakeMirSurface;
@@ -1602,7 +1603,7 @@ TEST_F(ApplicationManagerTests,DISABLED_QMLcacheDeletedOnAppCrash)
     dir.mkpath(path);
 
     // Report app crash
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     // Upstart notifies of **crashing** app
     applicationManager.onProcessFailed(appId, TaskController::Error::APPLICATION_FAILED_TO_START);
     applicationManager.onProcessStopped(appId);
@@ -1632,7 +1633,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     // Have app in fully Running state
     FakeMirSurface aSurface;
@@ -1647,7 +1648,7 @@ TEST_F(ApplicationManagerTests,QMLcacheRetainedOnAppShutdown)
     dir.mkpath(path);
 
     // Report app stop
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
 
@@ -1668,7 +1669,7 @@ TEST_F(ApplicationManagerTests,requestSurfaceCloseOnStop)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);
@@ -1706,7 +1707,7 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     Mock::VerifyAndClearExpectations(taskController);
 
@@ -1721,7 +1722,7 @@ TEST_F(ApplicationManagerTests,forceAppDeleteWhenRemovedWithMissingSurface)
     applicationManager.stopApplication(appId);
 
     // the mir session always ends before upstart notifies the process has stopped
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
 
     // Upstart notifies of stopping app
     applicationManager.onProcessStopped(appId);
@@ -1758,7 +1759,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     QScopedPointer<FakeMirSurface> surface(new FakeMirSurface);
     onSessionCreatedSurface(appInfo, surface.data());
@@ -1795,7 +1796,7 @@ TEST_F(ApplicationManagerTests,applicationStartQueuedOnStartStopStart)
     QSignalSpy appAddedSpy(&applicationManager, &QAbstractItemModel::rowsInserted);
 
     // Simulates that the application complied to the close() request and stopped itself
-    sessionManager.onSessionStopping(appInfo);
+    taskController->onSessionStopping(appInfo);
     applicationManager.onProcessStopped(appId);
 
     // DeferredDelete is special: likes to be called out specifically or it won't come out
@@ -1834,7 +1835,7 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     auto appInfo1 = createApplicationInfoFor("", procId1);
     bool authed = false;
     applicationManager.authorizeSession(procId1, authed);
-    sessionManager.onSessionStarting(appInfo1);
+    taskController->onSessionStarting(appInfo1);
 
     FakeMirSurface surface1;
     surface1.setSession(app1->session());
@@ -1860,7 +1861,7 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     applicationManager.onProcessStarting(appId2);
     auto appInfo2 = createApplicationInfoFor("", procId2);
     applicationManager.authorizeSession(procId2, authed);
-    sessionManager.onSessionStarting(appInfo2);
+    taskController->onSessionStarting(appInfo2);
 
     FakeMirSurface surface2;
     surface2.setSession(app2->session());
@@ -1909,7 +1910,7 @@ TEST_F(ApplicationManagerTests,surfaceFocusRequestGeneratesApplicationFocusReque
     auto appInfo = createApplicationInfoFor("", procId);
     bool authed = false;
     applicationManager.authorizeSession(procId, authed);
-    sessionManager.onSessionStarting(appInfo);
+    taskController->onSessionStarting(appInfo);
 
     FakeMirSurface surface;
     onSessionCreatedSurface(appInfo, &surface);

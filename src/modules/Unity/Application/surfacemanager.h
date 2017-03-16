@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -31,7 +31,6 @@ Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 namespace qtmir {
 
 class MirSurface;
-class SessionManager;
 class WindowControllerInterface;
 
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
@@ -66,7 +65,6 @@ private:
     QVector<MirSurface*> m_allSurfaces;
 
     WindowControllerInterface *m_windowController;
-    SessionManager* m_sessionManager;
 };
 
 } // namespace qtmir
