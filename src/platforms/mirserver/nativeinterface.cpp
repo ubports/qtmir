@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2017 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,8 +18,6 @@
 
 #include "qmirserver.h"
 #include "screen.h"
-
-#include <QDebug>
 
 NativeInterface::NativeInterface(QMirServer *server)
     : m_qMirServer(server)
@@ -41,7 +39,6 @@ QVariantMap NativeInterface::windowProperties(QPlatformWindow *window) const
     if (s) {
         propertyMap.insert(QStringLiteral("scale"), s->scale());
         propertyMap.insert(QStringLiteral("formFactor"), s->formFactor());
-        propertyMap.insert(QStringLiteral("availableDesktopArea"), w->availableDesktopArea());
     }
     return propertyMap;
 }
@@ -61,8 +58,6 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
         return s->scale();
     } else if (name == QStringLiteral("formFactor")) {
         return static_cast<int>(s->formFactor()); // naughty, should add enum to Qt's Type system
-    } else if (name == QStringLiteral("availableDesktopArea")) {
-        return w->availableDesktopArea();
     } else {
         return QVariant();
     }
@@ -75,38 +70,6 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
         return defaultValue;
     } else {
         return returnVal;
-    }
-}
-
-void NativeInterface::setWindowProperty(QPlatformWindow *window, const QString &name, const QVariant &value)
-{
-    if (!window || name.isNull()) {
-        return;
-    }
-    auto screenWindow = static_cast<ScreenWindow*>(window);
-
-    if (name == QStringLiteral("availableDesktopArea")) {
-        QRect rect = value.toRect();
-        if (rect.isValid()) {
-            screenWindow->setAvailableDesktopArea(rect);
-        } else {
-            qWarning().nospace() << "NativeInterface::setWindowProperty(" << window << ","
-                << name << "," << value << ") - value is not a QRect";
-        }
-    } else if (name == QStringLiteral("normalWindowMargins")) {
-        if (value.canConvert(QMetaType::QRect)) {
-            screenWindow->setNormalWindowMargins(value.toRect());
-        } else {
-            qWarning().nospace() << "NativeInterface::setWindowProperty(" << window << ","
-                << name << "," << value << ") - value is not a QRect";
-        }
-    } else if (name == QStringLiteral("dialogWindowMargins")) {
-        if (value.canConvert(QMetaType::QRect)) {
-            screenWindow->setDialogWindowMargins(value.toRect());
-        } else {
-            qWarning().nospace() << "NativeInterface::setWindowProperty(" << window << ","
-                << name << "," << value << ") - value is not a QRect";
-        }
     }
 }
 
