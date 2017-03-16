@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -215,6 +215,8 @@ void Session::prependSurface(MirSurfaceInterface *newSurface)
 {
     DEBUG_MSG << "(surface=" << newSurface << ")";
 
+    const bool focusedBefore = focused();
+
     connect(newSurface, &MirSurfaceInterface::stateChanged,
         this, &Session::updateFullscreenProperty);
 
@@ -242,6 +244,11 @@ void Session::prependSurface(MirSurfaceInterface *newSurface)
 
     if (m_state == Starting) {
         setState(Running);
+    }
+
+    const bool focusedNow = focused();
+    if (focusedNow != focusedBefore) {
+        Q_EMIT focusedChanged(focused());
     }
 
     updateFullscreenProperty();
@@ -386,6 +393,11 @@ void Session::setLive(const bool live)
 
             for (int i = 0; i < m_surfaceList.count(); ++i) {
                 auto surface = static_cast<MirSurfaceInterface*>(m_surfaceList.get(i));
+                surface->setLive(false);
+            }
+
+            for (int i = 0; i < m_closingSurfaces.count(); ++i) {
+                auto surface = static_cast<MirSurfaceInterface*>(m_closingSurfaces[i]);
                 surface->setLive(false);
             }
 

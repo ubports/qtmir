@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -17,7 +17,7 @@
 #include "surfacemanager.h"
 
 #include "mirsurface.h"
-#include "sessionmanager.h"
+#include "application_manager.h"
 #include "tracepoints.h"
 
 // mirserver
@@ -66,8 +66,6 @@ SurfaceManager::SurfaceManager(QObject *)
 
     auto windowModel = static_cast<WindowModelNotifier*>(nativeInterface->nativeResourceForIntegration("WindowModelNotifier"));
     connectToWindowModelNotifier(windowModel);
-
-    m_sessionManager = SessionManager::singleton();
 }
 
 void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
@@ -151,7 +149,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     }
 
     auto mirSession = window.windowInfo.window().application();
-    SessionInterface* session = m_sessionManager->findSession(mirSession.get());
+    SessionInterface* session = ApplicationManager::singleton()->findSession(mirSession.get());
 
     MirSurface *parentSurface = surfaceFor(window.windowInfo.parent());
 

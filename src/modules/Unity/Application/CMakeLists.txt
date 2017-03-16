@@ -44,9 +44,9 @@ set(QMLMIRPLUGIN_SRC
     mirbuffersgtexture.cpp
     proc_info.cpp
     session.cpp
-    sessionmanager.cpp
     sharedwakelock.cpp
     surfacemanager.cpp
+    taskcontroller.cpp
     upstart/applicationinfo.cpp
     upstart/taskcontroller.cpp
     timer.cpp

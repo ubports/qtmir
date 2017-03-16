@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -50,8 +50,7 @@ class QMirServer: public QObject
 public:
     virtual ~QMirServer();
 
-    static QSharedPointer<QMirServer> create(int &argc,
-                                           char **argv);
+    static QSharedPointer<QMirServer> create();
 
     void start();
     Q_SLOT void stop();
@@ -78,7 +77,7 @@ protected:
     QMirServerPrivate * const d_ptr;
 
 private:
-    QMirServer(int &argc, char **argv, QObject* parent=0);
+    QMirServer(QObject *parent = nullptr);
     Q_DISABLE_COPY(QMirServer)
     Q_DECLARE_PRIVATE(QMirServer)
 };

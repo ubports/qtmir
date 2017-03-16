@@ -96,4 +96,8 @@ void MirBufferSGTexture::bind()
         throw std::logic_error("Buffer does not support GL rendering");
 
     texture_source->gl_bind_to_texture();
+
+    // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
+    // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // 4 is the default which Qt uses
 }

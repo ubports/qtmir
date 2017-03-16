@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,7 +20,6 @@
 // local
 #include "logging.h"
 #include "wrappedwindowmanagementpolicy.h"
-#include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
 #include "qteventfeeder.h"
@@ -41,6 +40,8 @@
 
 namespace
 {
+static int qtmirArgc{1};
+static const char *qtmirArgv[]{"qtmir"};
 
 class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
@@ -120,13 +121,12 @@ std::shared_ptr<qtmir::SessionAuthorizer> QMirServerPrivate::theApplicationAutho
     return wrapped ? wrapped->wrapper() : nullptr;
 }
 
-QMirServerPrivate::QMirServerPrivate(int &argc, char* argv[])
+QMirServerPrivate::QMirServerPrivate()
     : m_displayConfigurationPolicy(buildDisplayConfigurationPolicy)
     , m_windowManagementPolicy(buildWindowManagementPolicy)
     , m_displayConfigurationStorage(buildDisplayConfigurationStorage)
     , m_wrappedSessionAuthorizer(buildSessionAuthorizer)
-    , runner(argc, const_cast<const char **>(argv))
-    , argc{argc}, argv{argv}
+    , runner(qtmirArgc, qtmirArgv)
 {
 }
 
@@ -137,21 +137,9 @@ PromptSessionListener *QMirServerPrivate::promptSessionListener() const
 
 void QMirServerPrivate::run(const std::function<void()> &startCallback)
 {
-    bool unknownArgsFound = false;
 
-    ::miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
+    miral::AddInitCallback addInitCallback{[&, this]
     {
-        unknownArgsFound = true;
-        // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
-        // argc as filteredArgv only defined in this scope.
-        qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
-    }};
-
-    ::miral::AddInitCallback addInitCallback{[&, this]
-    {
-        if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
-            argc = 1;
-        }
         qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
         qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
     }};
@@ -199,7 +187,6 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
                                                                               m_appNotifier,
                                                                               eventFeeder,
                                                                               m_windowManagementPolicy),
-            setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,

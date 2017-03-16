@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -33,7 +33,6 @@ Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 namespace qtmir {
 
 class MirSurface;
-class SessionManager;
 class WindowControllerInterface;
 class WorkspaceControllerInterface;
 
@@ -70,7 +69,6 @@ private:
 
     WindowControllerInterface *m_windowController;
     WorkspaceControllerInterface *m_workspaceController;
-    SessionManager* m_sessionManager;
 
     friend class Workspace;
     using swbimap_t = boost::bimap<MirSurface*, miral::Window>;
