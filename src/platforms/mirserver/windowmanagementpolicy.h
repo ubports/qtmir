@@ -25,7 +25,6 @@
 #include "windowmodelnotifier.h"
 
 #include <QScopedPointer>
-#include <QSize>
 
 using namespace mir::geometry;
 
@@ -87,7 +86,8 @@ public:
     void ask_client_to_close(const miral::Window &window);
     void forceClose(const miral::Window &window);
 
-Q_SIGNALS:
+    void set_window_position_boundaries(const QRegion &region);
+    void set_window_margins(MirWindowType windowType, const QMargins &margins);
 
 private:
     void ensureWindowIsActive(const miral::Window &window);
@@ -96,6 +96,8 @@ private:
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
     const QScopedPointer<QtEventFeeder> m_eventFeeder;
+    QRegion m_boundingRegion;
+    QMargins m_windowMargins[mir_window_types];
 };
 
 #endif // WINDOWMANAGEMENTPOLICY_H

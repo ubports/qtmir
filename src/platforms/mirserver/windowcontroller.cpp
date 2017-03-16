@@ -97,6 +97,20 @@ void WindowController::deliverPointerEvent(const miral::Window &window, const Mi
     }
 }
 
+void WindowController::setWindowPositionBoundaries(const QRegion &region)
+{
+    if (m_policy) {
+        m_policy->set_window_position_boundaries(region);
+    }
+}
+
+void WindowController::setWindowMargins(MirWindowType windowType, const QMargins &margins)
+{
+    if (m_policy) {
+        m_policy->set_window_margins(windowType, margins);
+    }
+}
+
 void WindowController::setPolicy(WindowManagementPolicy * const policy)
 {
     m_policy = policy;

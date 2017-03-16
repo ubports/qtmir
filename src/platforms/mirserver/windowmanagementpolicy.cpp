@@ -323,6 +323,18 @@ void WindowManagementPolicy::forceClose(const miral::Window &window)
     });
 }
 
+void WindowManagementPolicy::set_window_position_boundaries(const QRegion &region)
+{
+    m_boundingRegion = region;
+
+    // TODO: update window positions to respect new boundary.
+}
+
+void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
+{
+    m_windowMargins[windowType] = margins;
+}
+
 void WindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
 {
     auto &windowInfo = m_tools.info_for(window);
@@ -350,32 +362,22 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
 
 Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
 {
-    ScreenWindow *screenWindow = ScreenWindow::findWithWId(getExtraInfo(windowInfo)->screenWindowId);
-    if (!screenWindow) {
+    if (m_boundingRegion.isNull()) {
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
-    }
-
-    QRect availableRect = screenWindow->availableDesktopArea();
-    if (availableRect.isNull()) {
-        return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
-    }
-
-    QRect windowMargins;
-
-    // TODO: Consider margins for other window types
-    switch (windowInfo.type()) {
-    case mir_surface_type_normal:
-        windowMargins = screenWindow->normalWindowMargins();
-        break;
-    case mir_surface_type_dialog:
-        windowMargins = screenWindow->dialogWindowMargins();
-        break;
-    default:
-        // Use the default (0,0,0,0) QRect
-        break;
     }
 
     auto window = windowInfo.window();
+    const QMargins windowMargins = m_windowMargins[windowInfo.type()];
+    QRect geom(toQPoint(window.top_left()), toQSize(window.size()));
+
+    QRect availableRect;
+    for (const QRect &rect : m_boundingRegion.rects()) {
+        if (rect.contains(geom)) {
+            availableRect = rect;
+        }
+    }
+    // FIXME: Window could be outside boundingRegion, what do to then?
+
     int posX = window.top_left().x.as_int();
     int posY = window.top_left().y.as_int();
     int moveX = movement.dx.as_int();
