@@ -29,7 +29,6 @@
 #include "tracepoints.h"
 
 #include <QDebug>
-#include <QMutexLocker>
 
 namespace qtmir {
     std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo) {

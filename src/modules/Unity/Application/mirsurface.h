@@ -163,8 +163,6 @@ public:
 
     void requestFocus() override;
 
-    void setScreenWindowId(WId) override;
-
     ////
     // Own API
     void setPosition(const QPoint newPosition);

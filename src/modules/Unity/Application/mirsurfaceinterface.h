@@ -109,8 +109,6 @@ public:
 
     virtual void requestFocus() = 0;
 
-    virtual void setScreenWindowId(WId) = 0;
-
 public Q_SLOTS:
     virtual void onCompositorSwappedBuffers() = 0;
 

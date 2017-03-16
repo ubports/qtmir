@@ -43,7 +43,6 @@
 // Qt
 #include <QQmlEngine>
 #include <QScreen>
-#include <QMutexLocker>
 
 // std
 #include <limits>
@@ -1221,11 +1220,6 @@ void MirSurface::requestFocus()
 {
     INFO_MSG << "()";
     Q_EMIT focusRequested();
-}
-
-void MirSurface::setScreenWindowId(WId id)
-{
-    m_extraInfo->screenWindowId = id;
 }
 
 QPoint MirSurface::convertDisplayToLocalCoords(const QPoint &displayPos) const

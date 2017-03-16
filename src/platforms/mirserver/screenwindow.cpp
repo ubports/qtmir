@@ -27,11 +27,8 @@
 #include <QQuickWindow>
 #include <QtQuick/private/qsgrenderloop_p.h>
 #include <QDebug>
-#include <QMutexLocker>
 
 #include "logging.h"
-
-QMap<WId, ScreenWindow*> ScreenWindow::m_idToWindowMap;
 
 static WId newWId()
 {
@@ -59,21 +56,12 @@ ScreenWindow::ScreenWindow(QWindow *window)
         window->setGeometry(screenGeometry);
     }
     window->setSurfaceType(QSurface::OpenGLSurface);
-
-    m_idToWindowMap[m_winId] = this;
 }
 
 ScreenWindow::~ScreenWindow()
 {
     qCDebug(QTMIR_SCREENS) << "Destroying ScreenWindow" << this;
-
-    m_idToWindowMap.remove(m_winId);
     static_cast<Screen *>(screen())->setWindow(nullptr);
-}
-
-ScreenWindow *ScreenWindow::findWithWId(WId id)
-{
-    return m_idToWindowMap.value(id, nullptr);
 }
 
 bool ScreenWindow::isExposed() const
@@ -142,48 +130,30 @@ void ScreenWindow::doneCurrent()
 
 QRect ScreenWindow::availableDesktopArea() const
 {
-    QRect result;
-    {
-        QMutexLocker locker(&m_mutex);
-        result = m_availableDesktopArea;
-    }
-    return result;
+    return m_availableDesktopArea;
 }
 
 void ScreenWindow::setAvailableDesktopArea(const QRect &rect)
 {
-    QMutexLocker locker(&m_mutex);
     m_availableDesktopArea = rect;
 }
 
 QRect ScreenWindow::normalWindowMargins() const
 {
-    QRect result;
-    {
-        QMutexLocker locker(&m_mutex);
-        result = m_normalWindowMargins;
-    }
-    return result;
+    return m_normalWindowMargins;
 }
 
 void ScreenWindow::setNormalWindowMargins(const QRect &rect)
 {
-    QMutexLocker locker(&m_mutex);
     m_normalWindowMargins = rect;
 }
 
 QRect ScreenWindow::dialogWindowMargins() const
 {
-    QRect result;
-    {
-        QMutexLocker locker(&m_mutex);
-        result = m_dialogWindowMargins;
-    }
-    return result;
+    return m_dialogWindowMargins;
 }
 
 void ScreenWindow::setDialogWindowMargins(const QRect &rect)
 {
-    QMutexLocker locker(&m_mutex);
     m_dialogWindowMargins = rect;
 }
