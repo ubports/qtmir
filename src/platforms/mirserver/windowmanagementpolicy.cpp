@@ -375,9 +375,15 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
     for (const QRect &rect : m_confinementRegions) {
         if (rect.contains(geom)) {
             availableRect = rect;
+            break;
         }
     }
-    // FIXME: Window could be outside the m_confinementRegions, what do to then?
+    // If Window is outside the m_confinementRegions, consider it unconfined
+    if (availableRect.isNull()) {
+        return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
+    }
+
+    // What if there are multiple confinement regions and they intersect??
 
     int posX = geom.x();
     int posY = geom.y();
