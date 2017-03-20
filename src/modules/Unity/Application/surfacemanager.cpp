@@ -49,6 +49,7 @@ SurfaceManager::SurfaceManager()
         qFatal("ERROR: Unity.Application QML plugin requires use of the 'mirserver' QPA plugin");
     }
 
+    m_sessionMap = ApplicationManager::singleton();
     m_windowController = static_cast<WindowControllerInterface*>(nativeInterface->nativeResourceForIntegration("WindowController"));
 
     auto windowModel = static_cast<WindowModelNotifier*>(nativeInterface->nativeResourceForIntegration("WindowModelNotifier"));
@@ -56,8 +57,10 @@ SurfaceManager::SurfaceManager()
 }
 
 SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
-                               WindowModelNotifier *windowModel)
+                               WindowModelNotifier *windowModel,
+                               SessionMapInterface *sessionMap)
     : m_windowController(windowController)
+    , m_sessionMap(sessionMap)
 {
     DEBUG_MSG << "()";
     connectToWindowModelNotifier(windowModel);
@@ -104,7 +107,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     }
 
     auto mirSession = windowInfo.window().application();
-    SessionInterface* session = ApplicationManager::singleton()->findSession(mirSession.get());
+    SessionInterface* session = m_sessionMap->findSession(mirSession.get());
 
     const auto parentSurface = find(windowInfo.parent());
     const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
