@@ -30,7 +30,6 @@
 
 // miral
 #include <miral/add_init_callback.h>
-#include <miral/set_command_line_hander.h>
 #include <miral/set_terminator.h>
 #include <miral/set_window_managment_policy.h>
 
@@ -181,12 +180,12 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_wrappedSessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_managment_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
-                                                                              m_windowController,
-                                                                              m_workspaceController,
-                                                                              m_appNotifier,
-                                                                              eventFeeder,
-                                                                              m_windowManagementPolicy),
+            miral::set_window_management_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
+                                                                               m_windowController,
+                                                                               m_workspaceController,
+                                                                               m_appNotifier,
+                                                                               eventFeeder,
+                                                                               m_windowManagementPolicy),
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,

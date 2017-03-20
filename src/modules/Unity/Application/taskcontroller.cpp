@@ -28,7 +28,7 @@
 #include "qtmir/sessionauthorizer.h"
 
 // common
-#include "qtmir/appnotifier.h"
+#include "appnotifier.h"
 
 #define DEBUG_MSG qCDebug(QTMIR_SESSIONS).nospace() << "TaskController::" << __func__
 

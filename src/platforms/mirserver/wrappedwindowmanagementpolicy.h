@@ -18,10 +18,10 @@
 #define WRAPPEDWINDOWMANAGEMENTPOLICY_H
 
 #include "qtmir/windowmanagementpolicy.h"
-#include "qtmir/appnotifier.h"
-#include "qtmir/windowmodelnotifier.h"
+#include "appnotifier.h"
 #include "qteventfeeder.h"
 #include "windowcontroller.h"
+#include "windowmodelnotifier.h"
 #include "workspacecontroller.h"
 
 #include <QSharedPointer>

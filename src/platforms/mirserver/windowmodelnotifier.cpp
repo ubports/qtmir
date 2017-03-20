@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "qtmir/windowmodelnotifier.h"
+#include "windowmodelnotifier.h"
 
 #include <QMultiHash>
 #include <QMutex>

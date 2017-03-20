@@ -20,7 +20,7 @@
 #include <QAbstractListModel>
 
 #include "mirsurface.h"
-#include "qtmir/windowmodelnotifier.h"
+#include "windowmodelnotifier.h"
 
 namespace qtmir {
 

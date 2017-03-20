@@ -39,15 +39,10 @@ namespace qtmir
 
 class WindowModelNotifier;
 class AppNotifier;
-class Screens;
 
 class MirServerApplication : public QGuiApplication
 {
     Q_OBJECT
-
-    Q_PROPERTY(qtmir::AppNotifier* appNotifier READ appNotifier CONSTANT)
-    Q_PROPERTY(qtmir::WindowModelNotifier* windowModelNotifier READ windowModelNotifier CONSTANT)
-    Q_PROPERTY(qtmir::Screens* screenModel READ screenModel CONSTANT)
 
 public:
     explicit MirServerApplication(int &argc,
@@ -55,17 +50,9 @@ public:
                                   std::initializer_list<std::function<void(QMirServer&)>> options);
     ~MirServerApplication();
 
-    qtmir::AppNotifier* appNotifier() const;
-    qtmir::WindowModelNotifier* windowModelNotifier() const;
-    qtmir::Screens* screenModel() const;
-
 Q_SIGNALS:
     // invoked by screen model
     void screenAboutToBeRemoved(QScreen *screen);
-
-private:
-    class Private;
-    QScopedPointer<Private> d;
 };
 
 } // namespace qtmir

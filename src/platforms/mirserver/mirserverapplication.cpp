@@ -39,16 +39,10 @@ void init(std::initializer_list<std::function<void(QMirServer&)>> const& options
 
 }
 
-struct MirServerApplication::Private
-{
-    QSharedPointer<qtmir::Screens> screenModel{qtmir::get_screen_model()};
-};
-
 MirServerApplication::MirServerApplication(int &argc,
                                            char **argv,
                                            std::initializer_list<std::function<void(QMirServer&)>> options)
     : QGuiApplication((init(options), argc), argv) // comma operator to ensure init called before QGuiApplication
-    , d(new Private)
 {
     Q_UNUSED(options);
 }
@@ -56,21 +50,6 @@ MirServerApplication::MirServerApplication(int &argc,
 MirServerApplication::~MirServerApplication()
 {
     mirServer.clear();
-}
-
-AppNotifier *MirServerApplication::appNotifier() const
-{
-    return mirServer->appNotifier();
-}
-
-WindowModelNotifier *MirServerApplication::windowModelNotifier() const
-{
-    return mirServer->windowModelNotifier();
-}
-
-qtmir::Screens *MirServerApplication::screenModel() const
-{
-    return d->screenModel.data();
 }
 
 }
