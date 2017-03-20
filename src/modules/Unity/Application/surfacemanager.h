@@ -38,11 +38,17 @@ class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
     Q_OBJECT
 
 public:
-    explicit SurfaceManager(QObject *parent = 0);
+    explicit SurfaceManager();
     virtual ~SurfaceManager() {}
 
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
+
+protected:
+    // for testing purposes
+    SurfaceManager(WindowControllerInterface *windowController,
+                   WindowModelNotifier *windowModel);
+    MirSurface* find(const miral::WindowInfo &needle) const;
 
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
@@ -58,7 +64,6 @@ private:
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);
-    MirSurface* find(const miral::WindowInfo &needle) const;
     MirSurface* find(const miral::Window &needle) const;
 
     QVector<MirSurface*> m_allSurfaces;
