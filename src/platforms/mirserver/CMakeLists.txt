@@ -52,12 +52,10 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
 # These files will compile without mirserver-dev
-add_library(qpa-mirserver-nomirserver OBJECT
+add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
     logging.cpp
-    plugin.cpp
     shelluuid.cpp
-    ubuntutheme.cpp
     clipboard.cpp
     mirsingleton.cpp
     wrappedsessionauthorizer.cpp
@@ -76,7 +74,7 @@ set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLA
 include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
 
 # These files will only compile with mirserver-dev
-add_library(qpa-mirserver-mirserver OBJECT
+add_library(qtmirserver-mirserver OBJECT
     openglcontextfactory.cpp openglcontextfactory.h
     mircursorimages.cpp
     screenscontroller.cpp
@@ -91,7 +89,7 @@ add_library(qpa-mirserver-mirserver OBJECT
 )
 
 # These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
-set(MIRSERVER_QPA_PLUGIN_SRC
+set(QMIRSERVER_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     cursor.cpp
     eventbuilder.cpp
@@ -101,7 +99,6 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     platformscreen.cpp
     screenplatformwindow.cpp
     screensmodel.cpp
-    mirserverintegration.cpp
     miropenglcontext.cpp
     offscreensurface.cpp
     inputdeviceobserver.cpp
@@ -115,17 +112,17 @@ set(MIRSERVER_QPA_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
-    ${CMAKE_SOURCE_DIR}/include/qtmir/windowmodelnotifier.h
-    ${CMAKE_SOURCE_DIR}/include/qtmir/appnotifier.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
 
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
+    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
 )
 
 add_library(qtmirserver SHARED
-    ${MIRSERVER_QPA_PLUGIN_SRC}
-    $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
-    $<TARGET_OBJECTS:qpa-mirserver-mirserver>
+    ${QMIRSERVER_PLUGIN_SRC}
+    $<TARGET_OBJECTS:qtmirserver-nomirserver>
+    $<TARGET_OBJECTS:qtmirserver-mirserver>
     $<TARGET_OBJECTS:miral-prototypes>
 )
 

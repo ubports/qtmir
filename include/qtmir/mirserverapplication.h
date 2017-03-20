@@ -33,17 +33,11 @@ class MirServerApplication : public QGuiApplication
 {
     Q_OBJECT
 
-    Q_PROPERTY(qtmir::AppNotifier* appNotifier READ appNotifier CONSTANT)
-    Q_PROPERTY(qtmir::WindowModelNotifier* windowModelNotifier READ windowModelNotifier CONSTANT)
-
 public:
     explicit MirServerApplication(int &argc,
                                   char **argv,
                                   std::initializer_list<std::function<void(QMirServer&)>> options);
     ~MirServerApplication();
-
-    qtmir::AppNotifier* appNotifier() const;
-    qtmir::WindowModelNotifier* windowModelNotifier() const;
 
 Q_SIGNALS:
     // invoked by screen model
