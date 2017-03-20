@@ -110,66 +110,6 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     ASSERT_TRUE(spyFrameDropped.count() > 0);
 }
 
-
-TEST_F(MirSurfaceTest, DeleteMirSurfaceOnLastNonLiveUnregisterView)
-{
-    int argc = 0;
-    char* argv[0];
-    QCoreApplication qtApp(argc, argv); // app for deleteLater event
-
-    miral::Window mockWindow(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo mockWindowInfo(mockWindow, spec);
-
-    auto surface = new MirSurface(mockWindowInfo, nullptr); // lives on the heap, as it will delete itself
-
-    bool surfaceDeleted = false;
-    QObject::connect(surface, &QObject::destroyed, [&surfaceDeleted](){ surfaceDeleted = true; });
-
-    qintptr view1 = (qintptr)1;
-    qintptr view2 = (qintptr)2;
-
-    surface->registerView(view1);
-    surface->registerView(view2);
-    surface->setLive(false);
-    EXPECT_FALSE(surfaceDeleted);
-
-    surface->unregisterView(view1);
-    surface->unregisterView(view2);
-
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    EXPECT_TRUE(surfaceDeleted);
-}
-
-
-TEST_F(MirSurfaceTest, DISABLED_DoNotDeleteMirSurfaceOnLastLiveUnregisterView)
-{
-    int argc = 0;
-    char* argv[0];
-    QCoreApplication qtApp(argc, argv); // app for deleteLater event
-
-    miral::Window mockWindow(stubSession, stubSurface);
-    ms::SurfaceCreationParameters spec;
-    miral::WindowInfo mockWindowInfo(mockWindow, spec);
-
-    auto surface = new MirSurface(mockWindowInfo, nullptr); // lives on the heap, as it may delete itself
-
-    bool surfaceDeleted = false;
-    QObject::connect(surface, &QObject::destroyed, [&surfaceDeleted](){ surfaceDeleted = true; });
-
-    qintptr view1 = (qintptr)1;
-    qintptr view2 = (qintptr)2;
-
-    surface->registerView(view1);
-    surface->registerView(view2);
-
-    surface->unregisterView(view1);
-    surface->unregisterView(view2);
-
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
-    EXPECT_FALSE(surfaceDeleted);
-}
-
 /*
  * Test that MirSurface.visible is recalculated after the client swaps the first frame.
  * A surface is not considered visible unless it has a non-hidden & non-minimized state, and

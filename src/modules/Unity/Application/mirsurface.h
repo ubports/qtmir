@@ -191,7 +191,6 @@ private Q_SLOTS:
     void dropPendingBuffer();
     void onAttributeChanged(const MirWindowAttrib, const int);
     void onFramesPostedObserved();
-    void onSessionDestroyed();
     void emitSizeChanged();
     void setCursor(const QCursor &cursor);
     void onCloseTimedOut();
