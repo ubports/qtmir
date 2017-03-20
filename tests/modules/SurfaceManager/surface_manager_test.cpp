@@ -32,26 +32,13 @@
 // local
 #include "qtmir_test.h"
 #include "fake_session.h"
-#include "mock_session_manager.h"
+#include "mock_sessionmap.h"
 #include "mock_window_controller.h"
 
 using namespace qtmir;
 using StubSurface = mir::test::doubles::StubSurface;
 using StubSession = mir::test::doubles::StubSession;
 
-struct TestableSurfaceManager : public SurfaceManager
-{
-    // just exports the test-only protected constructor
-    TestableSurfaceManager(WindowControllerInterface *windowController,
-                           WindowModelNotifier *windowModel,
-                           SessionManager *sessionManager)
-        : SurfaceManager(windowController, windowModel, sessionManager) {}
-
-    MirSurface* find(const miral::WindowInfo &needle) const
-    {
-        return SurfaceManager::find(needle);
-    }
-};
 
 class SurfaceManagerTests : public ::testing::Test
 {
@@ -65,10 +52,10 @@ public:
         qRegisterMetaType<QVector<unity::shell::application::MirSurfaceInterface*>>();
     }
 
-    testing::NiceMock<MockSessionManager> sessionManager;
     testing::NiceMock<MockWindowController> wmController;
     WindowModelNotifier wmNotifier;
-    QScopedPointer<TestableSurfaceManager> surfaceManager;
+    MockSessionMap sessionMap;
+    QScopedPointer<SurfaceManager> surfaceManager;
     QScopedPointer<QCoreApplication> qtApp; // need to spin event loop for queued connections
 
     // Needed to create miral::WindowInfo
@@ -87,11 +74,10 @@ protected:
         qtApp.reset(new QCoreApplication(argc, argv));
 
         using namespace ::testing;
-        ON_CALL(sessionManager,findSession(_))
+        ON_CALL(sessionMap,findSession(_))
                 .WillByDefault(Return(&fakeSession));
 
-        surfaceManager.reset(new TestableSurfaceManager(&wmController,
-                                                        &wmNotifier, &sessionManager));
+        surfaceManager.reset(new SurfaceManager(&wmController, &wmNotifier, &sessionMap));
     }
 };
 
@@ -153,7 +139,7 @@ TEST_F(SurfaceManagerTests, createdMirSurfaceHasSessionSet)
 {
     // Setup
     using namespace ::testing;
-    EXPECT_CALL(sessionManager,findSession(_))
+    EXPECT_CALL(sessionMap,findSession(_))
             .WillOnce(Return(&fakeSession));
 
     // Test
