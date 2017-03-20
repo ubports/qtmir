@@ -138,7 +138,7 @@ void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
     DEBUG_MSG << "()";
     MirSurface *surface = find(windowInfo);
     forgetMirSurface(windowInfo.window());
-    if (surface->isBeingDisplayed()) {
+    if (surface && surface->isBeingDisplayed()) {
         surface->setLive(false);
     } else {
         delete surface;
