@@ -27,9 +27,6 @@
 #include <debughelpers.h>
 #include <mirqtconversion.h>
 
-// Mir
-#include <mir/scene/surface.h>
-
 // Qt
 #include <QGuiApplication>
 
@@ -88,25 +85,20 @@ void SurfaceManager::forgetMirSurface(const miral::Window &window)
 
 void SurfaceManager::onWindowAdded(const NewWindow &window)
 {
+    const auto &windowInfo = window.windowInfo;
     {
-        std::shared_ptr<mir::scene::Surface> surface = window.surface;
-        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(surface->type())
-            << ",parent=" << (void*)(surface->parent().get())
-            << ",state=" << mirSurfaceStateToStr(surface->state())
-            << ",top_left=" << toQPoint(surface->top_left())
+        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(windowInfo.type())
+            << ",parent=" << (void*)(std::shared_ptr<mir::scene::Surface>{windowInfo.parent()}.get())
+            << ",state=" << mirSurfaceStateToStr(windowInfo.state())
+            << ",top_left=" << toQPoint(windowInfo.window().top_left())
             << "]";
     }
 
-    auto mirSession = window.windowInfo.window().application();
+    auto mirSession = windowInfo.window().application();
     SessionInterface* session = ApplicationManager::singleton()->findSession(mirSession.get());
 
-    MirSurface *parentSurface;
-    {
-        std::shared_ptr<mir::scene::Surface> surface = window.windowInfo.window();
-        parentSurface = find(surface->parent());
-    }
-
-    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
+    const auto parentSurface = find(windowInfo.parent());
+    const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
     if (parentSurface) {
@@ -138,16 +130,6 @@ MirSurface *SurfaceManager::find(const miral::Window &window) const
 {
     Q_FOREACH(const auto surface, m_allSurfaces) {
         if (surface->window() == window) {
-            return surface;
-        }
-    }
-    return nullptr;
-}
-
-MirSurface *SurfaceManager::find(const std::shared_ptr<mir::scene::Surface> &needle) const
-{
-    Q_FOREACH(const auto surface, m_allSurfaces) {
-        if (surface->window() == needle) {
             return surface;
         }
     }
