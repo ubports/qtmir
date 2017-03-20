@@ -50,14 +50,4 @@ MirServerApplication::~MirServerApplication()
     mirServer.clear();
 }
 
-AppNotifier *MirServerApplication::appNotifier() const
-{
-    return mirServer->appNotifier();
-}
-
-WindowModelNotifier *MirServerApplication::windowModelNotifier() const
-{
-    return mirServer->windowModelNotifier();
-}
-
 }
