@@ -1215,6 +1215,13 @@ void MirSurface::requestFocus()
     Q_EMIT focusRequested();
 }
 
+void MirSurface::requestRaise()
+{
+    if (m_live) {
+        m_controller->raise(m_window);
+    }
+}
+
 QPoint MirSurface::convertDisplayToLocalCoords(const QPoint &displayPos) const
 {
     QPoint localPos = displayPos;

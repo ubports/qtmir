@@ -163,6 +163,8 @@ public:
 
     void requestFocus() override;
 
+    void requestRaise() override;
+
     ////
     // Own API
     void setPosition(const QPoint newPosition);
