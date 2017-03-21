@@ -387,8 +387,8 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
                                                qtmir::AppNotifier &appNotifier,
-                                               const std::shared_ptr<QtEventFeeder>& eventFeeder,
-                                               const qtmir::WindowManagmentPolicyBuilder& wmBuilder)
+                                               const std::shared_ptr<QtEventFeeder> &eventFeeder,
+                                               const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
     : qtmir::WindowManagementPolicy(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
                                                                                      appNotifier,
                                                                                      eventFeeder))
