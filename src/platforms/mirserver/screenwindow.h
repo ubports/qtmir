@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2017 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -22,6 +22,7 @@
 // ScreenWindow implements the basics of a QPlatformWindow.
 // QtMir enforces one Window per Screen, so Window and Screen are tightly coupled.
 // All Mir specifics live in the associated Screen object.
+
 class ScreenWindow : public QPlatformWindow
 {
 public:
@@ -39,21 +40,9 @@ public:
     void makeCurrent();
     void doneCurrent();
 
-    QRect availableDesktopArea() const;
-    void setAvailableDesktopArea(const QRect &rect);
-
-    QRect normalWindowMargins() const;
-    void setNormalWindowMargins(const QRect &rect);
-
-    QRect dialogWindowMargins() const;
-    void setDialogWindowMargins(const QRect &rect);
-
 private:
     bool m_exposed;
     WId m_winId;
-    QRect m_availableDesktopArea;
-    QRect m_normalWindowMargins;
-    QRect m_dialogWindowMargins;
 };
 
 #endif // SCREENWINDOW_H

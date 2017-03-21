@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2017 Canonical, Ltd.
+ * Copyright (C) 2013-2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -126,34 +126,4 @@ void ScreenWindow::makeCurrent()
 void ScreenWindow::doneCurrent()
 {
     static_cast<Screen *>(screen())->doneCurrent();
-}
-
-QRect ScreenWindow::availableDesktopArea() const
-{
-    return m_availableDesktopArea;
-}
-
-void ScreenWindow::setAvailableDesktopArea(const QRect &rect)
-{
-    m_availableDesktopArea = rect;
-}
-
-QRect ScreenWindow::normalWindowMargins() const
-{
-    return m_normalWindowMargins;
-}
-
-void ScreenWindow::setNormalWindowMargins(const QRect &rect)
-{
-    m_normalWindowMargins = rect;
-}
-
-QRect ScreenWindow::dialogWindowMargins() const
-{
-    return m_dialogWindowMargins;
-}
-
-void ScreenWindow::setDialogWindowMargins(const QRect &rect)
-{
-    m_dialogWindowMargins = rect;
 }

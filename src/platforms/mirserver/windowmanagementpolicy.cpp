@@ -19,7 +19,6 @@
 #include "eventdispatch.h"
 #include "initialsurfacesizes.h"
 #include "screensmodel.h"
-#include "screenwindow.h"
 #include "surfaceobserver.h"
 
 #include "miral/window_manager_tools.h"
@@ -324,6 +323,7 @@ void WindowManagementPolicy::forceClose(const miral::Window &window)
 
 void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
 {
+    qDebug() << "set_window_confinement" << regions;
     m_confinementRegions = regions;
 
     // TODO: update window positions to respect new boundary.
@@ -331,6 +331,7 @@ void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect>
 
 void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
 {
+    qDebug() << "set_window_margins" << windowType << margins;
     m_windowMargins[windowType] = margins;
 
     // TODO: update window positions/sizes to respect new margins.
@@ -363,6 +364,7 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
 
 Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
 {
+    qDebug() << "confirm_inherited_move: confinement regions" << m_confinementRegions;
     if (m_confinementRegions.isEmpty()) {
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
@@ -379,7 +381,7 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
         }
     }
     // If Window is outside the m_confinementRegions, consider it unconfined
-    if (availableRect.isNull()) {
+    if (availableRect.isNull()) { qDebug() << "Out of confinement!";
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
 
@@ -392,6 +394,7 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
     int width = geom.width();
     int height = geom.height();
 
+    qDebug() << "Moving window of geom:" << geom << "by" << moveX << moveY;
     // If the child window is already partially beyond the available desktop area (most likely because the user
     // explicitly moved it there) we won't pull it back, unless the inherited movement is this direction, but also won't
     // push it even further astray. But if it currently is completely within the available desktop area boundaries

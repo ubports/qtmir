@@ -18,6 +18,9 @@
 
 #include "qmirserver.h"
 #include "screen.h"
+#include "windowcontrollerinterface.h"
+
+#include <QDebug>
 
 NativeInterface::NativeInterface(QMirServer *server)
     : m_qMirServer(server)
@@ -70,6 +73,43 @@ QVariant NativeInterface::windowProperty(QPlatformWindow *window, const QString 
         return defaultValue;
     } else {
         return returnVal;
+    }
+}
+
+void NativeInterface::setWindowProperty(QPlatformWindow */*window*/, const QString &name, const QVariant &value)
+{
+    if (name.isNull()) {
+        return;
+    }
+
+    // TODO remove this hack and expose this properly when QtMir can share WindowController in a C++ header
+
+    // Get WindowController
+    auto windowController = static_cast<qtmir::WindowControllerInterface *>(m_qMirServer->nativeResourceForIntegration("WindowController"));
+
+    if (name == QStringLiteral("availableDesktopArea")) {
+        QRect rect = value.toRect();
+        if (rect.isValid()) {
+            windowController->setWindowConfinementRegions({rect});
+        } else {
+            qWarning().nospace() << "NativeInterface::setWindowProperty("
+                << name << "," << value << ") - value is not a QRect";
+       }
+    } else if (name.endsWith(QStringLiteral("WindowMargins"))) {
+        if (value.canConvert(QMetaType::QRect)) {
+            QRect rect = value.toRect();
+            QMargins margin(rect.x(), rect.y(), rect.width(), rect.height());
+            if (name == QStringLiteral("normalWindowMargins")) {
+                windowController->setWindowMargins(Mir::NormalType, margin);
+            } else if (name == QStringLiteral("dialogWindowMargins")) {
+                windowController->setWindowMargins(Mir::DialogType, margin);
+            } else {
+                qWarning() << "NativeInterface::setWindowProperty missing support for:" << name;
+            }
+        } else {
+            qWarning().nospace() << "NativeInterface::setWindowProperty("
+                << name << "," << value << ") - value is not a QRect";
+        }
     }
 }
 
