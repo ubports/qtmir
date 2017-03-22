@@ -658,9 +658,6 @@ void ApplicationManager::add(Application* application)
     m_applications.append(application);
     endInsertRows();
     Q_EMIT countChanged();
-    if (m_applications.size() == 1) {
-        Q_EMIT emptyChanged();
-    }
 
     m_modelUnderChange = false;
 
@@ -686,9 +683,6 @@ void ApplicationManager::remove(Application *application)
     m_applications.removeAt(index);
     endRemoveRows();
     Q_EMIT countChanged();
-    if (index == 0) {
-        Q_EMIT emptyChanged();
-    }
 
     disconnect(application, &Application::fullscreenChanged, this, 0);
     disconnect(application, &Application::focusedChanged, this, 0);
@@ -703,29 +697,6 @@ void ApplicationManager::remove(Application *application)
     m_modelUnderChange = false;
 
     DEBUG_MSG << "(appId=" << application->appId() << ") - after " << toString();
-}
-
-void ApplicationManager::move(int from, int to) {
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move - from=" << from << "to=" << to;
-    if (from == to) return;
-
-    Q_ASSERT(!m_modelUnderChange);
-    m_modelUnderChange = true;
-
-    if (from >= 0 && from < m_applications.size() && to >= 0 && to < m_applications.size()) {
-        QModelIndex parent;
-        /* When moving an item down, the destination index needs to be incremented
-           by one, as explained in the documentation:
-           http://qt-project.org/doc/qt-5.0/qtcore/qabstractitemmodel.html#beginMoveRows */
-
-        beginMoveRows(parent, from, from, parent, to + (to > from ? 1 : 0));
-        m_applications.move(from, to);
-        endMoveRows();
-    }
-
-    m_modelUnderChange = false;
-
-    qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::move after " << toString();
 }
 
 QModelIndex ApplicationManager::findIndex(Application* application)
@@ -762,17 +733,6 @@ Application *ApplicationManager::findClosingApplication(const QString &inputAppI
     }
     return nullptr;
 }
-
-Application *ApplicationManager::findApplication(qtmir::MirSurfaceInterface* surface)
-{
-    Q_FOREACH (Application *app, m_applications) {
-        if (app->session() == surface->session()) {
-            return app;
-        }
-    }
-    return nullptr;
-}
-
 
 void ApplicationManager::onSessionStarting(SessionInterface *qmlSession)
 {
