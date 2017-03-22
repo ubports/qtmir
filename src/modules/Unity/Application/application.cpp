@@ -28,7 +28,6 @@
 
 // QPA mirserver
 #include "logging.h"
-#include "initialsurfacesizes.h"
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
@@ -48,7 +47,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     : ApplicationInfoInterface(appInfo->appId(), parent)
     , m_sharedWakelock(sharedWakelock)
     , m_appInfo(appInfo)
-    , m_pid(0)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
@@ -72,8 +70,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     setStopTimer(new Timer);
 
     connect(m_proxySurfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
-
-    connect(this, &Application::queuedSetPid, this, &Application::setPid, Qt::QueuedConnection);
 }
 
 Application::~Application()
@@ -107,10 +103,6 @@ Application::~Application()
     if (m_session) {
         m_session->setApplication(nullptr);
         delete m_session;
-    }
-
-    if (m_pid != 0) {
-        InitialSurfaceSizes::remove(m_pid);
     }
 
     delete m_stopTimer;
@@ -426,11 +418,6 @@ bool Application::fullscreen() const
     return m_session ? m_session->fullscreen() : false;
 }
 
-pid_t Application::pid() const
-{
-    return m_pid;
-}
-
 void Application::close()
 {
     INFO_MSG << "()";
@@ -458,19 +445,6 @@ void Application::close()
     case InternalState::Stopped:
         // too late
         break;
-    }
-}
-
-void Application::setPid(pid_t pid)
-{
-    if (m_pid != 0) {
-        InitialSurfaceSizes::remove(m_pid);
-    }
-
-    m_pid = pid;
-
-    if (m_initialSurfaceSize.isValid() && m_pid != 0) {
-        InitialSurfaceSizes::set(m_pid, m_initialSurfaceSize);
     }
 }
 
@@ -851,9 +825,6 @@ void Application::setInitialSurfaceSize(const QSize &size)
 
     if (size != m_initialSurfaceSize) {
         m_initialSurfaceSize = size;
-        if (m_pid != 0 && m_initialSurfaceSize.isValid()) {
-            InitialSurfaceSizes::set(m_pid, size);
-        }
         Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
 }

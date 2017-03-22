@@ -118,8 +118,6 @@ public:
 
     Stages supportedStages() const;
 
-    pid_t pid() const;
-
     // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }
 
@@ -140,14 +138,11 @@ Q_SIGNALS:
     void stopped();
     void closing();
 
-    void queuedSetPid(const pid_t pid);
-
 
 private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
-    void setPid(pid_t pid);
 
 private:
 
@@ -169,7 +164,6 @@ private:
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
-    pid_t m_pid;
     Stages m_supportedStages;
     InternalState m_state;
     QStringList m_arguments;

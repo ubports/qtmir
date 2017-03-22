@@ -123,7 +123,10 @@ private:
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
 
+    void setApplicationPid(Application *application, pid_t pid);
+
     QList<Application*> m_applications;
+    QHash<Application*, pid_t> m_applicationsPid;
     DBusFocusInfo *m_dbusFocusInfo;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
