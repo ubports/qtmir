@@ -95,7 +95,7 @@ miral::WindowSpecification WindowManagementPolicy::place_new_window(
         QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
 
         if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
-            parameters.size() = Size{Width(initialSize.width()), Height(initialSize.height())};
+            parameters.size() = qtmir::toMirSize(initialSize);
         }
     }
 
@@ -242,6 +242,19 @@ void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
             m_tools.select_active_window(window);
         }
     });
+}
+
+QRect WindowManagementPolicy::getConfinementRect(const QRect rect) const
+{
+    QRect confinementRect;
+    for (const QRect r : m_confinementRegions) {
+        if (r.contains(rect)) {
+            confinementRect = r;
+            // TODO: What if there are multiple confinement regions and they intersect??
+            break;
+        }
+    }
+    return confinementRect;
 }
 
 /* Following methods all called from the Qt GUI thread to deliver events to clients */
@@ -399,16 +412,8 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
     const QRect geom(toQPoint(window.top_left()), toQSize(window.size()));
     QRect decoratedGeometry = geom.marginsAdded(windowMargins);
 
-    QRect confinementRect;
-    for (const QRect &rect : m_confinementRegions) {
-        if (rect.contains(geom)) {
-            confinementRect = rect;
-            // TODO: What if there are multiple confinement regions and they intersect??
-            break;
-        }
-    }
-    // If Window is outside the m_confinementRegions, consider it unconfined
-    if (confinementRect.isNull()) {
+    const QRect confinementRect = getConfinementRect(decoratedGeometry);
+    if (confinementRect.isNull()) { // If Window outside the m_confinementRegions, consider it unconfined
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
     const QPoint offset(movement.dx.as_int(), movement.dy.as_int());
@@ -420,5 +425,5 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
         decoratedGeometry.translate(correction);
     }
 
-    return qtmir::toMirRectangle(decoratedGeometry.marginsRemoved(windowMargins));
+    return toMirRectangle(decoratedGeometry.marginsRemoved(windowMargins));
 }

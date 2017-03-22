@@ -91,6 +91,7 @@ public:
 
 private:
     void ensureWindowIsActive(const miral::Window &window);
+    QRect getConfinementRect(const QRect rect) const;
 
     miral::WindowManagerTools m_tools;
     qtmir::WindowModelNotifier &m_windowModel;
