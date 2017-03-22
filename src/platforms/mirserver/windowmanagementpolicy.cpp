@@ -35,6 +35,32 @@ namespace qtmir {
     }
 }
 
+namespace {
+
+QPoint translationToContain(QRect rect, QRect container) // assumes rect will fit inside container
+{
+    int x1offset = container.left() - rect.left();
+    int y1offset = container.top() - rect.top();
+    int x2offset = container.right() - rect.right();
+    int y2offset = container.bottom() - rect.bottom();
+
+    QPoint translation;
+    if (x1offset > 0) {
+        translation.setX(x1offset);
+    }
+    if (y1offset > 0) {
+        translation.setY(y1offset);
+    }
+    if (x2offset < 0) {
+        translation.setX(x2offset);
+    }
+    if (y2offset < 0) {
+        translation.setY(y2offset);
+    }
+    return translation;
+}
+} // namespace
+
 using namespace qtmir;
 using namespace mir::geometry;
 
@@ -364,64 +390,35 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
 
 Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
 {
-    qDebug() << "confirm_inherited_move: confinement regions" << m_confinementRegions;
     if (m_confinementRegions.isEmpty()) {
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
 
     auto window = windowInfo.window();
     const QMargins windowMargins = m_windowMargins[windowInfo.type()];
-    QRect geom(toQPoint(window.top_left()), toQSize(window.size()));
+    const QRect geom(toQPoint(window.top_left()), toQSize(window.size()));
+    QRect decoratedGeometry = geom.marginsAdded(windowMargins);
 
-    QRect availableRect;
+    QRect confinementRect;
     for (const QRect &rect : m_confinementRegions) {
         if (rect.contains(geom)) {
-            availableRect = rect;
+            confinementRect = rect;
+            // TODO: What if there are multiple confinement regions and they intersect??
             break;
         }
     }
     // If Window is outside the m_confinementRegions, consider it unconfined
-    if (availableRect.isNull()) { qDebug() << "Out of confinement!";
+    if (confinementRect.isNull()) {
         return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
     }
+    const QPoint offset(movement.dx.as_int(), movement.dy.as_int());
 
-    // What if there are multiple confinement regions and they intersect??
+    decoratedGeometry.translate(offset);
 
-    int posX = geom.x();
-    int posY = geom.y();
-    int moveX = movement.dx.as_int();
-    int moveY = movement.dy.as_int();
-    int width = geom.width();
-    int height = geom.height();
-
-    qDebug() << "Moving window of geom:" << geom << "by" << moveX << moveY;
-    // If the child window is already partially beyond the available desktop area (most likely because the user
-    // explicitly moved it there) we won't pull it back, unless the inherited movement is this direction, but also won't
-    // push it even further astray. But if it currently is completely within the available desktop area boundaries
-    // we won't let go beyond it.
-
-    // TODO: Consider left, right and bottom window margins. Right now I just care about the top one which only one
-    //       used by unity 8 (for its window title bar)
-
-    if (moveX > 0) {
-        if (posX + width < availableRect.right()) {
-            posX = qMin(posX + moveX, availableRect.right() - width);
-        }
-    } else {
-        if (posX > availableRect.left()) {
-            posX = qMax(posX + moveX, availableRect.left());
-        }
+    if (!confinementRect.contains(decoratedGeometry)) { // tries to move outside confinement, correct it
+        QPoint correction = translationToContain(decoratedGeometry, confinementRect);
+        decoratedGeometry.translate(correction);
     }
 
-    if (moveY > 0) {
-        if (posY + height < availableRect.bottom()) {
-            posY = qMin(posY + moveY, availableRect.bottom() - height);
-        }
-    } else {
-        if (posY - windowMargins.top() > availableRect.top()) {
-            posY = qMax(posY + moveY, availableRect.top() + windowMargins.top());
-        }
-    }
-
-    return Rectangle(Point(posX,posY), windowInfo.window().size());
+    return qtmir::toMirRectangle(decoratedGeometry.marginsRemoved(windowMargins));
 }
