@@ -274,31 +274,30 @@ QString mirInputEventModifiersToString(MirInputEventModifiers modifiers)
 {
     QString string;
 
-    if (modifiers == mir_input_event_modifier_none) {
-        string.append("none");
-    } else {
-        if (modifiers & mir_input_event_modifier_alt) {
-            if (string.size() > 0) { string.append(","); }
-            string.append("alt");
+    if (modifiers != mir_input_event_modifier_none) {
+        #define PRINT_MODIFIER(NAME) \
+        if (modifiers & mir_input_event_modifier_##NAME) { \
+            if (string.size() > 0) { string.append(","); } \
+            string.append(#NAME); \
         }
-        /*
-        mir_input_event_modifier_alt_left
-        mir_input_event_modifier_alt_right
-        mir_input_event_modifier_shift
-        mir_input_event_modifier_shift_left
-        mir_input_event_modifier_shift_right
-        mir_input_event_modifier_sym
-        mir_input_event_modifier_function
-        mir_input_event_modifier_ctrl
-        mir_input_event_modifier_ctrl_left
-        mir_input_event_modifier_ctrl_right
-        mir_input_event_modifier_meta
-        mir_input_event_modifier_meta_left
-        mir_input_event_modifier_meta_right
-        mir_input_event_modifier_caps_lock
-        mir_input_event_modifier_num_lock
-        mir_input_event_modifier_scroll_lock
-        */
+        PRINT_MODIFIER(alt)
+        PRINT_MODIFIER(alt_left)
+        PRINT_MODIFIER(alt_right)
+        PRINT_MODIFIER(shift)
+        PRINT_MODIFIER(shift_left)
+        PRINT_MODIFIER(shift_right)
+        PRINT_MODIFIER(sym)
+        PRINT_MODIFIER(function)
+        PRINT_MODIFIER(ctrl)
+        PRINT_MODIFIER(ctrl_left)
+        PRINT_MODIFIER(ctrl_right)
+        PRINT_MODIFIER(meta)
+        PRINT_MODIFIER(meta_left)
+        PRINT_MODIFIER(meta_right)
+        PRINT_MODIFIER(caps_lock)
+        PRINT_MODIFIER(num_lock)
+        PRINT_MODIFIER(scroll_lock)
+        #undef PRINT_MODIFIER
     }
 
     return string;
