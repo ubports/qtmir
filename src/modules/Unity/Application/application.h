@@ -138,7 +138,6 @@ Q_SIGNALS:
     void stopped();
     void closing();
 
-
 private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
