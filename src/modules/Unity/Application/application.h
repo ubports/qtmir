@@ -140,16 +140,19 @@ Q_SIGNALS:
     void stopped();
     void closing();
 
+    void queuedSetPid(const pid_t pid);
+
+
 private Q_SLOTS:
     void onSessionStateChanged(SessionInterface::State sessionState);
 
     void respawn();
+    void setPid(pid_t pid);
 
 private:
 
     void acquireWakelock() const;
     void releaseWakelock() const;
-    void setPid(pid_t pid);
     void setArguments(const QStringList &arguments);
     void setInternalState(InternalState state);
     void wipeQMLCache();

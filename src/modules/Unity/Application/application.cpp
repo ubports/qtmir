@@ -72,6 +72,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     setStopTimer(new Timer);
 
     connect(m_proxySurfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
+
+    connect(this, &Application::queuedSetPid, this, &Application::setPid, Qt::QueuedConnection);
 }
 
 Application::~Application()
