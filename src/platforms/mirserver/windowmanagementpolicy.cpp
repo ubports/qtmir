@@ -37,6 +37,10 @@ namespace qtmir {
 
 namespace {
 
+/*
+ * translationToContain - returns the (x,y) translation needed to move a rectangle so that it
+ * fits inside the container rectangle.
+ */
 QPoint translationToContain(QRect rect, QRect container) // assumes rect will fit inside container
 {
     int x1offset = container.left() - rect.left();
