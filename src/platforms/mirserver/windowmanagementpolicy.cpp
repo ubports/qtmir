@@ -27,8 +27,6 @@
 #include "mirqtconversion.h"
 #include "tracepoints.h"
 
-#include <QDebug>
-
 namespace qtmir {
     std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo) {
         return std::static_pointer_cast<ExtraWindowInfo>(windowInfo.userdata());
@@ -335,7 +333,6 @@ void WindowManagementPolicy::forceClose(const miral::Window &window)
 
 void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
 {
-    qDebug() << "set_window_confinement" << regions;
     m_confinementRegions = regions;
 
     // TODO: update window positions to respect new boundary.
@@ -343,7 +340,6 @@ void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect>
 
 void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
 {
-    qDebug() << "set_window_margins" << windowType << margins;
     m_windowMargins[windowType] = margins;
 
     // TODO: update window positions/sizes to respect new margins.
