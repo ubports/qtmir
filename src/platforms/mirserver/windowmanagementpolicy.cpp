@@ -221,7 +221,7 @@ QRect WindowManagementPolicy::getConfinementRect(const QRect rect) const
 {
     QRect confinementRect;
     for (const QRect r : m_confinementRegions) {
-        if (r.contains(rect)) {
+        if (r.intersects(rect)) {
             confinementRect = r;
             // TODO: What if there are multiple confinement regions and they intersect??
             break;
