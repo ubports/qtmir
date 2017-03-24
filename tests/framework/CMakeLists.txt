@@ -28,6 +28,7 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_prompt_session_manager.cpp
     mock_renderable.cpp
     mock_session.cpp
+    mock_sessionmap.h
     mock_settings.cpp
     mock_shared_wakelock.cpp
     mock_surface.cpp
@@ -45,6 +46,8 @@ add_library(qtmir-test-framework-static STATIC
 
 target_link_libraries(
     qtmir-test-framework-static
+
+    unityapplicationplugin
 
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARIES}
