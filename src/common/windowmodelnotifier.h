@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QSize>
+#include <QMutex>
 
 #include <miral/window_info.h>
 #include <miral/workspace_policy.h>
@@ -59,6 +60,10 @@ struct ExtraWindowInfo {
     // Mir::MaximizedBottomLeftState:
     // Mir::MaximizedBottomRightState:
     Mir::State state{Mir::UnknownState};
+
+    bool allowClientResize{true};
+
+    QMutex mutex;
 };
 
 std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo);
@@ -99,14 +104,14 @@ public:
     static void foreachObserverForWindow(const miral::Window &window, std::function<void(WindowNotifierObserver*)> fn);
 
 Q_SIGNALS:
-    void surfaceCreated();
-    void surfaceRemoved();
-    void surfaceReady();
-    void surfaceMoved(const QPoint &topLeft);
-    void surfaceResized(const QSize &size);
-    void surfaceStateChanged(Mir::State state);
-    void surfaceFocusChanged(bool focused);
-    void surfaceRequestedRaise();
+    void windowCreated();
+    void windowRemoved();
+    void windowReady();
+    void windowMoved(const QPoint &topLeft);
+    void windowResized(const QSize &size);
+    void windowStateChanged(Mir::State state);
+    void windowFocusChanged(bool focused);
+    void windowRequestedRaise();
 };
 
 } // namespace qtmir

@@ -29,10 +29,14 @@
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/observer_registrar.h>
 
+// shouldn't really import this
+#include <qglobal.h>
+
 namespace mg = mir::graphics;
 
 namespace
 {
+
 struct PersistDisplayConfigPolicy
 {
     PersistDisplayConfigPolicy(std::shared_ptr<miral::DisplayConfigurationStorage> const& storage) :
@@ -192,7 +196,7 @@ void PersistDisplayConfigPolicy::apply_to(
                     for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
                         auto const& mode = *iter;
                         auto const& newMode = config.mode.value();
-                        if (mode.size == newMode.size && mode.vrefresh_hz == newMode.refresh_rate) {
+                        if (mode.size == newMode.size && qFuzzyCompare(mode.vrefresh_hz, newMode.refresh_rate)) {
                             mode_index = i;
                             break;
                         }

@@ -33,14 +33,19 @@ Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 namespace qtmir {
 
 class MirSurface;
+class SessionMapInterface;
 class WindowControllerInterface;
 class WorkspaceControllerInterface;
 
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
 {
     Q_OBJECT
+
 public:
-    virtual ~SurfaceManager() = default;
+    SurfaceManager(WindowControllerInterface *windowController,
+                   WindowModelNotifier *windowModel,
+                   SessionMapInterface *sessionMap);
+    virtual ~SurfaceManager() {}
 
     static SurfaceManager *instance();
 
@@ -54,21 +59,24 @@ public:
     void moveWorkspaceContentToWorkspace(const std::shared_ptr<miral::Workspace> &to,
                                          const std::shared_ptr<miral::Workspace> &from) override;
 
+    // mainly for test usage
+    MirSurface* surfaceFor(const miral::Window &window) const;
+
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
     void onWindowRemoved(const miral::WindowInfo &windowInfo);
 private:
-    explicit SurfaceManager(QObject *parent = 0);
+    explicit SurfaceManager();
 
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);
-    MirSurface* surfaceFor(const miral::Window &window) const;
     QVector<unity::shell::application::MirSurfaceInterface*> surfacesFor(const std::vector<miral::Window> &windows) const;
     miral::Window windowFor(MirSurface *surface) const;
 
     WindowControllerInterface *m_windowController;
     WorkspaceControllerInterface *m_workspaceController;
+    SessionMapInterface *m_sessionMap;
 
     friend class Workspace;
     using swbimap_t = boost::bimap<MirSurface*, miral::Window>;

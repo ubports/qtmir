@@ -32,49 +32,49 @@ WindowModelNotifier::WindowModelNotifier()
 {
     connect(this, &WindowModelNotifier::windowAdded,                this, [](const qtmir::NewWindow &window) {
         WindowNotifierObserver::foreachObserverForWindow(window.windowInfo.window(), [](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceCreated();
+            Q_EMIT observer->windowCreated();
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowRemoved,              this, [](const miral::WindowInfo &windowInfo) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceRemoved();
+            Q_EMIT observer->windowRemoved();
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowReady,                this, [](const miral::WindowInfo &windowInfo) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceReady();
+            Q_EMIT observer->windowReady();
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowMoved,                this, [](const miral::WindowInfo &windowInfo, const QPoint &top_left) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [top_left](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceMoved(top_left);
+            Q_EMIT observer->windowMoved(top_left);
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowResized,              this, [](const miral::WindowInfo &windowInfo, const QSize &size) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [size](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceResized(size);
+            Q_EMIT observer->windowResized(size);
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowStateChanged,         this, [](const miral::WindowInfo &windowInfo, Mir::State state) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [state](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceStateChanged(state);
+            Q_EMIT observer->windowStateChanged(state);
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowFocusChanged,         this, [](const miral::WindowInfo &windowInfo, bool focused) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [focused](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceFocusChanged(focused);
+            Q_EMIT observer->windowFocusChanged(focused);
         });
     }, Qt::QueuedConnection);
 
     connect(this, &WindowModelNotifier::windowRequestedRaise,       this, [this](const miral::WindowInfo &windowInfo) {
         WindowNotifierObserver::foreachObserverForWindow(windowInfo.window(), [](WindowNotifierObserver* observer) {
-            Q_EMIT observer->surfaceRequestedRaise();
+            Q_EMIT observer->windowRequestedRaise();
         });
     }, Qt::QueuedConnection);
 }

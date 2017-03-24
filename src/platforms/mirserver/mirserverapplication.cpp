@@ -37,7 +37,7 @@ void init(std::initializer_list<std::function<void(QMirServer&)>> const& options
     }
 }
 
-}
+} // namespace
 
 MirServerApplication::MirServerApplication(int &argc,
                                            char **argv,
@@ -52,4 +52,4 @@ MirServerApplication::~MirServerApplication()
     mirServer.clear();
 }
 
-}
+} // qtmir

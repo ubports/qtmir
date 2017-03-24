@@ -28,9 +28,6 @@
 #include <mirqtconversion.h>
 #include <workspacecontrollerinterface.h>
 
-// Mir
-#include <mir/scene/surface.h>
-
 // Qt
 #include <QGuiApplication>
 
@@ -51,7 +48,7 @@ SurfaceManager *SurfaceManager::instance()
     return instance;
 }
 
-SurfaceManager::SurfaceManager(QObject *)
+SurfaceManager::SurfaceManager()
 {
     DEBUG_MSG << "()";
 
@@ -61,10 +58,21 @@ SurfaceManager::SurfaceManager(QObject *)
         qFatal("ERROR: Unity.Application QML plugin requires use of the 'mirserver' QPA plugin");
     }
 
+    m_sessionMap = ApplicationManager::singleton();
     m_windowController = static_cast<WindowControllerInterface*>(nativeInterface->nativeResourceForIntegration("WindowController"));
     m_workspaceController = static_cast<WorkspaceControllerInterface*>(nativeInterface->nativeResourceForIntegration("WorkspaceController"));
 
     auto windowModel = static_cast<WindowModelNotifier*>(nativeInterface->nativeResourceForIntegration("WindowModelNotifier"));
+    connectToWindowModelNotifier(windowModel);
+}
+
+SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
+                               WindowModelNotifier *windowModel,
+                               SessionMapInterface *sessionMap)
+    : m_windowController(windowController)
+    , m_sessionMap(sessionMap)
+{
+    DEBUG_MSG << "()";
     connectToWindowModelNotifier(windowModel);
 }
 
@@ -139,22 +147,30 @@ void SurfaceManager::forgetMirSurface(const miral::Window &window)
 
 void SurfaceManager::onWindowAdded(const NewWindow &window)
 {
+    const auto &windowInfo = window.windowInfo;
     {
-        std::shared_ptr<mir::scene::Surface> surface = window.surface;
-        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(surface->type())
-            << ",parent=" << (void*)(surface->parent().get())
-            << ",state=" << mirSurfaceStateToStr(surface->state())
-            << ",top_left=" << toQPoint(surface->top_left())
+        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(windowInfo.type())
+            << ",parent=" << (void*)(std::shared_ptr<mir::scene::Surface>{windowInfo.parent()}.get())
+            << ",state=" << mirSurfaceStateToStr(windowInfo.state())
+            << ",top_left=" << toQPoint(windowInfo.window().top_left())
             << "]";
     }
 
-    auto mirSession = window.windowInfo.window().application();
-    SessionInterface* session = ApplicationManager::singleton()->findSession(mirSession.get());
+    auto mirSession = windowInfo.window().application();
+    SessionInterface* session = m_sessionMap->findSession(mirSession.get());
 
-    MirSurface *parentSurface = surfaceFor(window.windowInfo.parent());
-
-    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
+    const auto parentSurface = surfaceFor(windowInfo.parent());
+    const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
+
+    connect(surface, &MirSurface::isBeingDisplayedChanged, this, [this, surface]() {
+        if ((!surface->live() || !surface->session())
+                && !surface->isBeingDisplayed()) {
+            forgetMirSurface(static_cast<MirSurface*>(surface)->window());
+            surface->deleteLater(); // don't delete immediately, slot may be directly connected
+            tracepoint(qtmir, surfaceDestroyed);
+        }
+    });
 
     if (parentSurface) {
         static_cast<MirSurfaceListModel*>(parentSurface->childSurfaceList())->prependSurface(surface);
@@ -169,13 +185,17 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
 
 void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
 {
+    DEBUG_MSG << "()";
     MirSurface *surface = surfaceFor(windowInfo.window());
-    if (!surface) return;
-
     forgetMirSurface(windowInfo.window());
-    tracepoint(qtmir, surfaceDestroyed);
 
+    if (!surface) return;
     Q_EMIT surfaceRemoved(surface);
+
+    if (!surface->isBeingDisplayed()) {
+        delete surface;
+        tracepoint(qtmir, surfaceDestroyed);
+    }
 }
 
 MirSurface *SurfaceManager::surfaceFor(const miral::Window &window) const
