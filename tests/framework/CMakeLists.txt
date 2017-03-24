@@ -39,10 +39,6 @@ set(QTMIR_TEST_PRIVATE_SRC
     qtmir_test.cpp
 )
 
-#if (MIRTEST_VERSION VERSION_LESS 0.27)
-#    set(QTMIR_TEST_PRIVATE_SRC ${QTMIR_TEST_PRIVATE_SRC}  stub_input_channel.cpp)
-#endif()
-
 add_library(qtmir-test-framework-static STATIC
     ${QTMIR_TEST_PRIVATE_SRC}
 )
