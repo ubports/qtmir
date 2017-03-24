@@ -41,6 +41,7 @@
 #include <logging.h>
 
 // Qt
+#include <QElapsedTimer>
 #include <QQmlEngine>
 #include <QScreen>
 
@@ -68,10 +69,15 @@ enum class DirtyState {
 };
 Q_DECLARE_FLAGS(DirtyStates, DirtyState)
 
+qint64 msecsSinceReference()
+{
+    static QElapsedTimer elapsedTimer;
+    elapsedTimer.start();
+    return elapsedTimer.msecsSinceReference();
+}
+
 } // namespace {
 
-
-QElapsedTimer MirSurface::m_elapsedTimer;
 
 class MirSurface::SurfaceObserverImpl : public SurfaceObserver, public mir::scene::SurfaceObserver
 {
@@ -1339,12 +1345,6 @@ void MirSurface::releaseAllPressedKeys()
         m_controller->deliverKeyboardEvent(m_window, ev1);
     }
     m_pressedKeys.clear();
-}
-
-qint64 MirSurface::msecsSinceReference()
-{
-    m_elapsedTimer.start();
-    return m_elapsedTimer.msecsSinceReference();
 }
 
 MirSurface::PressedKey::PressedKey(QKeyEvent *qtEvent, qint64 msecsSinceReference)

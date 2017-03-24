@@ -22,7 +22,6 @@
 
 // Qt
 #include <QCursor>
-#include <QElapsedTimer>
 #include <QMutex>
 #include <QPointer>
 #include <QRect>
@@ -221,7 +220,6 @@ private:
     bool isKeyPressed(quint32 nativeVirtualKey) const;
     void forgetPressedKey(quint32 nativeVirtualKey);
     void releaseAllPressedKeys();
-    static qint64 msecsSinceReference();
 
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
@@ -302,8 +300,6 @@ private:
         qint64 msecsSinceReference{0};
     };
     QVector<PressedKey> m_pressedKeys;
-
-    static QElapsedTimer m_elapsedTimer;
 };
 
 } // namespace qtmir
