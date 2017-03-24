@@ -871,11 +871,11 @@ void Application::requestFocus()
     if (m_proxySurfaceList->rowCount() > 0) {
         INFO_MSG << "() - Requesting focus for most recent app surface";
 
-        // raise the tree beneath
+        // raise the whole tree beneath
         for (int i = 0; i < m_proxySurfaceList->count(); ++i) {
             auto iface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(i));
             if (iface && !iface->parentSurface()) {
-                iface->requestRaise();
+                iface->activate();
                 break;
             }
         }

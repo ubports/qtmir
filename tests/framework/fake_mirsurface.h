@@ -147,10 +147,6 @@ public:
         Q_EMIT focusRequested();
     }
 
-    void requestRaise() override {
-        Q_EMIT raiseRequested();
-    }
-
 public Q_SLOTS:
     void requestState(Mir::State qmlState) override;
     void onCompositorSwappedBuffers() override;
