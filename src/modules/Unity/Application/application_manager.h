@@ -26,6 +26,7 @@
 
 // local
 #include "application.h"
+#include "sessionmap_interface.h"
 #include "taskcontroller.h"
 
 // Unity API
@@ -55,7 +56,8 @@ class ProcInfo;
 class SharedWakelock;
 class SettingsInterface;
 
-class ApplicationManager : public unity::shell::application::ApplicationManagerInterface
+class ApplicationManager : public unity::shell::application::ApplicationManagerInterface,
+                           public SessionMapInterface
 {
     Q_OBJECT
 
@@ -94,7 +96,7 @@ public:
     const QList<Application*> &list() const { return m_applications; }
     qtmir::Application* findApplicationWithPid(const pid_t pid) const;
 
-    SessionInterface *findSession(const mir::scene::Session* session) const;
+    SessionInterface *findSession(const mir::scene::Session* session) const override;
 
 public Q_SLOTS:
     void authorizeSession(const pid_t pid, bool &authorized);

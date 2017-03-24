@@ -114,9 +114,19 @@ namespace qtmir
         Q_EMIT d->m_appNotifier.appCreatedWindow(appInfo);
     }
 
-    void WindowManagementPolicy::handle_modify_window(miral::WindowInfo &windowInfo, const miral::WindowSpecification &modifications)
+    void WindowManagementPolicy::handle_modify_window(miral::WindowInfo &windowInfo,
+                                                      const miral::WindowSpecification &modificationsClient)
     {
-        // TODO this applies the default policy. Qt needs to process the request instead
+        miral::WindowSpecification modifications(modificationsClient);
+
+        if (modifications.size().is_set()) {
+            auto extraWindowInfo = getExtraInfo(windowInfo);
+            QMutexLocker locker(&extraWindowInfo->mutex);
+            if (!extraWindowInfo->allowClientResize) {
+                modifications.size().consume();
+            }
+        }
+
         CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
 
         // TODO Once Qt processes the request we probably don't want to notify from here
@@ -387,8 +397,8 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
                                                qtmir::AppNotifier &appNotifier,
-                                               const std::shared_ptr<QtEventFeeder>& eventFeeder,
-                                               const qtmir::WindowManagmentPolicyBuilder& wmBuilder)
+                                               const std::shared_ptr<QtEventFeeder> &eventFeeder,
+                                               const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
     : qtmir::WindowManagementPolicy(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
                                                                                      appNotifier,
                                                                                      eventFeeder))
@@ -417,9 +427,9 @@ void WrappedWindowManagementPolicy::handle_window_ready(miral::WindowInfo &windo
 
 void WrappedWindowManagementPolicy::handle_modify_window(
     miral::WindowInfo &windowInfo,
-    const miral::WindowSpecification &modifications)
+    const miral::WindowSpecification &modificationsClient)
 {
-    m_wrapper->handle_modify_window(windowInfo, modifications);
+    m_wrapper->handle_modify_window(windowInfo, modificationsClient);
 }
 
 void WrappedWindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)

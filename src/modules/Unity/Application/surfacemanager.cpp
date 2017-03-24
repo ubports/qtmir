@@ -27,9 +27,6 @@
 #include <debughelpers.h>
 #include <mirqtconversion.h>
 
-// Mir
-#include <mir/scene/surface.h>
-
 // Qt
 #include <QGuiApplication>
 
@@ -41,7 +38,8 @@ Q_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER, "qtmir.surfacemanager", QtInfoMsg)
 using namespace qtmir;
 namespace unityapi = unity::shell::application;
 
-SurfaceManager::SurfaceManager(QObject *)
+
+SurfaceManager::SurfaceManager()
 {
     DEBUG_MSG << "()";
 
@@ -51,9 +49,20 @@ SurfaceManager::SurfaceManager(QObject *)
         qFatal("ERROR: Unity.Application QML plugin requires use of the 'mirserver' QPA plugin");
     }
 
+    m_sessionMap = ApplicationManager::singleton();
     m_windowController = static_cast<WindowControllerInterface*>(nativeInterface->nativeResourceForIntegration("WindowController"));
 
     auto windowModel = static_cast<WindowModelNotifier*>(nativeInterface->nativeResourceForIntegration("WindowModelNotifier"));
+    connectToWindowModelNotifier(windowModel);
+}
+
+SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
+                               WindowModelNotifier *windowModel,
+                               SessionMapInterface *sessionMap)
+    : m_windowController(windowController)
+    , m_sessionMap(sessionMap)
+{
+    DEBUG_MSG << "()";
     connectToWindowModelNotifier(windowModel);
 }
 
@@ -88,26 +97,30 @@ void SurfaceManager::forgetMirSurface(const miral::Window &window)
 
 void SurfaceManager::onWindowAdded(const NewWindow &window)
 {
+    const auto &windowInfo = window.windowInfo;
     {
-        std::shared_ptr<mir::scene::Surface> surface = window.surface;
-        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(surface->type())
-            << ",parent=" << (void*)(surface->parent().get())
-            << ",state=" << mirSurfaceStateToStr(surface->state())
-            << ",top_left=" << toQPoint(surface->top_left())
+        DEBUG_MSG << " mir::scene::Surface[type=" << mirSurfaceTypeToStr(windowInfo.type())
+            << ",parent=" << (void*)(std::shared_ptr<mir::scene::Surface>{windowInfo.parent()}.get())
+            << ",state=" << mirSurfaceStateToStr(windowInfo.state())
+            << ",top_left=" << toQPoint(windowInfo.window().top_left())
             << "]";
     }
 
-    auto mirSession = window.windowInfo.window().application();
-    SessionInterface* session = ApplicationManager::singleton()->findSession(mirSession.get());
+    auto mirSession = windowInfo.window().application();
+    SessionInterface* session = m_sessionMap->findSession(mirSession.get());
 
-    MirSurface *parentSurface;
-    {
-        std::shared_ptr<mir::scene::Surface> surface = window.windowInfo.window();
-        parentSurface = find(surface->parent());
-    }
-
-    auto surface = new MirSurface(window, m_windowController, session, parentSurface);
+    const auto parentSurface = find(windowInfo.parent());
+    const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
+
+    connect(surface, &MirSurface::isBeingDisplayedChanged, this, [this, surface]() {
+        if ((!surface->live() || !surface->session())
+                && !surface->isBeingDisplayed()) {
+            forgetMirSurface(static_cast<MirSurface*>(surface)->window());
+            surface->deleteLater(); // don't delete immediately, slot may be directly connected
+            tracepoint(qtmir, surfaceDestroyed);
+        }
+    });
 
     if (parentSurface) {
         static_cast<MirSurfaceListModel*>(parentSurface->childSurfaceList())->prependSurface(surface);
@@ -125,8 +138,12 @@ void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
     DEBUG_MSG << "()";
     MirSurface *surface = find(windowInfo);
     forgetMirSurface(windowInfo.window());
-    surface->setLive(false);
-    tracepoint(qtmir, surfaceDestroyed);
+    if (surface && surface->isBeingDisplayed()) {
+        surface->setLive(false);
+    } else {
+        delete surface;
+        tracepoint(qtmir, surfaceDestroyed);
+    }
 }
 
 MirSurface *SurfaceManager::find(const miral::WindowInfo &needle) const
@@ -138,16 +155,6 @@ MirSurface *SurfaceManager::find(const miral::Window &window) const
 {
     Q_FOREACH(const auto surface, m_allSurfaces) {
         if (surface->window() == window) {
-            return surface;
-        }
-    }
-    return nullptr;
-}
-
-MirSurface *SurfaceManager::find(const std::shared_ptr<mir::scene::Surface> &needle) const
-{
-    Q_FOREACH(const auto surface, m_allSurfaces) {
-        if (surface->window() == needle) {
             return surface;
         }
     }

@@ -37,6 +37,8 @@
 #include <QCoreApplication>
 #include <QOpenGLContext>
 
+#include <valgrind.h>
+
 namespace
 {
 static int qtmirArgc{1};
@@ -57,31 +59,28 @@ struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
     bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override { return false; }
 };
 
-auto buildDisplayConfigurationPolicy()
--> std::shared_ptr<miral::DisplayConfigurationPolicy>
+std::shared_ptr<miral::DisplayConfigurationPolicy> buildDisplayConfigurationPolicy()
 {
     return std::make_shared<qtmir::DisplayConfigurationPolicy>();
 }
 
-auto buildDisplayConfigurationStorage()
--> std::shared_ptr<miral::DisplayConfigurationStorage>
+std::shared_ptr<miral::DisplayConfigurationStorage> buildDisplayConfigurationStorage()
 {
     return std::make_shared<DefaultDisplayConfigurationStorage>();
 }
 
-auto buildWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
--> std::shared_ptr<qtmir::WindowManagementPolicy>
+std::shared_ptr<qtmir::WindowManagementPolicy> buildWindowManagementPolicy(const miral::WindowManagerTools &tools,
+                                                                           qtmir::WindowManagementPolicyPrivate& dd)
 {
     return std::make_shared<DefaultWindowManagementPolicy>(tools, dd);
 }
 
-auto buildSessionAuthorizer()
--> std::shared_ptr<qtmir::SessionAuthorizer>
+std::shared_ptr<qtmir::SessionAuthorizer> buildSessionAuthorizer()
 {
     return std::make_shared<qtmir::SessionAuthorizer>();
 }
 
-}
+} // namespace
 
 void MirServerThread::run()
 {
@@ -99,8 +98,10 @@ void MirServerThread::run()
 
 bool MirServerThread::waitForMirStartup()
 {
+    const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir ready
+
     std::unique_lock<decltype(mutex)> lock(mutex);
-    started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return mir_running; });
+    started_cv.wait_for(lock, std::chrono::seconds{timeout}, [&]{ return mir_running; });
     return mir_running;
 }
 

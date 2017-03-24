@@ -37,8 +37,8 @@ public:
                                   qtmir::WindowModelNotifier &windowModel,
                                   qtmir::WindowController &windowController,
                                   qtmir::AppNotifier &appNotifier,
-                                  const std::shared_ptr<QtEventFeeder>& eventFeeder,
-                                  const qtmir::WindowManagmentPolicyBuilder& wmBuilder);
+                                  const std::shared_ptr<QtEventFeeder> &eventFeeder,
+                                  const qtmir::WindowManagmentPolicyBuilder &wmBuilder);
 
     // From WindowManagementPolicy
     auto place_new_window(const miral::ApplicationInfo &app_info,
