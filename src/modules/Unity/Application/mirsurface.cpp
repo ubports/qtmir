@@ -167,7 +167,6 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     connect(m_surfaceObserver.get(), &SurfaceObserver::confinesMousePointerChanged, this, &MirSurface::confinesMousePointerChanged);
     m_surfaceObserver->setListener(this);
 
-    //connect(session, &QObject::destroyed, this, &MirSurface::onSessionDestroyed); // TODO try using Shared pointer for lifecycle
     connect(session, &SessionInterface::stateChanged, this, [this]() {
         if (clientIsRunning() && m_pendingResize.isValid()) {
             resize(m_pendingResize.width(), m_pendingResize.height());
@@ -596,9 +595,6 @@ void MirSurface::setLive(bool value)
         INFO_MSG << "(" << value << ")";
         m_live = value;
         Q_EMIT liveChanged(value);
-        if (m_views.isEmpty() && !m_live) {
-            deleteLater();
-        }
     }
 }
 
@@ -723,9 +719,6 @@ void MirSurface::unregisterView(qintptr viewId)
     INFO_MSG << "(" << viewId << ")" << " after=" << m_views.count() << " live=" << m_live;
     if (m_views.count() == 0) {
         Q_EMIT isBeingDisplayedChanged();
-        if (m_session.isNull() || !m_live) {
-            deleteLater();
-        }
     }
     updateExposure();
     setViewActiveFocus(viewId, false);
@@ -771,15 +764,9 @@ unsigned int MirSurface::currentFrameNumber(qintptr userId) const
     return compositorTexure ? compositorTexure->currentFrame() : 0;
 }
 
-void MirSurface::onSessionDestroyed()
-{
-    if (m_views.isEmpty()) {
-        deleteLater();
-    }
-}
-
 void MirSurface::emitSizeChanged()
 {
+    qCDebug(QTMIR_SURFACES).nospace() << "MirSurface[" << (void*)this << "," << appId() << "]::sizeChanged(" << m_size << ")";
     Q_EMIT sizeChanged(m_size);
 }
 
@@ -948,6 +935,20 @@ QRect MirSurface::inputBounds() const
 bool MirSurface::confinesMousePointer() const
 {
     return m_surface->confine_pointer_state() == mir_pointer_confined_to_window;
+}
+
+bool MirSurface::allowClientResize() const
+{
+    return m_extraInfo->allowClientResize;
+}
+
+void MirSurface::setAllowClientResize(bool value)
+{
+    if (m_extraInfo->allowClientResize != value) {
+        QMutexLocker locker(&m_extraInfo->mutex);
+        m_extraInfo->allowClientResize = value;
+        Q_EMIT allowClientResizeChanged(value);
+    }
 }
 
 void MirSurface::activate()

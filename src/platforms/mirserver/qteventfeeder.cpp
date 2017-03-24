@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -553,10 +553,10 @@ Qt::MouseButtons getQtMouseButtonsfromMirPointerEvent(MirPointerEvent const* pev
 
 void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 {
+    auto iev = mir_pointer_event_input_event(pev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_pointer_event_input_event(pev))));
-
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
     auto action = mir_pointer_event_action(pev);
     qCDebug(QTMIR_MIR_INPUT) << "Received" << qPrintable(mirPointerEventToString(pev));
 
@@ -578,7 +578,8 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 
         auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         if (hDelta != 0 || vDelta != 0) {
-            const QPoint angleDelta = QPoint(hDelta * 15, vDelta * 15);
+            // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
+            const QPoint angleDelta(120 * hDelta, 120 * vDelta);
 
             auto wheel = new QWheelEvent(relative, absolute, QPoint(), angleDelta, 0, Qt::Vertical, buttons, modifiers);
             wheel->setTimestamp(timestamp.count());
@@ -613,9 +614,10 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 
 void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 {
+    auto iev = mir_keyboard_event_input_event(kev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_keyboard_event_input_event(kev))));
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
 
     xkb_keysym_t xk_sym = mir_keyboard_event_key_code(kev);
 
@@ -663,9 +665,10 @@ void QtEventFeeder::dispatchKey(const MirKeyboardEvent *kev)
 
 void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
 {
+    auto iev = mir_touch_event_input_event(tev);
     auto timestamp = qtmir::compressTimestamp<qtmir::Timestamp>(
-                std::chrono::nanoseconds(mir_input_event_get_event_time(
-                                             mir_touch_event_input_event(tev))));
+                std::chrono::nanoseconds(mir_input_event_get_event_time(iev)));
+    EventBuilder::instance()->store(iev, timestamp.count());
 
     tracepoint(qtmirserver, touchEventDispatch_start, std::chrono::nanoseconds(timestamp).count());
 

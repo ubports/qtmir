@@ -31,6 +31,7 @@ Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 namespace qtmir {
 
 class MirSurface;
+class SessionMapInterface;
 class WindowControllerInterface;
 
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
@@ -38,11 +39,17 @@ class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
     Q_OBJECT
 
 public:
-    explicit SurfaceManager(QObject *parent = 0);
+    explicit SurfaceManager();
+    SurfaceManager(WindowControllerInterface *windowController,
+                   WindowModelNotifier *windowModel,
+                   SessionMapInterface *sessionMap);
     virtual ~SurfaceManager() {}
 
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
+
+    // mainly for test usage
+    MirSurface* find(const miral::WindowInfo &needle) const;
 
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
@@ -58,13 +65,12 @@ private:
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);
-    MirSurface* find(const miral::WindowInfo &needle) const;
     MirSurface* find(const miral::Window &needle) const;
-    MirSurface* find(const std::shared_ptr<mir::scene::Surface> &needle) const;
 
     QVector<MirSurface*> m_allSurfaces;
 
     WindowControllerInterface *m_windowController;
+    SessionMapInterface *m_sessionMap;
 };
 
 } // namespace qtmir
