@@ -90,9 +90,18 @@ void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
 
 void WindowManagementPolicy::handle_modify_window(
     miral::WindowInfo &windowInfo,
-    const miral::WindowSpecification &modifications)
+    const miral::WindowSpecification &modificationsClient)
 {
-    // TODO this applies the default policy. Qt needs to process the request instead
+    miral::WindowSpecification modifications(modificationsClient);
+
+    if (modifications.size().is_set()) {
+        auto extraWindowInfo = getExtraInfo(windowInfo);
+        QMutexLocker locker(&extraWindowInfo->mutex);
+        if (!extraWindowInfo->allowClientResize) {
+            modifications.size().consume();
+        }
+    }
+
     CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
 
     // TODO Once Qt processes the request we probably don't want to notify from here

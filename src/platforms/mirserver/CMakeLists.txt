@@ -46,6 +46,8 @@ include_directories(
     ${APPLICATION_API_INCLUDE_DIRS}
 
     ${CONTENT_HUB_INCLUDE_DIRS}
+
+    ${VALGRIND_INCLUDE_DIRS}
 )
 
 # We have to remove -pedantic for tracepoints.c
