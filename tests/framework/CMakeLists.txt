@@ -34,11 +34,14 @@ set(QTMIR_TEST_PRIVATE_SRC
     mock_surface.cpp
     mock_task_controller.cpp
     mock_persistent_surface_store.cpp
-    stub_input_channel.cpp
     fake_surface.h
     fake_displayconfigurationoutput.h
     qtmir_test.cpp
 )
+
+#if (MIRTEST_VERSION VERSION_LESS 0.27)
+#    set(QTMIR_TEST_PRIVATE_SRC ${QTMIR_TEST_PRIVATE_SRC}  stub_input_channel.cpp)
+#endif()
 
 add_library(qtmir-test-framework-static STATIC
     ${QTMIR_TEST_PRIVATE_SRC}
