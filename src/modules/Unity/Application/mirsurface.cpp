@@ -508,6 +508,13 @@ void MirSurface::setPosition(const QPoint newDisplayPosition)
     if (m_position != newPosition) {
         m_position = newPosition;
         Q_EMIT positionChanged(newPosition);
+
+        // Parent might have moved but children might stay put (in display coords). This
+        // means different local child coords, hence the need to update them.
+        for (int i = 0; i < m_childSurfaceList->count(); ++i) {
+            auto childSurface = static_cast<MirSurface*>(m_childSurfaceList->get(i));
+            childSurface->updatePosition();
+        }
     }
 }
 
@@ -1250,4 +1257,10 @@ unityapi::MirSurfaceInterface *MirSurface::parentSurface() const
 unityapi::MirSurfaceListInterface *MirSurface::childSurfaceList() const
 {
     return m_childSurfaceList;
+}
+
+void MirSurface::updatePosition()
+{
+    QPoint point(m_surface->top_left().x.as_int(),m_surface->top_left().y.as_int());
+    setPosition(point);
 }
