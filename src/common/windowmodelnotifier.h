@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QSize>
+#include <QMutex>
 
 #include <miral/window_info.h>
 
@@ -58,6 +59,10 @@ struct ExtraWindowInfo {
     // Mir::MaximizedBottomLeftState:
     // Mir::MaximizedBottomRightState:
     Mir::State state{Mir::UnknownState};
+
+    bool allowClientResize{true};
+
+    QMutex mutex;
 };
 
 std::shared_ptr<ExtraWindowInfo> getExtraInfo(const miral::WindowInfo &windowInfo);

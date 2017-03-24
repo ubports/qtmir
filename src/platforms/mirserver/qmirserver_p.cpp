@@ -37,6 +37,8 @@
 #include <QCoreApplication>
 #include <QOpenGLContext>
 
+#include <valgrind.h>
+
 namespace
 {
 static int qtmirArgc{1};
@@ -96,8 +98,10 @@ void MirServerThread::run()
 
 bool MirServerThread::waitForMirStartup()
 {
+    const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir ready
+
     std::unique_lock<decltype(mutex)> lock(mutex);
-    started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return mir_running; });
+    started_cv.wait_for(lock, std::chrono::seconds{timeout}, [&]{ return mir_running; });
     return mir_running;
 }
 
