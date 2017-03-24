@@ -5,6 +5,30 @@ qtmir (0.6.0) UNRELEASED; urgency=medium
 
  -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 10 Feb 2017 09:09:09 +0000
 
+qtmir (0.5.1+17.04.20170320.1-0ubuntu1) zesty; urgency=medium
+
+  [ Alan Griffiths ]
+  * Reduce dependencies on mirserver by reworking
+    ../Application/mirbuffersgtexture.cpp and
+    ../Application/surfacemanager.cpp
+
+  [ Andreas Pokorny ]
+  * Attach MirInputDeviceId and the MirCookie to input events (LP:
+    #1536279, #1668692)
+
+  [ Daniel d'Andrada ]
+  * Implement MirSurface::allowClientResize (LP: #1670390)
+
+  [ Gerry Boland ]
+  * Stop MirSurface deleting itself, ensure SurfaceManager alone manages
+    MirSurface lifetimes. Add SurfaceManager test suite. (LP: #1655644)
+  * Extend timeouts when running under valgrind
+
+  [ Albert Astals Cid, Gerry Boland ]
+  * Check for find() result not being null before using it
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 20 Mar 2017 21:16:34 +0000
+
 qtmir (0.5.1+17.04.20170307-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]
