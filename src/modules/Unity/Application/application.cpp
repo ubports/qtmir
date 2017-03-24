@@ -869,9 +869,8 @@ unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
 void Application::requestFocus()
 {
     if (m_proxySurfaceList->rowCount() > 0) {
-        INFO_MSG << "() - Requesting focus for toplevel app surface";
+        INFO_MSG << "() - Requesting focus for most recent toplevel app surface";
 
-        // raise the whole tree beneath
         for (int i = 0; i < m_proxySurfaceList->count(); ++i) {
             auto surface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(i));
             if (!surface->parentSurface()) {
