@@ -16,6 +16,7 @@
 
 #include "windowmanagementpolicy.h"
 
+#include "eventdispatch.h"
 #include "initialsurfacesizes.h"
 #include "screensmodel.h"
 #include "surfaceobserver.h"
@@ -24,8 +25,8 @@
 #include "miral/window_specification.h"
 
 #include "mirqtconversion.h"
+#include "tracepoints.h"
 
-#include <mir/scene/surface.h>
 #include <QDebug>
 
 namespace qtmir {
@@ -89,9 +90,18 @@ void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
 
 void WindowManagementPolicy::handle_modify_window(
     miral::WindowInfo &windowInfo,
-    const miral::WindowSpecification &modifications)
+    const miral::WindowSpecification &modificationsClient)
 {
-    // TODO this applies the default policy. Qt needs to process the request instead
+    miral::WindowSpecification modifications(modificationsClient);
+
+    if (modifications.size().is_set()) {
+        auto extraWindowInfo = getExtraInfo(windowInfo);
+        QMutexLocker locker(&extraWindowInfo->mutex);
+        if (!extraWindowInfo->allowClientResize) {
+            modifications.size().consume();
+        }
+    }
+
     CanonicalWindowManagerPolicy::handle_modify_window(windowInfo, modifications);
 
     // TODO Once Qt processes the request we probably don't want to notify from here
@@ -149,11 +159,13 @@ void WindowManagementPolicy::advise_raise(const std::vector<miral::Window> &wind
 
 void WindowManagementPolicy::advise_new_app(miral::ApplicationInfo &application)
 {
+    tracepoint(qtmirserver, starting);
     Q_EMIT m_appNotifier.appAdded(application);
 }
 
 void WindowManagementPolicy::advise_delete_app(const miral::ApplicationInfo &application)
 {
+    tracepoint(qtmirserver, stopping);
     Q_EMIT m_appNotifier.appRemoved(application);
 }
 
@@ -223,11 +235,7 @@ void WindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *even
         ensureWindowIsActive(window);
     }
 
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
-
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_keyboard_event_input_event(event));
 }
 
 void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
@@ -235,11 +243,7 @@ void WindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
 {
     ensureWindowIsActive(window);
 
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
-
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_touch_event_input_event(event));
 }
 
 void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
@@ -249,11 +253,8 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
     if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
         ensureWindowIsActive(window);
     }
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
-    if (auto surface = std::weak_ptr<mir::scene::Surface>(window).lock()) {
-        surface->consume(e);
-    }
+    dispatchInputEvent(window, mir_pointer_event_input_event(event));
 }
 
 /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */

@@ -1,5 +1,5 @@
-add_subdirectory(ArgvHelper)
 add_subdirectory(EventBuilder)
 add_subdirectory(QtEventFeeder)
 add_subdirectory(Screen)
 add_subdirectory(ScreensModel)
+add_subdirectory(miral)

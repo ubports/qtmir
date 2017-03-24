@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -18,14 +18,16 @@
 #include <QObject>
 #include <QDebug>
 
+#include <valgrind.h>
+
 // local
 #include "qmirserver.h"
 #include "qmirserver_p.h"
 
 
-QMirServer::QMirServer(int &argc, char **argv, QObject *parent)
+QMirServer::QMirServer(QObject *parent)
     : QObject(parent)
-    , d_ptr(new QMirServerPrivate(argc, argv))
+    , d_ptr(new QMirServerPrivate)
 {
     Q_D(QMirServer);
 
@@ -58,7 +60,9 @@ void QMirServer::stop()
 
     if (d->serverThread->isRunning()) {
         d->stop();
-        if (!d->serverThread->wait(10000)) {
+
+        const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir done
+        if (!d->serverThread->wait(timeout * 1000)) {
             // do something to indicate fail during shutdown
             qCritical() << "ERROR: QMirServer - Mir failed to shut down correctly, terminating it";
             d->serverThread->terminate();

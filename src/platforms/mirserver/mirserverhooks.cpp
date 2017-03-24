@@ -19,7 +19,6 @@
 #include "mirserverhooks.h"
 
 #include "mircursorimages.h"
-#include "mirserverstatuslistener.h"
 #include "promptsessionlistener.h"
 #include "screenscontroller.h"
 #include "logging.h"
@@ -38,7 +37,6 @@ namespace
 {
 struct PromptSessionListenerImpl : PromptSessionListener, mir::scene::PromptSessionListener
 {
-    using PromptSessionListener::PromptSessionListener;
     ~PromptSessionListenerImpl();
 
     void starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
@@ -86,9 +84,6 @@ qtmir::MirServerHooks::MirServerHooks() :
 
 void qtmir::MirServerHooks::operator()(mir::Server& server)
 {
-    server.override_the_server_status_listener([]
-        { return std::make_shared<MirServerStatusListener>(); });
-
     server.override_the_cursor_images([]
         { return std::make_shared<qtmir::MirCursorImages>(); });
 

@@ -28,7 +28,7 @@ namespace qtmir
 {
 struct MockTaskController : public qtmir::TaskController
 {
-    MockTaskController();
+    MockTaskController(std::shared_ptr<qtmir::PromptSessionManager> promptSessionManager, QObject *parent = nullptr);
     virtual ~MockTaskController();
 
     MOCK_METHOD2(appIdHasProcessId, bool(const QString&, pid_t));

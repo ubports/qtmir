@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,32 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// local
-#include "mirserverstatuslistener.h"
+#ifndef MOCK_SESSIONMAP_H
+#define MOCK_SESSIONMAP_H
 
-// Qt
-#include <QtGlobal>
-#include <QByteArray>
+#include <gmock/gmock.h>
 
-// std
-#include <csignal>
+#include <Unity/Application/sessionmap_interface.h>
 
-void MirServerStatusListener::paused()
+struct MockSessionMap : public qtmir::SessionMapInterface
 {
-}
+    MockSessionMap() {}
+    virtual ~MockSessionMap() {}
 
-void MirServerStatusListener::resumed()
-{
-}
+    MOCK_CONST_METHOD1(findSession, SessionInterface*(const mir::scene::Session*));
+};
 
-void MirServerStatusListener::started()
-{
-}
-
-void MirServerStatusListener::ready_for_user_input()
-{
-}
-
-void MirServerStatusListener::stop_receiving_input()
-{
-}
+#endif // MOCK_SESSIONMAP_H

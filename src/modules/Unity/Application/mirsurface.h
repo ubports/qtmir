@@ -95,6 +95,9 @@ public:
 
     bool confinesMousePointer() const override;
 
+    bool allowClientResize() const override;
+    void setAllowClientResize(bool) override;
+
     Q_INVOKABLE void activate() override;
 
     unity::shell::application::MirSurfaceInterface *parentSurface() const override;
@@ -186,7 +189,6 @@ private Q_SLOTS:
     void dropPendingBuffer();
     void onAttributeChanged(const MirWindowAttrib, const int);
     void onFramesPostedObserved();
-    void onSessionDestroyed();
     void emitSizeChanged();
     void setCursor(const QCursor &cursor);
     void setInputBounds(const QRect &rect);

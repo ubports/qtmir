@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015,2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -20,19 +20,25 @@
 #include "logging.h"
 #include "mirdisplayconfigurationpolicy.h"
 #include "windowmanagementpolicy.h"
-#include "argvHelper.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
 
+// prototyping for later incorporation in miral
+#include <miral/persist_display_config.h>
+
 // miral
 #include <miral/add_init_callback.h>
-#include <miral/set_command_line_hander.h>
 #include <miral/set_terminator.h>
 #include <miral/set_window_managment_policy.h>
 
 // Qt
 #include <QCoreApplication>
 #include <QOpenGLContext>
+
+#include <valgrind.h>
+
+static int qtmirArgc{1};
+static const char *qtmirArgv[]{"qtmir"};
 
 void MirServerThread::run()
 {
@@ -50,8 +56,10 @@ void MirServerThread::run()
 
 bool MirServerThread::waitForMirStartup()
 {
+    const int timeout = RUNNING_ON_VALGRIND ? 100 : 10; // else timeout triggers before Mir ready
+
     std::unique_lock<decltype(mutex)> lock(mutex);
-    started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return mir_running; });
+    started_cv.wait_for(lock, std::chrono::seconds{timeout}, [&]{ return mir_running; });
     return mir_running;
 }
 
@@ -65,9 +73,8 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
-QMirServerPrivate::QMirServerPrivate(int &argc, char *argv[]) :
-    runner(argc, const_cast<const char **>(argv)),
-    argc{argc}, argv{argv}
+QMirServerPrivate::QMirServerPrivate() :
+    runner(qtmirArgc, qtmirArgv)
 {
 }
 
@@ -78,21 +85,9 @@ PromptSessionListener *QMirServerPrivate::promptSessionListener() const
 
 void QMirServerPrivate::run(const std::function<void()> &startCallback)
 {
-    bool unknownArgsFound = false;
-
-    miral::SetCommandLineHandler setCommandLineHandler{[this, &unknownArgsFound](int filteredCount, const char* const filteredArgv[])
-    {
-        unknownArgsFound = true;
-        // Want to edit argv to match that which Mir returns, as those are for to Qt alone to process. Edit existing
-        // argc as filteredArgv only defined in this scope.
-        qtmir::editArgvToMatch(argc, argv, filteredCount, filteredArgv);
-    }};
 
     miral::AddInitCallback addInitCallback{[&, this]
     {
-        if (!unknownArgsFound) { // mir parsed all the arguments, so edit argv to pretend to have just argv[0]
-            argc = 1;
-        }
         qCDebug(QTMIR_MIR_MESSAGES) << "MirServer created";
         qCDebug(QTMIR_MIR_MESSAGES) << "Command line arguments passed to Qt:" << QCoreApplication::arguments();
     }};
@@ -133,13 +128,12 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             m_sessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_managment_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
+            miral::set_window_management_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
                     m_appNotifier, screensModel),
-            qtmir::setDisplayConfigurationPolicy,
-            setCommandLineHandler,
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
+            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
         });
 }
 

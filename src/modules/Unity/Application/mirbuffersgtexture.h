@@ -17,13 +17,11 @@
 #ifndef MIRBUFFERSGTEXTURE_H
 #define MIRBUFFERSGTEXTURE_H
 
-#include <memory>
+#include "miral/mirbuffer.h"
 
 #include <QSGTexture>
 
 #include <QtGui/qopengl.h>
-
-namespace mir { namespace graphics { class Buffer; }}
 
 class MirBufferSGTexture : public QSGTexture
 {
@@ -44,7 +42,7 @@ public:
     void bind() override;
 
 private:
-    std::shared_ptr<mir::graphics::Buffer> m_mirBuffer;
+    miral::GLBuffer m_mirBuffer;
     int m_width;
     int m_height;
     GLuint m_textureId;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,20 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRSERVERSTATUSLISTENER_H
-#define MIRSERVERSTATUSLISTENER_H
+#ifndef SESSIONMAP_INTERFACE_H
+#define SESSIONMAP_INTERFACE_H
 
-#include <mir/server_status_listener.h>
-#include <mir/version.h>
+namespace mir { namespace scene { class Session; }}
 
-class MirServerStatusListener : public virtual mir::ServerStatusListener
+namespace qtmir {
+
+class SessionInterface;
+
+
+class SessionMapInterface
 {
 public:
-    void paused() override;
-    void resumed() override;
-    void started() override;
-    void ready_for_user_input() override;
-    void stop_receiving_input() override;
+    SessionMapInterface() = default;
+    virtual ~SessionMapInterface() = default;
+
+    virtual SessionInterface *findSession(const mir::scene::Session* session) const = 0;
 };
 
-#endif // MIRSERVERSTATUSLISTENER_H
+} // namespace qtmir
+
+#endif // SESSIONMAP_INTERFACE_H

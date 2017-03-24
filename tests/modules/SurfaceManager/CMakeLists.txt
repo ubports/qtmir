@@ -1,11 +1,11 @@
 set(
-  SESSION_MANAGER_TEST_SOURCES
-  session_manager_test.cpp
-  session_test.cpp
+  SURFACE_MANAGER_TEST_SOURCES
+  surface_manager_test.cpp
   ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
 )
 
 include_directories(
+  ${CMAKE_SOURCE_DIR}/src/common
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/modules
   ${CMAKE_SOURCE_DIR}/tests/framework
@@ -15,15 +15,15 @@ include_directories(
   SYSTEM
   ${APPLICATION_API_INCLUDE_DIRS}
   ${MIRAL_INCLUDE_DIRS}
-  ${MIRSERVER_INCLUDE_DIRS}
+  ${MIRTEST_INCLUDE_DIRS}
 )
 
-add_executable(sessionmanager_test ${SESSION_MANAGER_TEST_SOURCES})
+add_executable(surfacemanager_test ${SURFACE_MANAGER_TEST_SOURCES})
 
-add_dependencies(sessionmanager_test qtmir-test-framework-static)
+add_dependencies(surfacemanager_test qtmir-test-framework-static)
 
 target_link_libraries(
-  sessionmanager_test
+  surfacemanager_test
 
   unityapplicationplugin
 
@@ -32,8 +32,9 @@ target_link_libraries(
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static
 
+  ${MIRTEST_LDFLAGS}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
 )
 
-add_test(SessionManager, sessionmanager_test)
+add_test(SurfaceManager, surfacemanager_test)
