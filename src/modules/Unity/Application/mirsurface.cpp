@@ -70,6 +70,9 @@ Q_DECLARE_FLAGS(DirtyStates, DirtyState)
 
 } // namespace {
 
+
+QElapsedTimer MirSurface::m_elapsedTimer;
+
 class MirSurface::SurfaceObserverImpl : public SurfaceObserver, public mir::scene::SurfaceObserver
 {
 public:
@@ -409,6 +412,25 @@ void MirSurface::setFocused(bool value)
 
     m_focused = value;
     Q_EMIT focusedChanged(value);
+
+    if (m_focused) {
+        /*
+            Ensure the window that got a key down also gets the corresponding key up
+
+            Otherwise it will be left in a inconsistent state (with a pressed key hanging around).
+
+            QQuickWindow's input dispatching doesn't guarantee that for its QQuickItems.
+            So we have to do it ourselves.
+
+            This can happen when qml active focus changes in response to a key press.
+            Eg: client creates a child window in response to a Ctrl+O. By the time the user
+            releases the Ctrl, active focus will already be in the child window, so the child window
+            will get the release event instead of the top-level one. To solve this, once the top-level
+            window gets active focus again, we synthesize KeyRelease events for all keys this window
+            thinks are still pressed.
+        */
+        releaseAllPressedKeys();
+    }
 }
 
 void MirSurface::setViewActiveFocus(qintptr viewId, bool value)
@@ -661,6 +683,18 @@ void MirSurface::wheelEvent(QWheelEvent *event)
 
 void MirSurface::keyPressEvent(QKeyEvent *qtEvent)
 {
+    {
+        if (!qtEvent->isAutoRepeat()) {
+            Q_ASSERT(!isKeyPressed(qtEvent->nativeVirtualKey()));
+            PressedKey pressedKey(qtEvent, msecsSinceReference());
+            auto info = EventBuilder::instance()->findInfo(qtEvent->timestamp());
+            if (info) {
+                pressedKey.deviceId = info->deviceId;
+            }
+            m_pressedKeys.append(std::move(pressedKey));
+        }
+    }
+
     auto ev = EventBuilder::instance()->makeMirEvent(qtEvent);
     auto ev1 = reinterpret_cast<MirKeyboardEvent const*>(ev.get());
     m_controller->deliverKeyboardEvent(m_window, ev1);
@@ -669,10 +703,14 @@ void MirSurface::keyPressEvent(QKeyEvent *qtEvent)
 
 void MirSurface::keyReleaseEvent(QKeyEvent *qtEvent)
 {
-    auto ev = EventBuilder::instance()->makeMirEvent(qtEvent);
-    auto ev1 = reinterpret_cast<MirKeyboardEvent const*>(ev.get());
-    m_controller->deliverKeyboardEvent(m_window, ev1);
-    qtEvent->accept();
+    if (isKeyPressed(qtEvent->nativeVirtualKey())) {
+        forgetPressedKey(qtEvent->nativeVirtualKey());
+        auto ev = EventBuilder::instance()->makeMirEvent(qtEvent);
+        auto ev1 = reinterpret_cast<MirKeyboardEvent const*>(ev.get());
+        m_controller->deliverKeyboardEvent(m_window, ev1);
+    } else {
+        // don't send a release event for a key for which we did not send a press in the first place
+    }
 }
 
 void MirSurface::touchEvent(Qt::KeyboardModifiers mods,
@@ -1263,4 +1301,56 @@ void MirSurface::updatePosition()
 {
     QPoint point(m_surface->top_left().x.as_int(),m_surface->top_left().y.as_int());
     setPosition(point);
+}
+
+bool MirSurface::isKeyPressed(quint32 nativeVirtualKey) const
+{
+    for (const auto &pressedKey : m_pressedKeys) {
+        if (pressedKey.nativeVirtualKey == nativeVirtualKey) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void MirSurface::forgetPressedKey(quint32 nativeVirtualKey)
+{
+    for (int i = 0; i < m_pressedKeys.count(); ++i) {
+        if (m_pressedKeys[i].nativeVirtualKey == nativeVirtualKey) {
+            m_pressedKeys.removeAt(i);
+            return;
+        }
+    }
+}
+
+void MirSurface::releaseAllPressedKeys()
+{
+    for (auto &pressedKey : m_pressedKeys) {
+        auto deltaMs = (ulong)(msecsSinceReference() - pressedKey.msecsSinceReference);
+        ulong timestamp = pressedKey.timestamp + deltaMs;
+        std::vector<uint8_t> cookie{};
+
+        auto ev = mir::events::make_event(pressedKey.deviceId,
+                uncompressTimestamp<qtmir::Timestamp>(qtmir::Timestamp(timestamp)),
+                cookie, mir_keyboard_action_up, pressedKey.nativeVirtualKey, pressedKey.nativeScanCode,
+                mir_input_event_modifier_none);
+
+        auto ev1 = reinterpret_cast<MirKeyboardEvent const*>(ev.get());
+        m_controller->deliverKeyboardEvent(m_window, ev1);
+    }
+    m_pressedKeys.clear();
+}
+
+qint64 MirSurface::msecsSinceReference()
+{
+    m_elapsedTimer.start();
+    return m_elapsedTimer.msecsSinceReference();
+}
+
+MirSurface::PressedKey::PressedKey(QKeyEvent *qtEvent, qint64 msecsSinceReference)
+    : nativeVirtualKey(qtEvent->nativeVirtualKey())
+    , nativeScanCode(qtEvent->nativeScanCode())
+    , timestamp(qtEvent->timestamp())
+    , msecsSinceReference(msecsSinceReference)
+{
 }

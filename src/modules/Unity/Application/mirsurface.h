@@ -22,6 +22,7 @@
 
 // Qt
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QMutex>
 #include <QPointer>
 #include <QRect>
@@ -29,6 +30,8 @@
 #include <QWeakPointer>
 #include <QSet>
 #include <QTimer>
+#include <QVector>
+#include <QKeyEvent>
 
 #include "mirbuffersgtexture.h"
 #include "windowcontrollerinterface.h"
@@ -214,6 +217,12 @@ private:
     QPoint convertLocalToDisplayCoords(const QPoint &localPos) const;
     void updatePosition();
 
+    // Handling of missing key release events from Qt
+    bool isKeyPressed(quint32 nativeVirtualKey) const;
+    void forgetPressedKey(quint32 nativeVirtualKey);
+    void releaseAllPressedKeys();
+    static qint64 msecsSinceReference();
+
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
     QString m_name;
@@ -281,6 +290,20 @@ private:
     MirSurface *m_parentSurface;
 
     MirSurfaceListModel *m_childSurfaceList;
+
+    // Track all keys that we told our mir window are currently pressed
+    struct PressedKey {
+        PressedKey() {}
+        PressedKey(QKeyEvent *qtEvent, qint64 msecsSinceReference);
+        quint32 nativeVirtualKey{0};
+        quint32 nativeScanCode{0};
+        ulong timestamp{0};
+        MirInputDeviceId deviceId{0};
+        qint64 msecsSinceReference{0};
+    };
+    QVector<PressedKey> m_pressedKeys;
+
+    static QElapsedTimer m_elapsedTimer;
 };
 
 } // namespace qtmir
