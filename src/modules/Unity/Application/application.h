@@ -64,7 +64,6 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
-        Closing, // The user has requested the app be closed
         StoppedResumable, // The process stopped but we want to keep the Application object around
                           // so it can be respawned as if it never stopped running in the first place.
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
