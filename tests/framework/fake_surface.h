@@ -21,8 +21,6 @@
 
 #include <mir/scene/surface.h>
 #include <mir/version.h>
-#include "stub_input_channel.h"
-
 #include <memory>
 #include <gmock/gmock.h>
 
@@ -32,18 +30,17 @@ namespace scene {
 class FakeSurface : public Surface
 {
 public:
-    std::shared_ptr<mir::test::doubles::StubInputChannel> channel;
     int fd;
     mir::input::InputReceptionMode input_mode{mir::input::InputReceptionMode::normal};
 
     FakeSurface(int fd=123)
-        : channel(std::make_shared<mir::test::doubles::StubInputChannel>(fd)), fd(fd)
+        : fd(fd)
     {
     }
 
     std::shared_ptr<mir::input::InputChannel> input_channel() const override
     {
-        return channel;
+        return {};
     }
 
     mir::input::InputReceptionMode reception_mode() const override

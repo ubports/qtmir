@@ -110,6 +110,11 @@ public:
     void placed_relative(mir::geometry::Rectangle const& placement) override;
 #endif
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+    void input_consumed(MirEvent const* event) override;
+    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
+#endif
+
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
     QObject *m_listener;
@@ -1267,6 +1272,16 @@ QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const m
         return QCursor(QPixmap::fromImage(image), cursorImage.hotspot().dx.as_int(), cursorImage.hotspot().dy.as_int());
     }
 }
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+void MirSurface::SurfaceObserverImpl::input_consumed(MirEvent const* /*event*/)
+{
+}
+
+void MirSurface::SurfaceObserverImpl::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+{
+}
+#endif
 
 void MirSurface::requestFocus()
 {
