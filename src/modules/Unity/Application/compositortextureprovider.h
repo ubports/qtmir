@@ -50,27 +50,26 @@ private:
 class CompositorTexture
 {
 public:
-    CompositorTexture()
-        : m_currentFrameNumber(0)
-        , m_textureUpdated(false)
-    {
-    }
+    ~CompositorTexture() = default;
 
     const QWeakPointer<QSGTexture>& texture() const { return m_texture; }
-    void setTexture(const QWeakPointer<QSGTexture>& texture) {
-        m_texture = texture;
-    }
-
     unsigned int currentFrame() const { return m_currentFrameNumber; }
-    void incrementFrame() { m_currentFrameNumber++; }
+    void incrementFrame();
 
     bool isUpToDate() const { return m_textureUpdated; }
-    void setUpToDate(bool updated) { m_textureUpdated = updated; }
+    void setUpToDate(bool updated);
+
+private:
+    CompositorTexture();
+
+    void setTexture(const QWeakPointer<QSGTexture>& texture);
 
 private:
     QWeakPointer<QSGTexture> m_texture;
     unsigned int m_currentFrameNumber;
     bool m_textureUpdated;
+
+    friend class CompositorTextureProvider;
 };
 
 }
