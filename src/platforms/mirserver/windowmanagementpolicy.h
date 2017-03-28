@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2016-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -25,7 +25,6 @@
 #include "windowmodelnotifier.h"
 
 #include <QScopedPointer>
-#include <QSize>
 
 using namespace mir::geometry;
 
@@ -70,6 +69,9 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
+
     // Methods for consumption by WindowControllerInterface
     void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
     void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
@@ -84,15 +86,19 @@ public:
     void ask_client_to_close(const miral::Window &window);
     void forceClose(const miral::Window &window);
 
-Q_SIGNALS:
+    void set_window_confinement_regions(const QVector<QRect> &regions);
+    void set_window_margins(MirWindowType windowType, const QMargins &margins);
 
 private:
     void ensureWindowIsActive(const miral::Window &window);
+    QRect getConfinementRect(const QRect rect) const;
 
     miral::WindowManagerTools m_tools;
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
     const QScopedPointer<QtEventFeeder> m_eventFeeder;
+    QVector<QRect> m_confinementRegions;
+    QMargins m_windowMargins[mir_window_types];
 };
 
 #endif // WINDOWMANAGEMENTPOLICY_H

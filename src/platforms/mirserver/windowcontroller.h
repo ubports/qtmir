@@ -43,6 +43,9 @@ public:
     void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) override;
     void deliverPointerEvent (const miral::Window &window, const MirPointerEvent *event) override;
 
+    void setWindowConfinementRegions(const QVector<QRect> &regions) override;
+    void setWindowMargins(Mir::Type windowType, const QMargins &margins) override;
+
     void setPolicy(WindowManagementPolicy *policy);
 
 protected:

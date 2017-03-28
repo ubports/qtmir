@@ -113,6 +113,22 @@ inline MirWindowState toMirState(Mir::State state)
     }
 }
 
+inline MirWindowType toMirType(Mir::Type type)
+{
+    switch (type) {
+    case Mir::NormalType:         return mir_window_type_normal;
+    case Mir::UtilityType:        return mir_window_type_utility;
+    case Mir::DialogType:         return mir_window_type_dialog;
+    case Mir::GlossType:          return mir_window_type_gloss;
+    case Mir::FreeStyleType:      return mir_window_type_freestyle;
+    case Mir::MenuType:           return mir_window_type_menu;
+    case Mir::InputMethodType:    return mir_window_type_inputmethod;
+    case Mir::SatelliteType:      return mir_window_type_satellite;
+    case Mir::TipType:            return mir_window_type_tip;
+    default: Q_UNREACHABLE();
+    }
+}
+
 inline Mir::ShellChrome toQtShellChrome(MirShellChrome chrome)
 {
     switch (chrome) {
