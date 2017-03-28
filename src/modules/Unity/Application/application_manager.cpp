@@ -539,8 +539,8 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     /*
      * Hack: Allow applications to be launched without being managed by upstart, where AppManager
      * itself manages processes executed with a "--desktop_file_hint=/path/to/desktopFile.desktop"
-     * parameter attached. This exists until ubuntu-app-launch can notify shell any application is
-     * and so shell should allow it.
+     * parameter attached, or an environment variable "DESKTOP_FILE_HINT=/path/to/desktopFile.desktop".
+     * This exists until all GUI applications are launched via ubuntu-app-launch.
      */
     std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
     if (!info) {
@@ -554,12 +554,16 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         return;
     }
 
-    const QString desktopFileName = info->getParameter("--desktop_file_hint=");
+    QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
     if (desktopFileName.isNull()) {
-        qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                    << "as it was not launched by upstart, and no desktop_file_hint is specified";
-        return;
+        auto environment = m_procInfo->environment(pid);
+        if (!environment->contains("DESKTOP_FILE_HINT")) {
+            qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
+                        << "as it was not launched by upstart, and no desktop_file_hint is specified";
+            return;
+        }
+        desktopFileName = environment->getParameter("DESKTOP_FILE_HINT");
     }
 
     // Guess appId from the desktop file hint
