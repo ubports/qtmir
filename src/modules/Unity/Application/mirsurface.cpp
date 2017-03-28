@@ -857,7 +857,14 @@ void MirSurface::applyKeymap()
         return;
     }
 
-    m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
+    try
+    {
+        m_surface->set_keymap(MirInputDeviceId(), "", layout.toStdString(), variant.toStdString(), "");
+    }
+    catch(std::exception const& e)
+    {
+        WARNING_MSG << "Setting keymap failed:" << e.what();
+    }
 }
 
 QCursor MirSurface::cursor() const
