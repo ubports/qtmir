@@ -65,6 +65,7 @@ public:
     static ApplicationManager* create();
     static ApplicationManager* singleton();
 
+    // Noone else will use the objects passed in this contructor
     explicit ApplicationManager(
             const QSharedPointer<TaskController> &taskController,
             const QSharedPointer<SharedWakelock> &sharedWakelock,
@@ -102,9 +103,16 @@ public Q_SLOTS:
 private Q_SLOTS:
     void onAppDataChanged(const int role);
     void onApplicationClosing(Application *application);
+    void addApp(const QSharedPointer<qtmir::ApplicationInfo> &appInfo, const QStringList &arguments, const pid_t pid);
+
+Q_SIGNALS:
+    void queuedAddApp(const QSharedPointer<qtmir::ApplicationInfo> &appInfo, const QStringList &arguments, const pid_t pid);
 
 private:
+    // All calls to private functions happen with the mutex held
     qtmir::Application* findApplicationWithPid(const pid_t pid) const;
+    Application* findApplicationMutexHeld(const QString &inputAppId) const;
+
     Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
     void setFocused(Application *application);
     void add(Application *application);
@@ -117,7 +125,10 @@ private:
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
 
+    void setApplicationPid(Application *application, pid_t pid);
+
     QList<Application*> m_applications;
+    QHash<Application*, pid_t> m_applicationsPid;
     DBusFocusInfo *m_dbusFocusInfo;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
@@ -130,6 +141,7 @@ private:
 
     friend class Application;
     friend class DBusWindowStack;
+    mutable QMutex m_mutex;
 };
 
 } // namespace qtmir
