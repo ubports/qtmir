@@ -293,6 +293,8 @@ void EventBuilder::EventInfo::store(const MirInputEvent *iev, ulong qtTimestamp)
         cookie.resize(mir_cookie_buffer_size(cookie_ptr));
         mir_cookie_to_buffer(cookie_ptr, cookie.data(), cookie.size());
         mir_cookie_release(cookie_ptr);
+    } else {
+        cookie.resize(0);
     }
     if (mir_input_event_type_pointer == mir_input_event_get_type(iev))
     {
