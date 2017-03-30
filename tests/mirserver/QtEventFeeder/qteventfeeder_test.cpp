@@ -79,11 +79,10 @@ protected:
 void QtEventFeederTest::SetUp()
 {
     mockWindowSystem = new MockQtWindowSystem;
-    auto screens = QSharedPointer<ScreensModel>();
 
     ASSERT_TRUE(mockWindowSystem->m_devices.count() == 0);
 
-    qtEventFeeder = new QtEventFeeder(screens, mockWindowSystem);
+    qtEventFeeder = new QtEventFeeder(mockWindowSystem);
 
     ASSERT_TRUE(mockWindowSystem->m_devices.count() == 1);
 

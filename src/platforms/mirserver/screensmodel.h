@@ -31,7 +31,6 @@ namespace mir {
     namespace compositor { class DisplayListener; }
 }
 class Screen;
-class QWindow;
 class QtCompositor;
 
 /*
@@ -62,8 +61,6 @@ public:
 
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
-
-    QWindow* getWindowForPoint(QPoint point);
 
 Q_SIGNALS:
     void screenAdded(Screen *screen);
