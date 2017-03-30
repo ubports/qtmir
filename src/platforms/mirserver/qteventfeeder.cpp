@@ -393,7 +393,7 @@ public:
 
     QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
-        const auto windowList = qGuiApp->topLevelWindows();
+        const QWindowList windowList = qGuiApp->topLevelWindows();
 
         // This is a part optimization, and a part work-around for AP generated input events occasionally
         // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
@@ -469,7 +469,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        const auto screens = qGuiApp->screens();
+        const QList<QScreen *> screens = qGuiApp->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
@@ -491,7 +491,7 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        const auto screens = qGuiApp->screens();
+        const QList<QScreen *> screens = qGuiApp->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
