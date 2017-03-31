@@ -55,28 +55,6 @@ void MirInputDeviceObserver::applyKeymap()
     }
 }
 
-void MirInputDeviceObserver::device_added(const std::shared_ptr<mi::Device> &device)
-{
-    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
-
-    if (mir::contains(device->capabilities(), mi::DeviceCapability::keyboard) &&
-            mir::contains(device->capabilities(), mi::DeviceCapability::alpha_numeric)) {
-        qCDebug(QTMIR_MIR_KEYMAP) << "Device added" << device->id();
-        m_devices.append(device);
-        applyKeymap(device);
-    }
-}
-
-void MirInputDeviceObserver::device_removed(const std::shared_ptr<mi::Device> &device)
-{
-    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
-
-    if (device && m_devices.contains(device)) {
-        qCDebug(QTMIR_MIR_KEYMAP) << "Device removed" << device->id();
-        m_devices.removeAll(device);
-    }
-}
-
 void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mi::Device> &device)
 {
     if (!m_keymap.isEmpty()) {

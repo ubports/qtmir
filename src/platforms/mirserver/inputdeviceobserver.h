@@ -17,34 +17,29 @@
 #ifndef INPUTDEVICEOBSERVER_H
 #define INPUTDEVICEOBSERVER_H
 
-#include <mir/input/input_device_observer.h>
-
 #include <QObject>
 #include <QString>
 #include <QVector>
 #include <QMutex>
 
+namespace mir { namespace input { class Device; }}
+
 namespace qtmir {
 
-class MirInputDeviceObserver: public QObject, public mir::input::InputDeviceObserver
+class MirInputDeviceObserver: public QObject
 {
     Q_OBJECT
 public:
     MirInputDeviceObserver(QObject * parent = nullptr);
     ~MirInputDeviceObserver() = default;
 
-protected:
-    void device_added(std::shared_ptr<mir::input::Device> const& device) override;
-    void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
-    void device_removed(std::shared_ptr<mir::input::Device> const& device) override;
-    void changes_complete() override {}
-
 private Q_SLOTS:
     void setKeymap(const QString &keymap);
 
-private:
+protected:
     void applyKeymap();
     void applyKeymap(const std::shared_ptr<mir::input::Device> &device);
+
     QString m_keymap;
     QVector<std::shared_ptr<mir::input::Device>> m_devices;
     QMutex m_mutex;
