@@ -118,8 +118,6 @@ public:
 
     Stages supportedStages() const;
 
-    pid_t pid() const;
-
     // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }
 
@@ -149,7 +147,6 @@ private:
 
     void acquireWakelock() const;
     void releaseWakelock() const;
-    void setPid(pid_t pid);
     void setArguments(const QStringList &arguments);
     void setInternalState(InternalState state);
     void wipeQMLCache();
@@ -166,7 +163,6 @@ private:
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
-    pid_t m_pid;
     Stages m_supportedStages;
     InternalState m_state;
     QStringList m_arguments;

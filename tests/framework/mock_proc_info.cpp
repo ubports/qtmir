@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,15 +23,17 @@ MockProcInfo::MockProcInfo()
 {
     using namespace ::testing;
     ON_CALL(*this, command_line(_)).WillByDefault(Return(QByteArray()));
-}
-
-MockProcInfo::~MockProcInfo()
-{
+    ON_CALL(*this, set_environment(_)).WillByDefault(Return(QByteArray()));
 }
 
 std::unique_ptr<qtmir::ProcInfo::CommandLine> MockProcInfo::commandLine(pid_t pid)
 {
     return std::unique_ptr<CommandLine>(new CommandLine{command_line(pid)});
+}
+
+std::unique_ptr<qtmir::ProcInfo::Environment> MockProcInfo::environment(pid_t pid)
+{
+    return std::unique_ptr<Environment>(new Environment{set_environment(pid)});
 }
 
 } // namespace qtmir

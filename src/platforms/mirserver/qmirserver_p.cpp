@@ -30,7 +30,12 @@
 // miral
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
+#include <miral/version.h>
+#if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
+#include <miral/set_window_management_policy.h>
+#else
 #include <miral/set_window_managment_policy.h>
+#endif
 
 // Qt
 #include <QCoreApplication>
