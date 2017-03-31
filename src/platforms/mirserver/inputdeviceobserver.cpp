@@ -15,7 +15,6 @@
  */
 
 #include <mir/input/device.h>
-#include <mir/input/device_capability.h>
 #include <mir/input/mir_keyboard_config.h>
 
 #include <Qt>
