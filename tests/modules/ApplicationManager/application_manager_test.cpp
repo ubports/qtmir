@@ -296,9 +296,11 @@ TEST_F(ApplicationManagerTests,two_sessions_on_one_application)
 
     auto firstAppInfo = createApplicationInfoFor("Oo", a_procId);
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
 
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(firstAppInfo);
+
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(secondAppInfo);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
@@ -331,16 +333,19 @@ TEST_F(ApplicationManagerTests,two_sessions_on_one_application_after_starting)
 
     auto firstAppInfo = createApplicationInfoFor("Oo", a_procId);
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
 
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(firstAppInfo);
+
+    EXPECT_EQ(true, authed);
+
     onSessionCreatedSurface(firstAppInfo, &aSurface);
     aSurface.setReady();
 
     Application * the_app = applicationManager.findApplication(an_app_id);
-
     EXPECT_EQ(1, the_app->sessions().count());
 
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(secondAppInfo);
 
     EXPECT_EQ(true, authed);

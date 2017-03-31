@@ -525,6 +525,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
             tracepoint(qtmir, appIdHasProcessId_start);
             if (m_taskController->appIdHasProcessId(app->appId(), pid)) {
                 authorized = true;
+                m_authorizedPids.insertMulti(pid, app->appId());
                 tracepoint(qtmir, appIdHasProcessId_end, 1); //found
                 return;
             }
@@ -581,12 +582,14 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
                                     << "in application list with appId:" << application->appId();
         authorized = true;
+        m_authorizedPids.insertMulti(pid, appInfo->appId());
         return;
     }
 
     const QStringList arguments(info->asStringList());
     queuedAddApp(appInfo, arguments, pid);
     authorized = true;
+    m_authorizedPids.insertMulti(pid, appInfo->appId());
 }
 
 
@@ -598,26 +601,22 @@ unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurfa
     auto qtmirSurface = static_cast<qtmir::MirSurfaceInterface*>(surface);
 
     QMutexLocker locker(&m_mutex);
-    return findApplicationWithPid(miral::pid_of(qtmirSurface->session()->session()));
+    return findApplicationWithSession(qtmirSurface->session()->session());
 }
 
-Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
+Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session) const
 {
     if (!session)
         return nullptr;
-    return findApplicationWithPid(miral::pid_of(session));
-}
 
-Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
-{
-    if (pid <= 0)
-        return nullptr;
-
-    for (Application *app : m_applications) {
-        if (m_taskController->appIdHasProcessId(app->appId(), pid)) {
-            return app;
+    for (auto *application : m_applications) {
+        for (auto *qmlSession : application->sessions()) {
+            if (qmlSession->session() == session) {
+                return application;
+            }
         }
     }
+
     return nullptr;
 }
 
@@ -786,7 +785,16 @@ void ApplicationManager::onSessionStarting(SessionInterface *qmlSession)
 {
     QMutexLocker locker(&m_mutex);
 
-    Application* application = findApplicationWithPid(miral::pid_of(qmlSession->session()));
+    Application* application = nullptr;
+    {
+        auto iter = m_authorizedPids.find(miral::pid_of(qmlSession->session()));
+        if (iter != m_authorizedPids.end()) {
+            QString appId = iter.value();
+            application = findApplication(appId);
+            m_authorizedPids.erase(iter);
+        }
+    }
+
     if (application) {
         application->addSession(qmlSession);
     }
