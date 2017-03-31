@@ -688,7 +688,7 @@ void ApplicationManager::add(Application* application)
         if (!m_taskController->stop(appId)) {
             qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
                     << "Sending SIGTERM to process:" << appId;
-            application->die();
+            application->terminate();
             application->setProcessState(Application::ProcessStopped);
         }
     });

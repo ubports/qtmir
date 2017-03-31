@@ -901,7 +901,7 @@ void Application::requestFocus()
     }
 }
 
-void Application::die()
+void Application::terminate()
 {
     for (auto session : m_sessions) {
         kill(session->pid(), SIGTERM);
