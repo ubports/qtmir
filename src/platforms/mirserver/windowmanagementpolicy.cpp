@@ -65,7 +65,7 @@ miral::WindowSpecification WindowManagementPolicy::place_new_window(
 
         QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
 
-        if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
+        if (initialSize.isValid() && surfaceType == mir_window_type_normal) {
             parameters.size() = toMirSize(initialSize);
         }
     }
