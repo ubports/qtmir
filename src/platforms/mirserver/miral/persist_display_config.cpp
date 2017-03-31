@@ -22,11 +22,9 @@
 
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
-#include <mir/server.h>
-#include <mir/version.h>
-
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/observer_registrar.h>
+#include <mir/server.h>
 
 namespace mg = mir::graphics;
 
@@ -160,7 +158,7 @@ void PersistDisplayConfigPolicy::apply_to(
                     int mode_index = output.current_mode_index;
                     int i = 0;
                     // Find the mode index which supports the saved size.
-                    for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
+                    for (auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
                         if ((*iter).size == config.size.value()) {
                             mode_index = i;
                             break;

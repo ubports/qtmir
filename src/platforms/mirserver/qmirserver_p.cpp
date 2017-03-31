@@ -54,7 +54,7 @@ struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
 
     bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override { return false; }
 };
-}
+} // namespace
 
 void MirServerThread::run()
 {
