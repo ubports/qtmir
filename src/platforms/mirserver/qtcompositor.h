@@ -17,8 +17,6 @@
 #ifndef QTCOMPOSITOR_H
 #define QTCOMPOSITOR_H
 
-#include <mir/compositor/compositor.h>
-
 // std lib
 #include <memory>
 
@@ -31,15 +29,12 @@ namespace mir {
     }
 }
 
-class QtCompositor : public QObject, public mir::compositor::Compositor
+class QtCompositor : public QObject
 {
     Q_OBJECT
 public:
     QtCompositor() = default;
     virtual ~QtCompositor() noexcept = default;
-
-    void start();
-    void stop();
 
 Q_SIGNALS:
     void starting();
