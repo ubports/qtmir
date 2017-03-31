@@ -106,9 +106,7 @@ public:
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
     void placed_relative(mir::geometry::Rectangle const& placement) override;
-#endif
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void input_consumed(MirEvent const* event) override;
@@ -1217,11 +1215,9 @@ void MirSurface::SurfaceObserverImpl::cursor_image_removed()
     Q_EMIT cursorChanged(QCursor());
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
 void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle const& /*placement*/)
 {
 }
-#endif
 
 void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
 {
