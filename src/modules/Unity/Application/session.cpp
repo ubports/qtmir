@@ -92,7 +92,7 @@ Session::~Session()
         delete child;
     }
     if (m_application) {
-        m_application->setSession(nullptr);
+        m_application->removeSession(this);
     }
 
     delete m_children; m_children = nullptr;

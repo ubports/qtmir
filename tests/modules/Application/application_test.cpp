@@ -49,7 +49,7 @@ public:
     inline void suspend(Application *application)
     {
         application->setRequestedState(Application::RequestedSuspended);
-        auto session = dynamic_cast<Session*>(application->session());
+        auto session = dynamic_cast<Session*>(application->sessions()[0]);
 
         ASSERT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
         ASSERT_EQ(Session::Suspending, session->state());
@@ -115,7 +115,7 @@ TEST_F(ApplicationTests, acquiresWakelockWhenRunningAndReleasesWhenSuspended)
 
     FakeSession *session = new FakeSession;
 
-    application->setSession(session);
+    application->addSession(session);
 
     ASSERT_EQ(Application::InternalState::Starting, application->internalState());
 
@@ -150,7 +150,7 @@ TEST_F(ApplicationTests, checkResumeAcquiresWakeLock)
 
     // Get it running and then suspend it
     application->setProcessState(Application::ProcessRunning);
-    application->setSession(session);
+    application->addSession(session);
     session->setState(SessionInterface::Running);
     application->setRequestedState(Application::RequestedSuspended);
     session->setState(SessionInterface::Suspended);
@@ -175,7 +175,7 @@ TEST_F(ApplicationTests, checkRespawnAcquiresWakeLock)
 
     // Get it running, suspend it, and finally stop it
     application->setProcessState(Application::ProcessRunning);
-    application->setSession(session);
+    application->addSession(session);
     session->setState(SessionInterface::Running);
     application->setRequestedState(Application::RequestedSuspended);
     session->setState(SessionInterface::Suspended);
@@ -215,7 +215,7 @@ TEST_F(ApplicationTests, checkDashDoesNotImpactWakeLock)
 
     FakeSession *session = new FakeSession;
 
-    application->setSession(session);
+    application->addSession(session);
 
     ASSERT_EQ(Application::InternalState::Starting, application->internalState());
 
@@ -250,7 +250,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenRunningAppStops)
     application->setProcessState(Application::ProcessRunning);
 
     FakeSession *session = new FakeSession;
-    application->setSession(session);
+    application->addSession(session);
 
     QSignalSpy spyAppStopped(application.data(), SIGNAL(stopped()));
 
@@ -283,7 +283,7 @@ TEST_F(ApplicationTests, emitsStoppedWhenAppStopsWhileSuspending)
     application->setProcessState(Application::ProcessRunning);
 
     Session *session = createSessionWithFakes();
-    application->setSession(session);
+    application->addSession(session);
 
     QSignalSpy spyAppStopped(application.data(), SIGNAL(stopped()));
 
@@ -318,7 +318,7 @@ TEST_F(ApplicationTests, doesNotEmitStoppedWhenKilledWhileSuspended)
     application->setProcessState(Application::ProcessRunning);
 
     FakeSession *session = new FakeSession;
-    application->setSession(session);
+    application->addSession(session);
 
     QSignalSpy spyAppStopped(application.data(), SIGNAL(stopped()));
 
@@ -380,7 +380,7 @@ TEST_F(ApplicationTests, suspendedApplicationResumesWhileSurfaceBeingClosed)
 
     Session *session = createSessionWithFakes();
 
-    application->setSession(session);
+    application->addSession(session);
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
@@ -437,7 +437,7 @@ TEST_F(ApplicationTests, quitsAfterLastSurfaceIsClosed)
 
     Session *session = createSessionWithFakes();
 
-    application->setSession(session);
+    application->addSession(session);
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
@@ -488,7 +488,7 @@ TEST_F(ApplicationTests, sessionStopsWhileBeingSuspended)
 
     QPointer<Session> session(createSessionWithFakes());
 
-    application->setSession(session);
+    application->addSession(session);
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
@@ -532,7 +532,7 @@ TEST_F(ApplicationTests, closeWhenSuspendedProcessFailed)
     application->setProcessState(Application::ProcessRunning);
 
     QPointer<Session> session(createSessionWithFakes());
-    application->setSession(session);
+    application->addSession(session);
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
@@ -570,7 +570,7 @@ TEST_F(ApplicationTests, stoppedWhileSuspendedTurnsIntoStoppeResumable)
 
     Session *session = createSessionWithFakes();
 
-    application->setSession(session);
+    application->addSession(session);
 
     FakeMirSurface *surface = new FakeMirSurface;
     session->registerSurface(surface);
@@ -602,7 +602,7 @@ TEST_F(ApplicationTests, surfaceCountPropertyUpdates)
     application->setProcessState(Application::ProcessRunning);
     Session *session = createSessionWithFakes();
 
-    application->setSession(session);
+    application->addSession(session);
 
     QSignalSpy surfaceCountChangedSpy(application.data(), &Application::surfaceCountChanged);
 
@@ -641,7 +641,7 @@ TEST_F(ApplicationTests, dontRespawnIfClosedWhileStillStartingUp)
 
     FakeSession *session = new FakeSession;
 
-    application->setSession(session);
+    application->addSession(session);
 
     QSignalSpy spyStartProcess(application.data(), SIGNAL(startProcessRequested()));
 
