@@ -578,7 +578,7 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     // some naughty applications use a script to launch the actual application. Check for the
     // case where shell actually launched the script.
     Application *application = findApplicationMutexHeld(appInfo->appId());
-    if (application && application->state() == Application::Starting) {
+    if (application) {
         qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
                                     << "in application list with appId:" << application->appId();
         authorized = true;
