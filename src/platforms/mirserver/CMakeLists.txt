@@ -113,7 +113,6 @@ set_source_files_properties(openglcontextfactory.cpp            PROPERTIES COMPI
 set_source_files_properties(mircursorimages.cpp                 PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(mirdisplayconfigurationpolicy.cpp   PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(screenscontroller.cpp               PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
-set_source_files_properties(windowmanagementpolicy.cpp          PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(mirserverhooks.cpp                  PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(setqtcompositor.cpp                 PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
 set_source_files_properties(eventdispatch.cpp                   PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
