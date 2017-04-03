@@ -27,6 +27,7 @@
 using namespace mir::geometry;
 
 class QMirServer;
+class QMargins;
 
 namespace qtmir {
 
@@ -71,6 +72,8 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
     // Methods for consumption by WindowControllerInterface
     virtual void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
     virtual void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
@@ -84,6 +87,9 @@ public:
 
     virtual void ask_client_to_close(const miral::Window &window);
     virtual void forceClose(const miral::Window &window);
+
+    virtual void set_window_confinement_regions(const QVector<QRect> &regions);
+    virtual void set_window_margins(MirWindowType windowType, const QMargins &margins);
 
     qtmir::WindowModelNotifier& windowNotifier() const;
     qtmir::AppNotifier& appNotifier() const;

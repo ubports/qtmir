@@ -38,6 +38,8 @@ public:
 
     void *nativeResourceForIntegration(const QByteArray &resource) override;
 
+    void setWindowProperty(QPlatformWindow *, const QString &name, const QVariant &value) override;
+
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
 

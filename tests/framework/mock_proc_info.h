@@ -26,10 +26,13 @@ namespace qtmir {
 struct MockProcInfo : public qtmir::ProcInfo
 {
     MockProcInfo();
-    virtual ~MockProcInfo();
+    virtual ~MockProcInfo() = default;
 
     MOCK_METHOD1(command_line, QByteArray(pid_t));
-    std::unique_ptr<CommandLine> commandLine(pid_t pid);
+    MOCK_METHOD1(set_environment, QByteArray(pid_t));
+
+    std::unique_ptr<CommandLine> commandLine(pid_t pid) override;
+    std::unique_ptr<Environment> environment(pid_t pid) override;
 };
 
 } // namespace qtmir

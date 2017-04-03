@@ -69,7 +69,6 @@ public:
                                 const QList<QTouchEvent::TouchPoint> &qtTouchPoints,
                                 Qt::TouchPointStates /* qtTouchPointStates */,
                                 ulong qtTimestamp);
-private:
     class EventInfo {
     public:
         void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
@@ -82,6 +81,7 @@ private:
 
     EventInfo *findInfo(ulong qtTimestamp);
 
+private:
     mir::EventUPtr makeMirEvent(QInputEvent *qtEvent, int x, int y, MirPointerButtons buttons);
 
 

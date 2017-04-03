@@ -60,7 +60,9 @@ struct MockSurface : public mir::scene::Surface
     MOCK_CONST_METHOD0(cursor_image, std::shared_ptr<graphics::CursorImage>());
     MOCK_METHOD1(add_observer, void(std::shared_ptr<SurfaceObserver> const& observer));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<SurfaceObserver> const& observer));
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(0, 27, 0)
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
+#endif
     MOCK_METHOD1(set_reception_mode, void(input::InputReceptionMode mode));
     MOCK_METHOD0(request_client_surface_close, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));

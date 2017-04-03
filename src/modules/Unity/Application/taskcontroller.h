@@ -104,8 +104,6 @@ public Q_SLOTS:
     void onPromptProviderAdded(const qtmir::PromptSession &promptSession, const miral::Application &);
     void onPromptProviderRemoved(const qtmir::PromptSession &promptSession, const miral::Application &);
 
-    void onAuthorizationForSessionRequested(const pid_t &pid, bool &authorized);
-
 protected:
     TaskController(QObject *parent = nullptr);
     TaskController(std::shared_ptr<PromptSessionManager>&, QObject *parent = nullptr);
