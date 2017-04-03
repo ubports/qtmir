@@ -100,7 +100,14 @@ void MirInputDeviceObserver::applyKeymap(const std::shared_ptr<mi::Device> &devi
         keymap.layout = layout.toStdString();
         keymap.variant = variant.toStdString();
 
-        device->apply_keyboard_configuration(std::move(keymap));
-        qCDebug(QTMIR_MIR_KEYMAP) << "Keymap applied";
+        try
+        {
+            device->apply_keyboard_configuration(std::move(keymap));
+            qCDebug(QTMIR_MIR_KEYMAP) << "Keymap applied";
+        }
+        catch(std::exception const& e)
+        {
+            qCWarning(QTMIR_MIR_KEYMAP) << "Keymap could not be applied:" << e.what();
+        }
     }
 }

@@ -97,6 +97,20 @@ void WindowController::deliverPointerEvent(const miral::Window &window, const Mi
     }
 }
 
+void WindowController::setWindowConfinementRegions(const QVector<QRect> &regions)
+{
+    if (m_policy) {
+        m_policy->set_window_confinement_regions(regions);
+    }
+}
+
+void WindowController::setWindowMargins(Mir::Type windowType, const QMargins &margins)
+{
+    if (m_policy) {
+        m_policy->set_window_margins(toMirType(windowType), margins);
+    }
+}
+
 void WindowController::setPolicy(WrappedWindowManagementPolicy * const policy)
 {
     m_policy = policy;

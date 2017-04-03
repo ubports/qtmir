@@ -71,14 +71,30 @@ namespace qtmir
             , m_eventFeeder(eventFeeder)
         {}
 
+        QRect getConfinementRect(const QRect rect) const
+        {
+            QRect confinementRect;
+            for (const QRect r : m_confinementRegions) {
+                if (r.intersects(rect)) {
+                    confinementRect = r;
+                    // TODO: What if there are multiple confinement regions and they intersect??
+                    break;
+                }
+            }
+            return confinementRect;
+        }
+
         qtmir::WindowModelNotifier &m_windowModel;
         qtmir::AppNotifier &m_appNotifier;
         const std::shared_ptr<QtEventFeeder> m_eventFeeder;
+
+        QVector<QRect> m_confinementRegions;
+        QMargins m_windowMargins[mir_window_types];
     };
 
-    WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+    WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
         : miral::CanonicalWindowManagerPolicy(tools)
-        , d(&dd)
+        , d(dd)
     {
     }
 
@@ -95,7 +111,7 @@ namespace qtmir
             QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
 
             if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
-                parameters.size() = Size{Width(initialSize.width()), Height(initialSize.height())};
+                parameters.size() = toMirSize(initialSize);
             }
         }
 
@@ -356,6 +372,67 @@ namespace qtmir
         }
     }
 
+    void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
+    {
+        d->m_confinementRegions = regions;
+
+        // TODO: update window positions to respect new boundary.
+    }
+
+    void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
+    {
+        d->m_windowMargins[windowType] = margins;
+
+        // TODO: update window positions/sizes to respect new margins.
+    }
+
+    Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
+    {
+        if (d->m_confinementRegions.isEmpty()) {
+            return CanonicalWindowManagerPolicy::confirm_inherited_move(windowInfo, movement);
+        }
+
+        auto window = windowInfo.window();
+        const QMargins windowMargins = d->m_windowMargins[windowInfo.type()];
+        QRect windowGeom(toQPoint(window.top_left()), toQSize(window.size()));
+
+        QRect geom = windowGeom.marginsAdded(windowMargins);
+        const QRect confinementRect = d->getConfinementRect(geom);
+
+        int x = geom.x();
+        int y = geom.y();
+        int moveX = movement.dx.as_int();
+        int moveY = movement.dy.as_int();
+
+        // If the child window is already partially beyond the available desktop area (most likely because the user
+        // explicitly moved it there) we won't pull it back, unless the inherited movement is this direction, but also won't
+        // push it even further astray. But if it currently is completely within the available desktop area boundaries
+        // we won't let go beyond it.
+
+        if (moveX > 0) {
+            if (geom.right() < confinementRect.right()) {
+                x = qMin(x + moveX, confinementRect.right() + 1 - geom.width()); // +1 because QRect::right() weird
+            }
+        } else {
+            if (geom.x() > confinementRect.left()) {
+                x = qMax(x + moveX, confinementRect.left());
+            }
+        }
+
+        if (moveY > 0) {
+            if (geom.bottom() < confinementRect.bottom()) {
+                y = qMin(y + moveY, confinementRect.bottom() + 1 - geom.height()); // +1 because QRect::bottom() weird
+            }
+        } else {
+            if (geom.y() > confinementRect.top()) {
+                y = qMax(y + moveY, confinementRect.top());
+            }
+        }
+
+        geom.moveTo(x, y);
+        return toMirRectangle(geom.marginsRemoved(windowMargins));
+    }
+
     WindowModelNotifier &WindowManagementPolicy::windowNotifier() const
     {
         return d->m_windowModel;
@@ -374,12 +451,10 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::AppNotifier &appNotifier,
                                                const std::shared_ptr<QtEventFeeder> &eventFeeder,
                                                const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
-    : qtmir::WindowManagementPolicy(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
-                                                                                     appNotifier,
-                                                                                     eventFeeder))
-    , m_wrapper(wmBuilder(tools, *new qtmir::WindowManagementPolicyPrivate(windowModel,
-                                                                           appNotifier,
-                                                                           eventFeeder)))
+    : qtmir::WindowManagementPolicy(tools, std::make_shared<qtmir::WindowManagementPolicyPrivate>(windowModel,
+                                                                                                  appNotifier,
+                                                                                                  eventFeeder))
+    , m_wrapper(wmBuilder(tools, d))
 {
     qRegisterMetaType<qtmir::NewWindow>();
     qRegisterMetaType<std::vector<miral::Window>>();
@@ -452,6 +527,11 @@ void WrappedWindowManagementPolicy::advise_delete_window(const miral::WindowInfo
 void WrappedWindowManagementPolicy::advise_raise(const std::vector<miral::Window> &windows)
 {
     m_wrapper->advise_raise(windows);
+}
+
+Rectangle WrappedWindowManagementPolicy::confirm_inherited_move(const miral::WindowInfo &windowInfo, Displacement movement)
+{
+    return m_wrapper->confirm_inherited_move(windowInfo, movement);
 }
 
 void WrappedWindowManagementPolicy::advise_new_app(miral::ApplicationInfo &application)
@@ -616,4 +696,14 @@ void WrappedWindowManagementPolicy::ask_client_to_close(const miral::Window &win
 void WrappedWindowManagementPolicy::forceClose(const miral::Window &window)
 {
     m_wrapper->forceClose(window);
+}
+
+void WrappedWindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
+{
+    m_wrapper->set_window_confinement_regions(regions);
+}
+
+void WrappedWindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
+{
+    m_wrapper->set_window_margins(windowType, margins);
 }

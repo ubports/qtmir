@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -23,10 +23,8 @@
 namespace qtmir
 {
 
-ProcInfo::~ProcInfo() {
-}
-
-std::unique_ptr<ProcInfo::CommandLine> ProcInfo::commandLine(pid_t pid) {
+std::unique_ptr<ProcInfo::CommandLine> ProcInfo::commandLine(pid_t pid)
+{
     QFile cmdline(QStringLiteral("/proc/%1/cmdline").arg(pid));
     if (!cmdline.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return nullptr;
@@ -34,22 +32,56 @@ std::unique_ptr<ProcInfo::CommandLine> ProcInfo::commandLine(pid_t pid) {
 
     return std::unique_ptr<CommandLine>(new CommandLine{ cmdline.readLine().replace('\0', ' ') });
 }
-QStringList ProcInfo::CommandLine::asStringList() const {
+
+QStringList ProcInfo::CommandLine::asStringList() const
+{
     return QString(m_command.data()).split(' ');
 }
 
-bool ProcInfo::CommandLine::startsWith(char const* prefix) const {
+bool ProcInfo::CommandLine::startsWith(char const* prefix) const
+{
     return m_command.startsWith(prefix);
 }
 
-bool ProcInfo::CommandLine::contains(char const* prefix) const {
+bool ProcInfo::CommandLine::contains(char const* prefix) const
+{
     return m_command.contains(prefix);
 }
 
-QString ProcInfo::CommandLine::getParameter(const char* name) const {
+QString ProcInfo::CommandLine::getParameter(const char* name) const
+{
     QString pattern = QRegularExpression::escape(name) + "(\\S+)";
     QRegularExpression regExp(pattern);
     QRegularExpressionMatch regExpMatch = regExp.match(m_command);
+
+    if (!regExpMatch.hasMatch()) {
+        return QString();
+    }
+
+    return QString(regExpMatch.captured(1));
+}
+
+
+std::unique_ptr<ProcInfo::Environment> ProcInfo::environment(pid_t pid)
+{
+    QFile environment(QStringLiteral("/proc/%1/environ").arg(pid));
+    if (!environment.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return nullptr;
+    }
+
+    return std::unique_ptr<Environment>(new Environment{ environment.readLine().replace('\0', ' ') });
+}
+
+bool ProcInfo::Environment::contains(char const* prefix) const
+{
+    return m_environment.contains(prefix);
+}
+
+QString ProcInfo::Environment::getParameter(const char* name) const
+{
+    QString pattern = QRegularExpression::escape(name) + "=(\\S+)";
+    QRegularExpression regExp(pattern);
+    QRegularExpressionMatch regExpMatch = regExp.match(m_environment);
 
     if (!regExpMatch.hasMatch()) {
         return QString();

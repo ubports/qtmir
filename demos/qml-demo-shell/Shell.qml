@@ -6,6 +6,41 @@ FocusScope {
     id: root
     focus: true
 
+    Image {
+        id: unityLogo
+        source: "UnityLogo.png"
+        fillMode: Image.PreserveAspectFit
+        anchors.centerIn: parent
+        width: 600
+        height: 600
+
+        RotationAnimation {
+            id: logoAnimation
+            target: unityLogo
+            from: 0
+            to: 359
+            duration: 3000
+            easing.type: Easing.Linear
+            loops: Animation.Infinite
+        }
+
+        MultiPointTouchArea {
+            anchors.fill: parent
+            minimumTouchPoints:1
+            maximumTouchPoints:1
+            onPressed: {
+                if (logoAnimation.paused) {
+                    logoAnimation.resume();
+                } else if (logoAnimation.running) {
+                    logoAnimation.pause();
+                } else {
+                    logoAnimation.start();
+                }
+            }
+        }
+    }
+
+
     WindowModel {
         id: windowModel;
     }

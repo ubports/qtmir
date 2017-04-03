@@ -28,6 +28,7 @@
 using namespace mir::geometry;
 
 class QMirServer;
+class QMargins;
 
 namespace qtmir {
 
@@ -73,12 +74,14 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
     // From miral::WorkspacePolicy
-    virtual void advise_adding_to_workspace(
+    void advise_adding_to_workspace(
             std::shared_ptr<miral::Workspace> const& workspace,
             std::vector<miral::Window> const& windows) override;
 
-    virtual void advise_removing_from_workspace(
+    void advise_removing_from_workspace(
         std::shared_ptr<miral::Workspace> const& workspace,
         std::vector<miral::Window> const& windows) override;
 
@@ -91,18 +94,20 @@ public:
     virtual void ask_client_to_close(const miral::Window &window);
     virtual void forceClose(const miral::Window &window);
 
+    virtual void set_window_confinement_regions(const QVector<QRect> &regions);
+    virtual void set_window_margins(MirWindowType windowType, const QMargins &margins);
+
     qtmir::WindowModelNotifier& windowNotifier() const;
     qtmir::AppNotifier& appNotifier() const;
 
 protected:
-    WindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd);
+    WindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd);
 
-private:
     std::shared_ptr<WindowManagementPolicyPrivate> d;
 };
 
 using WindowManagmentPolicyBuilder =
-    std::function<std::shared_ptr<WindowManagementPolicy>(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)>;
+    std::function<std::shared_ptr<WindowManagementPolicy>(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)>;
 
 class BasicSetWindowManagementPolicy
 {
@@ -135,7 +140,7 @@ class SetWindowManagementPolicy : public BasicSetWindowManagementPolicy
 public:
     template<typename ...Args>
     explicit SetWindowManagementPolicy(Args const& ...args) :
-        BasicSetWindowManagementPolicy{[&args...](const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd) {
+        BasicSetWindowManagementPolicy{[&args...](const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd) {
             return std::make_shared<Policy>(tools, dd, args...);
     }} {}
 };

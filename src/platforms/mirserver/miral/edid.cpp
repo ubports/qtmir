@@ -19,16 +19,13 @@
 #include "qtmir/miral/edid.h"
 
 #include <cstring>
-#include <sstream>
 #include <numeric>
 #include <stdexcept>
 
 miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
 {
     if (data.size() != 128 && data.size() != 256) {
-        std::ostringstream stringStream;
-        stringStream << "Incorrect EDID structure size {" << data.size() << "}";
-        throw std::runtime_error(stringStream.str());
+        throw std::runtime_error(std::string("Incorrect EDID structure size:") + std::to_string(data.size()));
     }
 
     // check the checksum

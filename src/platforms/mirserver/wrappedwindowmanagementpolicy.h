@@ -24,8 +24,6 @@
 #include "windowmodelnotifier.h"
 #include "workspacecontroller.h"
 
-#include <QSharedPointer>
-#include <QSize>
 
 using namespace mir::geometry;
 
@@ -72,6 +70,8 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
     void advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
                                     std::vector<miral::Window> const& windows) override;
 
@@ -91,6 +91,8 @@ public:
     void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
     void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
     void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
+    void set_window_confinement_regions(const QVector<QRect> &regions) override;
+    void set_window_margins(MirWindowType windowType, const QMargins &margins) override;
 
     // Methods for consumption by WorkspaceControllerInterface
     void for_each_window_in_workspace(const std::shared_ptr<miral::Workspace> &workspace,
@@ -101,7 +103,7 @@ public:
                                   const std::shared_ptr<miral::Workspace> &workspace);
 
 private:
-    std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;
+    const std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;
 };
 
 #endif // WRAPPEDWINDOWMANAGEMENTPOLICY_H
