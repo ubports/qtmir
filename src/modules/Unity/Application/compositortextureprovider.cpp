@@ -64,3 +64,24 @@ QSGTexture *CompositorTextureProvider::createTexture() const
 {
     return new MirBufferSGTexture;
 }
+
+CompositorTexture::CompositorTexture()
+    : m_currentFrameNumber(0)
+    , m_textureUpdated(false)
+{
+}
+
+void CompositorTexture::setTexture(const QWeakPointer<QSGTexture> &texture)
+{
+    m_texture = texture;
+}
+
+void CompositorTexture::incrementFrame()
+{
+    m_currentFrameNumber++;
+}
+
+void CompositorTexture::setUpToDate(bool updated)
+{
+    m_textureUpdated = updated;
+}

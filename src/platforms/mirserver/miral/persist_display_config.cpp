@@ -23,11 +23,9 @@
 
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
-#include <mir/server.h>
-#include <mir/version.h>
-
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/observer_registrar.h>
+#include <mir/server.h>
 
 // shouldn't really import this
 #include <qglobal.h>
@@ -193,7 +191,7 @@ void PersistDisplayConfigPolicy::apply_to(
                     int mode_index = output.current_mode_index;
                     int i = 0;
                     // Find the mode index which supports the saved size.
-                    for(auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
+                    for (auto iter = output.modes.cbegin(); iter != output.modes.cend(); ++iter, i++) {
                         auto const& mode = *iter;
                         auto const& newMode = config.mode.value();
                         if (mode.size == newMode.size && qFuzzyCompare(mode.vrefresh_hz, newMode.refresh_rate)) {

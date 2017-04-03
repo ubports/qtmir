@@ -19,6 +19,7 @@ endif()
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_BINARY_DIR} # for tracepoints.h
 )
 
 include_directories(

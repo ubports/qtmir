@@ -5,6 +5,36 @@ qtmir (0.6.0) UNRELEASED; urgency=medium
 
  -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 10 Feb 2017 09:09:09 +0000
 
+qtmir (0.5.1+17.04.20170328-0ubuntu1) zesty; urgency=medium
+
+  [ Alan Griffiths ]
+  * MirAL will be correcting another spelling error shortly. Avoid an
+    FTBFS when that happens.
+  * Compatibility with lp:mir and lp:~alan-griffiths/miral/1.3
+
+  [ Albert Astals Cid ]
+  * Remove empty property and move invokable
+  * Run ApplicationManager::authorizeSession in the calling thread (LP:
+    #1525285)
+
+  [ Andreas Pokorny ]
+  * Report and consume exception that may occur on constructing a keymap
+    (LP: #1557634)
+
+  [ Daniel d'Andrada ]
+  * Ensure the window that got a key down also gets the corresponding
+    key up (LP: #1671072)
+
+  [ Gerry Boland ]
+  * Don't let a child window go offscreen because its parent moved
+  * Add env var equivalent to desktop_file_hint
+
+  [ Lukáš Tinkl ]
+  * Raise (activate) windows when an app focus is requested (LP:
+    #1672337)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 28 Mar 2017 17:14:50 +0000
+
 qtmir (0.5.1+17.04.20170320.1-0ubuntu1) zesty; urgency=medium
 
   [ Alan Griffiths ]
