@@ -2,6 +2,7 @@
 # And also not anymore as pkgconfig module since Qt 5.6.
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 include(FindQt5PlatformSupport)
+include(UseLttngGenTp)
 
 set(QTMIRSERVER_ABI 1)
 
@@ -54,6 +55,12 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # Needed to compile tracepoints in C99 mode.
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
+# Generate tracepoints.c and .h from tracepoints.tp
+add_lttng_gen_tp(NAME tracepoints)
+add_custom_target(MirServer_LTTNG
+    DEPENDS tracepoints.h tracepoints.c
+)
+
 # These files will compile without mirserver-dev
 add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
@@ -75,6 +82,7 @@ add_library(qtmirserver-nomirserver OBJECT
     screenadaptormodel.cpp
     qtmir.cpp
 )
+add_dependencies(qtmirserver-nomirserver MirServer_LTTNG)
 
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
 
@@ -175,9 +183,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qtmirserver.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
     @ONLY
 )
-
-include(UseLttngGenTp)
-add_lttng_gen_tp(NAME tracepoints)
 
 install(
   TARGETS qtmirserver
