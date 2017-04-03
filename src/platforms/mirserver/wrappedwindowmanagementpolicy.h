@@ -24,7 +24,6 @@
 #include "qtmir/windowmanagementpolicy.h"
 
 #include <QScopedPointer>
-#include <QSize>
 
 using namespace mir::geometry;
 
@@ -70,6 +69,8 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+
     // Methods for consumption by WindowControllerInterface
     void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window) override;
     void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window) override;
@@ -83,6 +84,9 @@ public:
 
     void ask_client_to_close(const miral::Window &window) override;
     void forceClose(const miral::Window &window) override;
+
+    void set_window_confinement_regions(const QVector<QRect> &regions) override;
+    void set_window_margins(MirWindowType windowType, const QMargins &margins) override;
 
 private:
     std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;

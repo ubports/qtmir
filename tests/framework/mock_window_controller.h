@@ -38,6 +38,9 @@ public:
     MOCK_METHOD2(deliverKeyboardEvent, void(const miral::Window &, const MirKeyboardEvent *));
     MOCK_METHOD2(deliverTouchEvent,    void(const miral::Window &, const MirTouchEvent *));
     MOCK_METHOD2(deliverPointerEvent,  void(const miral::Window &, const MirPointerEvent *));
+
+    MOCK_METHOD1(setWindowConfinementRegions, void(const QVector<QRect> &regions));
+    MOCK_METHOD2(setWindowMargins, void(Mir::Type windowType, const QMargins &margins));
 };
 
 #endif // MOCK_WINDOW_CONTROLLER_H

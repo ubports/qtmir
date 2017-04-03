@@ -37,6 +37,9 @@ struct StubWindowModelController : public WindowControllerInterface
     void deliverKeyboardEvent(const miral::Window &/*window*/, const MirKeyboardEvent */*event*/) override { return; }
     void deliverTouchEvent   (const miral::Window &/*window*/, const MirTouchEvent */*event*/)    override { return; }
     void deliverPointerEvent (const miral::Window &/*window*/, const MirPointerEvent */*event*/)  override { return; }
+
+    void setWindowConfinementRegions(const QVector<QRect> &/*regions*/) override { return; }
+    void setWindowMargins(Mir::Type /*windowType*/, const QMargins &/*margins*/) override { return; }
 };
 
 } //namespace qtmir

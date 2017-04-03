@@ -20,7 +20,6 @@
 #define MIR_SCENE_FAKESURFACE_H_
 
 #include <mir/scene/surface.h>
-#include "stub_input_channel.h"
 
 #include <memory>
 #include <gmock/gmock.h>
@@ -31,7 +30,6 @@ namespace scene {
 class FakeSurface : public Surface
 {
 public:
-    std::shared_ptr<mir::test::doubles::StubInputChannel> channel;
     int fd;
     mir::input::InputReceptionMode input_mode{mir::input::InputReceptionMode::normal};
 
