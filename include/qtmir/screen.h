@@ -18,6 +18,7 @@
 #define QTMIR_SCREEN_H
 
 #include <qtmir/types.h>
+#include <qtmir/miral/display_id.h>
 
 #include <QObject>
 #include <QPointer>
@@ -39,7 +40,7 @@ class Screen : public QObject
 {
     Q_OBJECT
 public:
-    virtual qtmir::OutputId outputId() const = 0;
+    virtual miral::DisplayId displayId() const = 0;
     virtual bool used() const = 0;
     virtual QString name() const = 0;
     virtual float scale() const = 0;
@@ -95,7 +96,7 @@ public:
 struct ScreenConfiguration
 {
     bool valid{false};
-    qtmir::OutputId id;
+    miral::OutputId id;
 
     bool used;
     QPoint topLeft;

@@ -60,10 +60,10 @@ ScreenAdaptor::~ScreenAdaptor()
     m_modes.clear();
 }
 
-qtmir::OutputId ScreenAdaptor::outputId() const
+miral::DisplayId ScreenAdaptor::displayId() const
 {
     auto platformScreen = static_cast<PlatformScreen*>(m_screen->handle());
-    return platformScreen->outputId();
+    return platformScreen->displayId();
 }
 
 bool ScreenAdaptor::used() const
@@ -144,7 +144,7 @@ QScreen *ScreenAdaptor::qscreen() const
 
 qtmir::ScreenConfiguration *ScreenAdaptor::beginConfiguration() const
 {
-    auto config = m_screensController->outputConfiguration(this->outputId());
+    auto config = m_screensController->outputConfiguration(this->displayId().output_id);
     return new qtmir::ScreenConfiguration(config);
 }
 

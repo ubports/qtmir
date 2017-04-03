@@ -44,7 +44,7 @@ qtmir::ScreenConfigurationList ScreensController::configuration()
         list.append(
             qtmir::ScreenConfiguration {
                         true,
-                        screen->outputId(),
+                        screen->displayId().output_id,
                         screen->used(),
                         screen->geometry().topLeft(),
                         screen->currentModeIndex(),
@@ -87,7 +87,7 @@ bool ScreensController::setConfiguration(const qtmir::ScreenConfigurationList &n
     return true;
 }
 
-qtmir::ScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputId outputId)
+qtmir::ScreenConfiguration ScreensController::outputConfiguration(miral::OutputId outputId)
 {
     auto displayConfiguration = m_display->configuration();
     qtmir::ScreenConfiguration config;
@@ -97,7 +97,6 @@ qtmir::ScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputI
         {
             if (outputConfig.id == outputId) {
                 config.valid = true;
-                config.id = outputConfig.id;
                 config.used = outputConfig.used;
                 config.topLeft = QPoint{outputConfig.top_left.x.as_int(), outputConfig.top_left.y.as_int()};
                 config.currentModeIndex = outputConfig.current_mode_index;

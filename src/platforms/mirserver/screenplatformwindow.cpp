@@ -57,7 +57,7 @@ ScreenPlatformWindow::ScreenPlatformWindow(QWindow *window, bool exposed)
     DEBUG_MSG << "(window=" << window
               << ") - windowId=" << uint(m_winId)
               << ", on screen=" << platformScreen
-              << ", outputId=" << platformScreen->outputId().as_value()
+              << ", outputId=" << platformScreen->displayId().output_id.as_value()
               << ", geometry=" << screenGeometry;
 
     platformScreen->addWindow(this);
@@ -172,7 +172,7 @@ void ScreenPlatformWindow::setScreen(QPlatformScreen *newScreen)
     auto platformScreen = static_cast<PlatformScreen *>(newScreen);
     Q_ASSERT(platformScreen);
     DEBUG_MSG << "(screen=" << platformScreen
-              << ", outputId=" << platformScreen->outputId().as_value() << ")";
+              << ", outputId=" << platformScreen->displayId().output_id.as_value() << ")";
 
     // Dis-associate the old screen
     if (screen()) {

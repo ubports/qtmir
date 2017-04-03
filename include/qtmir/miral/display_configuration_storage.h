@@ -19,21 +19,15 @@
 #ifndef MIRAL_DISPLAY_CONFIGURATION_STORAGE_H
 #define MIRAL_DISPLAY_CONFIGURATION_STORAGE_H
 
-#include "mir/geometry/rectangle.h"
-#include "mir/optional_value.h"
-#include "mir_toolkit/common.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/optional_value.h>
+#include <mir_toolkit/common.h>
 
-#include "edid.h"
+#include "display_id.h"
 
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
-
-struct DisplayId
-{
-    Edid edid;
-    int output_id; // helps to identify a monitor if we have two of the same.
-};
 
 struct DisplayConfigurationOptions
 {
@@ -59,6 +53,6 @@ public:
     virtual bool load(const DisplayId&, DisplayConfigurationOptions&) const = 0;
 };
 
-}
+} // namespace miral
 
 #endif // MIRAL_DISPLAY_CONFIGURATION_STORAGE_H

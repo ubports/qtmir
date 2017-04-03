@@ -179,7 +179,7 @@ void PersistDisplayConfigPolicy::apply_to(
             miral::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
             display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-            display_id.output_id = output.id.as_value();
+            display_id.output_id = output.id;
 
             // TODO if the h/w profile (by some definition) has changed, then apply corresponding saved config (if any).
             // TODO Otherwise...
@@ -232,7 +232,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
             miral::DisplayId display_id;
             // FIXME - output.edid should be std::vector<uint8_t>, not std::vector<uint8_t const>
             display_id.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(output.edid));
-            display_id.output_id = output.id.as_value();
+            display_id.output_id = output.id;
 
             miral::DisplayConfigurationOptions config;
 

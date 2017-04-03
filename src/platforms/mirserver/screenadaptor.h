@@ -34,7 +34,7 @@ public:
     ScreenAdaptor(QScreen* screen, QObject* parent = 0);
     ~ScreenAdaptor();
 
-    qtmir::OutputId outputId() const override;
+    miral::DisplayId displayId() const override;
     bool used() const override;
     QString name() const override;
     float scale() const override;

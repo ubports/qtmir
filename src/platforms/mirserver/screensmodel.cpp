@@ -190,7 +190,7 @@ void ScreensModel::update()
 
     // Delete any old & unused Screens
     Q_FOREACH (auto screen, oldScreenList) {
-        DEBUG_MSG << "() - removed Screen with id " << screen->m_outputId.as_value()
+        DEBUG_MSG << "() - removed Screen with id " << screen->displayId().output_id.as_value()
                                << " and geometry " << screen->geometry();
 
         Q_FOREACH (ScreenPlatformWindow* window, screen->windows()) {
@@ -208,7 +208,7 @@ void ScreensModel::update()
 
     qCDebug(QTMIR_SCREENS) << "=======================================";
     Q_FOREACH (auto screen, m_screenList) {
-        qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->m_outputId.as_value()
+        qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->displayId().output_id.as_value()
                                << "geometry:" << screen->geometry()
                                << "window:" << screen->primaryWindow()
                                << "type:" << screen->name()
@@ -273,7 +273,7 @@ PlatformScreen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput 
 PlatformScreen* ScreensModel::findScreenWithId(const QList<PlatformScreen *> &list, const mg::DisplayConfigurationOutputId id)
 {
     Q_FOREACH (auto screen, list) {
-        if (screen->m_outputId == id) {
+        if (screen->displayId().output_id == id) {
             return screen;
         }
     }

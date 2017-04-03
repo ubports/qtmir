@@ -48,7 +48,7 @@ public:
     qtmir::ScreenConfigurationList configuration();
     bool setConfiguration(const qtmir::ScreenConfigurationList &newConfig);
 
-    qtmir::ScreenConfiguration outputConfiguration(qtmir::OutputId outputId);
+    qtmir::ScreenConfiguration outputConfiguration(miral::OutputId outputId);
     bool setOutputConfiguration(const qtmir::ScreenConfiguration &newConfig);
 
 private:

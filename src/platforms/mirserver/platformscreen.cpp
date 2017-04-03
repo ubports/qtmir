@@ -156,7 +156,7 @@ PlatformScreen::PlatformScreen(const mir::graphics::DisplayConfigurationOutput &
     , m_unityScreen(nullptr)
 {
     setMirDisplayConfiguration(screen, false);
-    DEBUG_MSG_SCREENS << "(output=" << m_outputId.as_value()
+    DEBUG_MSG_SCREENS << "(output=" << m_displayId.output_id.as_value()
                       << ", used=" << (m_used ? "true" : "false")
                       << ", geometry=" << geometry() << ")";
 
@@ -241,7 +241,13 @@ void PlatformScreen::setMirDisplayConfiguration(const mir::graphics::DisplayConf
     }
 
     // Output data - each output has a unique id and corresponding type. Can be multiple cards.
-    m_outputId = screen.id;
+    m_displayId.output_id = screen.id;
+    try {
+        m_displayId.edid.parse_data(reinterpret_cast<std::vector<uint8_t> const&>(screen.edid));
+    } catch (std::runtime_error const& e) {
+        printf("Failed to parse EDID - %s\n", e.what());
+    }
+
     auto type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
     if (m_type != type) {
         m_type = type;
@@ -409,7 +415,7 @@ QPlatformCursor *PlatformScreen::cursor() const
 
 QString PlatformScreen::name() const
 {
-    return displayTypeToString(m_type);
+    return QString("%1-%2").arg(displayTypeToString(m_type)).arg(m_displayId.output_id.as_value());
 }
 
 QWindow *PlatformScreen::topLevelAt(const QPoint &point) const
