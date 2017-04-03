@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -29,6 +29,8 @@
 #include <QWeakPointer>
 #include <QSet>
 #include <QTimer>
+#include <QVector>
+#include <QKeyEvent>
 
 #include "mirbuffersgtexture.h"
 #include "windowcontrollerinterface.h"
@@ -212,6 +214,12 @@ private:
     void onHeightIncrementChanged(int incHeight);
     QPoint convertDisplayToLocalCoords(const QPoint &displayPos) const;
     QPoint convertLocalToDisplayCoords(const QPoint &localPos) const;
+    void updatePosition();
+
+    // Handling of missing key release events from Qt
+    bool isKeyPressed(quint32 nativeVirtualKey) const;
+    void forgetPressedKey(quint32 nativeVirtualKey);
+    void releaseAllPressedKeys();
 
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
@@ -280,6 +288,18 @@ private:
     MirSurface *m_parentSurface;
 
     MirSurfaceListModel *m_childSurfaceList;
+
+    // Track all keys that we told our mir window are currently pressed
+    struct PressedKey {
+        PressedKey() {}
+        PressedKey(QKeyEvent *qtEvent, qint64 msecsSinceReference);
+        quint32 nativeVirtualKey{0};
+        quint32 nativeScanCode{0};
+        ulong timestamp{0};
+        MirInputDeviceId deviceId{0};
+        qint64 msecsSinceReference{0};
+    };
+    QVector<PressedKey> m_pressedKeys;
 };
 
 } // namespace qtmir

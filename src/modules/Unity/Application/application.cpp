@@ -28,7 +28,6 @@
 
 // QPA mirserver
 #include "logging.h"
-#include "initialsurfacesizes.h"
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
@@ -48,7 +47,6 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     : ApplicationInfoInterface(appInfo->appId(), parent)
     , m_sharedWakelock(sharedWakelock)
     , m_appInfo(appInfo)
-    , m_pid(0)
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
@@ -105,10 +103,6 @@ Application::~Application()
     if (m_session) {
         m_session->setApplication(nullptr);
         delete m_session;
-    }
-
-    if (m_pid != 0) {
-        InitialSurfaceSizes::remove(m_pid);
     }
 
     delete m_stopTimer;
@@ -424,11 +418,6 @@ bool Application::fullscreen() const
     return m_session ? m_session->fullscreen() : false;
 }
 
-pid_t Application::pid() const
-{
-    return m_pid;
-}
-
 void Application::close()
 {
     INFO_MSG << "()";
@@ -456,19 +445,6 @@ void Application::close()
     case InternalState::Stopped:
         // too late
         break;
-    }
-}
-
-void Application::setPid(pid_t pid)
-{
-    if (m_pid != 0) {
-        InitialSurfaceSizes::remove(m_pid);
-    }
-
-    m_pid = pid;
-
-    if (m_initialSurfaceSize.isValid() && m_pid != 0) {
-        InitialSurfaceSizes::set(m_pid, m_initialSurfaceSize);
     }
 }
 
@@ -849,9 +825,6 @@ void Application::setInitialSurfaceSize(const QSize &size)
 
     if (size != m_initialSurfaceSize) {
         m_initialSurfaceSize = size;
-        if (m_pid != 0 && m_initialSurfaceSize.isValid()) {
-            InitialSurfaceSizes::set(m_pid, size);
-        }
         Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
 }
@@ -869,9 +842,15 @@ unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
 void Application::requestFocus()
 {
     if (m_proxySurfaceList->rowCount() > 0) {
-        INFO_MSG << "() - Requesting focus for most recent app surface";
-        auto surface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(0));
-        surface->requestFocus();
+        INFO_MSG << "() - Requesting focus for most recent toplevel app surface";
+
+        for (int i = 0; i < m_proxySurfaceList->count(); ++i) {
+            auto surface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(i));
+            if (!surface->parentSurface()) {
+                surface->requestFocus();
+                break;
+            }
+        }
     } else {
         INFO_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();
