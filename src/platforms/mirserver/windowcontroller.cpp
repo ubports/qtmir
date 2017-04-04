@@ -15,7 +15,7 @@
  */
 
 #include "windowcontroller.h"
-#include "qtmir/windowmanagementpolicy.h"
+#include "wrappedwindowmanagementpolicy.h"
 
 #include "mirqtconversion.h"
 
@@ -111,7 +111,7 @@ void WindowController::setWindowMargins(Mir::Type windowType, const QMargins &ma
     }
 }
 
-void WindowController::setPolicy(WindowManagementPolicy * const policy)
+void WindowController::setPolicy(WrappedWindowManagementPolicy * const policy)
 {
     m_policy = policy;
 }
