@@ -52,7 +52,7 @@ static const char *qtmirArgv[]{"qtmir"};
 class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
-    DefaultWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+    DefaultWindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
         : qtmir::WindowManagementPolicy(tools, dd)
     {}
 };
@@ -75,7 +75,7 @@ std::shared_ptr<miral::DisplayConfigurationStorage> buildDisplayConfigurationSto
 }
 
 std::shared_ptr<qtmir::WindowManagementPolicy> buildWindowManagementPolicy(const miral::WindowManagerTools &tools,
-                                                                           qtmir::WindowManagementPolicyPrivate& dd)
+                                                                           std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
 {
     return std::make_shared<DefaultWindowManagementPolicy>(tools, dd);
 }
