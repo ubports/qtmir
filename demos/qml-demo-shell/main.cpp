@@ -58,7 +58,7 @@ struct DemoDisplayConfigurationPolicy : qtmir::DisplayConfigurationPolicy
 class DemoWindowManagementPolicy : public qtmir::WindowManagementPolicy
 {
 public:
-    DemoWindowManagementPolicy(const miral::WindowManagerTools &tools, qtmir::WindowManagementPolicyPrivate& dd)
+    DemoWindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
         : qtmir::WindowManagementPolicy(tools, dd)
     {}
 
