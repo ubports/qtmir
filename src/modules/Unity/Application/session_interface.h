@@ -53,12 +53,13 @@ public:
     SessionInterface(QObject *parent = 0) : QObject(parent) {}
     virtual ~SessionInterface() {}
 
+    // Ordered by importance/activity. Used for calculating the combined state of multiple sessions
     enum State {
-        Starting,
-        Running,
-        Suspending,
-        Suspended,
-        Stopped
+        Running = 4,
+        Starting = 3,
+        Suspending = 2,
+        Suspended = 1,
+        Stopped = 0
     };
 
     //getters

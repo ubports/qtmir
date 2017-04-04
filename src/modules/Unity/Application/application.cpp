@@ -28,9 +28,13 @@
 
 // QPA mirserver
 #include "logging.h"
+#include "initialsurfacesizes.h"
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
+
+// std
+#include <csignal>
 
 namespace unityapp = unity::shell::application;
 
@@ -50,12 +54,10 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
     , m_supportedStages(Application::MainStage|Application::SideStage)
     , m_state(InternalState::Starting)
     , m_arguments(arguments)
-    , m_session(nullptr)
     , m_requestedState(RequestedRunning)
     , m_processState(ProcessUnknown)
     , m_stopTimer(nullptr)
     , m_exemptFromLifecycle(false)
-    , m_proxySurfaceList(new ProxySurfaceListModel(this))
     , m_proxyPromptSurfaceList(new ProxySurfaceListModel(this))
 {
     INFO_MSG << "()";
@@ -69,7 +71,7 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
 
     setStopTimer(new Timer);
 
-    connect(m_proxySurfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
+    connect(&m_surfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
 }
 
 Application::~Application()
@@ -100,10 +102,11 @@ Application::~Application()
         break;
     }
 
-    if (m_session) {
-        m_session->setApplication(nullptr);
-        delete m_session;
+    for (SessionInterface *session : m_sessions) {
+        session->setApplication(nullptr);
+        delete session;
     }
+    m_sessions.clear();
 
     delete m_stopTimer;
 }
@@ -281,20 +284,22 @@ void Application::setRequestedState(RequestedState value)
 
 void Application::updateState()
 {
-    if ((!m_session && m_state != InternalState::Starting && m_state != InternalState::StoppedResumable)
+    SessionInterface *singleSession = m_sessions.count() == 1 ? m_sessions[0] : nullptr;
+
+    if ((m_sessions.isEmpty() && m_state != InternalState::Starting && m_state != InternalState::StoppedResumable)
         ||
-        (m_session && m_session->surfaceList()->isEmpty() && m_session->hasClosingSurfaces())) {
+        (singleSession && singleSession->surfaceList()->isEmpty() && singleSession->hasClosingSurfaces())) {
         // As we might not be able to go to Closing state right now (eg, SuspendingWaitProcess),
         // store the intent in a separate variable.
         m_closing = true;
     }
 
-    bool lostAllSurfaces = m_session && m_session->surfaceList()->isEmpty() && m_session->hadSurface()
-            && !m_session->hasClosingSurfaces();
+    bool lostAllSurfaces = singleSession && singleSession->surfaceList()->isEmpty() && singleSession->hadSurface()
+            && !singleSession->hasClosingSurfaces();
 
     if (m_closing || (lostAllSurfaces && m_state != InternalState::StoppedResumable)) {
         applyClosing();
-    } else if (m_requestedState == RequestedRunning || (m_session && m_session->hasClosingSurfaces())) {
+    } else if (m_requestedState == RequestedRunning || (singleSession && singleSession->hasClosingSurfaces())) {
         applyRequestedRunning();
     } else {
         applyRequestedSuspended();
@@ -410,12 +415,22 @@ void Application::applyRequestedSuspended()
 
 bool Application::focused() const
 {
-    return m_session && m_session->focused();
+    for (auto session : m_sessions) {
+        if (session->focused()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Application::fullscreen() const
 {
-    return m_session ? m_session->fullscreen() : false;
+    for (auto session : m_sessions) {
+        if (session->fullscreen()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Application::close()
@@ -433,7 +448,9 @@ void Application::close()
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
-        m_session->close();
+        for (auto session : m_sessions) {
+            session->close();
+        }
         break;
     case InternalState::Closing:
         // already on the way
@@ -453,69 +470,73 @@ void Application::setArguments(const QStringList &arguments)
     m_arguments = arguments;
 }
 
-void Application::setSession(SessionInterface *newSession)
+void Application::removeSession(SessionInterface *session)
+{
+    if (!m_sessions.contains(session))
+        return;
+
+    m_surfaceList.removeSurfaceList(session->surfaceList());
+    m_proxyPromptSurfaceList->setSourceList(nullptr);
+    session->disconnect(this);
+    session->surfaceList()->disconnect(this);
+    session->setApplication(nullptr);
+    session->setParent(nullptr);
+
+    m_sessions.removeAll(session);
+
+    InitialSurfaceSizes::remove(session->pid());
+}
+
+void Application::addSession(SessionInterface *newSession)
 {
     INFO_MSG << "(session=" << newSession << ")";
 
-    if (newSession == m_session)
+    if (!newSession || m_sessions.contains(newSession))
         return;
 
-    if (m_session) {
-        m_proxySurfaceList->setSourceList(nullptr);
-        m_proxyPromptSurfaceList->setSourceList(nullptr);
-        m_session->disconnect(this);
-        m_session->surfaceList()->disconnect(this);
-        m_session->setApplication(nullptr);
-        m_session->setParent(nullptr);
-    }
-
     bool oldFullscreen = fullscreen();
-    m_session = newSession;
+    m_sessions << newSession;
 
-    if (m_session) {
-        m_session->setParent(this);
-        m_session->setApplication(this);
+    newSession->setParent(this);
+    newSession->setApplication(this);
 
-        switch (m_state) {
-        case InternalState::Starting:
-        case InternalState::Running:
-        case InternalState::RunningInBackground:
-        case InternalState::Closing:
-            m_session->resume();
-            break;
-        case InternalState::SuspendingWaitSession:
-        case InternalState::SuspendingWaitProcess:
-        case InternalState::Suspended:
-            m_session->suspend();
-            break;
-        case InternalState::Stopped:
-        default:
-            m_session->stop();
-            break;
-        }
-
-        connect(m_session, &SessionInterface::stateChanged, this, &Application::onSessionStateChanged);
-        connect(m_session, &SessionInterface::fullscreenChanged, this, &Application::fullscreenChanged);
-        connect(m_session, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
-        connect(m_session, &SessionInterface::focusRequested, this, &Application::focusRequested);
-        connect(m_session->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
-        connect(m_session, &SessionInterface::focusedChanged, this, [&](bool focused) {
-            qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::focusedChanged(" << focused << ")";
-            Q_EMIT focusedChanged(focused);
-        });
-
-        if (oldFullscreen != fullscreen())
-            Q_EMIT fullscreenChanged(fullscreen());
-
-        m_proxySurfaceList->setSourceList(m_session->surfaceList());
-        m_proxyPromptSurfaceList->setSourceList(m_session->promptSurfaceList());
-    } else {
-        // this can only happen after the session has stopped
-        Q_ASSERT(m_state == InternalState::Stopped || m_state == InternalState::StoppedResumable
-                || m_state == InternalState::Closing);
+    switch (m_state) {
+    case InternalState::Starting:
+    case InternalState::Running:
+    case InternalState::RunningInBackground:
+    case InternalState::Closing:
+        newSession->resume();
+        break;
+    case InternalState::SuspendingWaitSession:
+    case InternalState::SuspendingWaitProcess:
+    case InternalState::Suspended:
+        newSession->suspend();
+        break;
+    case InternalState::Stopped:
+    default:
+        newSession->stop();
+        break;
     }
 
-    Q_EMIT sessionChanged(m_session);
+    connect(newSession, &SessionInterface::stateChanged, this, &Application::onSessionStateChanged);
+    connect(newSession, &SessionInterface::fullscreenChanged, this, &Application::fullscreenChanged);
+    connect(newSession, &SessionInterface::hasClosingSurfacesChanged, this, &Application::updateState);
+    connect(newSession, &SessionInterface::focusRequested, this, &Application::focusRequested);
+    connect(newSession->surfaceList(), &MirSurfaceListModel::emptyChanged, this, &Application::updateState);
+    connect(newSession, &SessionInterface::focusedChanged, this, [&](bool focused) {
+        qCDebug(QTMIR_APPLICATIONS).nospace() << "Application[" << appId() <<"]::focusedChanged(" << focused << ")";
+        Q_EMIT focusedChanged(focused);
+    });
+
+    if (m_initialSurfaceSize.isValid() && newSession->pid() != 0) {
+        InitialSurfaceSizes::set(newSession->pid(), m_initialSurfaceSize);
+    }
+
+    if (oldFullscreen != fullscreen())
+        Q_EMIT fullscreenChanged(fullscreen());
+
+    m_surfaceList.addSurfaceList(newSession->surfaceList());
+    m_proxyPromptSurfaceList->setSourceList(newSession->promptSurfaceList());
 }
 
 void Application::setInternalState(Application::InternalState state)
@@ -587,7 +608,7 @@ void Application::setProcessState(ProcessState newProcessState)
         break;
     case ProcessFailed:
         // we assume the session always stop before the process
-        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+        Q_ASSERT(m_sessions.isEmpty() || combinedSessionState() == Session::Stopped);
 
         if (m_state == InternalState::Starting) {
             // that was way too soon. let it go away
@@ -599,7 +620,7 @@ void Application::setProcessState(ProcessState newProcessState)
         break;
     case ProcessStopped:
         // we assume the session always stop before the process
-        Q_ASSERT(!m_session || m_session->state() == Session::Stopped);
+        Q_ASSERT(m_sessions.isEmpty() || combinedSessionState() == Session::Stopped);
 
         if (m_state == InternalState::Starting) {
             // that was way too soon. let it go away
@@ -622,7 +643,7 @@ void Application::suspend()
     INFO_MSG << "()";
 
     Q_ASSERT(m_state == InternalState::Running);
-    Q_ASSERT(m_session != nullptr);
+    Q_ASSERT(!m_sessions.isEmpty());
 
     if (exemptFromLifecycle()) {
         // There's no need to keep the wakelock as the process is never suspended
@@ -631,7 +652,9 @@ void Application::suspend()
         setInternalState(InternalState::RunningInBackground);
     } else {
         setInternalState(InternalState::SuspendingWaitSession);
-        m_session->suspend();
+        for (auto session : m_sessions) {
+            session->suspend();
+        }
     }
 }
 
@@ -645,12 +668,14 @@ void Application::resume()
         if (m_processState == ProcessSuspended) {
             setProcessState(ProcessRunning); // should we wait for a resumed() signal?
         }
-        if (m_session) {
-            m_session->resume();
+        for (auto session : m_sessions) {
+            session->resume();
         }
     } else if (m_state == InternalState::SuspendingWaitSession) {
         setInternalState(InternalState::Running);
-        m_session->resume();
+        for (auto session : m_sessions) {
+            session->resume();
+        }
     } else if (m_state == InternalState::RunningInBackground) {
         setInternalState(InternalState::Running);
     }
@@ -704,11 +729,6 @@ bool Application::rotatesWindowContents() const
     return m_rotatesWindowContents;
 }
 
-SessionInterface* Application::session() const
-{
-    return m_session;
-}
-
 void Application::acquireWakelock() const
 {
     if (appId() == QLatin1String("unity8-dash"))
@@ -725,9 +745,28 @@ void Application::releaseWakelock() const
     m_sharedWakelock->release(this);
 }
 
-void Application::onSessionStateChanged(Session::State sessionState)
+SessionInterface::State Application::combinedSessionState()
 {
-    switch (sessionState) {
+    // This doesn't make sense when there are no sessions
+    Q_ASSERT(m_sessions.count() > 0);
+
+    if (m_sessions.count() == 1) {
+        // easy case
+        return m_sessions[0]->state();
+    }
+
+    SessionInterface::State combinedState = SessionInterface::Stopped;
+    for (auto session : m_sessions) {
+        if (session->state() > combinedState) {
+            combinedState = session->state();
+        }
+    }
+    return combinedState;
+}
+
+void Application::onSessionStateChanged()
+{
+    switch (combinedSessionState()) {
     case Session::Starting:
         break;
     case Session::Running:
@@ -825,13 +864,18 @@ void Application::setInitialSurfaceSize(const QSize &size)
 
     if (size != m_initialSurfaceSize) {
         m_initialSurfaceSize = size;
+        if (m_initialSurfaceSize.isValid()) {
+            for (auto session : m_sessions) {
+                InitialSurfaceSizes::set(session->pid(), size);
+            }
+        }
         Q_EMIT initialSurfaceSizeChanged(m_initialSurfaceSize);
     }
 }
 
 unityapp::MirSurfaceListInterface* Application::surfaceList() const
 {
-    return m_proxySurfaceList;
+    return &m_surfaceList;
 }
 
 unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
@@ -841,11 +885,11 @@ unityapp::MirSurfaceListInterface* Application::promptSurfaceList() const
 
 void Application::requestFocus()
 {
-    if (m_proxySurfaceList->rowCount() > 0) {
+    if (m_surfaceList.rowCount() > 0) {
         INFO_MSG << "() - Requesting focus for most recent toplevel app surface";
 
-        for (int i = 0; i < m_proxySurfaceList->count(); ++i) {
-            auto surface = static_cast<MirSurfaceInterface*>(m_proxySurfaceList->get(i));
+        for (int i = 0; i < m_surfaceList.count(); ++i) {
+            auto surface = static_cast<MirSurfaceInterface*>(m_surfaceList.get(i));
             if (!surface->parentSurface()) {
                 surface->requestFocus();
                 break;
@@ -855,6 +899,18 @@ void Application::requestFocus()
         INFO_MSG << "() - emitting focusRequested()";
         Q_EMIT focusRequested();
     }
+}
+
+void Application::terminate()
+{
+    for (auto session : m_sessions) {
+        kill(session->pid(), SIGTERM);
+    }
+}
+
+QVector<SessionInterface*> Application::sessions() const
+{
+    return m_sessions;
 }
 
 } // namespace qtmir

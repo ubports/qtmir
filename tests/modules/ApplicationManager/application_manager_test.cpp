@@ -59,7 +59,7 @@ public:
     inline void suspend(Application *application) {
         application->setRequestedState(Application::RequestedSuspended);
         ASSERT_EQ(Application::InternalState::SuspendingWaitSession, application->internalState());
-        static_cast<qtmir::Session*>(application->session())->doSuspend();
+        static_cast<qtmir::Session*>(application->sessions()[0])->doSuspend();
         ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, application->internalState());
         applicationManager.onProcessSuspended(application->appId());
         ASSERT_EQ(Application::InternalState::Suspended, application->internalState());
@@ -84,6 +84,11 @@ TEST_F(ApplicationManagerTests,bug_case_1240400_second_dialer_app_fails_to_autho
     QByteArray secondcmdLine( "/usr/bin/dialer-app");
 
     FakeMirSurface surface;
+
+    EXPECT_CALL(*taskController,appIdHasProcessId(QString(dialer_app_id), firstProcId))
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(*taskController,appIdHasProcessId(QString(dialer_app_id), secondProcId))
+        .WillRepeatedly(Return(true));
 
     EXPECT_CALL(procInfo,command_line(firstProcId))
         .Times(1)
@@ -226,11 +231,21 @@ TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_
     const char third_app_id[] = "app3";
     QByteArray third_cmdLine( "/usr/bin/app3 --desktop_file_hint=app3");
 
+    ON_CALL(*taskController,appIdHasProcessId(QString(first_app_id), first_procId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(QString(first_app_id), second_procId)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString(first_app_id), third_procId)).WillByDefault(Return(false));
+
+    ON_CALL(*taskController,appIdHasProcessId(QString(second_app_id), second_procId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(QString(second_app_id), first_procId)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString(second_app_id), third_procId)).WillByDefault(Return(false));
+
+    ON_CALL(*taskController,appIdHasProcessId(QString(third_app_id), third_procId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(QString(third_app_id), first_procId)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString(third_app_id), second_procId)).WillByDefault(Return(false));
+
     EXPECT_CALL(procInfo,command_line(first_procId))
         .Times(1)
         .WillOnce(Return(first_cmdLine));
-
-    ON_CALL(*taskController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
 
     EXPECT_CALL(procInfo,command_line(second_procId))
         .Times(1)
@@ -257,12 +272,12 @@ TEST_F(ApplicationManagerTests,bug_case_1281075_session_ptrs_always_distributed_
     Application * secondApp = applicationManager.findApplication(second_app_id);
     Application * thirdApp = applicationManager.findApplication(third_app_id);
 
-    EXPECT_EQ(firstAppInfo.application(), firstApp->session()->session());
-    EXPECT_EQ(secondAppInfo.application(), secondApp->session()->session());
-    EXPECT_EQ(thirdAppInfo.application(), thirdApp->session()->session());
+    EXPECT_EQ(firstAppInfo.application(), firstApp->sessions()[0]->session());
+    EXPECT_EQ(secondAppInfo.application(), secondApp->sessions()[0]->session());
+    EXPECT_EQ(thirdAppInfo.application(), thirdApp->sessions()[0]->session());
 }
 
-TEST_F(ApplicationManagerTests,two_session_on_one_application)
+TEST_F(ApplicationManagerTests,two_sessions_on_one_application)
 {
     int argc = 0;
     char* argv[0];
@@ -275,28 +290,30 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application)
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
-    ON_CALL(*taskController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString(an_app_id), a_procId)).WillByDefault(Return(true));
 
     bool authed = true;
 
     auto firstAppInfo = createApplicationInfoFor("Oo", a_procId);
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
 
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(firstAppInfo);
+
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(secondAppInfo);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
 
     EXPECT_EQ(true, authed);
-    EXPECT_EQ(secondAppInfo.application(), the_app->session()->session());
+    EXPECT_EQ(2, the_app->sessions().count());
 
     taskController->onSessionStopping(firstAppInfo);
     taskController->onSessionStopping(secondAppInfo);
     qtApp.sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
-TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
+TEST_F(ApplicationManagerTests,two_sessions_on_one_application_after_starting)
 {
     int argc = 0;
     char* argv[0];
@@ -310,24 +327,30 @@ TEST_F(ApplicationManagerTests,two_session_on_one_application_after_starting)
 
     ON_CALL(procInfo,command_line(_)).WillByDefault(Return(a_cmd));
 
-    ON_CALL(*taskController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString(an_app_id), a_procId)).WillByDefault(Return(true));
 
     bool authed = true;
 
     auto firstAppInfo = createApplicationInfoFor("Oo", a_procId);
     auto secondAppInfo = createApplicationInfoFor("oO", a_procId);
-    applicationManager.authorizeSession(a_procId, authed);
 
+    applicationManager.authorizeSession(a_procId, authed);
     taskController->onSessionStarting(firstAppInfo);
+
+    EXPECT_EQ(true, authed);
+
     onSessionCreatedSurface(firstAppInfo, &aSurface);
     aSurface.setReady();
-    taskController->onSessionStarting(secondAppInfo);
 
     Application * the_app = applicationManager.findApplication(an_app_id);
+    EXPECT_EQ(1, the_app->sessions().count());
+
+    applicationManager.authorizeSession(a_procId, authed);
+    taskController->onSessionStarting(secondAppInfo);
 
     EXPECT_EQ(true, authed);
     EXPECT_EQ(Application::Running, the_app->state());
-    EXPECT_EQ(firstAppInfo.application(), the_app->session()->session());
+    EXPECT_EQ(2, the_app->sessions().count());
 
     taskController->onSessionStopping(firstAppInfo);
     taskController->onSessionStopping(secondAppInfo);
@@ -345,7 +368,7 @@ TEST_F(ApplicationManagerTests,starting_app_is_suspended_when_it_gets_ready_if_r
         .Times(1)
         .WillOnce(Return(cmdLine));
 
-    ON_CALL(*taskController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString("app"), procId)).WillByDefault(Return(true));
 
     bool authed = true;
 
@@ -383,7 +406,9 @@ TEST_F(ApplicationManagerTests,requestFocusApplication)
         .Times(1)
         .WillOnce(Return(first_cmdLine));
 
-    ON_CALL(*taskController,appIdHasProcessId(_,_)).WillByDefault(Return(false));
+    ON_CALL(*taskController,appIdHasProcessId(QString("app1"), first_procId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(QString("app2"), second_procId)).WillByDefault(Return(true));
+    ON_CALL(*taskController,appIdHasProcessId(QString("app3"), third_procId)).WillByDefault(Return(true));
 
     EXPECT_CALL(procInfo,command_line(second_procId))
         .Times(1)
@@ -718,7 +743,7 @@ TEST_F(ApplicationManagerTests,onceAppAddedToApplicationLists_mirSessionStarting
 
     // Check application state and session are correctly set
     Application *theApp = applicationManager.findApplication(appId);
-    EXPECT_EQ(theApp->session()->session(), appInfo.application());
+    EXPECT_EQ(theApp->sessions()[0]->session(), appInfo.application());
     EXPECT_EQ(theApp->focused(), false);
 }
 
@@ -1115,6 +1140,8 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingAppLaunchedWithDesktopFileHi
     QByteArray cmdLine("/usr/bin/testApp --desktop_file_hint=");
     cmdLine = cmdLine.append(appId);
 
+    ON_CALL(*taskController,appIdHasProcessId(appId, procId)).WillByDefault(Return(true));
+
     // Set up Mocks & signal watcher
     EXPECT_CALL(procInfo,command_line(procId))
         .Times(1)
@@ -1181,7 +1208,7 @@ TEST_F(ApplicationManagerTests,mirNotifiesOfStoppingBackgroundApp)
 
     ASSERT_EQ(Application::InternalState::SuspendingWaitSession, app->internalState());
 
-    static_cast<qtmir::Session*>(app->session())->doSuspend();
+    static_cast<qtmir::Session*>(app->sessions()[0])->doSuspend();
     ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, app->internalState());
 
     applicationManager.onProcessSuspended(app->appId());
@@ -1412,10 +1439,10 @@ TEST_F(ApplicationManagerTests,stoppedBackgroundAppRelaunchedByUpstart)
 
     // Session should have called deleteLater() on itself, as it's zombie and doesn't hold any surface
     // But DeferredDelete is special: likes to be called out specifically or it won't come out
-    qtApp.sendPostedEvents(app->session(), QEvent::DeferredDelete);
+    qtApp.sendPostedEvents(app->sessions()[0], QEvent::DeferredDelete);
     qtApp.sendPostedEvents();
 
-    ASSERT_EQ(app->session(), nullptr);
+    ASSERT_EQ(app->sessions().count(), 0);
 
     QSignalSpy focusRequestSpy(&applicationManager, SIGNAL(focusRequested(const QString &)));
 
@@ -1461,7 +1488,7 @@ TEST_F(ApplicationManagerTests, lifecycleExemptAppIsNotSuspended)
     the_app->setRequestedState(Application::RequestedSuspended);
     ASSERT_EQ(Application::InternalState::SuspendingWaitSession, the_app->internalState());
 
-    static_cast<qtmir::Session*>(the_app->session())->doSuspend();
+    static_cast<qtmir::Session*>(the_app->sessions()[0])->doSuspend();
     ASSERT_EQ(Application::InternalState::SuspendingWaitProcess, the_app->internalState());
     applicationManager.onProcessSuspended(the_app->appId());
     ASSERT_EQ(Application::InternalState::Suspended, the_app->internalState());
@@ -1838,7 +1865,7 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     taskController->onSessionStarting(appInfo1);
 
     FakeMirSurface surface1;
-    surface1.setSession(app1->session());
+    surface1.setSession(app1->sessions()[0]);
     onSessionCreatedSurface(appInfo1, &surface1);
     surface1.setReady();
 
@@ -1864,7 +1891,7 @@ TEST_F(ApplicationManagerTests,focusedApplicationId)
     taskController->onSessionStarting(appInfo2);
 
     FakeMirSurface surface2;
-    surface2.setSession(app2->session());
+    surface2.setSession(app2->sessions()[0]);
     onSessionCreatedSurface(appInfo2, &surface2);
     surface2.setReady();
 
