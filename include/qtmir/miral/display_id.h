@@ -1,5 +1,5 @@
-#ifndef MIRAL_DISPLAY_H
-#define MIRAL_DISPLAY_H
+#ifndef MIRAL_DISPLAY_ID_H
+#define MIRAL_DISPLAY_ID_H
 
 #include <mir/int_wrapper.h>
 
@@ -20,5 +20,4 @@ struct DisplayId
 
 } // namespace miral
 
-
-#endif // MIRAL_DISPLAY_H
+#endif // MIRAL_DISPLAY_ID_H
