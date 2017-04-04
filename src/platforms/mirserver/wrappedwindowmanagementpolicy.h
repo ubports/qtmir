@@ -72,21 +72,21 @@ public:
     Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
 
     // Methods for consumption by WindowControllerInterface
-    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window) override;
-    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window) override;
-    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window) override;
+    void deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window);
+    void deliver_touch_event   (const MirTouchEvent *event,    const miral::Window &window);
+    void deliver_pointer_event (const MirPointerEvent *event,  const miral::Window &window);
 
-    void activate(const miral::Window &window) override;
-    void resize(const miral::Window &window, const Size size) override;
-    void move  (const miral::Window &window, const Point topLeft) override;
-    void raise(const miral::Window &window) override;
-    void requestState(const miral::Window &window, const Mir::State state) override;
+    void activate(const miral::Window &window);
+    void resize(const miral::Window &window, const Size size);
+    void move  (const miral::Window &window, const Point topLeft);
+    void raise(const miral::Window &window);
+    void requestState(const miral::Window &window, const Mir::State state);
 
-    void ask_client_to_close(const miral::Window &window) override;
-    void forceClose(const miral::Window &window) override;
+    void ask_client_to_close(const miral::Window &window);
+    void forceClose(const miral::Window &window);
 
-    void set_window_confinement_regions(const QVector<QRect> &regions) override;
-    void set_window_margins(MirWindowType windowType, const QMargins &margins) override;
+    void set_window_confinement_regions(const QVector<QRect> &regions);
+    void set_window_margins(MirWindowType windowType, const QMargins &margins);
 
 private:
     std::shared_ptr<qtmir::WindowManagementPolicy> m_wrapper;
