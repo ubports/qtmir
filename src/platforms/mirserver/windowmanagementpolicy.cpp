@@ -41,7 +41,6 @@ WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &
                                                qtmir::AppNotifier &appNotifier,
                                                const QSharedPointer<ScreensModel> screensModel)
     : CanonicalWindowManagerPolicy(tools)
-    , m_tools(tools)
     , m_windowModel(windowModel)
     , m_appNotifier(appNotifier)
     , m_eventFeeder(new QtEventFeeder(screensModel))
@@ -81,7 +80,7 @@ void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
 
     Q_EMIT m_windowModel.windowReady(windowInfo);
 
-    auto appInfo = m_tools.info_for(windowInfo.window().application());
+    auto appInfo = tools.info_for(windowInfo.window().application());
     Q_EMIT m_appNotifier.appCreatedWindow(appInfo);
 }
 
@@ -136,7 +135,7 @@ void WindowManagementPolicy::advise_new_window(const miral::WindowInfo &windowIn
 {
     // TODO: attach surface observer here
 
-    getExtraInfo(windowInfo)->persistentId = QString::fromStdString(m_tools.id_for_window(windowInfo.window()));
+    getExtraInfo(windowInfo)->persistentId = QString::fromStdString(tools.id_for_window(windowInfo.window()));
 
     // FIXME: remove when possible
     getExtraInfo(windowInfo)->state = toQtState(windowInfo.state());
@@ -217,9 +216,9 @@ void WindowManagementPolicy::advise_end()
 
 void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        if (m_tools.active_window() != window) {
-            m_tools.select_active_window(window);
+    tools.invoke_under_lock([&window, this]() {
+        if (tools.active_window() != window) {
+            tools.select_active_window(window);
         }
     });
 }
@@ -273,7 +272,7 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
 void WindowManagementPolicy::activate(const miral::Window &window)
 {
     if (window) {
-        auto &windowInfo = m_tools.info_for(window);
+        auto &windowInfo = tools.info_for(window);
 
         // restore from minimized if needed
         if (windowInfo.state() == mir_window_state_minimized) {
@@ -283,16 +282,16 @@ void WindowManagementPolicy::activate(const miral::Window &window)
         }
     }
 
-    m_tools.invoke_under_lock([&]() {
-        m_tools.select_active_window(window);
+    tools.invoke_under_lock([&]() {
+        tools.select_active_window(window);
     });
 }
 
 // raises the window tree
 void WindowManagementPolicy::raise(const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.raise_tree(window);
+    tools.invoke_under_lock([&window, this]() {
+        tools.raise_tree(window);
     });
 }
 
@@ -300,9 +299,9 @@ void WindowManagementPolicy::resize(const miral::Window &window, const Size size
 {
     miral::WindowSpecification modifications;
     modifications.size() = size;
-    m_tools.invoke_under_lock([&window, &modifications, this]() {
+    tools.invoke_under_lock([&window, &modifications, this]() {
         try {
-            m_tools.modify_window(m_tools.info_for(window), modifications);
+            tools.modify_window(tools.info_for(window), modifications);
         } catch (const std::out_of_range&) {
             // usually shell trying to operate on a window which already closed, just ignore
             // TODO: MirSurface extends the miral::Window lifetime by holding a shared pointer to
@@ -316,9 +315,9 @@ void WindowManagementPolicy::move(const miral::Window &window, const Point topLe
 {
     miral::WindowSpecification modifications;
     modifications.top_left() = topLeft;
-    m_tools.invoke_under_lock([&window, &modifications, this]() {
+    tools.invoke_under_lock([&window, &modifications, this]() {
         try {
-            m_tools.modify_window(m_tools.info_for(window), modifications);
+            tools.modify_window(tools.info_for(window), modifications);
         } catch (const std::out_of_range&) {
             // usually shell trying to operate on a window which already closed, just ignore
             // TODO: see above comment in resize, same issue
@@ -328,15 +327,15 @@ void WindowManagementPolicy::move(const miral::Window &window, const Point topLe
 
 void WindowManagementPolicy::ask_client_to_close(const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.ask_client_to_close(window);
+    tools.invoke_under_lock([&window, this]() {
+        tools.ask_client_to_close(window);
     });
 }
 
 void WindowManagementPolicy::forceClose(const miral::Window &window)
 {
-    m_tools.invoke_under_lock([&window, this]() {
-        m_tools.force_close(window);
+    tools.invoke_under_lock([&window, this]() {
+        tools.force_close(window);
     });
 }
 
@@ -356,7 +355,7 @@ void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const 
 
 void WindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
 {
-    auto &windowInfo = m_tools.info_for(window);
+    auto &windowInfo = tools.info_for(window);
     auto extraWinInfo = getExtraInfo(windowInfo);
 
     if (extraWinInfo->state == state)
@@ -373,8 +372,8 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
     if (modifications.state() == windowInfo.state()) {
         Q_EMIT m_windowModel.windowStateChanged(windowInfo, state);
     } else {
-        m_tools.invoke_under_lock([&]() {
-            m_tools.modify_window(windowInfo, modifications);
+        tools.invoke_under_lock([&]() {
+            tools.modify_window(windowInfo, modifications);
         });
     }
 }
