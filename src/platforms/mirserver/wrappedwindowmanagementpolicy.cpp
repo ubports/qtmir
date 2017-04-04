@@ -136,7 +136,7 @@ namespace qtmir
         miral::WindowSpecification modifications(modificationsClient);
 
         if (modifications.size().is_set()) {
-            auto extraWindowInfo = getExtraInfo(windowInfo);
+            auto extraWindowInfo = qtmir::getExtraInfo(windowInfo);
             QMutexLocker locker(&extraWindowInfo->mutex);
             if (!extraWindowInfo->allowClientResize) {
                 modifications.size().consume();
@@ -274,118 +274,6 @@ namespace qtmir
         Q_EMIT d->m_windowModel.windowsAboutToBeRemovedFromWorkspace(workspace, windows);
     }
 
-    /* Methods to allow Shell to request changes to the window stack. Called from the Qt GUI thread */
-
-    // raises the window tree and focus it.
-    void WindowManagementPolicy::activate(const miral::Window &window)
-    {
-        if (window) {
-            auto &windowInfo = tools.info_for(window);
-
-            // restore from minimized if needed
-            if (windowInfo.state() == mir_window_state_minimized) {
-                auto extraInfo = getExtraInfo(windowInfo);
-                Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
-                requestState(window, extraInfo->previousState);
-            }
-        }
-
-        tools.invoke_under_lock([&]() {
-            tools.select_active_window(window);
-        });
-    }
-
-    // raises the window tree
-    void WindowManagementPolicy::raise(const miral::Window &window)
-    {
-        tools.invoke_under_lock([&window, this]() {
-            tools.raise_tree(window);
-        });
-    }
-
-    void WindowManagementPolicy::resize(const miral::Window &window, const Size size)
-    {
-        miral::WindowSpecification modifications;
-        modifications.size() = size;
-        tools.invoke_under_lock([&window, &modifications, this]() {
-            try {
-                tools.modify_window(tools.info_for(window), modifications);
-            } catch (const std::out_of_range&) {
-                // usually shell trying to operate on a window which already closed, just ignore
-                // TODO: MirSurface extends the miral::Window lifetime by holding a shared pointer to
-                // the mir::scene::Surface, meaning it cannot detect when the window has been closed
-                // and thus avoid calling this method.
-            }
-        });
-    }
-
-    void WindowManagementPolicy::move(const miral::Window &window, const Point topLeft)
-    {
-        miral::WindowSpecification modifications;
-        modifications.top_left() = topLeft;
-        tools.invoke_under_lock([&window, &modifications, this]() {
-            try {
-                tools.modify_window(tools.info_for(window), modifications);
-            } catch (const std::out_of_range&) {
-                // usually shell trying to operate on a window which already closed, just ignore
-                // TODO: see above comment in resize, same issue
-            }
-        });
-    }
-
-    void WindowManagementPolicy::ask_client_to_close(const miral::Window &window)
-    {
-        tools.invoke_under_lock([&window, this]() {
-            tools.ask_client_to_close(window);
-        });
-    }
-
-    void WindowManagementPolicy::forceClose(const miral::Window &window)
-    {
-        tools.invoke_under_lock([&window, this]() {
-            tools.force_close(window);
-        });
-    }
-
-    void WindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
-    {
-        auto &windowInfo = tools.info_for(window);
-        auto extraWinInfo = getExtraInfo(windowInfo);
-
-        if (extraWinInfo->state == state)
-            return;
-
-        miral::WindowSpecification modifications;
-        modifications.state() = toMirState(state);
-
-        // TODO: What if the window modification fails? Is that possible?
-        //       Assuming here that the state will indeed change
-        extraWinInfo->previousState = extraWinInfo->state;
-        extraWinInfo->state = state;
-
-        if (modifications.state() == windowInfo.state()) {
-            Q_EMIT d->m_windowModel.windowStateChanged(windowInfo, state);
-        } else {
-            tools.invoke_under_lock([&]() {
-                tools.modify_window(windowInfo, modifications);
-            });
-        }
-    }
-
-    void WindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
-    {
-        d->m_confinementRegions = regions;
-
-        // TODO: update window positions to respect new boundary.
-    }
-
-    void WindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
-    {
-        d->m_windowMargins[windowType] = margins;
-
-        // TODO: update window positions/sizes to respect new margins.
-    }
-
     Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
     {
         if (d->m_confinementRegions.isEmpty()) {
@@ -431,16 +319,6 @@ namespace qtmir
 
         geom.moveTo(x, y);
         return toMirRectangle(geom.marginsRemoved(windowMargins));
-    }
-
-    WindowModelNotifier &WindowManagementPolicy::windowNotifier() const
-    {
-        return d->m_windowModel;
-    }
-
-    AppNotifier &WindowManagementPolicy::appNotifier() const
-    {
-        return d->m_appNotifier;
     }
 }
 
@@ -569,9 +447,7 @@ void WrappedWindowManagementPolicy::advise_resize(const miral::WindowInfo &info,
     m_wrapper->advise_resize(info, newSize);
 }
 
-/* Following methods all called from the Qt GUI thread to deliver events to clients */
-void WrappedWindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event,
-                                                    const miral::Window &window)
+void WrappedWindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEvent *event, const miral::Window &window)
 {
     if (mir_keyboard_event_action(event) == mir_keyboard_action_down) {
         tools.invoke_under_lock([&]() {
@@ -584,8 +460,7 @@ void WrappedWindowManagementPolicy::deliver_keyboard_event(const MirKeyboardEven
     qtmir::dispatchInputEvent(window, mir_keyboard_event_input_event(event));
 }
 
-void WrappedWindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event,
-                                                        const miral::Window &window)
+void WrappedWindowManagementPolicy::deliver_touch_event(const MirTouchEvent *event, const miral::Window &window)
 {
     tools.invoke_under_lock([&]() {
         if (tools.active_window() != window) {
@@ -596,8 +471,7 @@ void WrappedWindowManagementPolicy::deliver_touch_event(const MirTouchEvent *eve
     qtmir::dispatchInputEvent(window, mir_touch_event_input_event(event));
 }
 
-void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
-                                                          const miral::Window &window)
+void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event, const miral::Window &window)
 {
     // Prevent mouse hover events causing window focus to change
     if (mir_pointer_event_action(event) == mir_pointer_action_button_down) {
@@ -609,6 +483,126 @@ void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent 
     }
 
     qtmir::dispatchInputEvent(window, mir_pointer_event_input_event(event));
+}
+
+void WrappedWindowManagementPolicy::advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                               const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_adding_to_workspace(workspace, windows);
+}
+
+void WrappedWindowManagementPolicy::advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                                   const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_removing_from_workspace(workspace, windows);
+}
+
+void WrappedWindowManagementPolicy::activate(const miral::Window &window)
+{
+    if (window) {
+        auto &windowInfo = tools.info_for(window);
+
+        // restore from minimized if needed
+        if (windowInfo.state() == mir_window_state_minimized) {
+            auto extraInfo = qtmir::getExtraInfo(windowInfo);
+            Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
+            requestState(window, extraInfo->previousState);
+        }
+    }
+
+    tools.invoke_under_lock([&]() {
+        tools.select_active_window(window);
+    });
+}
+
+void WrappedWindowManagementPolicy::resize(const miral::Window &window, const Size size)
+{
+    miral::WindowSpecification modifications;
+    modifications.size() = size;
+    tools.invoke_under_lock([&window, &modifications, this]() {
+        try {
+            tools.modify_window(tools.info_for(window), modifications);
+        } catch (const std::out_of_range&) {
+            // usually shell trying to operate on a window which already closed, just ignore
+            // TODO: MirSurface extends the miral::Window lifetime by holding a shared pointer to
+            // the mir::scene::Surface, meaning it cannot detect when the window has been closed
+            // and thus avoid calling this method.
+        }
+    });
+}
+
+void WrappedWindowManagementPolicy::move(const miral::Window &window, const Point topLeft)
+{
+    miral::WindowSpecification modifications;
+    modifications.top_left() = topLeft;
+    tools.invoke_under_lock([&window, &modifications, this]() {
+        try {
+            tools.modify_window(tools.info_for(window), modifications);
+        } catch (const std::out_of_range&) {
+            // usually shell trying to operate on a window which already closed, just ignore
+            // TODO: see above comment in resize, same issue
+        }
+    });
+}
+
+void WrappedWindowManagementPolicy::raise(const miral::Window &window)
+{
+    tools.invoke_under_lock([&window, this]() {
+        tools.raise_tree(window);
+    });
+}
+
+void WrappedWindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
+{
+    auto &windowInfo = tools.info_for(window);
+    auto extraWinInfo = qtmir::getExtraInfo(windowInfo);
+
+    if (extraWinInfo->state == state)
+        return;
+
+    miral::WindowSpecification modifications;
+    modifications.state() = qtmir::toMirState(state);
+
+    // TODO: What if the window modification fails? Is that possible?
+    //       Assuming here that the state will indeed change
+    extraWinInfo->previousState = extraWinInfo->state;
+    extraWinInfo->state = state;
+
+    if (modifications.state() == windowInfo.state()) {
+        Q_EMIT d->m_windowModel.windowStateChanged(windowInfo, state);
+    } else {
+        tools.invoke_under_lock([&]() {
+            tools.modify_window(windowInfo, modifications);
+        });
+    }
+}
+
+void WrappedWindowManagementPolicy::ask_client_to_close(const miral::Window &window)
+{
+    tools.invoke_under_lock([&window, this]() {
+        tools.ask_client_to_close(window);
+    });
+}
+
+void WrappedWindowManagementPolicy::forceClose(const miral::Window &window)
+{
+    tools.invoke_under_lock([&window, this]() {
+        tools.force_close(window);
+    });
+}
+
+void WrappedWindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
+{
+    d->m_confinementRegions = regions;
+
+    // TODO: update window positions to respect new boundary.
+}
+
+void WrappedWindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
+{
+    d->m_windowMargins[windowType] = margins;
+
+    // TODO: update window positions/sizes to respect new margins.
 }
 
 void WrappedWindowManagementPolicy::for_each_window_in_workspace(const std::shared_ptr<miral::Workspace> &workspace,
@@ -651,59 +645,3 @@ void WrappedWindowManagementPolicy::move_window_to_workspace(const miral::Window
     });
 }
 
-void WrappedWindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
-                                                               std::vector<miral::Window> const& windows)
-{
-    m_wrapper->advise_adding_to_workspace(workspace, windows);
-}
-
-void WrappedWindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
-                                                                   std::vector<miral::Window> const& windows)
-{
-    m_wrapper->advise_removing_from_workspace(workspace, windows);
-}
-
-void WrappedWindowManagementPolicy::activate(const miral::Window &window)
-{
-    m_wrapper->activate(window);
-}
-
-void WrappedWindowManagementPolicy::resize(const miral::Window &window, const Size size)
-{
-    m_wrapper->resize(window, size);
-}
-
-void WrappedWindowManagementPolicy::move(const miral::Window &window, const Point topLeft)
-{
-    m_wrapper->move(window, topLeft);
-}
-
-void WrappedWindowManagementPolicy::raise(const miral::Window &window)
-{
-    m_wrapper->raise(window);
-}
-
-void WrappedWindowManagementPolicy::requestState(const miral::Window &window, const Mir::State state)
-{
-    m_wrapper->requestState(window, state);
-}
-
-void WrappedWindowManagementPolicy::ask_client_to_close(const miral::Window &window)
-{
-    m_wrapper->ask_client_to_close(window);
-}
-
-void WrappedWindowManagementPolicy::forceClose(const miral::Window &window)
-{
-    m_wrapper->forceClose(window);
-}
-
-void WrappedWindowManagementPolicy::set_window_confinement_regions(const QVector<QRect> &regions)
-{
-    m_wrapper->set_window_confinement_regions(regions);
-}
-
-void WrappedWindowManagementPolicy::set_window_margins(MirWindowType windowType, const QMargins &margins)
-{
-    m_wrapper->set_window_margins(windowType, margins);
-}

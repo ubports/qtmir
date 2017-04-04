@@ -74,31 +74,12 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
-    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+    Rectangle confirm_inherited_move(const miral::WindowInfo &windowInfo, Displacement movement) override;
 
-    // From miral::WorkspacePolicy
-    void advise_adding_to_workspace(
-            std::shared_ptr<miral::Workspace> const& workspace,
-            std::vector<miral::Window> const& windows) override;
-
-    void advise_removing_from_workspace(
-        std::shared_ptr<miral::Workspace> const& workspace,
-        std::vector<miral::Window> const& windows) override;
-
-    virtual void activate(const miral::Window &window);
-    virtual void resize(const miral::Window &window, const Size size);
-    virtual void move  (const miral::Window &window, const Point topLeft);
-    virtual void raise(const miral::Window &window);
-    virtual void requestState(const miral::Window &window, const Mir::State state);
-
-    virtual void ask_client_to_close(const miral::Window &window);
-    virtual void forceClose(const miral::Window &window);
-
-    virtual void set_window_confinement_regions(const QVector<QRect> &regions);
-    virtual void set_window_margins(MirWindowType windowType, const QMargins &margins);
-
-    qtmir::WindowModelNotifier& windowNotifier() const;
-    qtmir::AppNotifier& appNotifier() const;
+    void advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                    const std::vector<miral::Window> &windows) override;
+    void advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                        const std::vector<miral::Window> &windows) override;
 
 protected:
     WindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd);
