@@ -53,7 +53,7 @@ TaskController::TaskController(QObject *parent)
 
     auto sessionAuthorizer = static_cast<SessionAuthorizer*>(nativeInterface->nativeResourceForIntegration("SessionAuthorizer"));
     QObject::connect(sessionAuthorizer, &SessionAuthorizer::requestAuthorizationForSession,
-                     this, &TaskController::onAuthorizationForSessionRequested, Qt::BlockingQueuedConnection);
+                     this, &TaskController::authorizationRequestedForSession, Qt::DirectConnection);
 }
 
 TaskController::TaskController(std::shared_ptr<PromptSessionManager> &promptSessionManager, QObject *parent)
@@ -157,11 +157,6 @@ SessionInterface *TaskController::findSession(const mir::scene::Session* session
             return child;
     }
     return nullptr;
-}
-
-void TaskController::onAuthorizationForSessionRequested(const pid_t &pid, bool &authorized)
-{
-    Q_EMIT authorizationRequestedForSession(pid, authorized);
 }
 
 void TaskController::connectToAppNotifier(AppNotifier *appNotifier)
