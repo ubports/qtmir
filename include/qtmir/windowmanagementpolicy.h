@@ -19,7 +19,12 @@
 
 // miral
 #include "miral/canonical_window_manager.h"
+#include <miral/version.h>
+#if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
+#include <miral/set_window_management_policy.h>
+#else
 #include <miral/set_window_managment_policy.h>
+#endif
 
 // Unity API
 #include <unity/shell/application/Mir.h>
