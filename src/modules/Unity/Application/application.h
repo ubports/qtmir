@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Canonical, Ltd.
+ * Copyright (C) 2013-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -24,6 +24,7 @@
 #include <QtCore/QtCore>
 #include <QImage>
 #include <QSharedPointer>
+#include <QVector>
 
 // Unity API
 #include <unity/shell/application/ApplicationInfoInterface.h>
@@ -108,9 +109,11 @@ public:
     void setProcessState(ProcessState value);
 
     QStringList arguments() const { return m_arguments; }
+    void setArguments(const QStringList &arguments);
 
-    SessionInterface* session() const;
-    void setSession(SessionInterface *session);
+    void addSession(SessionInterface *session);
+    void removeSession(SessionInterface *session);
+    QVector<SessionInterface*> sessions() const;
 
     bool isValid() const;
     bool fullscreen() const;
@@ -122,13 +125,13 @@ public:
 
     void requestFocus();
 
+    void terminate();
+
     // for tests
     void setStopTimer(AbstractTimer *timer);
     AbstractTimer *stopTimer() const { return m_stopTimer; }
-
 Q_SIGNALS:
     void fullscreenChanged(bool fullscreen);
-    void sessionChanged(SessionInterface *session);
 
     void startProcessRequested();
     void stopProcessRequested();
@@ -138,7 +141,7 @@ Q_SIGNALS:
     void closing();
 
 private Q_SLOTS:
-    void onSessionStateChanged(SessionInterface::State sessionState);
+    void onSessionStateChanged();
 
     void respawn();
 
@@ -146,7 +149,6 @@ private:
 
     void acquireWakelock() const;
     void releaseWakelock() const;
-    void setArguments(const QStringList &arguments);
     void setInternalState(InternalState state);
     void wipeQMLCache();
     void suspend();
@@ -159,6 +161,7 @@ private:
     void applyRequestedSuspended();
     void applyClosing();
     void onSessionStopped();
+    SessionInterface::State combinedSessionState() const;
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;
@@ -167,7 +170,7 @@ private:
     QStringList m_arguments;
     Qt::ScreenOrientations m_supportedOrientations;
     bool m_rotatesWindowContents;
-    SessionInterface *m_session;
+    QVector<SessionInterface*> m_sessions;
     RequestedState m_requestedState;
     ProcessState m_processState;
     AbstractTimer *m_stopTimer;
@@ -175,12 +178,8 @@ private:
     QSize m_initialSurfaceSize;
     bool m_closing{false};
 
-    ProxySurfaceListModel *m_proxySurfaceList;
+    mutable MirSurfaceListModel m_surfaceList;
     ProxySurfaceListModel *m_proxyPromptSurfaceList;
-
-    friend class ApplicationManager;
-    friend class SessionManager;
-    friend class Session;
 };
 
 } // namespace qtmir

@@ -28,7 +28,6 @@
 #include "settings.h"
 
 // mirserver
-#include "initialsurfacesizes.h"
 #include "nativeinterface.h"
 #include "logging.h"
 
@@ -428,7 +427,6 @@ void ApplicationManager::onProcessFailed(const QString &appId, TaskController::E
 
     Q_UNUSED(error); // FIXME(greyback) upstart reports app that fully started up & crashes as failing during startup??
     application->setProcessState(Application::ProcessFailed);
-    setApplicationPid(application, 0);
 }
 
 void ApplicationManager::onProcessStopped(const QString &appId)
@@ -453,7 +451,6 @@ void ApplicationManager::onProcessStopped(const QString &appId)
     // we don't want to override what onProcessFailed already set.
     if (application->processState() != Application::ProcessFailed) {
         application->setProcessState(Application::ProcessStopped);
-        setApplicationPid(application, 0);
     }
 }
 
@@ -530,8 +527,8 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         if (app->state() == Application::Starting) {
             tracepoint(qtmir, appIdHasProcessId_start);
             if (m_taskController->appIdHasProcessId(app->appId(), pid)) {
-                setApplicationPid(app, pid);
                 authorized = true;
+                m_authorizedPids.insertMulti(pid, app->appId());
                 tracepoint(qtmir, appIdHasProcessId_end, 1); //found
                 return;
             }
@@ -584,17 +581,18 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     // some naughty applications use a script to launch the actual application. Check for the
     // case where shell actually launched the script.
     Application *application = findApplicationMutexHeld(appInfo->appId());
-    if (application && application->state() == Application::Starting) {
+    if (application) {
         qCDebug(QTMIR_APPLICATIONS) << "Process with pid" << pid << "appeared, attaching to existing entry"
                                     << "in application list with appId:" << application->appId();
-        setApplicationPid(application, pid);
         authorized = true;
+        m_authorizedPids.insertMulti(pid, appInfo->appId());
         return;
     }
 
     const QStringList arguments(info->asStringList());
     queuedAddApp(appInfo, arguments, pid);
     authorized = true;
+    m_authorizedPids.insertMulti(pid, appInfo->appId());
 }
 
 
@@ -606,26 +604,22 @@ unityapi::ApplicationInfoInterface *ApplicationManager::findApplicationWithSurfa
     auto qtmirSurface = static_cast<qtmir::MirSurfaceInterface*>(surface);
 
     QMutexLocker locker(&m_mutex);
-    return findApplicationWithPid(miral::pid_of(qtmirSurface->session()->session()));
+    return findApplicationWithSession(qtmirSurface->session()->session());
 }
 
-Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session)
+Application* ApplicationManager::findApplicationWithSession(const std::shared_ptr<ms::Session> &session) const
 {
     if (!session)
         return nullptr;
-    return findApplicationWithPid(miral::pid_of(session));
-}
 
-Application* ApplicationManager::findApplicationWithPid(const pid_t pid) const
-{
-    if (pid <= 0)
-        return nullptr;
-
-    for (Application *app : m_applications) {
-        if (m_applicationsPid.value(app) == pid) {
-            return app;
+    for (auto *application : m_applications) {
+        for (auto *qmlSession : application->sessions()) {
+            if (qmlSession->session() == session) {
+                return application;
+            }
         }
     }
+
     return nullptr;
 }
 
@@ -641,7 +635,6 @@ void ApplicationManager::addApp(const QSharedPointer<qtmir::ApplicationInfo> &ap
         appInfo,
         arguments,
         this);
-    setApplicationPid(application, pid);
     add(application);
 }
 
@@ -656,21 +649,7 @@ void ApplicationManager::add(Application* application)
     DEBUG_MSG << "(appId=" << application->appId() << ")";
 
     connect(application, &QObject::destroyed, this, [this, application] {
-        const pid_t pid = m_applicationsPid.value(application);
-        if (pid != 0) {
-            InitialSurfaceSizes::remove(pid);
-            m_applicationsPid.remove(application);
-        }
         m_closingApplications.removeAll(application);
-    });
-    connect(application, &Application::initialSurfaceSizeChanged, this, [this, application] {
-        const pid_t pid = m_applicationsPid.value(application);
-        if (pid != 0) {
-            const QSize size = application->initialSurfaceSize();
-            if (size.isValid()) {
-                InitialSurfaceSizes::set(pid, size);
-            }
-        }
     });
 
     Q_ASSERT(!m_modelUnderChange);
@@ -710,13 +689,10 @@ void ApplicationManager::add(Application* application)
 
     connect(application, &Application::stopProcessRequested, this, [=]() {
         if (!m_taskController->stop(appId)) {
-            const pid_t pid = m_applicationsPid.value(application);
-            if (pid > 0) {
-                qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
-                        << "Sending SIGTERM to process:" << appId;
-                kill(pid, SIGTERM);
-                application->setProcessState(Application::ProcessStopped);
-            }
+            qWarning() << "FAILED to ask Upstart to stop application with appId" << appId
+                    << "Sending SIGTERM to process:" << appId;
+            application->terminate();
+            application->setProcessState(Application::ProcessStopped);
         }
     });
 
@@ -808,27 +784,22 @@ Application *ApplicationManager::findClosingApplication(const QString &inputAppI
     return nullptr;
 }
 
-void ApplicationManager::setApplicationPid(Application *app, pid_t pid)
-{
-    const pid_t oldPid = m_applicationsPid.value(app);
-    if (oldPid != 0) {
-        InitialSurfaceSizes::remove(oldPid);
-    }
-
-    m_applicationsPid.insert(app, pid);
-
-    if (app->initialSurfaceSize().isValid() && pid != 0) {
-        InitialSurfaceSizes::set(pid, app->initialSurfaceSize());
-    }
-}
-
 void ApplicationManager::onSessionStarting(SessionInterface *qmlSession)
 {
     QMutexLocker locker(&m_mutex);
 
-    Application* application = findApplicationWithSession(qmlSession->session());
-    if (application && application->state() != Application::Running) {
-        application->setSession(qmlSession);
+    Application* application = nullptr;
+    {
+        auto iter = m_authorizedPids.find(miral::pid_of(qmlSession->session()));
+        if (iter != m_authorizedPids.end()) {
+            QString appId = iter.value();
+            application = findApplication(appId);
+            m_authorizedPids.erase(iter);
+        }
+    }
+
+    if (application) {
+        application->addSession(qmlSession);
     }
 }
 

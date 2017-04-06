@@ -110,10 +110,9 @@ Q_SIGNALS:
 
 private:
     // All calls to private functions happen with the mutex held
-    qtmir::Application* findApplicationWithPid(const pid_t pid) const;
     Application* findApplicationMutexHeld(const QString &inputAppId) const;
 
-    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session);
+    Application* findApplicationWithSession(const std::shared_ptr<mir::scene::Session> &session) const;
     void setFocused(Application *application);
     void add(Application *application);
     void remove(Application* application);
@@ -125,10 +124,7 @@ private:
     Application* findApplicationWithPromptSession(const mir::scene::PromptSession* promptSession);
     Application *findClosingApplication(const QString &inputAppId) const;
 
-    void setApplicationPid(Application *application, pid_t pid);
-
     QList<Application*> m_applications;
-    QHash<Application*, pid_t> m_applicationsPid;
     DBusFocusInfo *m_dbusFocusInfo;
     QSharedPointer<TaskController> m_taskController;
     QSharedPointer<ProcInfo> m_procInfo;
@@ -139,8 +135,8 @@ private:
     bool m_modelUnderChange{false};
     static ApplicationManager* the_application_manager;
 
-    friend class Application;
-    friend class DBusWindowStack;
+    QHash<pid_t, QString> m_authorizedPids;
+
     mutable QMutex m_mutex;
 };
 

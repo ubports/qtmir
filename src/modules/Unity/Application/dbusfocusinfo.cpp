@@ -75,18 +75,20 @@ QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
 {
     Q_FOREACH (Application* application, m_applications) {
-        auto session = application->session();
-        if (pidSet.contains(session->pid())) {
-            return session;
-        }
-        SessionInterface *chosenChildSession = nullptr;
-        session->foreachChildSession([&](SessionInterface* childSession) {
-            if (pidSet.contains(childSession->pid())) {
-                chosenChildSession = childSession;
+        QVector<SessionInterface*> sessions = application->sessions();
+        for (auto session : sessions) {
+            if (pidSet.contains(session->pid())) {
+                return session;
             }
-        });
-        if (chosenChildSession) {
-            return chosenChildSession;
+            SessionInterface *chosenChildSession = nullptr;
+            session->foreachChildSession([&](SessionInterface* childSession) {
+                if (pidSet.contains(childSession->pid())) {
+                    chosenChildSession = childSession;
+                }
+            });
+            if (chosenChildSession) {
+                return chosenChildSession;
+            }
         }
     }
     return nullptr;
@@ -111,21 +113,22 @@ bool DBusFocusInfo::isSurfaceFocused(const QString &serializedId)
 MirSurfaceInterface *DBusFocusInfo::findQmlSurface(const QString &serializedId)
 {
     for (Application* application : m_applications) {
-        auto session = application->session();
-        if (session) {
-            auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
-            for (int i = 0; i < surfaceList->count(); ++i) {
-                auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
-                if (qmlSurface->persistentId() == serializedId) {
-                    return qmlSurface;
+        for (SessionInterface *session : application->sessions()) {
+            if (session) {
+                auto surfaceList = static_cast<MirSurfaceListModel*>(session->surfaceList());
+                for (int i = 0; i < surfaceList->count(); ++i) {
+                    auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+                    if (qmlSurface->persistentId() == serializedId) {
+                        return qmlSurface;
+                    }
                 }
-            }
 
-            surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
-            for (int i = 0; i < surfaceList->count(); ++i) {
-                auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
-                if (qmlSurface->persistentId() == serializedId) {
-                    return qmlSurface;
+                surfaceList = static_cast<MirSurfaceListModel*>(session->promptSurfaceList());
+                for (int i = 0; i < surfaceList->count(); ++i) {
+                    auto qmlSurface = static_cast<MirSurfaceInterface*>(surfaceList->get(i));
+                    if (qmlSurface->persistentId() == serializedId) {
+                        return qmlSurface;
+                    }
                 }
             }
         }

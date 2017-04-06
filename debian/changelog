@@ -1,3 +1,15 @@
+qtmir (0.5.1+17.04.20170404-0ubuntu1) zesty; urgency=medium
+
+  [ Albert Astals Cid ]
+  * Remove m_tools member
+  * EventInfo::store: Store an empty cookie for mir events without
+    cookie
+
+  [ Daniel d'Andrada ]
+  * Support multiple sessions per Application (LP: #1675448)
+
+ -- Lukáš Tinkl <lukas.tinkl@canonical.com>  Tue, 04 Apr 2017 00:47:22 +0000
+
 qtmir (0.5.1+17.04.20170328-0ubuntu1) zesty; urgency=medium
 
   [ Alan Griffiths ]
