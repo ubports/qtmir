@@ -1,9 +1,11 @@
-qtmir (0.6.0) UNRELEASED; urgency=medium
+qtmir (0.6.0ubuntu1) UNRELEASED; urgency=medium
 
   [ Nick Dedekind ]
   * Introduced QtMir API
+  * Support for multiple compositors per MirSurface
+  * Support multiple screen windows & cursors with qml instantiation
 
- -- Nick Dedekind <nick.dedekind@canonical.com>  Fri, 10 Feb 2017 09:09:09 +0000
+ -- Nick Dedekind <nick.dedekind@canonical.com>  Thu, 06 Apr 2017 09:45:53 +0100
 
 qtmir (0.5.1+17.04.20170328-0ubuntu1) zesty; urgency=medium
 
