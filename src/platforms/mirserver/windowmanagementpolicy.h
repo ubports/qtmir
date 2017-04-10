@@ -28,16 +28,13 @@
 
 using namespace mir::geometry;
 
-class ScreensModel;
-
 class WindowManagementPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
     WindowManagementPolicy(const miral::WindowManagerTools &tools,
                            qtmir::WindowModelNotifier &windowModel,
                            qtmir::WindowController &windowController,
-                           qtmir::AppNotifier &appNotifier,
-                           const QSharedPointer<ScreensModel> screensModel);
+                           qtmir::AppNotifier &appNotifier);
 
     // From WindowManagementPolicy
     auto place_new_window(const miral::ApplicationInfo &app_info,
@@ -95,7 +92,7 @@ private:
 
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
-    const QScopedPointer<QtEventFeeder> m_eventFeeder;
+    QtEventFeeder m_eventFeeder;
     QVector<QRect> m_confinementRegions;
     QMargins m_windowMargins[mir_window_types];
 };

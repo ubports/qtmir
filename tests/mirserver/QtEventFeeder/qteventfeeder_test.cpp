@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -79,11 +79,10 @@ protected:
 void QtEventFeederTest::SetUp()
 {
     mockWindowSystem = new MockQtWindowSystem;
-    auto screens = QSharedPointer<ScreensModel>();
 
     ASSERT_TRUE(mockWindowSystem->m_devices.count() == 0);
 
-    qtEventFeeder = new QtEventFeeder(screens, mockWindowSystem);
+    qtEventFeeder = new QtEventFeeder(mockWindowSystem);
 
     ASSERT_TRUE(mockWindowSystem->m_devices.count() == 1);
 
