@@ -21,15 +21,23 @@
 #include <QPoint>
 
 // Mir
-#include <mir/graphics/display_configuration.h>
+#include "mir/int_wrapper.h"
 
 // std
 #include <memory>
 
 namespace mir {
-    namespace graphics { class Display; }
     namespace compositor { class DisplayListener; }
+
+    namespace graphics {
+        namespace detail { struct GraphicsConfCardIdTag; struct GraphicsConfOutputIdTag; }
+    typedef IntWrapper <detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
+    typedef IntWrapper <detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
+    class Display;
+    class DisplayConfigurationOutput;
+    }
 }
+
 class Screen;
 class QtCompositor;
 

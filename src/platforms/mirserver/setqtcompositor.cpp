@@ -21,10 +21,35 @@
 // local
 #include "qtcompositor.h"
 #include "screensmodel.h"
+#include "logging.h"
 
 // mir
+#include <mir/compositor/compositor.h>
 #include <mir/server.h>
 #include <mir/shell/shell.h>
+
+namespace
+{
+struct QtCompositorImpl : QtCompositor, mir::compositor::Compositor
+{
+    void start();
+    void stop();
+};
+
+void QtCompositorImpl::start()
+{
+    qCDebug(QTMIR_SCREENS) << "QtCompositor::start";
+
+    Q_EMIT starting(); // blocks
+}
+
+void QtCompositorImpl::stop()
+{
+    qCDebug(QTMIR_SCREENS) << "QtCompositor::stop";
+
+    Q_EMIT stopping(); // blocks
+}
+}
 
 qtmir::SetQtCompositor::SetQtCompositor(QSharedPointer<ScreensModel> const& screensModel) :
     m_screensModel{screensModel}
@@ -35,7 +60,7 @@ void qtmir::SetQtCompositor::operator()(mir::Server& server)
 {
     server.override_the_compositor([this]
     {
-        auto result = std::make_shared<QtCompositor>();
+        auto result = std::make_shared<QtCompositorImpl>();
         m_compositor = result;
         return result;
     });

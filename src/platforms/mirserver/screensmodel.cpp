@@ -26,6 +26,7 @@
 // Mir
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
+#include <mir/graphics/display_configuration.h>
 #include <mir/compositor/display_listener.h>
 
 // Qt
