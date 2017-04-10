@@ -269,7 +269,40 @@ const char *mirKeyboardActionToString(MirKeyboardAction keyboardAction)
         break;
     }
 }
+
+QString mirInputEventModifiersToString(MirInputEventModifiers modifiers)
+{
+    QString string;
+
+    if (modifiers != mir_input_event_modifier_none) {
+        #define PRINT_MODIFIER(NAME) \
+        if (modifiers & mir_input_event_modifier_##NAME) { \
+            if (string.size() > 0) { string.append(","); } \
+            string.append(#NAME); \
+        }
+        PRINT_MODIFIER(alt)
+        PRINT_MODIFIER(alt_left)
+        PRINT_MODIFIER(alt_right)
+        PRINT_MODIFIER(shift)
+        PRINT_MODIFIER(shift_left)
+        PRINT_MODIFIER(shift_right)
+        PRINT_MODIFIER(sym)
+        PRINT_MODIFIER(function)
+        PRINT_MODIFIER(ctrl)
+        PRINT_MODIFIER(ctrl_left)
+        PRINT_MODIFIER(ctrl_right)
+        PRINT_MODIFIER(meta)
+        PRINT_MODIFIER(meta_left)
+        PRINT_MODIFIER(meta_right)
+        PRINT_MODIFIER(caps_lock)
+        PRINT_MODIFIER(num_lock)
+        PRINT_MODIFIER(scroll_lock)
+        #undef PRINT_MODIFIER
+    }
+
+    return string;
 }
+} // anonymous namespace
 
 QString mirKeyboardEventToString(MirKeyboardEvent const* event)
 {
@@ -277,9 +310,12 @@ QString mirKeyboardEventToString(MirKeyboardEvent const* event)
 
     xkb_keysym_t keyCode = mir_keyboard_event_key_code(event);
 
-    return QStringLiteral("MirKeyboardEvent(action=%1,key_code=0x%2)")
+    MirInputEventModifiers modifiers = mir_keyboard_event_modifiers(event);
+
+    return QStringLiteral("MirKeyboardEvent(action=%1,key_code=0x%2,modifiers=[%3])")
         .arg(mirKeyboardActionToString(keyboardAction))
-        .arg(keyCode, 4, 16, QLatin1Char('0'));
+        .arg(keyCode, 4, 16, QLatin1Char('0'))
+        .arg(mirInputEventModifiersToString(modifiers));
 }
 
 const char *qtCursorShapeToStr(Qt::CursorShape shape)
