@@ -1,3 +1,9 @@
+qtmir (0.5.1+17.04.20170410-0ubports2) xenial; urgency=medium
+
+  * Backport to xenial
+
+ -- Marius gripsgard <mariogrip@ubports.com>  Mon, 10 Jul 2017 00:30:26 +0200
+
 qtmir (0.5.1+17.04.20170410-0ubuntu1) zesty; urgency=medium
 
   [ Alan Griffiths ]
