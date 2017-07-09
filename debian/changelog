@@ -1,4 +1,4 @@
-qtmir (0.5.1+17.04.20170410-0ubports2) xenial; urgency=medium
+qtmir (0.5.2+ubports1) xenial; urgency=medium
 
   * Backport to xenial
 
