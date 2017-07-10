@@ -17,24 +17,44 @@ export GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 cd ..
 /usr/bin/generate-git-snapshot
 '''
+        stash(name: 'source', includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt')
       }
     }
     stage('Build binary - armhf') {
       steps {
-        sh '''export architecture="armhf"
+        node(label: 'xenial-armhf') {
+          unstash 'source'
+          sh '''export architecture="armhf"
 export REPOS="xenial"
+export BUILD_ONLY=true
 /usr/bin/generate-reprepro-codename "${REPOS}"
 /usr/bin/build-and-provide-package'''
+          stash(includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt', name: 'build')
+          cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true, deleteDirs: true)
+        }
+
       }
     }
     stage('Results') {
       steps {
-        archiveArtifacts '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo'
+        unstash 'build'
+        archiveArtifacts(artifacts: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo', fingerprint: true, onlyIfSuccessful: true)
+        sh '''export architecture="armhf"
+export REPOS="xenial"
+mkdir -p binaries
+
+for suffix in gz bz2 xz deb dsc changes ; do
+  mv *.${suffix} binaries/ || true
+done
+
+export BASE_PATH="binaries/"
+export PROVIDE_ONLY=true
+/usr/bin/build-and-provide-package'''
       }
     }
     stage('Cleanup') {
       steps {
-        cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true)
+        cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true, deleteDirs: true)
       }
     }
   }
