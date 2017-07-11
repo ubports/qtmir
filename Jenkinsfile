@@ -6,6 +6,7 @@ pipeline {
         dir(path: 'source') {
           git 'https://github.com/ubports/qtmir.git'
         }
+        
       }
     }
     stage('Build source') {
@@ -22,7 +23,7 @@ cd ..
     }
     stage('Build binary - armhf') {
       steps {
-        node(label: 'xenial-armhf') {
+        node(label: 'xenial-cpu') {
           unstash 'source'
           sh '''export architecture="armhf"
 export REPOS="xenial"
@@ -32,7 +33,7 @@ export BUILD_ONLY=true
           stash(includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt', name: 'build')
           cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true, deleteDirs: true)
         }
-
+        
       }
     }
     stage('Results') {
