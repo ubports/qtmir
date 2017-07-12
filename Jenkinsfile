@@ -29,6 +29,7 @@ cd ..
 export distribution="xenial"
 export REPOS="xenial"
 export BUILD_ONLY=true
+export DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck"
 /usr/bin/generate-reprepro-codename "${REPOS}"
 /usr/bin/build-and-provide-package'''
           stash(includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt', name: 'build')
