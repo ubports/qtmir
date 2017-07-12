@@ -26,6 +26,7 @@ cd ..
         node(label: 'xenial-arm64') {
           unstash 'source'
           sh '''export architecture="armhf"
+export distribution="xenial"
 export REPOS="xenial"
 export BUILD_ONLY=true
 /usr/bin/generate-reprepro-codename "${REPOS}"
