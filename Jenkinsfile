@@ -12,13 +12,9 @@ pipeline {
     stage('Build source') {
       steps {
         sh 'rm -f ./* || true'
-        sh '''cd source
-export GIT_COMMIT=$(git rev-parse HEAD)
-export GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-cd ..
-/usr/bin/generate-git-snapshot
-'''
+        sh '/usr/bin/build-source.sh'
         stash(name: 'source', includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt')
+        cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true, deleteDirs: true)
       }
     }
     stage('Build binary - armhf') {
@@ -26,11 +22,7 @@ cd ..
         node(label: 'xenial-arm64') {
           unstash 'source'
           sh '''export architecture="armhf"
-export distribution="xenial"
-export REPOS="xenial"
 export BUILD_ONLY=true
-export DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck"
-/usr/bin/generate-reprepro-codename "${REPOS}"
 /usr/bin/build-and-provide-package'''
           stash(includes: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo,lintian.txt', name: 'build')
           cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true, deleteDirs: true)
@@ -43,16 +35,7 @@ export DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck"
         unstash 'build'
         archiveArtifacts(artifacts: '*.gz,*.bz2,*.xz,*.deb,*.dsc,*.changes,*.buildinfo', fingerprint: true, onlyIfSuccessful: true)
         sh '''export architecture="armhf"
-export REPOS="xenial"
-mkdir -p binaries
-
-for suffix in gz bz2 xz deb dsc changes ; do
-  mv *.${suffix} binaries/ || true
-done
-
-export BASE_PATH="binaries/"
-export PROVIDE_ONLY=true
-/usr/bin/build-and-provide-package'''
+/usr/bin/build-repo.sh'''
       }
     }
     stage('Cleanup') {
