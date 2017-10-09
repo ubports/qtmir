@@ -27,7 +27,7 @@
 class QMirServer;
 
 // mir
-namespace qtmir { class PromptSessionManager; }
+namespace qtmir { class PromptSessionManager; class Seats; }
 namespace mir { namespace shell { class PersistentSurfaceStore; }}
 
 class NativeInterface : public QPlatformNativeInterface
@@ -45,6 +45,7 @@ public:
 
     std::shared_ptr<qtmir::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> thePersistentSurfaceStore() const;
+    std::shared_ptr<qtmir::Seats> theSeats() const;
 
 private:
     QMirServer *m_qMirServer;

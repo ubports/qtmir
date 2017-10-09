@@ -1,3 +1,9 @@
+qtmir (0.5.3) UNRELEASED; urgency=medium
+
+  * Another no changes rebuild for Mir 1.0
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 27 Sep 2017 18:10:17 -0400
+
 qtmir (0.5.2) UNRELEASED; urgency=medium
 
   * No changes rebuild for Mir 1.0
