@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wall -fno-strict-alias
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 
-include(EnableCoverageReport)
+# include(EnableCoverageReport)
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
 # Usage:
