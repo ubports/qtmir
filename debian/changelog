@@ -1,3 +1,9 @@
+qtmir (0.5.1+ubports) xenial; urgency=medium
+
+  * Imported to UBports
+
+ -- UBports auto importer <infra@ubports.com>  Fri, 13 Oct 2017 03:33:22 +0200
+
 qtmir (0.5.0+17.04.20161123.3-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]
