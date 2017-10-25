@@ -220,7 +220,6 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setHeight(static_cast<float>(screen.physical_size_mm.height.as_int()));
 
     // Screen capabilities
-    m_modes = screen.modes;
     m_currentModeIndex = screen.current_mode_index;
     m_preferredModeIndex = screen.preferred_mode_index;
     m_pixelFormats = screen.pixel_formats;
