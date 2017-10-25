@@ -16,9 +16,17 @@
 
 #include "mirserverintegration.h"
 
+#include <QtGlobal>
+
+#if QT_VERSION >= 0x050800
+#include <QtFontDatabaseSupport/private/qgenericunixfontdatabase_p.h>
+#include <QtEventDispatcherSupport/private/qgenericunixeventdispatcher_p.h>
+#include <QtServiceSupport/private/qgenericunixservices_p.h>
+#else
 #include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
 #include <QtPlatformSupport/private/qgenericunixservices_p.h>
+#endif
 
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformaccessibility.h>
