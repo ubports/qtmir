@@ -24,7 +24,13 @@
 
 #include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
+
+#if QT_VERSION >= 0x050800
+#include <QtEglSupport/private/qeglconvenience_p.h>
+#else
 #include <QtPlatformSupport/private/qeglconvenience_p.h>
+#endif
+
 #include <QtGui/private/qopenglcontext_p.h>
 
 // Mir

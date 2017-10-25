@@ -17,7 +17,13 @@
 #ifndef UBUNTU_THEME_H
 #define UBUNTU_THEME_H
 
+#include <QtGlobal>
+
+#if QT_VERSION >= 0x050800
+#include <QtThemeSupport/private/qgenericunixthemes_p.h>
+#else
 #include <QtPlatformSupport/private/qgenericunixthemes_p.h>
+#endif
 
 class UbuntuTheme : public QGenericUnixTheme
 {

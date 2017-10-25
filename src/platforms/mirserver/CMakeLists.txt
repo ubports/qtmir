@@ -4,7 +4,6 @@
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
-add_definitions(-DQ_FONTCONFIGDATABASE)
 
 if (QGL_DEBUG)
     message(STATUS "Qt's OpenGL debug logging enabled.")
@@ -13,15 +12,24 @@ endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
-# Dirty hack: The private QtPlatformSupport include dirs are not made available via
-# a cmake module or the pkgconfig file (which only exposes the necessary linker flags)
-# So we generate the paths ourselves from the Qt5Gui private dirs!
-set(QT5_PLATFORMSUPPORT_INCLUDE_DIRS)
-foreach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
-  set(newitem "")
-   string(REGEX REPLACE "QtGui" "QtPlatformSupport" newitem ${item})
-   list(APPEND QT5_PLATFORMSUPPORT_INCLUDE_DIRS ${newitem})
-endforeach(item ${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+if(Qt5Core_VERSION VERSION_LESS "5.8.0")
+    add_definitions(-DQ_FONTCONFIGDATABASE)
+    find_package(Qt5PlatformSupport REQUIRED)
+    set(QT5PLATFORMSUPPORT_LIBS Qt5PlatformSupport::Qt5PlatformSupport)
+else()
+    find_package(Qt5FontDatabaseSupport REQUIRED)
+    find_package(Qt5ThemeSupport REQUIRED)
+    find_package(Qt5EventDispatcherSupport REQUIRED)
+    find_package(Qt5EglSupport REQUIRED)
+    find_package(Qt5ServiceSupport REQUIRED)
+    set(QT5PLATFORMSUPPORT_LIBS
+        Qt5FontDatabaseSupport::Qt5FontDatabaseSupport
+        Qt5ThemeSupport::Qt5ThemeSupport
+        Qt5EventDispatcherSupport::Qt5EventDispatcherSupport
+        Qt5EglSupport::Qt5EglSupport
+        Qt5ServiceSupport::Qt5ServiceSupport
+    )
+endif()
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
@@ -40,7 +48,7 @@ include_directories(
 
     ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-    ${QT5_PLATFORMSUPPORT_INCLUDE_DIRS}
+
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
@@ -99,7 +107,7 @@ add_library(qpa-mirserver SHARED
 
 target_link_libraries(
     qpa-mirserver
-    Qt5PlatformSupport
+    ${QT5PLATFORMSUPPORT_LIBS}
 
     ${MIRSERVER_LDFLAGS}
     ${MIRCLIENT_LDFLAGS}
