@@ -37,7 +37,7 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
 endif()
 
 
-find_package(CoverageReport)
+#find_package(CoverageReport)
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
 # Usage:
