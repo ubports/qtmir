@@ -1,3 +1,9 @@
+qtmir (0.5.2+ubports1) xenial; urgency=medium
+
+  * Import to ubports 
+
+ -- Marius Gripsgard <marius@ubports.com>  Thu, 28 Dec 2017 04:30:55 +0100
+
 qtmir (0.5.1+17.04.20170404-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]
