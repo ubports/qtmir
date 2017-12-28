@@ -48,6 +48,9 @@ include_directories(
 
     ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+if(Qt5Core_VERSION VERSION_LESS "5.8.0")
+    ${Qt5ThemeSupport_INCLUDE_DIRS}
+endif()
 
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 
