@@ -72,9 +72,11 @@ struct MockSession : public Session
 
     void send_error(ClientVisibleError const&) override;
 
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(0, 28, 0)
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override { return {}; }
     graphics::BufferID create_buffer(geometry::Size, uint32_t, uint32_t) override {return {}; }
+#endif
 #endif
 
 private:

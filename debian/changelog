@@ -1,8 +1,20 @@
-qtmir (0.5.2+ubports1) xenial; urgency=medium
+qtmir (0.5.3+ubports1) xenial; urgency=medium
 
   * Import to ubports 
 
  -- Marius Gripsgard <marius@ubports.com>  Thu, 28 Dec 2017 04:30:55 +0100
+
+qtmir (0.5.3) UNRELEASED; urgency=medium
+
+  * Another no changes rebuild for Mir 1.0
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 27 Sep 2017 18:10:17 -0400
+
+qtmir (0.5.2) UNRELEASED; urgency=medium
+
+  * No changes rebuild for Mir 1.0
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 27 Sep 2017 18:10:17 -0400
 
 qtmir (0.5.1+17.04.20170404-0ubuntu1) zesty; urgency=medium
 

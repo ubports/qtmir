@@ -53,6 +53,9 @@ const mg::DisplayConfigurationOutput fakeOutput1
     {},
     mir_output_gamma_unsupported,
     {}
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+    ,{}
+#endif
 };
 
 const mg::DisplayConfigurationOutput fakeOutput2
@@ -83,6 +86,9 @@ const mg::DisplayConfigurationOutput fakeOutput2
     {},
     mir_output_gamma_unsupported,
     {}
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+    ,{}
+#endif
 };
 
 #endif // FAKE_DISPLAYCONFIGURATIONOUTPUT_H
