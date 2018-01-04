@@ -68,3 +68,15 @@ void miral::GLBuffer::bind_to_texture()
         throw std::logic_error("Buffer does not support GL rendering");
     }
 }
+
+void miral::GLBuffer::secure_for_render()
+{
+    if (auto const texture_source = dynamic_cast<TextureSource*>(wrapped->native_buffer_base()))
+    {
+        texture_source->secure_for_render();
+    }
+    else
+    {
+        throw std::logic_error("Buffer does not support GL rendering");
+    }
+}
