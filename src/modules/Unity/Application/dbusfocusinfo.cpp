@@ -17,7 +17,6 @@
 #include "dbusfocusinfo.h"
 
 // local
-#include "cgmanager.h"
 #include "mirsurfacelistmodel.h"
 #include "mirsurfaceinterface.h"
 #include "session_interface.h"
@@ -35,8 +34,6 @@ DBusFocusInfo::DBusFocusInfo(const QList<Application*> &applications)
 {
     QDBusConnection::sessionBus().registerService("com.canonical.Unity.FocusInfo");
     QDBusConnection::sessionBus().registerObject("/com/canonical/Unity/FocusInfo", this, QDBusConnection::ExportScriptableSlots);
-
-    m_cgManager = new CGManager(this);
 }
 
 bool DBusFocusInfo::isPidFocused(unsigned int pid)
@@ -54,22 +51,9 @@ bool DBusFocusInfo::isPidFocused(unsigned int pid)
 
 QSet<pid_t> DBusFocusInfo::fetchAssociatedPids(pid_t pid)
 {
-    QString cgroup = m_cgManager->getCGroupOfPid("freezer", pid);
-
-    // If a cgroup has a format like this:
-    // /user.slice/user-32011.slice/session-c3.scope/upstart/application-legacy-puritine_gedit_0.0-
-    // All PIds in it are associated with a single application.
-    if (cgroup.split("/").contains("upstart")) {
-        QSet<pid_t> pidSet = m_cgManager->getTasks("freezer", cgroup);
-        qCDebug(QTMIR_DBUS) << "DBusFocusInfo: pid" << pid << "is in cgroup" << cgroup << "along with:" << pidSet;
-        if (pidSet.isEmpty()) {
-            pidSet << pid;
-        }
-        return pidSet;
-    } else {
-        qCDebug(QTMIR_DBUS) << "DBusFocusInfo: pid" << pid << "is in cgroup" << cgroup << "which is not app-specific";
-        return QSet<pid_t>({pid});
-    }
+    // TODO port me to systemd ubuntu-app-launch
+    qCDebug(QTMIR_DBUS) << "DBusFocusInfo: pid" << pid << "unable to determine cgroup, assuming is not app-specific.";
+    return QSet<pid_t>({pid});
 }
 
 SessionInterface* DBusFocusInfo::findSessionWithPid(const QSet<pid_t> &pidSet)
