@@ -152,6 +152,11 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
 {
     setMirDisplayConfiguration(screen, false);
 
+    qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen - identifier is:" << m_orientationSensor->identifier();
+
+    // FIXME: Forcing use of qtubuntu-sensors!
+    m_orientationSensor->setIdentifier("core.orientation");
+
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
         ? Qt::LandscapeOrientation : Qt::PortraitOrientation;
