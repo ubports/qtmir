@@ -78,6 +78,7 @@ qint64 msecsSinceReference()
 
 } // namespace {
 
+
 class MirSurface::SurfaceObserverImpl : public SurfaceObserver, public mir::scene::SurfaceObserver
 {
 public:
@@ -86,7 +87,7 @@ public:
 
     void setListener(QObject *listener);
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 30, 0)
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
     void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override;
     void resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
     void moved_to(mir::scene::Surface const*, mir::geometry::Point const&) override {}
@@ -105,15 +106,6 @@ public:
                         std::string const&, std::string const&) override {}
     void renamed(mir::scene::Surface const*, char const * name) override;
     void cursor_image_removed(mir::scene::Surface const*) override;
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
-    void placed_relative(mir::scene::Surface const*, mir::geometry::Rectangle const& placement) override;
-#endif
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
-    void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
-    void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
-#endif
 #else
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
@@ -133,15 +125,20 @@ public:
                         std::string const&, std::string const&) override {}
     void renamed(char const * name) override;
     void cursor_image_removed() override;
+#endif
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+    void placed_relative(mir::scene::Surface const*, mir::geometry::Rectangle const& placement) override;
+#elif MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
     void placed_relative(mir::geometry::Rectangle const& placement) override;
 #endif
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+    void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
+    void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
+#elif MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void input_consumed(MirEvent const* event) override;
     void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
-#endif
 #endif
 
 private:
@@ -1227,8 +1224,12 @@ void MirSurface::SurfaceObserverImpl::setListener(QObject *listener)
         Q_EMIT framesPosted();
     }
 }
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 30, 0)
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
 void MirSurface::SurfaceObserverImpl::frame_posted(mir::scene::Surface const*, int /*frames_available*/, mir::geometry::Size const& /*size*/)
+#else
+void MirSurface::SurfaceObserverImpl::frame_posted(int /*frames_available*/, mir::geometry::Size const& /*size*/)
+#endif
 {
     m_framesPosted = true;
     if (m_listener) {
@@ -1236,102 +1237,63 @@ void MirSurface::SurfaceObserverImpl::frame_posted(mir::scene::Surface const*, i
     }
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
 void MirSurface::SurfaceObserverImpl::renamed(mir::scene::Surface const*, char const * name)
+#else
+void MirSurface::SurfaceObserverImpl::renamed(char const * name)
+#endif
 {
     Q_EMIT nameChanged(QString::fromUtf8(name));
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
 void MirSurface::SurfaceObserverImpl::cursor_image_removed(mir::scene::Surface const*)
+#else
+void MirSurface::SurfaceObserverImpl::cursor_image_removed()
+#endif
 {
     Q_EMIT cursorChanged(QCursor());
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
 void MirSurface::SurfaceObserverImpl::placed_relative(mir::scene::Surface const*, mir::geometry::Rectangle const& /*placement*/)
 {
 }
-#endif
-
-void MirSurface::SurfaceObserverImpl::attrib_changed(mir::scene::Surface const*, MirWindowAttrib attribute, int value)
-{
-    if (m_listener) {
-        Q_EMIT attributeChanged(attribute, value);
-    }
-}
-
-void MirSurface::SurfaceObserverImpl::resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
-{
-    Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
-}
-
-void MirSurface::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const*, const mir::graphics::CursorImage &cursorImage)
-{
-    QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
-    Q_EMIT cursorChanged(qcursor);
-}
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
-void MirSurface::SurfaceObserverImpl::input_consumed(mir::scene::Surface const*, MirEvent const* /*event*/)
-{
-}
-
-void MirSurface::SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& /*handle*/)
-{
-}
-#endif
-#else
-void MirSurface::SurfaceObserverImpl::frame_posted(int /*frames_available*/, mir::geometry::Size const& /*size*/)
-{
-    m_framesPosted = true;
-    if (m_listener) {
-        Q_EMIT framesPosted();
-    }
-}
-
-void MirSurface::SurfaceObserverImpl::renamed(char const * name)
-{
-    Q_EMIT nameChanged(QString::fromUtf8(name));
-}
-
-void MirSurface::SurfaceObserverImpl::cursor_image_removed()
-{
-    Q_EMIT cursorChanged(QCursor());
-}
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
+#elif MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
 void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle const& /*placement*/)
 {
 }
 #endif
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+void MirSurface::SurfaceObserverImpl::attrib_changed(mir::scene::Surface const*, MirWindowAttrib attribute, int value)
+#else
 void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
+#endif
 {
     if (m_listener) {
         Q_EMIT attributeChanged(attribute, value);
     }
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+void MirSurface::SurfaceObserverImpl::resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
+#else
 void MirSurface::SurfaceObserverImpl::resized_to(mir::geometry::Size const&size)
+#endif
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+void MirSurface::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const*, const mir::graphics::CursorImage &cursorImage)
+#else
 void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::CursorImage &cursorImage)
+#endif
 {
     QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
     Q_EMIT cursorChanged(qcursor);
 }
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
-void MirSurface::SurfaceObserverImpl::input_consumed(MirEvent const* /*event*/)
-{
-}
-
-void MirSurface::SurfaceObserverImpl::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
-{
-}
-#endif
-#endif
 
 QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage) {
     if (cursorImage.as_argb_8888() == nullptr) {
@@ -1363,6 +1325,24 @@ QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const m
 
         return QCursor(QPixmap::fromImage(image), cursorImage.hotspot().dx.as_int(), cursorImage.hotspot().dy.as_int());
     }
+}
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+void MirSurface::SurfaceObserverImpl::input_consumed(mir::scene::Surface const*, MirEvent const* /*event*/)
+{
+}
+#elif MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
+void MirSurface::SurfaceObserverImpl::input_consumed(MirEvent const* /*event*/)
+{
+}
+#endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+void MirSurface::SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& /*handle*/)
+#else
+void MirSurface::SurfaceObserverImpl::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+#endif
+{
 }
 
 void MirSurface::requestFocus()
