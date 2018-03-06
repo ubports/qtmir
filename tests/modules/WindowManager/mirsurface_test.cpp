@@ -47,6 +47,7 @@ struct MirEvent {}; // otherwise won't compile otherwise due to incomplete type
 
 // mir
 #include <mir/scene/surface_creation_parameters.h>
+#include <mir/version.h>
 
 // miral
 #include <miral/window.h>
@@ -103,7 +104,11 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
         .WillRepeatedly(Return(std::make_shared<mir::graphics::StubBuffer>()));
 
     MirSurface surface(mockWindowInfo, nullptr);
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+    surface.surfaceObserver()->frame_posted(NULL, 1, mir::geometry::Size{1,1});
+#else
     surface.surfaceObserver()->frame_posted(1, mir::geometry::Size{1,1});
+#endif
 
     QSignalSpy spyFrameDropped(&surface, SIGNAL(frameDropped()));
     QTest::qWait(300);

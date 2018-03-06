@@ -23,6 +23,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir/geometry/size.h>
+#include <mir/version.h>
 
 namespace mir {
     namespace scene {
@@ -39,7 +40,11 @@ class SurfaceObserver : public QObject
 public:
     virtual ~SurfaceObserver();
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 31, 0)
+    virtual void frame_posted(mir::scene::Surface const*, int frames_available, mir::geometry::Size const& size ) = 0;
+#else
     virtual void frame_posted(int frames_available, mir::geometry::Size const& size ) = 0;
+#endif
 
     void notifySurfaceModifications(const miral::WindowSpecification&);
 
