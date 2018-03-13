@@ -51,6 +51,7 @@ const mg::DisplayConfigurationOutput fakeOutput1
     mir_subpixel_arrangement_unknown,
     {},
     mir_output_gamma_unsupported,
+    {},
     {}
 };
 
@@ -81,6 +82,7 @@ const mg::DisplayConfigurationOutput fakeOutput2
     mir_subpixel_arrangement_unknown,
     {},
     mir_output_gamma_unsupported,
+    {},
     {}
 };
 
