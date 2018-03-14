@@ -83,6 +83,24 @@ bool SessionAuthorizer::prompt_session_is_allowed(miral::ApplicationCredentials 
     return true;
 }
 
+bool SessionAuthorizer::configure_input_is_allowed(miral::ApplicationCredentials const& creds)
+{
+    qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::configure_input_is_allowed - this=" << this << "pid=" << creds.pid();
+
+    //FIXME Actually mediate this access for clients
+    Q_UNUSED(creds)
+    return true;
+}
+
+bool SessionAuthorizer::set_base_input_configuration_is_allowed(miral::ApplicationCredentials const& creds)
+{
+    qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::set_base_input_configuration_is_allowed - this=" << this << "pid=" << creds.pid();
+
+    //FIXME Actually mediate this access for clients
+    Q_UNUSED(creds)
+    return true;
+}
+
 bool SessionAuthorizer::set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds)
 {
     qCDebug(QTMIR_MIR_MESSAGES) << "SessionAuthorizer::set_base_display_configuration_is_allowed - this="
