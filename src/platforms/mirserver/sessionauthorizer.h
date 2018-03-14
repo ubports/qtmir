@@ -39,6 +39,8 @@ public:
     bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
     bool screencast_is_allowed(miral::ApplicationCredentials const& creds) override;
     bool prompt_session_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool configure_input_is_allowed(miral::ApplicationCredentials const& creds) override;
+    bool set_base_input_configuration_is_allowed(miral::ApplicationCredentials const& creds) override;
 
 Q_SIGNALS:
     // needs to be blocked queued signal which returns value for authorized
