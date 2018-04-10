@@ -39,7 +39,7 @@ class SurfaceObserver : public QObject
 public:
     virtual ~SurfaceObserver();
 
-    virtual void frame_posted(int frames_available, mir::geometry::Size const& size ) = 0;
+    virtual void frame_posted(mir::scene::Surface const*, int frames_available, mir::geometry::Size const& size ) = 0;
 
     void notifySurfaceModifications(const miral::WindowSpecification&);
 

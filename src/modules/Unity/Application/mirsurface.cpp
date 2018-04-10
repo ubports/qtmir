@@ -86,31 +86,28 @@ public:
 
     void setListener(QObject *listener);
 
-    void attrib_changed(MirWindowAttrib, int) override;
-    void resized_to(mir::geometry::Size const&) override;
-    void moved_to(mir::geometry::Point const&) override {}
-    void hidden_set_to(bool) override {}
+    void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override;
+    void resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
+    void moved_to(mir::scene::Surface const*, mir::geometry::Point const&) override {}
+    void hidden_set_to(mir::scene::Surface const*, bool) override {}
 
     // Get new frame notifications from Mir, called from a Mir thread.
-    void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
+    void frame_posted(mir::scene::Surface const*, int frames_available, mir::geometry::Size const& size ) override;
 
-    void alpha_set_to(float) override {}
-    void transformation_set_to(glm::mat4 const&) override {}
-    void reception_mode_set_to(mir::input::InputReceptionMode) override {}
-    void cursor_image_set_to(mir::graphics::CursorImage const&) override;
-    void orientation_set_to(MirOrientation) override {}
-    void client_surface_close_requested() override {}
-    void keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
+    void alpha_set_to(mir::scene::Surface const*, float) override {}
+    void transformation_set_to(mir::scene::Surface const*, glm::mat4 const&) override {}
+    void reception_mode_set_to(mir::scene::Surface const*, mir::input::InputReceptionMode) override {}
+    void cursor_image_set_to(mir::scene::Surface const*, mir::graphics::CursorImage const&) override;
+    void orientation_set_to(mir::scene::Surface const*, MirOrientation) override {}
+    void client_surface_close_requested(mir::scene::Surface const*) override {}
+    void keymap_changed(mir::scene::Surface const*, MirInputDeviceId, std::string const&, std::string const&,
                         std::string const&, std::string const&) override {}
-    void renamed(char const * name) override;
-    void cursor_image_removed() override;
+    void renamed(mir::scene::Surface const*, char const * name) override;
+    void cursor_image_removed(mir::scene::Surface const*) override;
 
-    void placed_relative(mir::geometry::Rectangle const& placement) override;
-
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
-    void input_consumed(MirEvent const* event) override;
-    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
-#endif
+    void placed_relative(mir::scene::Surface const*, mir::geometry::Rectangle const& placement) override;
+    void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
+    void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
 
 private:
     QCursor createQCursorFromMirCursorImage(const mir::graphics::CursorImage &cursorImage);
@@ -1152,7 +1149,7 @@ void MirSurface::SurfaceObserverImpl::setListener(QObject *listener)
     }
 }
 
-void MirSurface::SurfaceObserverImpl::frame_posted(int /*frames_available*/, mir::geometry::Size const& /*size*/)
+void MirSurface::SurfaceObserverImpl::frame_posted(const mir::scene::Surface *, int /*frames_available*/, mir::geometry::Size const& /*size*/)
 {
     m_framesPosted = true;
     if (m_listener) {
@@ -1160,33 +1157,33 @@ void MirSurface::SurfaceObserverImpl::frame_posted(int /*frames_available*/, mir
     }
 }
 
-void MirSurface::SurfaceObserverImpl::renamed(char const * name)
+void MirSurface::SurfaceObserverImpl::renamed(const mir::scene::Surface *, char const * name)
 {
     Q_EMIT nameChanged(QString::fromUtf8(name));
 }
 
-void MirSurface::SurfaceObserverImpl::cursor_image_removed()
+void MirSurface::SurfaceObserverImpl::cursor_image_removed(const mir::scene::Surface *)
 {
     Q_EMIT cursorChanged(QCursor());
 }
 
-void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle const& /*placement*/)
+void MirSurface::SurfaceObserverImpl::placed_relative(const mir::scene::Surface *, mir::geometry::Rectangle const& /*placement*/)
 {
 }
 
-void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
+void MirSurface::SurfaceObserverImpl::attrib_changed(const mir::scene::Surface *, MirWindowAttrib attribute, int value)
 {
     if (m_listener) {
         Q_EMIT attributeChanged(attribute, value);
     }
 }
 
-void MirSurface::SurfaceObserverImpl::resized_to(mir::geometry::Size const&size)
+void MirSurface::SurfaceObserverImpl::resized_to(const mir::scene::Surface *, mir::geometry::Size const&size)
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
 }
 
-void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::CursorImage &cursorImage)
+void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::scene::Surface *, const mir::graphics::CursorImage &cursorImage)
 {
     QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
     Q_EMIT cursorChanged(qcursor);
@@ -1224,15 +1221,13 @@ QCursor MirSurface::SurfaceObserverImpl::createQCursorFromMirCursorImage(const m
     }
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
-void MirSurface::SurfaceObserverImpl::input_consumed(MirEvent const* /*event*/)
+void MirSurface::SurfaceObserverImpl::input_consumed(mir::scene::Surface const*, MirEvent const* /*event*/)
 {
 }
 
-void MirSurface::SurfaceObserverImpl::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+void MirSurface::SurfaceObserverImpl::start_drag_and_drop(const mir::scene::Surface *, std::vector<uint8_t> const& /*handle*/)
 {
 }
-#endif
 
 void MirSurface::requestFocus()
 {

@@ -47,6 +47,11 @@ public:
             const miral::WindowSpecification &modifications) override;
     void handle_raise_window(miral::WindowInfo &windowInfo) override;
 
+    auto confirm_placement_on_display(
+        const miral::WindowInfo &window_info,
+        MirWindowState new_state,
+        const mir::geometry::Rectangle &new_placement) -> mir::geometry::Rectangle override;
+
     bool handle_keyboard_event(const MirKeyboardEvent *event) override;
     bool handle_touch_event(const MirTouchEvent *event) override;
     bool handle_pointer_event(const MirPointerEvent *event) override;
@@ -65,6 +70,10 @@ public:
     void advise_resize(const miral::WindowInfo &info, const Size &newSize) override;
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
+
+    void handle_request_drag_and_drop(miral::WindowInfo &window_info) override;
+    void handle_request_move(miral::WindowInfo &window_info, const MirInputEvent *input_event) override;
+    void handle_request_resize(miral::WindowInfo &window_info, const MirInputEvent *input_event, MirResizeEdge edge) override;
 
     Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
 

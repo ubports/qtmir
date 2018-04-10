@@ -110,6 +110,13 @@ void WindowManagementPolicy::handle_raise_window(miral::WindowInfo &windowInfo)
     Q_EMIT m_windowModel.windowRequestedRaise(windowInfo);
 }
 
+Rectangle WindowManagementPolicy::confirm_placement_on_display(const miral::WindowInfo &/*window_info*/,
+                                                               MirWindowState /*new_state*/,
+                                                               const Rectangle &new_placement)
+{
+    return new_placement;
+}
+
 /* Handle input events - here just inject them into Qt event loop for later processing */
 bool WindowManagementPolicy::handle_keyboard_event(const MirKeyboardEvent *event)
 {
@@ -421,4 +428,21 @@ Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const
 
     geom.moveTo(x, y);
     return toMirRectangle(geom.marginsRemoved(windowMargins));
+}
+
+void WindowManagementPolicy::handle_request_drag_and_drop(miral::WindowInfo &/*window_info*/)
+{
+
+}
+
+void WindowManagementPolicy::handle_request_move(miral::WindowInfo &/*window_info*/,
+                                                 const MirInputEvent */*input_event*/)
+{
+
+}
+
+void WindowManagementPolicy::handle_request_resize(miral::WindowInfo &/*window_info*/,
+                                                   const MirInputEvent */*input_event*/, MirResizeEdge /*edge*/)
+{
+
 }
