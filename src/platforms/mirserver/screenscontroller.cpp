@@ -44,7 +44,7 @@ CustomScreenConfigurationList ScreensController::configuration()
             CustomScreenConfiguration {
                         screen->outputId(),
                         screen->geometry().topLeft(),
-                        screen->currentModeIndex(),
+                        screen->currentMode(),
                         screen->powerMode(),
                         mir_orientation_normal, //screen->orientation(), disable for now
                         screen->scale(),

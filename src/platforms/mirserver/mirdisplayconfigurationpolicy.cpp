@@ -86,7 +86,7 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
             nextTopLeftPosition += output.modes[output.current_mode_index].size.width.as_int();
 
             if (phoneDetected) {
-                if (screenCount == 1 || output.type == mg::DisplayConfigurationOutputType::lvds) {
+                if (output.type == mg::DisplayConfigurationOutputType::lvds) {
                     output.form_factor = mir_form_factor_phone;
                     output.scale = m_defaultScale;
                 } else { // screenCount > 1 && output.type != lvds
@@ -95,7 +95,7 @@ void MirDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration &conf)
                 }
             } else { // desktop
                 output.form_factor = mir_form_factor_monitor;
-                output.scale = m_defaultScale; // probably 1 on desktop anyway.
+                output.scale = 1; // probably 1 on desktop anyway.
             }
         });
 }

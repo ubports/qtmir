@@ -70,8 +70,10 @@ void QQuickScreenWindow::setScreen(QScreen *screen)
     QQuickWindow::setScreen(screen);
 
     float scale = getScaleNativeProperty();
+    qCritical() << "if setScreen: " << m_scale;
     if (!qFuzzyCompare(m_scale, scale)) {
         m_scale = scale;
+        qCritical() << "setScreen: " << m_scale;
         Q_EMIT scaleChanged(m_scale);
     }
 
@@ -84,15 +86,17 @@ void QQuickScreenWindow::setScreen(QScreen *screen)
 
 qreal QQuickScreenWindow::scale()
 {
-    if (m_scale < 0) {
+  //  if (m_scale < 0) {
         m_scale = getScaleNativeProperty();
-    }
+  //  }
      // am keeping local copy, to avoid emitting changed signal if screen changes but scale doesn't.
     return m_scale;
 }
 
 bool QQuickScreenWindow::setScaleAndFormFactor(const float scale, const Screens::FormFactor formFactor)
 {
+    qCritical() << "setScaleAndFormFactor: " << scale;
+
     if (qFuzzyCompare(scale, m_scale) && formFactor == m_formFactor) {
         return true;
     }
@@ -111,12 +115,15 @@ bool QQuickScreenWindow::setScaleAndFormFactor(const float scale, const Screens:
 
     auto id = screenHandle->outputId();
 
+    qCritical() << "setScreen: " << scale << "ID: " << id.as_value();
+
     auto configs = controller->configuration();
 
     auto config = configs.begin();
     while (config != configs.end()) {
         if (config->id == id) {
             config->scale = scale;
+            qCritical() << "while set: " << scale;
             config->formFactor = static_cast<MirFormFactor>(formFactor);
         }
         config++;
@@ -168,8 +175,10 @@ float QQuickScreenWindow::getScaleNativeProperty() const
     bool ok;
     float scale = scaleVal.toFloat(&ok);
     if (!ok || scale <= 0) {
+      qCritical() << "retrn m_scale: " << m_scale;
         return m_scale;
     }
+    qCritical() << "return scale: " << scale;
     return scale;
 }
 

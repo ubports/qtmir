@@ -31,6 +31,7 @@
 #include <qpa/qwindowsysteminterface.h>
 #include <QThread>
 #include <QtMath>
+#include <QSize>
 
 // Qt sensors
 #include <QtSensors/QOrientationReading>
@@ -225,7 +226,13 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     m_physicalSize.setHeight(static_cast<float>(screen.physical_size_mm.height.as_int()));
 
     // Screen capabilities
-    m_modes = screen.modes;
+    m_modes = QVector<QPlatformScreen::Mode>();
+    for(auto const& mode: screen.modes) {
+        QSize size(mode.size.width.as_int(), mode.size.height.as_int());
+        m_modes.append({size, mode.vrefresh_hz});
+    }
+    for(auto const& mode: m_modes)
+      qCDebug(QTMIR_SENSOR_MESSAGES) << "Mode: " << mode.size << mode.refreshRate;
     m_currentModeIndex = screen.current_mode_index;
     m_preferredModeIndex = screen.preferred_mode_index;
     m_pixelFormats = screen.pixel_formats;
@@ -274,19 +281,22 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     auto w = window(); // usually there is no Window associated with this Screen at this time.
     auto nativeInterface = qGuiApp->platformNativeInterface();
+    m_formFactor = screen.form_factor;
     if (screen.form_factor != m_formFactor) {
-        m_formFactor = screen.form_factor;
         if (w && notify) {
             Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("formFactor"));
         }
     }
 
+    m_scale = screen.scale;
     if (!qFuzzyCompare(screen.scale, m_scale)) {
-        m_scale = screen.scale;
         if (w && notify) {
+            qCDebug(QTMIR_SENSOR_MESSAGES) <<  "EMIT";
             Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("scale"));
         }
     }
+
+    qCDebug(QTMIR_SENSOR_MESSAGES) << m_scale;
 }
 
 void Screen::toggleSensors(const bool enable) const

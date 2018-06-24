@@ -27,7 +27,7 @@ struct CustomScreenConfiguration
     mir::graphics::DisplayConfigurationOutputId id;
 
     QPoint topLeft;
-    uint32_t currentModeIndex;
+    int currentModeIndex;
     MirPowerMode powerMode;
     MirOrientation orientation;
     float scale;
