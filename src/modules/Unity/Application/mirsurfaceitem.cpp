@@ -347,6 +347,9 @@ void MirSurfaceItem::wheelEvent(QWheelEvent *event)
 
 void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
 {
+    event->ignore();
+    return;
+
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->hoverEnterEvent(event);
     } else {
@@ -356,6 +359,9 @@ void MirSurfaceItem::hoverEnterEvent(QHoverEvent *event)
 
 void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 {
+    event->ignore();
+    return;
+
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->hoverLeaveEvent(event);
     } else {
@@ -365,6 +371,9 @@ void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 
 void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
 {
+    event->ignore();
+    return;
+
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->hoverMoveEvent(event);
     } else {
