@@ -301,9 +301,6 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
 void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
 {
-    event->ignore();
-    return;
-
     auto mousePos = event->localPos().toPoint();
     if (m_consumesInput && m_surface && m_surface->live() && m_surface->inputAreaContains(mousePos)) {
         m_surface->mousePressEvent(event);
@@ -314,9 +311,6 @@ void MirSurfaceItem::mousePressEvent(QMouseEvent *event)
 
 void MirSurfaceItem::mouseMoveEvent(QMouseEvent *event)
 {
-    event->ignore();
-    return;
-
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->mouseMoveEvent(event);
     } else {
@@ -326,9 +320,6 @@ void MirSurfaceItem::mouseMoveEvent(QMouseEvent *event)
 
 void MirSurfaceItem::mouseReleaseEvent(QMouseEvent *event)
 {
-    event->ignore();
-    return;
-
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->mouseReleaseEvent(event);
     } else {
