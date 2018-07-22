@@ -347,6 +347,11 @@ void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 
 void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
 {
+    // HACK! Ignore hover move events
+    // This is a masive hack and is only done as a temp fix
+    event->ignore();
+    return;
+
     if (m_consumesInput && m_surface && m_surface->live()) {
         m_surface->hoverMoveEvent(event);
     } else {
