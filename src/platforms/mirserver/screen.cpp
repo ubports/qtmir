@@ -269,7 +269,7 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     // Scale, DPR & Form Factor
     // Update the scale & form factor native-interface properties for the windows affected
     // as there is no convenient way to emit signals for those custom properties on a QScreen
-    m_devicePixelRatio = 0.5; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
+    m_devicePixelRatio = 0.3; //qCeil(m_scale); // FIXME: I need to announce this changing, probably by delete/recreate Screen
 
     auto w = window(); // usually there is no Window associated with this Screen at this time.
     auto nativeInterface = qGuiApp->platformNativeInterface();
