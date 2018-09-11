@@ -87,6 +87,7 @@ void ScreenWindow::setExposed(const bool exposed)
     auto renderer = QSGRenderLoop::instance();
     if (exposed) {
         renderer->show(quickWindow);
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
         QWindowSystemInterface::handleExposeEvent(window(), geometry()); // else it won't redraw
         QWindowSystemInterface::handleWindowActivated(window(), Qt::ActiveWindowFocusReason);
     } else {
@@ -108,6 +109,7 @@ void ScreenWindow::setScreen(QPlatformScreen *newScreen)
     Q_ASSERT(myScreen);
     myScreen->setWindow(this);
 
+    QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
     QWindowSystemInterface::handleWindowScreenChanged(window(), myScreen->screen());
     setExposed(true); //GERRY - assumption setScreen only called while compositor running
 

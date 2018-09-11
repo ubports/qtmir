@@ -248,6 +248,9 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
+    // We want to be synchronous to avoid race
+    QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
+
     // Check for Screen geometry change
     if (m_geometry != oldGeometry) {
         if (notify) {

@@ -108,6 +108,7 @@ bool MirServerIntegration::hasCapability(QPlatformIntegration::Capability cap) c
 QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) const
 {
     QWindowSystemInterface::flushWindowSystemEvents();
+    QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
 
     auto screens = m_mirServer->screensModel().lock();
     if (!screens) {
