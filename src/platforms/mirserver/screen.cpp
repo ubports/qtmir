@@ -288,6 +288,11 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     }
 }
 
+qreal Screen::pixelDensity() const
+{
+    return qMax(1.0, logicalDpi().first / 96.0);
+}
+
 void Screen::toggleSensors(const bool enable) const
 {
     qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::toggleSensors - enable=" << enable;

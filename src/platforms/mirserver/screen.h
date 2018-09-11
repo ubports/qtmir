@@ -48,6 +48,7 @@ public:
     int depth() const override { return m_depth; }
     QImage::Format format() const override { return m_format; }
     qreal devicePixelRatio() const override { return m_devicePixelRatio; }
+    qreal pixelDensity() const override;
     QSizeF physicalSize() const override { return m_physicalSize; }
     qreal refreshRate() const override { return m_refreshRate; }
     Qt::ScreenOrientation nativeOrientation() const override { return m_nativeOrientation; }
