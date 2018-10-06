@@ -18,6 +18,7 @@
 #define FAKE_DISPLAYCONFIGURATIONOUTPUT_H
 
 #include <mir/graphics/display_configuration.h>
+#include <mir/version.h>
 
 #include <vector>
 
