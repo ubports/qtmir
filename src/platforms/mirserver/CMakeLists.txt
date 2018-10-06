@@ -41,6 +41,7 @@ include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
+    ${MIRSERVER_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -123,13 +124,6 @@ string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # BYTE_ORDER needed to compile tracepoints in C99 mode.
 set(TRACEPOINTS_CMAKE_C_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS} -DBYTE_ORDER=__BYTE_ORDER -fPIC ")
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS}")
-
-# Frig for files that still rely on mirserver-dev
-string(REPLACE ";" " -I" QTMIR_ADD_MIRSERVER "-I ${MIRSERVER_INCLUDE_DIRS}")
-
-foreach(CPP_FILE ${MIRSERVER_DEPENDANTS})
-    set_source_files_properties(${CPP_FILE} PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
-endforeach(CPP_FILE)
 
 target_link_libraries(
     qpa-mirserver
