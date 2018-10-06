@@ -20,8 +20,7 @@
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
-#include "screen.h" // NEEDED?
-#include "screensmodel.h"
+#include "screen.h"
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
@@ -387,11 +386,6 @@ public:
         qRegisterMetaType<Qt::MouseButtons>("Qt::MouseButtons");
     }
 
-    void setScreensModel(const QSharedPointer<ScreensModel> &sc) override
-    {
-        m_screensModel = sc;
-    }
-
     virtual QWindow* focusedWindow() override
     {
         return QGuiApplication::focusWindow();
@@ -399,7 +393,20 @@ public:
 
     QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
-        return m_screensModel->getWindowForPoint(point);
+        const QWindowList windowList = qGuiApp->topLevelWindows();
+
+        // This is a part optimization, and a part work-around for AP generated input events occasionally
+        // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
+        if (windowList.length() == 1) {
+            return windowList.first();
+        }
+
+        Q_FOREACH (QWindow *window, windowList) {
+            if (window->geometry().contains(point)) {
+                return window;
+            }
+        }
+        return nullptr;
     }
 
     void registerTouchDevice(QTouchDevice *device) override
@@ -462,11 +469,12 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screensModel->screens();
+        const QList<QScreen *> screens = qGuiApp->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
-            auto platformCursor = static_cast<qtmir::Cursor*>(screens[i]->cursor());
+            auto screenWindow = static_cast<Screen*>(screens[i]->handle());
+            auto platformCursor = static_cast<qtmir::Cursor*>(screenWindow->cursor());
             eventHandled = platformCursor->handleMouseEvent(timestamp, relative, buttons, modifiers);
             ++i;
         }
@@ -483,11 +491,12 @@ public:
         //       This will probably come once we implement the feature of having the mouse pointer
         //       crossing adjacent screens.
 
-        QList<Screen*> screens = m_screensModel->screens();
+        const QList<QScreen *> screens = qGuiApp->screens();
         bool eventHandled = false;
         int i = 0;
         while (i < screens.count() && !eventHandled) {
-            auto platformCursor = static_cast<qtmir::Cursor*>(screens.at(i)->cursor());
+            auto screenWindow = static_cast<Screen*>(screens[i]->handle());
+            auto platformCursor = static_cast<qtmir::Cursor*>(screenWindow->cursor());
             eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, modifiers);
             ++i;
         }
@@ -496,20 +505,16 @@ public:
                                                      QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
         }
     }
-
-private:
-    QSharedPointer<ScreensModel> m_screensModel;
 };
 
 } // anonymous namespace
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel)
-    : QtEventFeeder(screensModel, new QtWindowSystem)
+QtEventFeeder::QtEventFeeder()
+    : QtEventFeeder(new QtWindowSystem)
 {
 }
 
-QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
-                             QtEventFeeder::QtWindowSystemInterface *windowSystem)
+QtEventFeeder::QtEventFeeder(QtEventFeeder::QtWindowSystemInterface *windowSystem)
     : mQtWindowSystem(windowSystem)
 {
     // Initialize touch device. Hardcoded just like in qtubuntu
@@ -521,7 +526,6 @@ QtEventFeeder::QtEventFeeder(const QSharedPointer<ScreensModel> &screensModel,
     mTouchDevice->setCapabilities(
             QTouchDevice::Position | QTouchDevice::Area | QTouchDevice::Pressure |
             QTouchDevice::NormalizedPosition);
-    mQtWindowSystem->setScreensModel(screensModel);
     mQtWindowSystem->registerTouchDevice(mTouchDevice);
 }
 

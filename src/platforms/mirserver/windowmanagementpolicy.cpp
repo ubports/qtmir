@@ -38,12 +38,10 @@ using namespace qtmir;
 WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
-                                               qtmir::AppNotifier &appNotifier,
-                                               const QSharedPointer<ScreensModel> screensModel)
+                                               qtmir::AppNotifier &appNotifier)
     : CanonicalWindowManagerPolicy(tools)
     , m_windowModel(windowModel)
     , m_appNotifier(appNotifier)
-    , m_eventFeeder(new QtEventFeeder(screensModel))
 {
     qRegisterMetaType<qtmir::NewWindow>();
     qRegisterMetaType<std::vector<miral::Window>>();
@@ -64,7 +62,7 @@ miral::WindowSpecification WindowManagementPolicy::place_new_window(
 
         QSize initialSize = InitialSurfaceSizes::get(miral::pid_of(appInfo.application()));
 
-        if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
+        if (initialSize.isValid() && surfaceType == mir_window_type_normal) {
             parameters.size() = toMirSize(initialSize);
         }
     }
@@ -122,19 +120,19 @@ Rectangle WindowManagementPolicy::confirm_placement_on_display(const miral::Wind
 /* Handle input events - here just inject them into Qt event loop for later processing */
 bool WindowManagementPolicy::handle_keyboard_event(const MirKeyboardEvent *event)
 {
-    m_eventFeeder->dispatchKey(event);
+    m_eventFeeder.dispatchKey(event);
     return true;
 }
 
 bool WindowManagementPolicy::handle_touch_event(const MirTouchEvent *event)
 {
-    m_eventFeeder->dispatchTouch(event);
+    m_eventFeeder.dispatchTouch(event);
     return true;
 }
 
 bool WindowManagementPolicy::handle_pointer_event(const MirPointerEvent *event)
 {
-    m_eventFeeder->dispatchPointer(event);
+    m_eventFeeder.dispatchPointer(event);
     return true;
 }
 

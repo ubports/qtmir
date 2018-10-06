@@ -15,22 +15,4 @@
  */
 
 #include "qtcompositor.h"
-#include "logging.h"
-
-#include <mir/graphics/cursor.h>
-
-// Lives in a Mir thread
-void QtCompositor::start()
-{
-    qCDebug(QTMIR_SCREENS) << "QtCompositor::start";
-
-    Q_EMIT starting(); // blocks
-}
-
-void QtCompositor::stop()
-{
-    qCDebug(QTMIR_SCREENS) << "QtCompositor::stop";
-
-    Q_EMIT stopping(); // blocks
-}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright (C) 2015-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -16,23 +16,23 @@
 
 #include "screensmodel.h"
 
-#include "screenwindow.h"
-#include "qtcompositor.h"
 #include "logging.h"
-#include "mirserverintegration.h"
-#include "screen.h"
 #include "mirqtconversion.h"
+#include "mirserverintegration.h"
+#include "qtcompositor.h"
+#include "screen.h"
+#include "screenwindow.h"
 
 // Mir
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_buffer.h>
+#include <mir/graphics/display_configuration.h>
 #include <mir/compositor/display_listener.h>
 
 // Qt
 #include <QScreen>
-#include <QQuickWindow>
-#include <qpa/qwindowsysteminterface.h>
 #include <QGuiApplication> // for qApp
+#include <qpa/qwindowsysteminterface.h>
 
 // std
 #include <memory>
@@ -262,22 +262,6 @@ Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::Di
     for (Screen *screen : list) {
         if (screen->m_outputId == id) {
             return screen;
-        }
-    }
-    return nullptr;
-}
-
-QWindow* ScreensModel::getWindowForPoint(QPoint point) //FIXME - not thread safe & not efficient
-{
-    // This is a part optimization, and a part work-around for AP generated input events occasionally
-    // appearing outside the screen borders: https://bugs.launchpad.net/qtmir/+bug/1508415
-    if (m_screenList.length() == 1 && m_screenList.first()->window()) {
-        return m_screenList.first()->window()->window();
-    }
-
-    Q_FOREACH (Screen *screen, m_screenList) {
-        if (screen->window() && screen->geometry().contains(point)) {
-            return screen->window()->window();
         }
     }
     return nullptr;

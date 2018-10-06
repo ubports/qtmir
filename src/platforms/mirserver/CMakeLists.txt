@@ -61,78 +61,75 @@ endif()
     ${VALGRIND_INCLUDE_DIRS}
 )
 
-# We have to remove -pedantic for tracepoints.c
-string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-# Needed to compile tracepoints in C99 mode.
-add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
-
-# These files will compile without mirserver-dev
-add_library(qpa-mirserver-nomirserver OBJECT
-    ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
-    logging.cpp
-    plugin.cpp
-    shelluuid.cpp
-    ubuntutheme.cpp
-    clipboard.cpp
-    mirsingleton.cpp
-    sessionauthorizer.cpp
-    promptsessionlistener.cpp
-    nativeinterface.cpp
-    services.cpp
-    windowcontroller.cpp
-    tracepoints.c
-    surfaceobserver.cpp
-    initialsurfacesizes.cpp
-)
-
-set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS} -fPIC")
-
-include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
-
-# These files will only compile with mirserver-dev
-add_library(qpa-mirserver-mirserver OBJECT
-    openglcontextfactory.cpp openglcontextfactory.h
+# Files the depend on mirserver-dev
+set(MIRSERVER_DEPENDANTS
+    eventbuilder.cpp
+    eventdispatch.cpp
+    inputdeviceobserver.cpp
     mircursorimages.cpp
     mirdisplayconfigurationpolicy.cpp
-    screenscontroller.cpp
-    qtcompositor.cpp
-    windowmanagementpolicy.cpp
-    mirserverhooks.cpp mirserverhooks.h
-    setqtcompositor.cpp setqtcompositor.h
-    eventdispatch.cpp eventdispatch.h
-    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
-)
-
-# These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
-set(MIRSERVER_QPA_PLUGIN_SRC
-    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
-    cursor.cpp
-    eventbuilder.cpp
-    qteventfeeder.cpp
+    miropenglcontext.cpp
+    mirserverhooks.cpp
+    mirserverintegration.cpp
+    openglcontextfactory.cpp
+    promptsessionmanager.cpp
     qmirserver.cpp
     qmirserver_p.cpp
+    qteventfeeder.cpp
     screen.cpp
-    screenwindow.cpp
+    screenscontroller.cpp
     screensmodel.cpp
-    mirserverintegration.cpp
-    miropenglcontext.cpp
+    screenwindow.cpp
+    setqtcompositor.cpp
+    )
+
+add_library(qpa-mirserver SHARED
+    ${MIRSERVER_DEPENDANTS}
+    clipboard.cpp
+    cursor.cpp
+    initialsurfacesizes.cpp
+    inputdeviceobserver.cpp
+    logging.cpp
+    mirsingleton.cpp
+    nativeinterface.cpp
     offscreensurface.cpp
+    plugin.cpp
+    promptsessionlistener.cpp
+    qtcompositor.cpp
+    services.cpp
+    sessionauthorizer.cpp
+    shelluuid.cpp
+    surfaceobserver.cpp
+    tracepoints.c
+    ubuntutheme.cpp
+    windowcontroller.cpp
+    windowmanagementpolicy.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
+
     # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
     ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
-    inputdeviceobserver.cpp
     $<TARGET_OBJECTS:miral-prototypes>
-# We need to run moc on these headers
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
+    # We need to run moc on these headers
 )
 
-add_library(qpa-mirserver SHARED
-    ${MIRSERVER_QPA_PLUGIN_SRC}
-    $<TARGET_OBJECTS:qpa-mirserver-nomirserver>
-    $<TARGET_OBJECTS:qpa-mirserver-mirserver>
-)
+# We have to remove -pedantic for tracepoints.c
+string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+# BYTE_ORDER needed to compile tracepoints in C99 mode.
+set(TRACEPOINTS_CMAKE_C_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS} -DBYTE_ORDER=__BYTE_ORDER -fPIC ")
+set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS}")
+
+# Frig for files that still rely on mirserver-dev
+string(REPLACE ";" " -I" QTMIR_ADD_MIRSERVER "-I ${MIRSERVER_INCLUDE_DIRS}")
+
+foreach(CPP_FILE ${MIRSERVER_DEPENDANTS})
+    set_source_files_properties(${CPP_FILE} PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} ${QTMIR_ADD_MIRSERVER}")
+endforeach(CPP_FILE)
 
 target_link_libraries(
     qpa-mirserver

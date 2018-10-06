@@ -20,6 +20,7 @@
 
 // Mir
 #include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/geometry/point.h>
 

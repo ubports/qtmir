@@ -20,7 +20,6 @@
 #define MIR_SCENE_FAKESURFACE_H_
 
 #include <mir/scene/surface.h>
-#include <mir/version.h>
 #include <memory>
 #include <gmock/gmock.h>
 

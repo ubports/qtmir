@@ -28,7 +28,9 @@
 #include <mir/server.h>
 #include <mir/graphics/cursor.h>
 #include <mir/scene/prompt_session_listener.h>
+#include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -51,6 +53,14 @@ struct PromptSessionListenerImpl : PromptSessionListener, mir::scene::PromptSess
 
 private:
     QHash<const mir::scene::PromptSession *, qtmir::PromptSession> m_mirPromptToSessionHash;
+};
+
+struct MirInputDeviceObserverImpl : qtmir::MirInputDeviceObserver, mir::input::InputDeviceObserver
+{
+    void device_added(std::shared_ptr<mir::input::Device> const& device) override;
+    void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
+    void device_removed(std::shared_ptr<mir::input::Device> const& device) override;
+    void changes_complete() override {}
 };
 
 struct HiddenCursorWrapper : mg::Cursor
@@ -146,7 +156,7 @@ QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController
 
 void qtmir::MirServerHooks::createInputDeviceObserver()
 {
-    theInputDeviceHub()->add_observer(std::make_shared<qtmir::MirInputDeviceObserver>());
+    theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>());
 }
 
 PromptSessionListenerImpl::~PromptSessionListenerImpl() = default;
@@ -194,3 +204,26 @@ void PromptSessionListenerImpl::prompt_provider_removed(ms::PromptSession const&
                                 << "prompt_provider=" << prompt_provider.get();
     Q_EMIT promptProviderRemoved(m_mirPromptToSessionHash[&prompt_session], prompt_provider);
 }
+
+void MirInputDeviceObserverImpl::device_added(const std::shared_ptr<mir::input::Device> &device)
+{
+    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
+
+    if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard) &&
+        mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric)) {
+        qCDebug(QTMIR_MIR_KEYMAP) << "Device added" << device->id();
+        m_devices.append(device);
+        applyKeymap(device);
+    }
+}
+
+void MirInputDeviceObserverImpl::device_removed(const std::shared_ptr<mir::input::Device> &device)
+{
+    QMutexLocker locker(&m_mutex);  // lock so that Qt and Mir don't apply the keymap at the same time
+
+    if (device && m_devices.contains(device)) {
+        qCDebug(QTMIR_MIR_KEYMAP) << "Device removed" << device->id();
+        m_devices.removeAll(device);
+    }
+}
+

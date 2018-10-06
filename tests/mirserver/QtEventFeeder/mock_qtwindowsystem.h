@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Canonical, Ltd.
+ * Copyright (C) 2014-2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -24,7 +24,6 @@
 class MockQtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
 public:
     MOCK_CONST_METHOD0(ready, bool());
-    MOCK_METHOD1(setScreensModel, void(const QSharedPointer<ScreensModel> &));
     MOCK_METHOD1(getWindowForTouchPoint, QWindow*(const QPoint &point));
     MOCK_METHOD0(lastWindow, QWindow*());
     MOCK_METHOD0(focusedWindow, QWindow*());

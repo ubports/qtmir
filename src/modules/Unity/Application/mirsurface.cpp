@@ -18,7 +18,6 @@
 #include "mirsurfacelistmodel.h"
 #include "namedcursor.h"
 #include "session_interface.h"
-#include "timer.h"
 #include "timestamp.h"
 
 // from common dir
@@ -134,9 +133,7 @@ public:
     void renamed(char const * name) override;
     void cursor_image_removed() override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
     void placed_relative(mir::geometry::Rectangle const& placement) override;
-#endif
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void input_consumed(MirEvent const* event) override;
@@ -237,8 +234,6 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
 
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 
-    setCloseTimer(new Timer);
-
     m_requestedPosition.rx() = std::numeric_limits<int>::min();
     m_requestedPosition.ry() = std::numeric_limits<int>::min();
 }
@@ -251,8 +246,6 @@ MirSurface::~MirSurface()
 
     QMutexLocker locker(&m_mutex);
     m_surface->remove_observer(m_surfaceObserver);
-
-    delete m_closeTimer;
 
     Q_EMIT destroyed(this); // Early warning, while MirSurface methods can still be accessed.
 }
@@ -528,15 +521,7 @@ void MirSurface::updateVisible()
 
 void MirSurface::close()
 {
-    if (m_closingState != NotClosing) {
-        return;
-    }
-
     INFO_MSG << "()";
-
-    m_closingState = Closing;
-    Q_EMIT closeRequested();
-    m_closeTimer->start();
 
     if (m_window) {
         m_controller->requestClose(m_window);
@@ -1038,38 +1023,6 @@ void MirSurface::activate()
     }
 }
 
-void MirSurface::onCloseTimedOut()
-{
-    Q_ASSERT(m_closingState == Closing);
-
-    INFO_MSG << "()";
-
-    m_closingState = CloseOverdue;
-
-    if (m_live) {
-        m_controller->forceClose(m_window);
-    }
-}
-
-void MirSurface::setCloseTimer(AbstractTimer *timer)
-{
-    bool timerWasRunning = false;
-
-    if (m_closeTimer) {
-        timerWasRunning = m_closeTimer->isRunning();
-        delete m_closeTimer;
-    }
-
-    m_closeTimer = timer;
-    m_closeTimer->setInterval(3000);
-    m_closeTimer->setSingleShot(true);
-    connect(m_closeTimer, &AbstractTimer::timeout, this, &MirSurface::onCloseTimedOut);
-
-    if (timerWasRunning) {
-        m_closeTimer->start();
-    }
-}
-
 std::shared_ptr<SurfaceObserver> MirSurface::surfaceObserver() const
 {
     return m_surfaceObserver;
@@ -1298,11 +1251,9 @@ void MirSurface::SurfaceObserverImpl::cursor_image_removed()
     Q_EMIT cursorChanged(QCursor());
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 25, 0)
 void MirSurface::SurfaceObserverImpl::placed_relative(mir::geometry::Rectangle const& /*placement*/)
 {
 }
-#endif
 
 void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, int value)
 {

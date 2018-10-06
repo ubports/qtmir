@@ -16,6 +16,24 @@ qtmir (0.5.2) UNRELEASED; urgency=medium
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 27 Sep 2017 18:10:17 -0400
 
+qtmir (0.5.1+17.04.20170410-0ubuntu1) zesty; urgency=medium
+
+  [ Alan Griffiths ]
+  * Remove legacy of support for older Mir versions.
+  * Another pass at separating out the libmirserver dependencies
+
+  [ Daniel d'Andrada ]
+  * Make mirKeyboardEventToString() also print modifiers
+
+  [ Gerry Boland ]
+  * Decouple QtEventFeeder and ScreensModel, event feeder can rely on
+    qGuiApp::screens()
+
+  [ Lukáš Tinkl ]
+  * Do not forcefully kill and hide apps, let them handle the SIGTERM
+
+ -- Lukáš Tinkl <lukas.tinkl@canonical.com>  Mon, 10 Apr 2017 09:39:38 +0000
+
 qtmir (0.5.1+17.04.20170404-0ubuntu1) zesty; urgency=medium
 
   [ Albert Astals Cid ]
