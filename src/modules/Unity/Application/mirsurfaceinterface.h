@@ -33,6 +33,17 @@ class QMouseEvent;
 class QKeyEvent;
 class QSGTexture;
 
+namespace mir
+{
+namespace graphics
+{
+namespace gl
+{
+class Texture;
+}
+}
+}
+
 namespace qtmir {
 
 class MirSurfaceInterface : public unity::shell::application::MirSurfaceInterface
@@ -57,9 +68,12 @@ public:
     virtual void setViewExposure(qintptr viewId, bool exposed) = 0;
 
     // methods called from the rendering (scene graph) thread:
-    virtual QSharedPointer<QSGTexture> texture() = 0;
-    virtual QSGTexture *weakTexture() const = 0;
-    virtual bool updateTexture() = 0;
+    struct SubSurfaceTexture
+    {
+        QRectF extent;
+        std::shared_ptr<mir::graphics::gl::Texture> texture;
+    };
+    virtual std::vector<SubSurfaceTexture> updateTexture() = 0;
     virtual unsigned int currentFrameNumber() const = 0;
     virtual bool numBuffersReadyForCompositor() = 0;
     // end of methods called from the rendering (scene graph) thread

@@ -31,9 +31,6 @@
 
 namespace qtmir {
 
-class QSGMirSurfaceNode;
-class MirTextureProvider;
-
 class MirSurfaceItem : public unity::shell::application::MirSurfaceItemInterface
 {
     Q_OBJECT
@@ -73,8 +70,7 @@ public:
     ////////
     // QQuickItem
 
-    bool isTextureProvider() const override { return true; }
-    QSGTextureProvider *textureProvider() const override;
+    bool isTextureProvider() const override { return false; }
 
     ////////
     // own API
@@ -88,9 +84,6 @@ public:
 
 
 public Q_SLOTS:
-    // Called by QQuickWindow from the rendering thread
-    void invalidateSceneGraph();
-
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -107,8 +100,6 @@ protected:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
-    void releaseResources() override;
-
 private Q_SLOTS:
     void scheduleMirSurfaceSizeUpdate();
     void updateMirSurfaceSize();
@@ -122,8 +113,6 @@ private Q_SLOTS:
     void onWindowChanged(QQuickWindow *window);
 
 private:
-    void ensureTextureProvider();
-
     bool hasTouchInsideInputRegion(const QList<QTouchEvent::TouchPoint> &touchPoints);
 
     QString appId() const;
@@ -138,7 +127,6 @@ private:
     QQuickWindow* m_window;
 
     QMutex m_mutex;
-    MirTextureProvider *m_textureProvider;
 
     QTimer m_updateMirSurfaceSizeTimer;
 
