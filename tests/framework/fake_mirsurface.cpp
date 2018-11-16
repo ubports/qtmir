@@ -155,11 +155,7 @@ void FakeMirSurface::unregisterView(qintptr viewId)
     updateVisibility();
 }
 
-QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
-
-QSGTexture *FakeMirSurface::weakTexture() const { return nullptr; }
-
-bool FakeMirSurface::updateTexture() { return true; }
+auto FakeMirSurface::updateTexture() -> std::vector<SubSurfaceTexture> { return {}; }
 
 unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
 

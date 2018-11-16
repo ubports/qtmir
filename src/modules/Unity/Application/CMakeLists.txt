@@ -10,6 +10,7 @@ include_directories(
     ${GIO_UNIX_INCLUDE_DIRS}
     ${MIRAL_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
+    ${MIRPLATFORM_INCLUDE_DIRS}
     ${PROCESS_CPP_INCLUDE_DIRS}
     ${UBUNTU_PLATFORM_API_INCLUDE_DIRS}
     ${UBUNTU_APP_LAUNCH_INCLUDE_DIRS}
@@ -37,7 +38,6 @@ set(QMLMIRPLUGIN_SRC
     mirsurfaceinterface.h
     mirsurfaceitem.cpp
     mirsurfacelistmodel.cpp
-    mirbuffersgtexture.cpp
     proc_info.cpp
     session.cpp
     sharedwakelock.cpp
@@ -81,6 +81,7 @@ target_link_libraries(
     ${GLIB_LDFLAGS}
     ${UBUNTU_PLATFORM_API_LDFLAGS}
     ${MIRSERVER_LDFLAGS}
+    ${MIRPLATFORM_LDFLAGS}
     ${PROCESS_CPP_LDFLAGS}
     ${UBUNTU_APP_LAUNCH_LDFLAGS}
     ${LTTNG_LDFLAGS}

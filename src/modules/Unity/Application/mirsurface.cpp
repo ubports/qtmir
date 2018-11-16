@@ -36,6 +36,8 @@
 #include <mir/scene/surface_observer.h>
 #include <mir/version.h>
 #include <mir_toolkit/cursors.h>
+#include <mir/graphics/buffer.h>
+#include <mir/graphics/texture.h>
 
 // mirserver
 #include <logging.h>
@@ -327,35 +329,32 @@ void MirSurface::dropPendingBuffer()
     }
 
     m_textureUpdated = false;
-    auto texture = static_cast<MirBufferSGTexture*>(m_texture.data());
 
     auto renderables = m_surface->generate_renderables(userId);
     if (renderables.size() > 0) {
         ++m_currentFrameNumber;
-        if (texture) {
-            texture->freeBuffer();
-            texture->setBuffer(renderables[0]->buffer());
-            if (texture->textureSize() != size()) {
-                m_size = texture->textureSize();
-                m_sizePendingChange = false;
-                QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
-            }
-            m_textureUpdated = true;
+        // Get a pointer to the buffer; this tells Mir we consumed it.
+        auto const buffer = renderables[0]->buffer();
 
-            framesPending = m_surface->buffers_ready_for_compositor(userId);
-            if (framesPending > 0) {
-                // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
-                // queued since the timer lives in a different thread
-                DEBUG_MSG << "() - there are still buffers ready for compositor. starting frame dropper";
-                QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
-            }
-        } else {
-            // Just get a pointer to the buffer. This tells mir we consumed it.
-            renderables[0]->buffer();
+        QSize newSize{buffer->size().width.as_int(), buffer->size().height.as_int()};
+        if (size() != newSize) {
+            m_size = newSize;
+            m_sizePendingChange = false;
+            QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
+        }
+        m_textureUpdated = true;
+
+        framesPending = m_surface->buffers_ready_for_compositor(userId);
+        if (framesPending > 0) {
+            // restart the frame dropper to give MirSurfaceItems enough time to render the next frame.
+            // queued since the timer lives in a different thread
+            DEBUG_MSG << "() - there are still buffers ready for compositor. starting frame dropper";
+            QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
         }
 
         Q_EMIT frameDropped();
 
+        // Drop the buffer on the floor; Mir will ensure we always have a buffer if we need it.
     } else {
         WARNING_MSG << "() - failed. Giving up.";
         m_frameDropperTimer.stop();
@@ -376,49 +375,46 @@ void MirSurface::startFrameDropper()
     }
 }
 
-QSharedPointer<QSGTexture> MirSurface::texture()
+auto MirSurface::updateTexture() -> std::vector<SubSurfaceTexture>
 {
     QMutexLocker locker(&m_mutex);
-
-    if (!m_texture) {
-        QSharedPointer<QSGTexture> texture(new MirBufferSGTexture);
-        m_texture = texture.toWeakRef();
-        return texture;
-    } else {
-        return m_texture.toStrongRef();
-    }
-}
-
-bool MirSurface::updateTexture()
-{
-    QMutexLocker locker(&m_mutex);
-
-    MirBufferSGTexture *texture = static_cast<MirBufferSGTexture*>(m_texture.data());
-    if (!texture) return false;
-
-    if (m_textureUpdated) {
-        return texture->hasBuffer();
-    }
 
     const void* const userId = (void*)123;
     auto renderables = m_surface->generate_renderables(userId);
 
-    if (renderables.size() > 0 &&
-            (m_surface->buffers_ready_for_compositor(userId) > 0 || !texture->hasBuffer())
-        ) {
-        // Avoid holding two buffers for the compositor at the same time. Thus free the current
-        // before acquiring the next
-        texture->freeBuffer();
-        texture->setBuffer(renderables[0]->buffer());
+    std::vector<SubSurfaceTexture> subsurfaces;
+    subsurfaces.reserve(renderables.size());
+
+    if (renderables.size() > 0 && m_surface->buffers_ready_for_compositor(userId) > 0)
+    {
         ++m_currentFrameNumber;
 
-        if (texture->textureSize() != size()) {
-            m_size = texture->textureSize();
+        QSize const newSize{
+            renderables[0]->screen_position().size.width.as_int(),
+            renderables[0]->screen_position().size.height.as_int()};
+
+        if (newSize != size()) {
+            m_size = newSize;
             m_sizePendingChange = false;
             QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
         }
 
-        m_textureUpdated = true;
+        for (auto const& renderable : renderables)
+        {
+            auto const mirTopLeft = m_surface->top_left();
+            auto const mirStreamPosition = renderable->screen_position();
+            QRectF const relativePosition(
+                mirStreamPosition.left().as_int() - mirTopLeft.x.as_int(),
+                mirStreamPosition.top().as_int() - mirTopLeft.y.as_int(),
+                mirStreamPosition.size.width.as_int(),
+                mirStreamPosition.size.height.as_int()
+            );
+            subsurfaces.emplace_back(
+                SubSurfaceTexture{
+                    relativePosition,
+                    std::dynamic_pointer_cast<mir::graphics::gl::Texture>(renderable->buffer())
+                });
+        }
     }
 
     if (m_surface->buffers_ready_for_compositor(userId) > 0) {
@@ -427,7 +423,7 @@ bool MirSurface::updateTexture()
         QMetaObject::invokeMethod(&m_frameDropperTimer, "start", Qt::QueuedConnection);
     }
 
-    return texture->hasBuffer();
+    return subsurfaces;
 }
 
 void MirSurface::onCompositorSwappedBuffers()
