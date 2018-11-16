@@ -32,63 +32,288 @@
 #include <QQmlEngine>
 #include <QQuickWindow>
 #include <QScreen>
-#if QT_VERSION >= 0x050800
-#include <private/qsgdefaultinternalimagenode_p.h>
-#else
-#include <private/qsgdefaultimagenode_p.h>
-#endif
 #include <QTimer>
 #include <QSGTextureProvider>
+#include <QtQuick/qsgmaterial.h>
+#include <QtQuick/qsgnode.h>
 
 #include <QRunnable>
+
+#include <mir/graphics/texture.h>
+#include <mir/graphics/program.h>
+#include <mir/graphics/program_factory.h>
+#include <array>
+#include <sstream>
+#include <memory>
 
 namespace qtmir {
 
 namespace {
+class MirTextureQSGMaterial;
 
-class MirSurfaceItemReleaseResourcesJob : public QRunnable
+class MirTextureQSGMaterialShader : public QSGMaterialShader
 {
 public:
-    MirSurfaceItemReleaseResourcesJob() : textureProvider(nullptr) {}
-    void run() {
-        delete textureProvider;
-        textureProvider = nullptr;
-    }
-    QObject *textureProvider;
-};
-
-} // namespace {
-
-class MirTextureProvider : public QSGTextureProvider
-{
-    Q_OBJECT
-public:
-    MirTextureProvider(const QSharedPointer<QSGTexture>& texture) : t(texture) {}
-    QSGTexture *texture() const {
-        if (t)
-            t->setFiltering(smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-        return t.data();
+    MirTextureQSGMaterialShader(std::string fragment_source)
+        : fragment_source{std::move(fragment_source)}
+    {
     }
 
-    bool smooth{false};
-
-    void releaseTexture() {
-        t.reset();
+    char const* vertexShader() const override
+    {
+        return
+            "attribute highp vec4 a_position;\n"
+            "attribute mediump vec2 a_texCoord;\n"
+            "uniform highp mat4 matrix;\n"
+            "varying mediump vec2 v_texCoord;\n"
+            "void main() {\n"
+            "  gl_Position = matrix * a_position;\n"
+            "  v_texCoord = a_texCoord;\n"
+            "}";
     }
 
-    void setTexture(const QSharedPointer<QSGTexture>& newTexture) {
-        t = newTexture;
+    char const* fragmentShader() const override
+    {
+        return fragment_source.c_str();
+    }
+
+    char const* const* attributeNames() const override
+    {
+        static char const* attribs[] = {
+            "a_position",
+            "a_texCoord",
+            nullptr
+        };
+        return attribs;
+    }
+
+    void initialize() override
+    {
+        QSGMaterialShader::initialize();
+        std::array<std::pair<int, char const*>, std::tuple_size<decltype(tex_uniforms)>::value> const
+            uniform_specs = {
+            std::make_pair(0, "tex"),
+            std::make_pair(1, "tex1"),
+            std::make_pair(2, "tex2"),
+            std::make_pair(3, "tex3")
+        };
+        for (auto const& uniform_spec : uniform_specs)
+        {
+            tex_uniforms[uniform_spec.first] = program()->uniformLocation(uniform_spec.second);
+        }
+        alpha_uniform = program()->uniformLocation("alpha");
+        matrix_uniform = program()->uniformLocation("matrix");
+    }
+
+    void updateState(RenderState const& state, QSGMaterial* to, QSGMaterial* from) override;
+
+    void deactivate() override
+    {
+        QSGMaterialShader::deactivate();
+
+        if (last_used_texture)
+        {
+            // We've finished rendering the scene, so we're *definitely* done.
+            last_used_texture->add_syncpoint();
+            last_used_texture = nullptr;
+        }
+    }
+
+    QSGMaterialType const* type() const
+    {
+        return &type_;
     }
 
 private:
-    QSharedPointer<QSGTexture> t;
+    std::string const fragment_source;
+    QSGMaterialType const type_{};
+
+    // Used to insert post-rendering syncpoints.
+    std::shared_ptr<mir::graphics::gl::Texture> last_used_texture{};
+
+    std::array<int, 4> tex_uniforms;
+    int alpha_uniform;
+    int matrix_uniform;
 };
+
+std::string build_opaque_fragment_shader_string(
+    char const* extension_fragment,
+    char const* fragment_fragment)
+{
+    std::stringstream opaque_fragment;
+    opaque_fragment
+        << extension_fragment
+        << "precision mediump float;\n"
+	<< "\n"
+        << fragment_fragment
+        << "\n"
+        <<
+        "varying vec2 v_texCoord;\n"
+        "void main() {\n"
+        "    gl_FragColor = sample_to_rgba(v_texCoord);\n"
+        "}\n";
+
+    return opaque_fragment.str();
+}
+
+std::string build_alpha_fragment_shader_string(
+    char const* extension_fragment,
+    char const* fragment_fragment)
+{
+    std::stringstream alpha_fragment;
+    alpha_fragment
+        << extension_fragment
+        << "precision mediump float;\n"
+	<< "\n"
+        << fragment_fragment
+        << "\n"
+        <<
+        "varying vec2 v_texCoord;\n"
+        "uniform lowp float alpha;\n"
+        "void main() {\n"
+        "    gl_FragColor = alpha * sample_to_rgba(v_texCoord);\n"
+        "}\n";
+
+    return alpha_fragment.str();
+}
+
+class QtMirProgram : public mir::graphics::gl::Program
+{
+public:
+    QtMirProgram(
+        char const* extension_fragment,
+        char const* fragment_fragment)
+            : alpha(build_alpha_fragment_shader_string(extension_fragment, fragment_fragment)),
+              opaque(build_opaque_fragment_shader_string(extension_fragment, fragment_fragment))
+    {
+    }
+
+    MirTextureQSGMaterialShader mutable alpha;
+    MirTextureQSGMaterialShader mutable opaque;
+};
+
+class QSGProgramFactory : public mir::graphics::gl::ProgramFactory
+{
+public:
+    std::unique_ptr<mir::graphics::gl::Program> compile_fragment_shader(
+        char const* extension_fragment,
+        char const* fragment_fragment) override
+    {
+        return std::make_unique<QtMirProgram>(extension_fragment, fragment_fragment);
+    }
+};
+QSGProgramFactory programFactory;
+
+class MirTextureQSGMaterial : public QSGMaterial
+{
+public:
+    enum class Opacity
+    {
+        Alpha,
+        Solid
+    };
+
+    MirTextureQSGMaterial(Opacity opacity)
+        : opacity{opacity}
+    {
+        setFlag(QSGMaterial::RequiresFullMatrix);
+    }
+
+    QSGMaterialType* type() const override
+    {
+        return const_cast<QSGMaterialType*>(shader->type());
+    }
+
+    QSGMaterialShader* createShader() const override
+    {
+        return shader;
+    }
+
+    int compare(QSGMaterial const* other) const override
+    {
+        /*
+         * We don't have to care about matching opacities - Qt guarantees that this will only be called
+         * with type() == other->type(), and opaque shaders have a different type to alpha shaders.
+         *
+         * With that out of the way, two materials are equal iff they're sampling from the same Texture.
+         */
+        auto const* rhs = static_cast<MirTextureQSGMaterial const*>(other);
+        if (buffer < rhs->buffer)
+            return -1;
+        if (buffer == rhs->buffer)
+            return 0;
+        return 1;
+    }
+
+    void setTextureSource(std::shared_ptr<mir::graphics::gl::Texture> source)
+    {
+        buffer = std::move(source);
+        auto const& programs =
+            static_cast<QtMirProgram const&>(
+                buffer->shader(programFactory));
+
+        switch (opacity)
+        {
+        case Opacity::Alpha:
+            shader = &programs.alpha;
+            break;
+        case Opacity::Solid:
+            shader = &programs.opaque;
+            break;
+        }
+    }
+private:
+    friend class MirTextureQSGMaterialShader;
+    Opacity const opacity;
+    std::shared_ptr<mir::graphics::gl::Texture> buffer;
+    MirTextureQSGMaterialShader* shader;
+};
+
+void MirTextureQSGMaterialShader::updateState(RenderState const& state, QSGMaterial* to, QSGMaterial* from)
+{
+    /*
+     * The compare() implementation on our QSGMaterial implementation *should*
+     * prevent Qt from calling updateState() when the underlying Texture object
+     * hasn't changed, and we don't really have any other state to crib from
+     * the existing state.
+     */
+    Q_UNUSED(from);
+
+    if (last_used_texture)
+    {
+        // We're on to the next draw, so we've definitely finished using the last
+        // texture.
+        last_used_texture->add_syncpoint();
+    }
+
+    last_used_texture = static_cast<MirTextureQSGMaterial*>(to)->buffer;
+
+    for (auto i = 0u; i < tex_uniforms.size() ; ++i)
+    {
+        if (tex_uniforms[i] != -1)
+        {
+            program()->setUniformValue(tex_uniforms[i], GL_TEXTURE0 + i);
+        }
+    }
+    last_used_texture->bind();
+
+    if (state.isOpacityDirty() && (alpha_uniform != -1))
+    {
+        program()->setUniformValue(alpha_uniform, state.opacity());
+    }
+    if (state.isMatrixDirty())
+    {
+        program()->setUniformValue(matrix_uniform, state.combinedMatrix());
+    }
+}
+
+} // namespace {
+
 
 MirSurfaceItem::MirSurfaceItem(QQuickItem *parent)
     : MirSurfaceItemInterface(parent)
     , m_surface(nullptr)
     , m_window(nullptr)
-    , m_textureProvider(nullptr)
     , m_lastTouchEvent(nullptr)
     , m_lastFrameNumberRendered(nullptr)
     , m_surfaceWidth(0)
@@ -183,104 +408,88 @@ Mir::ShellChrome MirSurfaceItem::shellChrome() const
     return m_surface ? m_surface->shellChrome() : Mir::NormalChrome;
 }
 
-// Called from the rendering (scene graph) thread
-QSGTextureProvider *MirSurfaceItem::textureProvider() const
-{
-    QMutexLocker mutexLocker(const_cast<QMutex*>(&m_mutex));
-    const_cast<MirSurfaceItem *>(this)->ensureTextureProvider();
-    return m_textureProvider;
-}
-
-void MirSurfaceItem::ensureTextureProvider()
-{
-    if (!m_surface) {
-        return;
-    }
-
-    if (!m_textureProvider) {
-        m_textureProvider = new MirTextureProvider(m_surface->texture());
-
-    // Check that the item is indeed using the texture from the MirSurface it currently holds
-    // If until now we were drawing a MirSurface "A" and it replaced with a MirSurface "B",
-    // we will still hold the texture from "A" until the first time we're asked to draw "B".
-    // That's the moment when we finally discard the texture from "A" and get the one from "B".
-    //
-    // Also note that m_surface->weakTexture() will return null if m_surface->texture() was never
-    // called before.
-    } else if (!m_textureProvider->texture() || m_textureProvider->texture() != m_surface->weakTexture()) {
-        m_textureProvider->setTexture(m_surface->texture());
-    }
-}
-
 QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)    // called by render thread
 {
     QMutexLocker mutexLocker(&m_mutex);
 
     if (!m_surface) {
-        if (m_textureProvider) {
-            m_textureProvider->releaseTexture();
-        }
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
-    ensureTextureProvider();
-
-    if (!m_textureProvider->texture() || !m_surface->updateTexture()) {
+    auto textures = m_surface->updateTexture();
+    if (textures.empty()) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     if (m_surface->numBuffersReadyForCompositor() > 0) {
         QTimer::singleShot(0, this, &MirSurfaceItem::update);
     }
 
-    m_textureProvider->smooth = smooth();
-#if QT_VERSION >= 0x050800
-    QSGDefaultInternalImageNode *node = static_cast<QSGDefaultInternalImageNode*>(oldNode);
-#else
-    QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
-#endif
-    if (!node) {
-#if QT_VERSION >= 0x050800
-        node = new QSGDefaultInternalImageNode;
-#else
-        node = new QSGDefaultImageNode;
-#endif
-        node->setMipmapFiltering(QSGTexture::None);
-        node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
-        node->setVerticalWrapMode(QSGTexture::ClampToEdge);
-    } else {
-        if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber())) {
-            node->markDirty(QSGNode::DirtyMaterial);
-        }
+    auto* const node = oldNode ? static_cast<QSGGeometryNode*>(oldNode) : new QSGGeometryNode{};
+    auto* const opaque_material =
+        [node]()
+        {
+            if (node->opaqueMaterial())
+            {
+                return static_cast<MirTextureQSGMaterial*>(node->opaqueMaterial());
+            }
+            auto const material = new MirTextureQSGMaterial{MirTextureQSGMaterial::Opacity::Solid};
+            node->setOpaqueMaterial(material);
+            node->setFlag(QSGNode::OwnsMaterial);
+            return material;
+        }();
+    auto* const material =
+        [node]()
+        {
+            if (node->material())
+            {
+                return static_cast<MirTextureQSGMaterial*>(node->material());
+            }
+            auto const material = new MirTextureQSGMaterial{MirTextureQSGMaterial::Opacity::Alpha};
+            node->setMaterial(material);
+            node->setFlag(QSGNode::OwnsMaterial);
+            return material;
+        }();
+    auto* const geometry =
+        [node]()
+        {
+            if (!node->geometry())
+            {
+                node->setFlag(QSGNode::OwnsGeometry);
+                node->setGeometry(new QSGGeometry{QSGGeometry::defaultAttributes_TexturedPoint2D(), 4});
+            }
+            return node->geometry();
+        }();
+
+    // If the surface content has changed since the last render pass, we need to update it.
+    if (!m_lastFrameNumberRendered  || (*m_lastFrameNumberRendered != m_surface->currentFrameNumber())) {
+        opaque_material->setTextureSource(textures[0].texture);
+        material->setTextureSource(textures[0].texture);
+
+        node->markDirty(QSGNode::DirtyMaterial);
     }
-    node->setTexture(m_textureProvider->texture());
 
-    if (m_fillMode == PadOrCrop) {
-        const QSize &textureSize = m_textureProvider->texture()->textureSize();
+    QRectF const newSize{0, 0, width(), height()};
+    QRectF const newTextureRect =
+        [this](QRectF const& textureSize)
+        {
+            if (m_fillMode == PadOrCrop) {
+                // Sample out of the appropriate subrect of the texture
+                auto const clampedWidth = qMin(width(), textureSize.width());
+                auto const clampedHeight = qMin(height(), textureSize.height());
 
-        QRectF targetRect;
-        targetRect.setWidth(qMin(width(), static_cast<qreal>(textureSize.width())));
-        targetRect.setHeight(qMin(height(), static_cast<qreal>(textureSize.height())));
+                return QRectF{0, 0, clampedWidth / textureSize.width(), clampedHeight / textureSize.height()};
+            }
+            else {
+                // Sample out of the whole texture
+                return QRectF{0, 0, 1, 1};
+            }
+        }(textures[0].extent);
 
-        qreal u = targetRect.width() / textureSize.width();
-        qreal v = targetRect.height() / textureSize.height();
-        node->setSubSourceRect(QRectF(0, 0, u, v));
-
-        node->setTargetRect(targetRect);
-        node->setInnerTargetRect(targetRect);
-    } else {
-        // Stretch
-        node->setSubSourceRect(QRectF(0, 0, 1, 1));
-        node->setTargetRect(QRectF(0, 0, width(), height()));
-        node->setInnerTargetRect(QRectF(0, 0, width(), height()));
-    }
-
-    node->setFiltering(smooth() ? QSGTexture::Linear : QSGTexture::Nearest);
-    node->setAntialiasing(antialiasing());
-
-    node->update();
+    QSGGeometry::updateTexturedRectGeometry(geometry, newSize, newTextureRect);
+    node->markDirty(QSGNode::DirtyGeometry);
 
     if (!m_lastFrameNumberRendered) {
         m_lastFrameNumberRendered = new unsigned int;
@@ -535,12 +744,6 @@ void MirSurfaceItem::updateMirSurfaceActiveFocus()
     }
 }
 
-void MirSurfaceItem::invalidateSceneGraph()
-{
-    delete m_textureProvider;
-    m_textureProvider = nullptr;
-}
-
 void MirSurfaceItem::TouchEvent::updateTouchPointStatesAndType()
 {
     touchPointStates = 0;
@@ -669,18 +872,6 @@ void MirSurfaceItem::onWindowChanged(QQuickWindow *window)
     if (m_window) {
         connect(m_window, &QQuickWindow::frameSwapped, this, &MirSurfaceItem::onCompositorSwappedBuffers,
                 Qt::DirectConnection);
-    }
-}
-
-void MirSurfaceItem::releaseResources()
-{
-    if (m_textureProvider) {
-        Q_ASSERT(window());
-
-        MirSurfaceItemReleaseResourcesJob *job = new MirSurfaceItemReleaseResourcesJob;
-        job->textureProvider = m_textureProvider;
-        m_textureProvider = nullptr;
-        window()->scheduleRenderJob(job, QQuickWindow::AfterSynchronizingStage);
     }
 }
 

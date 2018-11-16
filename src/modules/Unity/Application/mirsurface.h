@@ -32,7 +32,6 @@
 #include <QVector>
 #include <QKeyEvent>
 
-#include "mirbuffersgtexture.h"
 #include "windowcontrollerinterface.h"
 #include "windowmodelnotifier.h"
 
@@ -126,9 +125,7 @@ public:
     void setViewExposure(qintptr viewId, bool exposed) override;
 
     // methods called from the rendering (scene graph) thread:
-    QSharedPointer<QSGTexture> texture() override;
-    QSGTexture *weakTexture() const override { return m_texture.data(); }
-    bool updateTexture() override;
+    std::vector<SubSurfaceTexture> updateTexture() override;
     unsigned int currentFrameNumber() const override;
     bool numBuffersReadyForCompositor() override;
     // end of methods called from the rendering (scene graph) thread
