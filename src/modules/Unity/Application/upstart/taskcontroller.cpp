@@ -78,7 +78,7 @@ std::shared_ptr<ual::Application> createApp(const QString &inputAppId, std::shar
 
     try {
         return ual::Application::create(appId, registry);
-    } catch (std::runtime_error e) {
+    } catch (std::runtime_error& e) {
         qCDebug(QTMIR_APPLICATIONS) << "ApplicationController::createApp - UAL failed to create app for appId"
                                     << inputAppId << ":" << e.what();
         return {};
