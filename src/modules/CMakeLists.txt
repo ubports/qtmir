@@ -1,4 +1,4 @@
-include(QmlPlugins)
+find_package(QmlPlugins)
 
 # Set up and install a QML plugin.
 #
