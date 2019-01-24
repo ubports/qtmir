@@ -57,9 +57,9 @@ MirOpenGLContext::MirOpenGLContext(
     mirContext->make_current();
 
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
-    if (eglDisplay == EGL_NO_DISPLAY) {
-        qFatal("Unable to determine current EGL Display");
-    }
+//    if (eglDisplay == EGL_NO_DISPLAY) {
+//        qFatal("Unable to determine current EGL Display");
+//    }
     EGLContext eglContext = eglGetCurrentContext();
     if (eglContext == EGL_NO_CONTEXT) {
         qFatal("Unable to determine current EGL Context");
