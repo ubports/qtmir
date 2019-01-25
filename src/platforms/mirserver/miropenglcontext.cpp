@@ -20,6 +20,8 @@
 #include "mirglconfig.h"
 #include "screenwindow.h"
 
+#include <dlfcn.h>
+
 #include <QDebug>
 
 #include <QOpenGLFramebufferObject>
@@ -191,11 +193,17 @@ void MirOpenGLContext::doneCurrent()
 #if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
 QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)
 {
-    return eglGetProcAddress(procName.constData());
+    QFunctionPointer p = (QFunctionPointer) dlsym(RTLD_DEFAULT, procName.constData());
+    if (!p)
+	p = eglGetProcAddress(procName.constData());
+    return p;
 }
 #else
 QFunctionPointer MirOpenGLContext::getProcAddress(const char *procName)
 {
-    return eglGetProcAddress(procName);
+    QFunctionPointer p = (QFunctionPointer) dlsym(RTLD_DEFAULT, procName);
+    if (!p)
+	p = eglGetProcAddress(procName);
+    return p;
 }
 #endif
