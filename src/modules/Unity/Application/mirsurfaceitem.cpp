@@ -917,5 +917,3 @@ void MirSurfaceItem::setFillMode(FillMode value)
 }
 
 } // namespace qtmir
-
-#include "mirsurfaceitem.moc"
