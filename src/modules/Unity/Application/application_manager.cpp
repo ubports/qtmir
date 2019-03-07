@@ -549,7 +549,9 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         return;
     }
 
-    if (info->startsWith("maliit-server") || info->contains("qt5/libexec/QtWebProcess")) {
+    if (info->startsWith("maliit-server")
+        || info->startsWith("Xwayland")
+        || info->contains("qt5/libexec/QtWebProcess")) {
         authorized = true;
         return;
     }

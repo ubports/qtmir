@@ -681,6 +681,25 @@ TEST_F(ApplicationManagerTests,maliitSessionsAccepted)
 }
 
 /*
+ * Test that Xwayland sessions are accepted
+ */
+TEST_F(ApplicationManagerTests,xwaylandSessionsAccepted)
+{
+    using namespace ::testing;
+    const pid_t procId = 151;
+    QByteArray cmdLine("Xwayland -dpi 160");
+
+    // Set up Mocks & signal watcher
+    EXPECT_CALL(procInfo,command_line(procId))
+        .Times(1)
+        .WillOnce(Return(cmdLine));
+
+    bool authed = false;
+    applicationManager.authorizeSession(procId, authed);
+    EXPECT_EQ(authed, true);
+}
+
+/*
  * Test that an application in the Starting state is not impacted by the upstart "Starting" message
  * for that application (i.e. the upstart message is effectively useless)
  */
