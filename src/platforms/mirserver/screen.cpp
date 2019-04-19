@@ -18,6 +18,8 @@
 #include "screen.h"
 #include "logging.h"
 #include "nativeinterface.h"
+#include "screensmodel.h"
+#include "orientationsensor.h"
 
 // Mir
 #include "mir/geometry/size.h"
@@ -36,6 +38,9 @@
 // Qt sensors
 #include <QtSensors/QOrientationReading>
 #include <QtSensors/QOrientationSensor>
+
+// std
+#include <memory>
 
 namespace mg = mir::geometry;
 
@@ -138,19 +143,20 @@ public:
 const QEvent::Type OrientationReadingEvent::m_type =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
-bool Screen::skipDBusRegistration = false;
-
-Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
+Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen,
+               const std::shared_ptr<OrientationSensor> orientationSensor)
     : QObject(nullptr)
     , m_refreshRate(-1.0)
     , m_scale(1.0)
     , m_formFactor(mir_form_factor_unknown)
+    , m_sensorEnabled(false)
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
-    , m_orientationSensor(new QOrientationSensor(this))
     , m_screenWindow(nullptr)
-    , m_unityScreen(nullptr)
 {
+    // Hack to make signals work
+    this->moveToThread(orientationSensor->thread());
+
     setMirDisplayConfiguration(screen, false);
 
     // Set the default orientation based on the initial screen dimmensions.
@@ -164,24 +170,10 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen)
     qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen - initial currentOrientation is:" << m_currentOrientation;
 
     if (internalDisplay()) { // only enable orientation sensor for device-internal display
-        QObject::connect(m_orientationSensor, &QOrientationSensor::readingChanged,
+        QObject::connect(orientationSensor.get(), &OrientationSensor::onOrientationChanged,
                          this, &Screen::onOrientationReadingChanged);
-        m_orientationSensor->start();
-    }
-
-    if (!skipDBusRegistration) {
-        // FIXME This is a unity8 specific dbus call and shouldn't be in qtmir
-        m_unityScreen = new QDBusInterface(QStringLiteral("com.canonical.Unity.Screen"),
-                                         QStringLiteral("/com/canonical/Unity/Screen"),
-                                         QStringLiteral("com.canonical.Unity.Screen"),
-                                         QDBusConnection::systemBus(), this);
-
-        m_unityScreen->connection().connect(QStringLiteral("com.canonical.Unity.Screen"),
-                                          QStringLiteral("/com/canonical/Unity/Screen"),
-                                          QStringLiteral("com.canonical.Unity.Screen"),
-                                          QStringLiteral("DisplayPowerStateChange"),
-                                          this,
-                                          SLOT(onDisplayPowerStateChanged(int, int)));
+        orientationSensor->enable();
+        m_sensorEnabled = true;
     }
 }
 
@@ -193,17 +185,10 @@ Screen::~Screen()
     }
 }
 
+// Only for tests
 bool Screen::orientationSensorEnabled()
 {
-    return m_orientationSensor->isActive();
-}
-
-void Screen::onDisplayPowerStateChanged(int status, int reason)
-{
-    Q_UNUSED(reason);
-    if (internalDisplay()) {
-        toggleSensors(status);
-    }
+    return m_sensorEnabled;
 }
 
 void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
@@ -281,16 +266,6 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     }
 }
 
-void Screen::toggleSensors(const bool enable) const
-{
-    qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::toggleSensors - enable=" << enable;
-    if (enable) {
-        m_orientationSensor->start();
-    } else {
-        m_orientationSensor->stop();
-    }
-}
-
 void Screen::customEvent(QEvent* event)
 {
     OrientationReadingEvent* oReadingEvent = static_cast<OrientationReadingEvent*>(event);
@@ -328,14 +303,14 @@ void Screen::customEvent(QEvent* event)
     qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::customEvent - new orientation" << m_currentOrientation << "handled";
 }
 
-void Screen::onOrientationReadingChanged()
+void Screen::onOrientationReadingChanged(QOrientationReading::Orientation orientation)
 {
     qCDebug(QTMIR_SENSOR_MESSAGES) << "Screen::onOrientationReadingChanged";
 
     // Make sure to switch to the main Qt thread context
     QCoreApplication::postEvent(this, new OrientationReadingEvent(
                                               OrientationReadingEvent::m_type,
-                                              m_orientationSensor->reading()->orientation()));
+                                              orientation));
 }
 
 QPlatformCursor *Screen::cursor() const

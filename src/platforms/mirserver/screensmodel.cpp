@@ -22,6 +22,7 @@
 #include "qtcompositor.h"
 #include "screen.h"
 #include "screenwindow.h"
+#include "orientationsensor.h"
 
 // Mir
 #include <mir/graphics/display.h>
@@ -43,6 +44,7 @@ namespace mg = mir::graphics;
 ScreensModel::ScreensModel(QObject *parent)
     : QObject(parent)
     , m_compositing(false)
+    , m_orientationSensor(std::make_shared<OrientationSensor>(this))
 {
     qCDebug(QTMIR_SCREENS) << "ScreensModel::ScreensModel";
 }
@@ -79,6 +81,8 @@ void ScreensModel::onCompositorStarting()
     qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStarting";
     m_compositing = true;
 
+    m_orientationSensor->start();
+
     update(); // must handle all hardware changes before starting the renderer
 
     startRenderer();
@@ -88,6 +92,8 @@ void ScreensModel::onCompositorStopping()
 {
     qCDebug(QTMIR_SCREENS) << "ScreensModel::onCompositorStopping";
     m_compositing = false;
+
+    m_orientationSensor->stop();
 
     haltRenderer(); // must stop all rendering before handling any hardware changes
 
@@ -254,7 +260,7 @@ void ScreensModel::haltRenderer()
 
 Screen* ScreensModel::createScreen(const mg::DisplayConfigurationOutput &output) const
 {
-    return new Screen(output);
+    return new Screen(output, m_orientationSensor);
 }
 
 Screen* ScreensModel::findScreenWithId(const QList<Screen *> &list, const mg::DisplayConfigurationOutputId id)

@@ -28,6 +28,7 @@
 #include "testable_screensmodel.h"
 #include "screen.h"
 #include "screenwindow.h"
+#include "orientationsensor.h"
 
 #include <QGuiApplication>
 #include <QLoggingCategory>
@@ -54,7 +55,7 @@ protected:
 void ScreensModelTest::SetUp()
 {
     setenv("QT_QPA_PLATFORM", "minimal", 1);
-    Screen::skipDBusRegistration = true;
+    OrientationSensor::skipDBusRegistration = true;
 
     // We don't want the logging spam cluttering the test results
     QLoggingCategory::setFilterRules(QStringLiteral("qtmir.*=false"));

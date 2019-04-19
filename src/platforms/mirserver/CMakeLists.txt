@@ -105,6 +105,7 @@ add_library(qpa-mirserver SHARED
     ubuntutheme.cpp
     windowcontroller.cpp
     windowmanagementpolicy.cpp
+    orientationsensor.cpp
 
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
