@@ -21,8 +21,8 @@
 #include <QObject>
 #include <QScopedPointer>
 #include <QTimer>
-#include <QtDBus/QDBusInterface>
 #include <qpa/qplatformscreen.h>
+#include <QtSensors/QOrientationReading>
 
 // Mir
 #include <mir_toolkit/common.h>
@@ -32,7 +32,10 @@
 #include "screenwindow.h"
 #include "screentypes.h"
 
-class QOrientationSensor;
+// std
+#include <memory>
+
+class OrientationSensor;
 namespace mir {
     namespace graphics { class DisplayBuffer; class DisplaySyncGroup; class DisplayConfigurationOutput; }
     namespace renderer { namespace gl { class RenderTarget; }}
@@ -42,7 +45,7 @@ class Screen : public QObject, public QPlatformScreen
 {
     Q_OBJECT
 public:
-    Screen(const mir::graphics::DisplayConfigurationOutput &);
+    Screen(const mir::graphics::DisplayConfigurationOutput &, const std::shared_ptr<OrientationSensor>);
     ~Screen();
 
     // QPlatformScreen methods.
@@ -70,12 +73,10 @@ public:
     void customEvent(QEvent* event) override;
 
     // To make it testable
-    static bool skipDBusRegistration;
     bool orientationSensorEnabled();
 
 public Q_SLOTS:
-   void onDisplayPowerStateChanged(int, int);
-   void onOrientationReadingChanged();
+   void onOrientationReadingChanged(QOrientationReading::Orientation);
 
 protected:
     void setWindow(ScreenWindow *window);
@@ -87,7 +88,6 @@ protected:
     void doneCurrent();
 
 private:
-    void toggleSensors(const bool enable) const;
     bool internalDisplay() const;
 
     QRect m_geometry;
@@ -99,6 +99,7 @@ private:
     float m_scale;
     MirFormFactor m_formFactor;
     uint32_t m_currentModeIndex;
+    bool m_sensorEnabled;
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
@@ -108,10 +109,8 @@ private:
 
     Qt::ScreenOrientation m_nativeOrientation;
     Qt::ScreenOrientation m_currentOrientation;
-    QOrientationSensor *m_orientationSensor;
 
     ScreenWindow *m_screenWindow;
-    QDBusInterface *m_unityScreen;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 

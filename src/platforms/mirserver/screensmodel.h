@@ -40,7 +40,7 @@ namespace mir {
 
 class Screen;
 class QtCompositor;
-
+class OrientationSensor;
 /*
  * ScreensModel monitors the Mir display configuration and compositor status, and updates
  * the relevant QScreen and QWindow states accordingly.
@@ -103,6 +103,7 @@ private:
     std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
     QList<Screen*> m_screenList;
     bool m_compositing;
+    std::shared_ptr<OrientationSensor> m_orientationSensor;
 };
 
 #endif // SCREENCONTROLLER_H

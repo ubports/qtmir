@@ -21,6 +21,7 @@
 #include "fake_displayconfigurationoutput.h"
 
 #include <screen.h>
+#include <orientationsensor.h>
 
 #include <QSensorManager>
 
@@ -47,40 +48,44 @@ void ScreenTest::SetUp()
         }
     }
 
-    Screen::skipDBusRegistration = true;
+    OrientationSensor::skipDBusRegistration = true;
 }
 
 TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 {
-    Screen *screen = new Screen(fakeOutput1); // is external display (dvi)
+    auto orientationSensor = std::make_shared<OrientationSensor>();
+    orientationSensor->start();
+    Screen *screen = new Screen(fakeOutput1, orientationSensor); // is external display (dvi)
 
     // Default state should be disabled
     ASSERT_FALSE(screen->orientationSensorEnabled());
 
-    screen->onDisplayPowerStateChanged(0,0);
-    ASSERT_FALSE(screen->orientationSensorEnabled());
+    orientationSensor->onDisplayPowerStateChanged(0,0);
+    ASSERT_FALSE(orientationSensor->enabled());
 
-    screen->onDisplayPowerStateChanged(1,0);
-    ASSERT_FALSE(screen->orientationSensorEnabled());
+    orientationSensor->onDisplayPowerStateChanged(1,0);
+    ASSERT_FALSE(orientationSensor->enabled());
 }
 
 TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 {
-    Screen *screen = new Screen(fakeOutput2); // is internal display
+    auto orientationSensor = std::make_shared<OrientationSensor>();
+    orientationSensor->start();
+    Screen *screen = new Screen(fakeOutput2, orientationSensor); // is internal display
 
     // Default state should be active
     ASSERT_TRUE(screen->orientationSensorEnabled());
 
-    screen->onDisplayPowerStateChanged(0,0);
-    ASSERT_FALSE(screen->orientationSensorEnabled());
+    orientationSensor->onDisplayPowerStateChanged(0,0);
+    ASSERT_FALSE(orientationSensor->enabled());
 
-    screen->onDisplayPowerStateChanged(1,0);
-    ASSERT_TRUE(screen->orientationSensorEnabled());
+    orientationSensor->onDisplayPowerStateChanged(1,0);
+    ASSERT_TRUE(orientationSensor->enabled());
 }
 
 TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput1);
+    Screen *screen = new Screen(fakeOutput1, std::make_shared<OrientationSensor>());
 
     EXPECT_EQ(screen->geometry(), QRect(0, 0, 150, 200));
     EXPECT_EQ(screen->availableGeometry(), QRect(0, 0, 150, 200));
@@ -93,7 +98,7 @@ TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 
 TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput2);
+    Screen *screen = new Screen(fakeOutput2, std::make_shared<OrientationSensor>());
 
     EXPECT_EQ(screen->geometry(), QRect(500, 600, 1500, 2000));
     EXPECT_EQ(screen->availableGeometry(), QRect(500, 600, 1500, 2000));

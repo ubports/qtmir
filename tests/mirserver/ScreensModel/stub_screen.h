@@ -18,12 +18,13 @@
 #define STUBSCREEN_H
 
 #include "screen.h"
+#include "orientationsensor.h"
 
 class StubScreen : public Screen
 {
     Q_OBJECT
 public:
-    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : Screen(output) {}
+    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : Screen(output, std::make_shared<OrientationSensor>()) {}
 
     void makeCurrent() { Screen::makeCurrent(); }
 };
