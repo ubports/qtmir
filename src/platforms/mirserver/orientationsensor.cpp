@@ -34,15 +34,16 @@ OrientationSensor::OrientationSensor(QObject *parent)
 {
 }
 
-void OrientationSensor::onDisplayPowerStateChanged(int status, int /*reason*/)
+void OrientationSensor::onDisplayPowerStateChanged(int /*status*/, int /*reason*/)
 {
     qCDebug(QTMIR_SENSOR_MESSAGES) << "OrientationSensor::onDisplayPowerStateChanged";
-    if (m_orientationSensor != nullptr) {
+ /*   if (m_orientationSensor != nullptr) {
         if (status)
             start();
         else
             stop();
     }
+    */
 }
 
 // Used by tests
