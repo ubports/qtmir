@@ -15,6 +15,7 @@
  */
 
 #include "qmirserver_p.h"
+#include "miral/display_configuration_storage.h"
 
 // local
 #include "logging.h"
@@ -42,8 +43,18 @@
 
 #include <valgrind.h>
 
+namespace
+{
 static int qtmirArgc{1};
 static const char *qtmirArgv[]{"qtmir"};
+
+struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::DisplayId&, const miral::DisplayConfigurationOptions&) override {}
+
+    bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override { return false; }
+};
+} // namespace
 
 void MirServerThread::run()
 {
@@ -138,7 +149,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{std::make_shared<DefaultDisplayConfigurationStorage>(),
+                                        &qtmir::wrapDisplayConfigurationPolicy}
         });
 }
 

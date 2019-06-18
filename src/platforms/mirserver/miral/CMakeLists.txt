@@ -2,6 +2,7 @@ include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS} ${MIRRENDERERGLDEV_INCLUDE_
 
 add_library(miral-prototypes OBJECT
     edid.cpp edid.h
+    display_configuration_storage.h
     persist_display_config.cpp persist_display_config.h
     mirbuffer.cpp mirbuffer.h
 )
