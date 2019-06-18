@@ -332,6 +332,7 @@ void MirSurface::dropPendingBuffer()
             texture->setBuffer(renderables[0]->buffer());
             if (texture->textureSize() != size()) {
                 m_size = texture->textureSize();
+                m_sizePendingChange = false;
                 QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
             }
             m_textureUpdated = true;
@@ -408,6 +409,7 @@ bool MirSurface::updateTexture()
 
         if (texture->textureSize() != size()) {
             m_size = texture->textureSize();
+            m_sizePendingChange = false;
             QMetaObject::invokeMethod(this, "emitSizeChanged", Qt::QueuedConnection);
         }
 
@@ -537,8 +539,9 @@ void MirSurface::resize(int width, int height)
 
     bool mirSizeIsDifferent = width != m_size.width() || height != m_size.height();
 
-    if (mirSizeIsDifferent) {
+    if (mirSizeIsDifferent || m_sizePendingChange) {
         m_controller->resize(m_window, QSize(width, height));
+        m_sizePendingChange = true;
         DEBUG_MSG << " old (" << m_size.width() << "," << m_size.height() << ")"
                   << ", new (" << width << "," << height << ")";
     }
