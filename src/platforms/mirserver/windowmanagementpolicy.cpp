@@ -383,6 +383,15 @@ void WindowManagementPolicy::requestState(const miral::Window &window, const Mir
     }
 }
 
+void WindowManagementPolicy::setActiveFocus(const miral::Window &window, const bool focus)
+{
+    auto &windowInfo = tools.info_for(window);
+    if (focus)
+        advise_focus_gained(windowInfo);
+    else
+        advise_focus_lost(windowInfo);
+}
+
 Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
 {
     if (m_confinementRegions.isEmpty()) {

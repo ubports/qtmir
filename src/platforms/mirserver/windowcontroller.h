@@ -38,6 +38,7 @@ public:
     void forceClose(const miral::Window &window) override;
 
     void requestState(const miral::Window &window, const Mir::State state) override;
+    void setActiveFocus(const miral::Window &window, const bool focus) override;
 
     void deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event) override;
     void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) override;

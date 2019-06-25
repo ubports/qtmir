@@ -497,8 +497,6 @@ void MirSurface::updateActiveFocus()
         return;
     }
 
-    // TODO Figure out what to do here
-    /*
     if (m_activelyFocusedViews.isEmpty()) {
         DEBUG_MSG << "() unfocused";
         m_controller->setActiveFocus(m_window, false);
@@ -506,7 +504,6 @@ void MirSurface::updateActiveFocus()
         DEBUG_MSG << "() focused";
         m_controller->setActiveFocus(m_window, true);
     }
-    */
 
     m_neverSetSurfaceFocus = false;
 }

@@ -48,6 +48,7 @@ public:
     virtual void forceClose(const miral::Window &window) = 0;
 
     virtual void requestState(const miral::Window &window, const Mir::State state) = 0;
+    virtual void setActiveFocus(const miral::Window &window, const bool focus) = 0;
 
     virtual void deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event) = 0;
     virtual void deliverTouchEvent   (const miral::Window &window, const MirTouchEvent *event) = 0;

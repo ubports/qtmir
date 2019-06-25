@@ -34,6 +34,7 @@ public:
     MOCK_METHOD1(forceClose,   void(const miral::Window &));
 
     MOCK_METHOD2(requestState, void(const miral::Window &, const Mir::State));
+    MOCK_METHOD2(setActiveFocus, void(const miral::Window &, const bool));
 
     MOCK_METHOD2(deliverKeyboardEvent, void(const miral::Window &, const MirKeyboardEvent *));
     MOCK_METHOD2(deliverTouchEvent,    void(const miral::Window &, const MirTouchEvent *));

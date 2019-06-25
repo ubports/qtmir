@@ -76,6 +76,13 @@ void WindowController::requestState(const miral::Window &window, const Mir::Stat
     }
 }
 
+void WindowController::setActiveFocus(const miral::Window &window, const bool focus)
+{
+      if (m_policy) {
+        m_policy->setActiveFocus(window, focus);
+    }
+}
+
 void WindowController::deliverKeyboardEvent(const miral::Window &window, const MirKeyboardEvent *event)
 {
     if (m_policy) {

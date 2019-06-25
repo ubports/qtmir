@@ -88,6 +88,7 @@ public:
     void move  (const miral::Window &window, const Point topLeft);
     void raise(const miral::Window &window);
     void requestState(const miral::Window &window, const Mir::State state);
+    void setActiveFocus(const miral::Window &window, const bool focus);
 
     void ask_client_to_close(const miral::Window &window);
     void forceClose(const miral::Window &window);
