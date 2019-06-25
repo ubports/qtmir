@@ -155,8 +155,7 @@ Rectangle {
 
     property var windowComponent: resizeModeStretch ? windowStretchComponent : windowWaitResizeComponent
 
-    Connections {
-        target: SurfaceManager
+    SurfaceManager {
         onSurfaceCreated: {
             print("new surface", surface.name)
 
