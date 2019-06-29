@@ -530,6 +530,15 @@ void MirSurface::close()
     }
 }
 
+void MirSurface::forceClose()
+{
+    INFO_MSG << "()";
+
+    if (m_window) {
+        m_controller->forceClose(m_window);
+    }
+}
+
 void MirSurface::resize(int width, int height)
 {
     if (!clientIsRunning()) {

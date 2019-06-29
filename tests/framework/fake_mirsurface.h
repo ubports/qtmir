@@ -88,6 +88,7 @@ public:
     void close() override {
         Q_EMIT closeRequested();
     }
+    void forceClose() override {}
 
     void activate() override {}
 
