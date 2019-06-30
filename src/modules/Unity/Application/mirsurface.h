@@ -106,6 +106,7 @@ public:
     unity::shell::application::MirSurfaceListInterface *childSurfaceList() const override;
 
     Q_INVOKABLE void close() override;
+    Q_INVOKABLE void forceClose() override;
 
     ////
     // qtmir::MirSurfaceInterface
