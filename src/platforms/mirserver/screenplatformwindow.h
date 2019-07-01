@@ -14,22 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREENWINDOW_H
-#define SCREENWINDOW_H
+#ifndef SCREENPLATFORMWINDOW_H
+#define SCREENPLATFORMWINDOW_H
 
 #include <qpa/qplatformwindow.h>
 
-// ScreenWindow implements the basics of a QPlatformWindow.
+// ScreenPlatformWindow implements the basics of a QPlatformWindow.
 // QtMir enforces one Window per Screen, so Window and Screen are tightly coupled.
 // All Mir specifics live in the associated Screen object.
 
-class ScreenWindow : public QPlatformWindow
+class ScreenPlatformWindow : public QObject,
+                             public QPlatformWindow
 {
+    Q_OBJECT
 public:
-    explicit ScreenWindow(QWindow *window);
-    virtual ~ScreenWindow();
+    explicit ScreenPlatformWindow(QWindow *window, bool exposed);
+    virtual ~ScreenPlatformWindow();
+
+    void setVisible(bool visible) override;
+    void setGeometry(const QRect &rect) override;
+    void requestActivateWindow() override;
 
     bool isExposed() const override;
+    bool isActive() const override;
     void setExposed(const bool exposed);
 
     WId winId() const override { return m_winId; }
@@ -40,9 +47,19 @@ public:
     void makeCurrent();
     void doneCurrent();
 
+public Q_SLOTS:
+    void setActive(bool active);
+
+private Q_SLOTS:
+    void updateExpose();
+
 private:
+    void setPrimary(const bool primary);
+
     bool m_exposed;
+    bool m_primary;
+    bool m_active;
     WId m_winId;
 };
 
-#endif // SCREENWINDOW_H
+#endif // SCREENPLATFORMWINDOW_H

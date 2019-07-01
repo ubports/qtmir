@@ -12,7 +12,9 @@ include_directories(
 set(SCREENSPLUGIN_SRC
     plugin.cpp
     screens.cpp
+    screen.cpp
     qquickscreenwindow.cpp
+    types.h
     )
 
 add_library(unityscreensplugin SHARED
@@ -22,7 +24,7 @@ add_library(unityscreensplugin SHARED
 target_link_libraries(
     unityscreensplugin
 
-    qpa-mirserver
+    qtmirserver
 
     Qt5::Gui
     Qt5::Qml

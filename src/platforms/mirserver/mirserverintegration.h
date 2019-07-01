@@ -20,6 +20,7 @@
 // qt
 #include <qpa/qplatformintegration.h>
 #include <QScopedPointer>
+#include <QSharedPointer>
 
 class NativeInterface;
 class QMirServer;
@@ -54,12 +55,14 @@ public:
 
     QPlatformOffscreenSurface *createPlatformOffscreenSurface(QOffscreenSurface *surface) const override;
 
+    Qt::WindowState defaultWindowState(Qt::WindowFlags) const override;
+
 private:
     QScopedPointer<QPlatformAccessibility> m_accessibility;
     QScopedPointer<QPlatformFontDatabase> m_fontDb;
     QScopedPointer<QPlatformServices> m_services;
 
-    QScopedPointer<QMirServer> m_mirServer;
+    QSharedPointer<QMirServer> m_mirServer;
 
     NativeInterface *m_nativeInterface;
     QPlatformInputContext* m_inputContext;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Canonical, Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,19 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRDISPLAYCONFIGURATIONPOLICY_H
-#define MIRDISPLAYCONFIGURATIONPOLICY_H
+#ifndef UNITY_SCREEN_TYPES_H
+#define UNITY_SCREEN_TYPES_H
 
-#include <memory>
+#include <QObject>
+#include <QSize>
 
-namespace mir { namespace graphics { class DisplayConfigurationPolicy; }}
-
-namespace qtmir
+class ScreenMode : public QObject
 {
+    Q_OBJECT
+    Q_PROPERTY(qreal refreshRate MEMBER refreshRate CONSTANT)
+    Q_PROPERTY(QSize size MEMBER size CONSTANT)
+public:
+    ScreenMode():refreshRate(-1) {}
+    ScreenMode(const ScreenMode& other)
+        : QObject(nullptr),
+          refreshRate{other.refreshRate},size{other.size}
+    {}
 
-auto wrapDisplayConfigurationPolicy(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)
--> std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>;
-}
+    qreal refreshRate;
+    QSize size;
+};
 
+Q_DECLARE_METATYPE(ScreenMode)
 
-#endif // MIRDISPLAYCONFIGURATIONPOLICY_H
+#endif //UNITY_SCREEN_TYPES_H

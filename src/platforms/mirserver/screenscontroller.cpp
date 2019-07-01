@@ -15,7 +15,7 @@
  */
 
 #include "screenscontroller.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screensmodel.h"
 
 // Mir
@@ -26,7 +26,7 @@
 
 namespace mg = mir::graphics;
 
-ScreensController::ScreensController(const QSharedPointer<ScreensModel> &model,
+ScreensController::ScreensController(const std::shared_ptr<ScreensModel> &model,
         const std::shared_ptr<mir::graphics::Display> &display,
         const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
         QObject *parent)
@@ -44,7 +44,9 @@ CustomScreenConfigurationList ScreensController::configuration()
     Q_FOREACH(auto screen, m_screensModel->screens()) {
         list.append(
             CustomScreenConfiguration {
+                        true,
                         screen->outputId(),
+                        screen->used(),
                         screen->geometry().topLeft(),
                         screen->currentModeIndex(),
                         screen->powerMode(),
@@ -67,15 +69,72 @@ bool ScreensController::setConfiguration(const CustomScreenConfigurationList &ne
             [&config](mg::UserDisplayConfigurationOutput &outputConfig)
             {
                 if (config.id == outputConfig.id) {
-                    outputConfig.current_mode_index = config.currentModeIndex;
+                    outputConfig.used = config.used;
                     outputConfig.top_left = Point{ X{config.topLeft.x()}, Y{config.topLeft.y()}};
+                    outputConfig.current_mode_index = config.currentModeIndex;
                     outputConfig.power_mode = config.powerMode;
 //                    outputConfig.orientation = config.orientation; // disabling for now
                     outputConfig.scale = config.scale;
-                    outputConfig.form_factor = config.formFactor;
+                    outputConfig.form_factor = static_cast<MirFormFactor>(config.formFactor);
                 }
             });
     }
+
+    if (!displayConfiguration->valid()) {
+        return false;
+    }
+
+    m_displayConfigurationController->set_base_configuration(std::move(displayConfiguration));
+    return true;
+}
+
+CustomScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputId outputId)
+{
+    auto displayConfiguration = m_display->configuration();
+    CustomScreenConfiguration config;
+
+    displayConfiguration->for_each_output(
+        [&config, outputId](mg::UserDisplayConfigurationOutput &outputConfig)
+        {
+            if (outputConfig.id == outputId) {
+                config.valid = true;
+                config.id = outputConfig.id;
+                config.used = outputConfig.used;
+                config.topLeft = QPoint{outputConfig.top_left.x.as_int(), outputConfig.top_left.y.as_int()};
+                config.currentModeIndex = outputConfig.current_mode_index;
+                config.powerMode = outputConfig.power_mode;
+                config.orientation = outputConfig.orientation;
+                config.scale = outputConfig.scale;
+                config.formFactor = static_cast<qtmir::FormFactor>(outputConfig.form_factor);
+            }
+    });
+    return config;
+}
+
+bool ScreensController::setOutputConfiguration(const CustomScreenConfiguration &newConfig)
+{
+    using namespace mir::geometry;
+    if (!newConfig.valid)
+        return false;
+
+    auto displayConfiguration = m_display->configuration();
+
+    // FIXME - probably need to enforce some policy here.
+    // Dont disable all sreens
+
+    displayConfiguration->for_each_output(
+        [newConfig](mg::UserDisplayConfigurationOutput &outputConfig)
+        {
+            if (outputConfig.id == newConfig.id) {
+                outputConfig.used = newConfig.used;
+                outputConfig.top_left = Point{ X{newConfig.topLeft.x()}, Y{newConfig.topLeft.y()}};
+                outputConfig.current_mode_index = newConfig.currentModeIndex;
+                outputConfig.power_mode = newConfig.powerMode;
+//              outputConfig.orientation = newConfig.orientation; // disabling for now
+                outputConfig.scale = newConfig.scale;
+                outputConfig.form_factor = static_cast<MirFormFactor>(newConfig.formFactor);
+            }
+        });
 
     if (!displayConfiguration->valid()) {
         return false;

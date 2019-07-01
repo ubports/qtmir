@@ -26,8 +26,8 @@
 #include <mir/test/doubles/stub_display_buffer.h>
 
 #include "testable_screensmodel.h"
-#include "screen.h"
-#include "screenwindow.h"
+#include "platformscreen.h"
+#include "screenplatformwindow.h"
 #include "orientationsensor.h"
 
 #include <QGuiApplication>
@@ -89,7 +89,7 @@ TEST_F(ScreensModelTest, SingleScreenFound)
     screensModel->update();
 
     ASSERT_EQ(1, screensModel->screens().count());
-    Screen* screen = screensModel->screens().first();
+    PlatformScreen* screen = screensModel->screens().first();
     EXPECT_EQ(QRect(0, 0, 150, 200), screen->geometry());
 }
 

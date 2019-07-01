@@ -31,19 +31,24 @@
 #include "screensmodel.h"
 #include "windowcontroller.h"
 #include "windowmodelnotifier.h"
-#include "sessionauthorizer.h"
 #include "mirserverhooks.h"
+#include "wrappedsessionauthorizer.h"
+#include "qteventfeeder.h"
+#include "qtmir/displayconfigurationpolicy.h"
+#include "qtmir/windowmanagementpolicy.h"
+#include "qtmir/displayconfigurationstorage.h"
 
 //miral
-#include <miral/application_authorizer.h>
 #include <miral/runner.h>
+#include <QDebug>
 
 class MirServerThread;
 class QOpenGLContext;
+class QMirServer;
 
 namespace qtmir
 {
-using SetSessionAuthorizer = miral::SetApplicationAuthorizer<SessionAuthorizer>;
+class SessionAuthorizer;
 class PromptSessionManager;
 }
 
@@ -51,8 +56,9 @@ class QMirServerPrivate
 {
 public:
     QMirServerPrivate();
-    const QSharedPointer<ScreensModel> screensModel{new ScreensModel()};
+    const std::shared_ptr<ScreensModel> screensModel{new ScreensModel()};
     QSharedPointer<ScreensController> screensController;
+    std::shared_ptr<QtEventFeeder> eventFeeder{};
     MirServerThread *serverThread;
 
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const;
@@ -63,8 +69,7 @@ public:
     PromptSessionListener *promptSessionListener() const;
     std::shared_ptr<qtmir::PromptSessionManager> promptSessionManager() const;
 
-    std::shared_ptr<SessionAuthorizer> theApplicationAuthorizer() const
-        { return m_sessionAuthorizer.the_custom_application_authorizer(); }
+    std::shared_ptr<qtmir::SessionAuthorizer> theApplicationAuthorizer() const;
 
     qtmir::WindowModelNotifier *windowModelNotifier() const
         { return &m_windowModelNotifier; }
@@ -75,8 +80,11 @@ public:
     qtmir::WindowControllerInterface *windowController() const
         { return &m_windowController; }
 
+    qtmir::DisplayConfigurationPolicyWrapper m_displayConfigurationPolicy;
+    qtmir::WindowManagmentPolicyBuilder m_windowManagementPolicy;
+    qtmir::BasicSetDisplayConfigurationStorage m_displayConfigurationStorage;
+    miral::SetApplicationAuthorizer<WrappedSessionAuthorizer> m_wrappedSessionAuthorizer;
 private:
-    qtmir::SetSessionAuthorizer m_sessionAuthorizer;
     qtmir::OpenGLContextFactory m_openGLContextFactory;
     qtmir::MirServerHooks       m_mirServerHooks;
 

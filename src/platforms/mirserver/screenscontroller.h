@@ -40,7 +40,7 @@ class ScreensController : public QObject
     Q_OBJECT
 
 public:
-    explicit ScreensController(const QSharedPointer<ScreensModel> &model,
+    explicit ScreensController(const std::shared_ptr<ScreensModel> &model,
                                const std::shared_ptr<mir::graphics::Display> &display,
                                const std::shared_ptr<mir::shell::DisplayConfigurationController> &controller,
                                QObject *parent = 0);
@@ -48,8 +48,11 @@ public:
     CustomScreenConfigurationList configuration();
     bool setConfiguration(const CustomScreenConfigurationList &newConfig);
 
+    CustomScreenConfiguration outputConfiguration(qtmir::OutputId outputId);
+    bool setOutputConfiguration(const CustomScreenConfiguration &newConfig);
+
 private:
-    const QSharedPointer<ScreensModel> m_screensModel;
+    const std::shared_ptr<ScreensModel> m_screensModel;
     const std::shared_ptr<mir::graphics::Display> m_display;
     const std::shared_ptr<mir::shell::DisplayConfigurationController> m_displayConfigurationController;
 };

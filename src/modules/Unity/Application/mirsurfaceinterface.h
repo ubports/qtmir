@@ -57,11 +57,11 @@ public:
     virtual void setViewExposure(qintptr viewId, bool exposed) = 0;
 
     // methods called from the rendering (scene graph) thread:
-    virtual QSharedPointer<QSGTexture> texture() = 0;
-    virtual QSGTexture *weakTexture() const = 0;
-    virtual bool updateTexture() = 0;
-    virtual unsigned int currentFrameNumber() const = 0;
-    virtual bool numBuffersReadyForCompositor() = 0;
+    virtual QSharedPointer<QSGTexture> texture(qintptr userId) = 0;
+    virtual QSGTexture *weakTexture(qintptr userId) const = 0;
+    virtual bool updateTexture(qintptr userId) = 0;
+    virtual unsigned int currentFrameNumber(qintptr userId) const = 0;
+    virtual bool numBuffersReadyForCompositor(qintptr userId) = 0;
     // end of methods called from the rendering (scene graph) thread
 
     /*

@@ -26,14 +26,16 @@
 
 struct CustomScreenConfiguration
 {
+    bool valid{false};
     qtmir::OutputId id;
 
+    bool used;
     QPoint topLeft;
     uint32_t currentModeIndex;
     MirPowerMode powerMode;
     MirOrientation orientation;
     float scale;
-    MirFormFactor formFactor;
+    qtmir::FormFactor formFactor;
 
     // To read additional readonly state, consult the Screen
 };

@@ -20,7 +20,6 @@
 #include "logging.h"
 #include "timestamp.h"
 #include "tracepoints.h" // generated from tracepoints.tp
-#include "screen.h"
 
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
@@ -391,7 +390,7 @@ public:
         return QGuiApplication::focusWindow();
     }
 
-    QWindow* getWindowForTouchPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
+    QWindow* getWindowForPoint(const QPoint &point) override //FIXME: not efficient, not updating focused window
     {
         const QWindowList windowList = qGuiApp->topLevelWindows();
 
@@ -458,52 +457,6 @@ public:
             QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
         }
 #endif
-    }
-
-    void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
-                          Qt::KeyboardModifiers modifiers) override
-    {
-        // Send to the first screen that handles the mouse event
-        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
-        //       (because they all might have their own separate graphical mouse pointer item)
-        //       This will probably come once we implement the feature of having the mouse pointer
-        //       crossing adjacent screens.
-
-        const QList<QScreen *> screens = qGuiApp->screens();
-        bool eventHandled = false;
-        int i = 0;
-        while (i < screens.count() && !eventHandled) {
-            auto screenWindow = static_cast<Screen*>(screens[i]->handle());
-            auto platformCursor = static_cast<qtmir::Cursor*>(screenWindow->cursor());
-            eventHandled = platformCursor->handleMouseEvent(timestamp, relative, buttons, modifiers);
-            ++i;
-        }
-        if (!eventHandled) {
-            QWindowSystemInterface::handleMouseEvent(focusedWindow(), timestamp, absolute, absolute, buttons, modifiers);
-        }
-    }
-
-    void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta, Qt::KeyboardModifiers modifiers) override
-    {
-        // Send to the first screen that handles the mouse event
-        // TODO: Have a mechanism to tell which screen currently has the logical mouse pointer
-        //       (because they all might have their own separate graphical mouse pointer item)
-        //       This will probably come once we implement the feature of having the mouse pointer
-        //       crossing adjacent screens.
-
-        const QList<QScreen *> screens = qGuiApp->screens();
-        bool eventHandled = false;
-        int i = 0;
-        while (i < screens.count() && !eventHandled) {
-            auto screenWindow = static_cast<Screen*>(screens[i]->handle());
-            auto platformCursor = static_cast<qtmir::Cursor*>(screenWindow->cursor());
-            eventHandled = platformCursor->handleWheelEvent(timestamp, angleDelta, modifiers);
-            ++i;
-        }
-        if (!eventHandled) {
-            QWindowSystemInterface::handleWheelEvent(focusedWindow(), timestamp, absolute, absolute,
-                                                     QPoint(), angleDelta, modifiers, Qt::ScrollUpdate);
-        }
     }
 };
 
@@ -613,6 +566,7 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
 
     auto relative = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
+
     auto absolute = QPointF(mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
                             mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
 
@@ -624,13 +578,35 @@ void QtEventFeeder::dispatchPointer(const MirPointerEvent *pev)
         const float hDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll);
         const float vDelta = mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll);
 
+        auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
         if (hDelta != 0 || vDelta != 0) {
             // QWheelEvent::DefaultDeltasPerStep = 120 but not defined on vivid
             const QPoint angleDelta(120 * hDelta, 120 * vDelta);
-            mQtWindowSystem->handleWheelEvent(timestamp.count(), absolute, angleDelta, modifiers);
+
+            auto wheel = new QWheelEvent(relative, absolute, QPoint(), angleDelta, 0, Qt::Vertical, buttons, modifiers);
+            wheel->setTimestamp(timestamp.count());
+            QGuiApplication::postEvent(this, wheel);
         }
-        auto buttons = getQtMouseButtonsfromMirPointerEvent(pev);
-        mQtWindowSystem->handleMouseEvent(timestamp.count(), relative, absolute, buttons, modifiers);
+
+        auto type = action == mir_pointer_action_motion ? QEvent::MouseMove
+                                                        : action == mir_pointer_action_button_up ? QEvent::MouseButtonRelease
+                                                                                                 : QEvent::MouseButtonPress;
+
+        Qt::MouseButtons stateChange = m_buttons ^ buttons;
+        Qt::MouseButton button = Qt::NoButton;
+        for (int check = Qt::LeftButton;
+            check <= int(Qt::MaxMouseButton);
+             check = check << 1) {
+            if (check & stateChange) {
+                button = Qt::MouseButton(check);
+                break;
+            }
+        }
+
+        m_buttons = buttons;
+        auto mouseEvent = new QMouseEvent(type, relative, absolute, button, buttons, modifiers);
+        mouseEvent->setTimestamp(timestamp.count());
+        QGuiApplication::postEvent(this, mouseEvent);
         break;
     }
     default:
@@ -708,7 +684,7 @@ void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
     QWindow *window = nullptr;
 
     if (kPointerCount > 0) {
-        window = mQtWindowSystem->getWindowForTouchPoint(
+        window = mQtWindowSystem->getWindowForPoint(
                     QPoint(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                            mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
 
@@ -766,6 +742,41 @@ void QtEventFeeder::dispatchTouch(const MirTouchEvent *tev)
         touchPoints);
 
     tracepoint(qtmirserver, touchEventDispatch_end, std::chrono::nanoseconds(timestamp).count());
+}
+
+bool QtEventFeeder::event(QEvent *e)
+{
+    switch (e->type()) {
+    case QEvent::Wheel:
+    {
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
+
+        QWheelEvent* we = static_cast<QWheelEvent*>(e);
+        QWindowSystemInterface::handleWheelEvent(nullptr, we->timestamp(), we->pos(), we->globalPos(),
+                we->pixelDelta(), we->angleDelta(), we->modifiers(), Qt::ScrollUpdate);
+
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
+        return true;
+    } break;
+
+    case QEvent::MouseMove:
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    {
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(true);
+
+        QMouseEvent* me = static_cast<QMouseEvent*>(e);
+        QWindowSystemInterface::handleMouseEvent(nullptr, me->timestamp(), me->localPos(), me->globalPos(), me->buttons(), me->modifiers());
+
+        QWindowSystemInterface::setSynchronousWindowSystemEvents(false);
+        return true;
+    } break;
+
+    default:
+        break;
+    }
+
+    return QObject::event(e);
 }
 
 void QtEventFeeder::validateTouches(QWindow *window, ulong timestamp,

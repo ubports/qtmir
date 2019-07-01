@@ -15,13 +15,15 @@
  */
 
 #include "qmirserver_p.h"
+#include "qtmir/miral/display_configuration_storage.h"
 
 // local
 #include "logging.h"
-#include "mirdisplayconfigurationpolicy.h"
-#include "windowmanagementpolicy.h"
+#include "wrappedwindowmanagementpolicy.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
+#include "qteventfeeder.h"
+#include "qtmir/sessionauthorizer.h"
 
 // prototyping for later incorporation in miral
 #include <miral/persist_display_config.h>
@@ -29,12 +31,6 @@
 // miral
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
-#include <miral/version.h>
-#if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
-#include <miral/set_window_management_policy.h>
-#else
-#include <miral/set_window_managment_policy.h>
-#endif
 
 // Qt
 #include <QCoreApplication>
@@ -42,8 +38,48 @@
 
 #include <valgrind.h>
 
+namespace
+{
 static int qtmirArgc{1};
 static const char *qtmirArgv[]{"qtmir"};
+
+class DefaultWindowManagementPolicy : public qtmir::WindowManagementPolicy
+{
+public:
+    DefaultWindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
+        : qtmir::WindowManagementPolicy(tools, dd)
+    {}
+};
+
+struct DefaultDisplayConfigurationStorage : miral::DisplayConfigurationStorage
+{
+    void save(const miral::DisplayId&, const miral::DisplayConfigurationOptions&) override {}
+
+    bool load(const miral::DisplayId&, miral::DisplayConfigurationOptions&) const override { return false; }
+};
+
+std::shared_ptr<miral::DisplayConfigurationPolicy> buildDisplayConfigurationPolicy()
+{
+    return std::make_shared<qtmir::DisplayConfigurationPolicy>();
+}
+
+std::shared_ptr<miral::DisplayConfigurationStorage> buildDisplayConfigurationStorage()
+{
+    return std::make_shared<DefaultDisplayConfigurationStorage>();
+}
+
+std::shared_ptr<qtmir::WindowManagementPolicy> buildWindowManagementPolicy(const miral::WindowManagerTools &tools,
+                                                                           std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd)
+{
+    return std::make_shared<DefaultWindowManagementPolicy>(tools, dd);
+}
+
+std::shared_ptr<qtmir::SessionAuthorizer> buildSessionAuthorizer()
+{
+    return std::make_shared<qtmir::SessionAuthorizer>();
+}
+
+} // namespace
 
 void MirServerThread::run()
 {
@@ -78,8 +114,18 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServerPrivate::promptSessionMan
     return std::make_shared<qtmir::PromptSessionManager>(m_mirServerHooks.thePromptSessionManager());
 }
 
-QMirServerPrivate::QMirServerPrivate() :
-    runner(qtmirArgc, qtmirArgv)
+std::shared_ptr<qtmir::SessionAuthorizer> QMirServerPrivate::theApplicationAuthorizer() const
+{
+    auto wrapped = m_wrappedSessionAuthorizer.the_custom_application_authorizer();
+    return wrapped ? wrapped->wrapper() : nullptr;
+}
+
+QMirServerPrivate::QMirServerPrivate()
+    : m_displayConfigurationPolicy(buildDisplayConfigurationPolicy)
+    , m_windowManagementPolicy(buildWindowManagementPolicy)
+    , m_displayConfigurationStorage(buildDisplayConfigurationStorage)
+    , m_wrappedSessionAuthorizer(buildSessionAuthorizer)
+    , runner(qtmirArgc, qtmirArgv)
 {
 }
 
@@ -115,7 +161,6 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 
     runner.add_start_callback([&]
     {
-        screensModel->update();
         screensController = m_mirServerHooks.createScreensController(screensModel);
         m_mirServerHooks.createInputDeviceObserver();
     });
@@ -128,17 +173,22 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         screensController.clear();
     });
 
+    auto displayStorageBuilder = m_displayConfigurationStorage.builder();
+
     runner.run_with(
         {
-            m_sessionAuthorizer,
+            m_wrappedSessionAuthorizer,
             m_openGLContextFactory,
             m_mirServerHooks,
-            miral::set_window_management_policy<WindowManagementPolicy>(m_windowModelNotifier, m_windowController,
-                    m_appNotifier),
+            miral::set_window_management_policy<WrappedWindowManagementPolicy>(m_windowModelNotifier,
+                                                                               m_windowController,
+                                                                               m_appNotifier,
+                                                                               m_windowManagementPolicy),
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{displayStorageBuilder(),
+                                        m_displayConfigurationPolicy}
         });
 }
 

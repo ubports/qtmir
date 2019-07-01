@@ -20,7 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "fake_displayconfigurationoutput.h"
 
-#include <screen.h>
+#include <platformscreen.h>
 #include <orientationsensor.h>
 
 #include <QSensorManager>
@@ -55,7 +55,7 @@ TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 {
     auto orientationSensor = std::make_shared<OrientationSensor>();
     orientationSensor->start();
-    Screen *screen = new Screen(fakeOutput1, orientationSensor); // is external display (dvi)
+    PlatformScreen *screen = new PlatformScreen(fakeOutput1, orientationSensor); // is external display (dvi)
 
     // Default state should be disabled
     ASSERT_FALSE(screen->orientationSensorEnabled());
@@ -71,7 +71,7 @@ TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 {
     auto orientationSensor = std::make_shared<OrientationSensor>();
     orientationSensor->start();
-    Screen *screen = new Screen(fakeOutput2, orientationSensor); // is internal display
+    PlatformScreen *screen = new PlatformScreen(fakeOutput2, orientationSensor); // is internal display
 
     // Default state should be active
     ASSERT_TRUE(screen->orientationSensorEnabled());
@@ -85,7 +85,7 @@ TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 
 TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput1, std::make_shared<OrientationSensor>());
+    PlatformScreen *screen = new PlatformScreen(fakeOutput1, std::make_shared<OrientationSensor>());
 
     EXPECT_EQ(screen->geometry(), QRect(0, 0, 150, 200));
     EXPECT_EQ(screen->availableGeometry(), QRect(0, 0, 150, 200));
@@ -98,7 +98,7 @@ TEST_F(ScreenTest, ReadConfigurationFromDisplayConfig)
 
 TEST_F(ScreenTest, ReadDifferentConfigurationFromDisplayConfig)
 {
-    Screen *screen = new Screen(fakeOutput2, std::make_shared<OrientationSensor>());
+    PlatformScreen *screen = new PlatformScreen(fakeOutput2, std::make_shared<OrientationSensor>());
 
     EXPECT_EQ(screen->geometry(), QRect(500, 600, 1500, 2000));
     EXPECT_EQ(screen->availableGeometry(), QRect(500, 600, 1500, 2000));

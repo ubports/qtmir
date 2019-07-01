@@ -18,41 +18,32 @@
 #define QQUICKSCREENWINDOW_H
 
 #include <QQuickWindow>
-#include "screens.h"
+#include <QPointer>
+
+class ScreenAdapter;
 
 namespace qtmir {
 
+/*
+ * QQuickScreenWindow - wrapper of QQuickWindow to enable QML to specify destination screen.
+**/
 class QQuickScreenWindow : public QQuickWindow
 {
     Q_OBJECT
-
-    Q_PROPERTY(QScreen *screen READ screen WRITE setScreen NOTIFY screenChanged)
-    Q_PROPERTY(float scale READ scale NOTIFY scaleChanged)
-    Q_PROPERTY(FormFactor formFactor READ formFactor NOTIFY formFactorChanged)
-
+    Q_PROPERTY(ScreenAdapter *screen READ screenWrapper WRITE setScreenWrapper NOTIFY screenWrapperChanged)
+    Q_PROPERTY(int winId READ winId CONSTANT)
 public:
     explicit QQuickScreenWindow(QQuickWindow *parent = 0);
+    ~QQuickScreenWindow();
 
-    QScreen *screen() const;
-    void setScreen(QScreen *screen);
-
-    qreal scale();
-    FormFactor formFactor();
-    Q_INVOKABLE bool setScaleAndFormFactor(const float scale, const FormFactor formFactor);
+    ScreenAdapter *screenWrapper() const;
+    void setScreenWrapper(ScreenAdapter *screen);
 
 Q_SIGNALS:
-    void screenChanged(QScreen *screen);
-    void scaleChanged(qreal scale);
-    void formFactorChanged(FormFactor arg);
-
-private Q_SLOTS:
-    void nativePropertyChanged(QPlatformWindow *window, const QString &propertyName);
+    void screenWrapperChanged();
 
 private:
-    float getScaleNativeProperty() const;
-    float m_scale;
-    FormFactor getFormFactorNativeProperty() const;
-    FormFactor m_formFactor;
+    QPointer<ScreenAdapter> m_screen;
 };
 
 } //namespace qtmir

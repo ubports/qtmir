@@ -41,9 +41,24 @@ QMirServer::~QMirServer()
     stop();
 }
 
+QSharedPointer<QMirServer> QMirServer::create()
+{
+    static QWeakPointer<QMirServer> server;
+    if (server.isNull()) {
+        QSharedPointer<QMirServer> newServer(new QMirServer());
+        server = newServer.toWeakRef();
+        return newServer;
+    }
+    return server.toStrongRef();
+}
+
 void QMirServer::start()
 {
     Q_D(QMirServer);
+
+    if (d->serverThread->isRunning()) {
+        return;
+    }
 
     d->serverThread->start(QThread::TimeCriticalPriority);
 
@@ -76,7 +91,7 @@ bool QMirServer::isRunning() const
     return d->serverThread->isRunning();
 }
 
-QSharedPointer<ScreensModel> QMirServer::screensModel() const
+std::shared_ptr<ScreensModel> QMirServer::screensModel() const
 {
     Q_D(const QMirServer);
     return d->screensModel;
@@ -105,6 +120,8 @@ void *QMirServer::nativeResourceForIntegration(const QByteArray &resource) const
         result = d->windowModelNotifier();
     else if (resource == "ScreensController")
         result = d->screensController.data();
+    else if (resource == "InputDispatcher")
+        result = d->eventFeeder.get();
 
     return result;
 }
@@ -113,4 +130,40 @@ std::shared_ptr<qtmir::PromptSessionManager> QMirServer::thePromptSessionManager
 {
     Q_D(const QMirServer);
     return d->promptSessionManager();
+}
+
+qtmir::WindowModelNotifier *QMirServer::windowModelNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->windowModelNotifier();
+}
+
+qtmir::AppNotifier *QMirServer::appNotifier() const
+{
+    Q_D(const QMirServer);
+    return d->appNotifier();
+}
+
+void QMirServer::wrapDisplayConfigurationPolicy(qtmir::DisplayConfigurationPolicyWrapper const& setDisplayConfigurationPolicy)
+{
+    Q_D(QMirServer);
+    d->m_displayConfigurationPolicy = setDisplayConfigurationPolicy;
+}
+
+void QMirServer::overrideSessionAuthorizer(qtmir::SessionAuthorizerBuilder const& setApplicationAuthorizer)
+{
+    Q_D(QMirServer);
+    d->m_wrappedSessionAuthorizer = miral::SetApplicationAuthorizer<WrappedSessionAuthorizer>(setApplicationAuthorizer);
+}
+
+void QMirServer::overrideWindowManagementPolicy(const qtmir::WindowManagmentPolicyBuilder &wmPolicyCreator)
+{
+    Q_D(QMirServer);
+    d->m_windowManagementPolicy = wmPolicyCreator;
+}
+
+void QMirServer::overrideDisplayConfigurationStorage(const qtmir::BasicSetDisplayConfigurationStorage &setDisplayConfigStorage)
+{
+    Q_D(QMirServer);
+    d->m_displayConfigurationStorage = setDisplayConfigStorage;
 }

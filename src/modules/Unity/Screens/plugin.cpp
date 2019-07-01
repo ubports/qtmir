@@ -21,9 +21,19 @@
 
 // local
 #include "screens.h"
+#include "screen.h"
 #include "qquickscreenwindow.h"
 
 using namespace qtmir;
+
+namespace {
+QObject* screensSingleton(QQmlEngine* engine, QJSEngine* scriptEngine) {
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
+    return new qtmir::Screens();
+}
+}
+
 
 class UnityScreensPlugin : public QQmlExtensionPlugin {
     Q_OBJECT
@@ -33,12 +43,16 @@ class UnityScreensPlugin : public QQmlExtensionPlugin {
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Unity.Screens"));
 
-        qRegisterMetaType<QScreen*>("QScreen*");
+        qRegisterMetaType<ScreenAdapter*>("Screen*");
+        qRegisterMetaType<ScreenMode*>("ScreenMode*");
+        qRegisterMetaType<ScreenConfig*>("ScreenConfig*");
+        qmlRegisterUncreatableType<ScreenMode>(uri, 0, 1, "ScreenMode", "ScreenMode is not creatable.");
 
-        qmlRegisterType<qtmir::Screens>(uri, 0, 1, "Screens");
+        qmlRegisterSingletonType<qtmir::Screens>(uri, 0, 1, "Screens", screensSingleton);
         qRegisterMetaType<qtmir::FormFactor>("qtmir::FormFactor");
 
         qmlRegisterType<qtmir::QQuickScreenWindow>(uri, 0, 1, "ScreenWindow");
+        qmlRegisterRevision<QWindow,1>(uri, 0, 1);
     }
 };
 

@@ -26,41 +26,32 @@
 
 namespace qtmir {
 
+
 class Cursor : public MirPlatformCursor
 {
     Q_OBJECT
 public:
     Cursor();
 
-    // Called form Mir input thread
-    bool handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
-            Qt::KeyboardModifiers modifiers);
-    bool handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers mods);
-
     ////
     // MirPlatformCursor
 
     // Called from Qt's GUI thread
-    void setMousePointer(MirMousePointerInterface *mousePointer) override;
+    void registerMousePointer(MirMousePointerInterface *mousePointer) override;
+    void unregisterMousePointer(MirMousePointerInterface *mousePointer) override;
 
     ////
     // QPlatformCursor
 
+    void pointerEvent(const QMouseEvent & event) override;
     void changeCursor(QCursor *windowCursor, QWindow *window) override;
 
     void setPos(const QPoint &pos) override;
     QPoint pos() const override;
 
-private Q_SLOTS:
-    void setMirCursorName(const QString &mirCursorName);
-
 private:
-    void updateMousePointerCursorName();
-    QMutex m_mutex;
-    QPointer<MirMousePointerInterface> m_mousePointer;
-    QMap<int,QString> m_shapeToCursorName;
-    QString m_qtCursorName;
-    QString m_mirCursorName;
+    class Private;
+    QSharedPointer<Private> d;
 };
 
 } // namespace qtmir

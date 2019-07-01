@@ -27,6 +27,7 @@
 #include <mir/compositor/compositor.h>
 #include <mir/server.h>
 #include <mir/shell/shell.h>
+#include <mir/observer_registrar.h>
 
 namespace
 {
@@ -51,7 +52,8 @@ void QtCompositorImpl::stop()
 }
 }
 
-qtmir::SetQtCompositor::SetQtCompositor(QSharedPointer<ScreensModel> const& screensModel) :
+
+qtmir::SetQtCompositor::SetQtCompositor(std::shared_ptr<ScreensModel> const& screensModel) :
     m_screensModel{screensModel}
 {
 }
@@ -69,6 +71,7 @@ void qtmir::SetQtCompositor::operator()(mir::Server& server)
         {
             if (auto const compositor = m_compositor.lock())
             {
+                server.the_display_configuration_observer_registrar()->register_interest(m_screensModel);
                 m_screensModel->init(server.the_display(), compositor, server.the_shell());
             }
             else

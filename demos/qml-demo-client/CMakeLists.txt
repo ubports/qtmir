@@ -22,6 +22,9 @@ target_link_libraries(
 
 file(GLOB QML_JS_FILES *.qml *.js *.png)
 
+add_custom_target(${DEMO_CLIENT}-qmlfiles
+                  SOURCES ${QML_JS_FILES})
+
 # install binaries
 install(TARGETS ${DEMO_CLIENT}
      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

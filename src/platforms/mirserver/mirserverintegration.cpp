@@ -48,9 +48,9 @@
 #include "nativeinterface.h"
 #include "offscreensurface.h"
 #include "qmirserver.h"
-#include "screen.h"
+#include "platformscreen.h"
 #include "screensmodel.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 #include "services.h"
 #include "ubuntutheme.h"
 #include "logging.h"
@@ -62,7 +62,7 @@ MirServerIntegration::MirServerIntegration()
     : m_accessibility(new QPlatformAccessibility())
     , m_fontDb(new QGenericUnixFontDatabase())
     , m_services(new Services)
-    , m_mirServer(new QMirServer)
+    , m_mirServer(QMirServer::create())
     , m_nativeInterface(nullptr)
 {
     // For access to sensors, qtmir uses qtubuntu-sensors. qtubuntu-sensors reads the
@@ -111,19 +111,11 @@ QPlatformWindow *MirServerIntegration::createPlatformWindow(QWindow *window) con
 
     auto screens = m_mirServer->screensModel();
     if (!screens) {
-        qCritical("Screens are not initialized, unable to create a new QWindow/ScreenWindow");
+        qCritical("Screens are not initialized, unable to create a new QWindow/ScreenPlatformWindow");
         return nullptr;
     }
 
-    auto platformWindow = new ScreenWindow(window);
-    if (screens->compositing()) {
-        platformWindow->setExposed(true);
-    }
-
-    qCDebug(QTMIR_SCREENS) << "QWindow" << window << "with geom" << window->geometry()
-                           << "is backed by a" << static_cast<Screen *>(window->screen()->handle())
-                           << "with geometry" << window->screen()->geometry();
-    return platformWindow;
+    return new ScreenPlatformWindow(window, screens->compositing());
 }
 
 QPlatformBackingStore *MirServerIntegration::createPlatformBackingStore(QWindow */*window*/) const
@@ -144,16 +136,20 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
+    m_nativeInterface = new NativeInterface(m_mirServer.data());
     m_mirServer->start();
 
     auto screens = m_mirServer->screensModel();
     if (!screens) {
         qFatal("ScreensModel not initialized");
     }
-    QObject::connect(screens.data(), &ScreensModel::screenAdded,
-            [this](Screen *screen) { this->screenAdded(screen); });
-    QObject::connect(screens.data(), &ScreensModel::screenRemoved,
-            [this](Screen *screen) {
+    // need to create the screens before the integration initialises.
+    screens->update();
+
+    QObject::connect(screens.get(), &ScreensModel::screenAdded,
+            [this](PlatformScreen *screen) { this->screenAdded(screen); });
+    QObject::connect(screens.get(), &ScreensModel::screenRemoved,
+            [this](PlatformScreen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;
 #else
@@ -164,8 +160,6 @@ void MirServerIntegration::initialize()
     Q_FOREACH(auto screen, screens->screens()) {
         screenAdded(screen);
     }
-
-    m_nativeInterface = new NativeInterface(m_mirServer.data());
 }
 
 QPlatformAccessibility *MirServerIntegration::accessibility() const
@@ -212,4 +206,9 @@ QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
         QOffscreenSurface *surface) const
 {
     return new OffscreenSurface(surface);
+}
+
+Qt::WindowState MirServerIntegration::defaultWindowState(Qt::WindowFlags) const
+{
+    return Qt::WindowFullScreen;
 }

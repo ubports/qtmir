@@ -24,7 +24,7 @@ Build-Depends: cmake,
                libubuntu-app-launch2-dev,
                libubuntu-application-api-dev,
                libudev-dev,
-               libunity-api-dev (>= 8.5),
+               libunity-api-dev (>= 8.7),
                liburl-dispatcher1-dev,
                libxkbcommon-dev,
                libxrender-dev,
@@ -89,6 +89,35 @@ Description: Qt platform abstraction (QPA) plugin for a Mir server (desktop)
  a Mir server. It also exposes some internal Mir functionality.
  .
  This variant of the package is for GNU-based desktops.
+
+Package: libqtmirserver-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: qtmir-desktop (= ${binary:Version}) | qtmir-android (= ${binary:Version}),
+         ${misc:Depends},
+         libmiral-dev (>= 1.3.0),
+Description: Developer files for QtMir server API
+ QtMir is a set of Qt5 components to enable one to write a Mir server with Qt.
+ It contains a QPA (Qt Platform Abstraction) plugin which creates and manages
+ a Mir server. It also exposes some internal Mir functionality.
+ .
+ This package contains the library headers for developers.
+
+Package: libqtmirserver1
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+      ${shlibs:Depends},
+Description: QtMir server API shared library
+ QtMir is a set of Qt5 components to enable one to write a Mir server with Qt.
+ It contains a QPA (Qt Platform Abstraction) plugin which creates and manages
+ a Mir server. It also exposes some internal Mir functionality.
+ .
+ Contains the shared library containing QtMir server API.
 
 Package: qtdeclarative5-qtmir-plugin
 Architecture: any

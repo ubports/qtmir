@@ -1,6 +1,9 @@
 # Qt5PlatformSupport is not available as a cmake module.
 # And also not anymore as pkgconfig module since Qt 5.6.
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
+include(FindQt5PlatformSupport)
+
+set(QTMIRSERVER_ABI 1)
 
 add_subdirectory(miral)
 
@@ -34,12 +37,16 @@ else()
 endif()
 
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_BINARY_DIR} # for tracepoints.h
 )
 
 include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
+    ${MIRCOMMON_INCLUDE_DIRS}
+    ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
 
@@ -47,13 +54,16 @@ include_directories(
     ${EGL_INCLUDE_DIRS}
     ${LTTNG_INCLUDE_DIRS}
 
-    ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
+    ${Qt5Gui_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
 if(Qt5Core_VERSION VERSION_LESS "5.8.0")
     ${Qt5ThemeSupport_INCLUDE_DIRS}
 endif()
 
+
+    ${Qt5Quick_INCLUDE_DIRS}
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
+    ${Qt5Qml_INCLUDE_DIRS}
 
     ${APPLICATION_API_INCLUDE_DIRS}
 
@@ -62,62 +72,24 @@ endif()
     ${VALGRIND_INCLUDE_DIRS}
 )
 
-# Files the depend on mirserver-dev
-set(MIRSERVER_DEPENDANTS
-    eventbuilder.cpp
-    eventdispatch.cpp
-    inputdeviceobserver.cpp
-    mircursorimages.cpp
-    mirdisplayconfigurationpolicy.cpp
-    miropenglcontext.cpp
-    mirserverhooks.cpp
-    mirserverintegration.cpp
-    openglcontextfactory.cpp
-    promptsessionmanager.cpp
-    qmirserver.cpp
-    qmirserver_p.cpp
-    qteventfeeder.cpp
-    screen.cpp
-    screenscontroller.cpp
-    screensmodel.cpp
-    screenwindow.cpp
-    setqtcompositor.cpp
-    )
-
-add_library(qpa-mirserver SHARED
-    ${MIRSERVER_DEPENDANTS}
-    clipboard.cpp
-    cursor.cpp
-    initialsurfacesizes.cpp
-    inputdeviceobserver.cpp
-    logging.cpp
-    mirsingleton.cpp
-    nativeinterface.cpp
-    offscreensurface.cpp
-    plugin.cpp
-    promptsessionlistener.cpp
-    qtcompositor.cpp
-    services.cpp
-    sessionauthorizer.cpp
-    shelluuid.cpp
-    surfaceobserver.cpp
-    tracepoints.c
-    ubuntutheme.cpp
-    windowcontroller.cpp
-    windowmanagementpolicy.cpp
-    orientationsensor.cpp
-
-    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+# These files will compile without mirserver-dev
+# These files will compile without mirserver-dev
+add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
-
-    # We need to run moc on these headers
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
-    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
-    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
-    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
-    $<TARGET_OBJECTS:miral-prototypes>
-    # We need to run moc on these headers
+    logging.cpp
+    shelluuid.cpp
+    clipboard.cpp
+    mirsingleton.cpp
+    wrappedsessionauthorizer.cpp
+    promptsessionlistener.cpp
+    displayconfigurationstorage.cpp
+    nativeinterface.cpp
+    services.cpp
+    windowcontroller.cpp
+    tracepoints.c
+    surfaceobserver.cpp
+    initialsurfacesizes.cpp
+    orientationsensor.cpp
 )
 
 # We have to remove -pedantic for tracepoints.c
@@ -126,21 +98,131 @@ string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 set(TRACEPOINTS_CMAKE_C_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS} -DBYTE_ORDER=__BYTE_ORDER -fPIC ")
 set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS}")
 
-target_link_libraries(
-    qpa-mirserver
+include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
+
+# These files will only compile with mirserver-dev
+add_library(qtmirserver-mirserver OBJECT
+    openglcontextfactory.cpp openglcontextfactory.h
+    mircursorimages.cpp
+    screenscontroller.cpp
+    qtcompositor.cpp
+    displayconfigurationpolicy.cpp
+    wrappedwindowmanagementpolicy.cpp
+    mirdisplayconfigurationobserver.cpp
+    mirserverhooks.cpp mirserverhooks.h
+    setqtcompositor.cpp setqtcompositor.h
+    eventdispatch.cpp eventdispatch.h
+    promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+)
+
+# These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
+set(QMIRSERVER_PLUGIN_SRC
+    ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
+    cursor.cpp
+    eventbuilder.cpp
+    qteventfeeder.cpp
+    qmirserver.cpp
+    qmirserver_p.cpp
+    platformscreen.cpp
+    screenplatformwindow.cpp
+    screensmodel.cpp
+    miropenglcontext.cpp
+    offscreensurface.cpp
+    inputdeviceobserver.cpp
+    mirserverapplication.cpp
+
+# We need to run moc on these headers
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
+    ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/Mir.h
+
+    ${CMAKE_SOURCE_DIR}/include/qtmir/mirserverapplication.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationpolicy.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
+
+    ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
+    ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
+)
+
+add_library(qtmirserver SHARED
+    ${QMIRSERVER_PLUGIN_SRC}
+    $<TARGET_OBJECTS:qtmirserver-nomirserver>
+    $<TARGET_OBJECTS:qtmirserver-mirserver>
+    $<TARGET_OBJECTS:miral-prototypes>
+)
+
+target_link_libraries(qtmirserver
+    PUBLIC
+        ${MIRAL_LDFLAGS}
+        ${MIRSERVER_LDFLAGS}
+        Qt5::Core
+        Qt5::Gui
+
+    PRIVATE
+        ${URL_DISPATCHER_LDFLAGS}
+        ${EGL_LDFLAGS}
+        ${GL_LIBRARIES}
+        ${LTTNG_LIBRARIES}
+        ${GIO_LDFLAGS}
+        ${FONTCONFIG_LDFLAGS}
+        ${XKBCOMMON_LIBRARIES}
+
+        ${CONTENT_HUB_LIBRARIES}
+
+        Qt5::DBus
+        Qt5::Quick
+        Qt5::Sensors
+        ${QT5PLATFORMSUPPORT_LIBS}
+)
+
+set_target_properties(qtmirserver
+  PROPERTIES
+  SOVERSION ${QTMIRSERVER_ABI}
+)
+
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/qtmir")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qtmirserver.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
+    @ONLY
+)
+
+install(
+  TARGETS qtmirserver
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/qtmir
+  DESTINATION "include/qtmir"
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/qtmirserver.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
+
+add_library(qpa-mirserver SHARED
+    mirserverintegration.cpp
+    plugin.cpp
+    ubuntutheme.cpp
+)
+
+target_link_libraries(qpa-mirserver
+PRIVATE
+    qtmirserver
     ${QT5PLATFORMSUPPORT_LIBS}
 
-    ${MIRAL_LDFLAGS}
     ${MIRSERVER_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}
     ${LTTNG_LIBRARIES}
-
-    ${QT5PLATFORM_SUPPORT_LDFLAGS}
-    # TODO Qt5Platform support LDFLAGS dont provide actual required ldflags...
-    # I found these were needed...perhaps there is some way to query qmake/qconfig?
-    -lfreetype
     ${GIO_LDFLAGS}
     ${FONTCONFIG_LDFLAGS}
     ${XKBCOMMON_LIBRARIES}
@@ -151,6 +233,7 @@ target_link_libraries(
     Qt5::DBus
     Qt5::Quick
     Qt5::Sensors
+    Qt5::Qml
 )
 
 include(UseLttngGenTp)

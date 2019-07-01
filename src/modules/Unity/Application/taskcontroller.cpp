@@ -25,7 +25,7 @@
 #include "nativeinterface.h"
 #include "promptsessionlistener.h"
 #include "promptsession.h"
-#include "sessionauthorizer.h"
+#include "qtmir/sessionauthorizer.h"
 
 // common
 #include "appnotifier.h"

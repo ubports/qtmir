@@ -34,12 +34,12 @@ namespace qtmir
 class SetQtCompositor
 {
 public:
-    explicit SetQtCompositor(QSharedPointer<ScreensModel> const& screensModel);
+    explicit SetQtCompositor(std::shared_ptr<ScreensModel> const& screensModel);
 
     void operator()(mir::Server& server);
 
 private:
-    QSharedPointer<ScreensModel> const m_screensModel;
+    std::shared_ptr<ScreensModel> const m_screensModel;
     std::weak_ptr<QtCompositor> m_compositor;
 };
 }

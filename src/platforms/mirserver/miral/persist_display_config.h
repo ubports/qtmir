@@ -22,24 +22,27 @@
 #include <functional>
 #include <memory>
 
-namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
+namespace mir { class Server; }
 
 // Prototyping namespace for later incorporation in MirAL
 namespace miral
 {
+class DisplayConfigurationPolicy;
+class DisplayConfigurationStorage;
+
 /// Restores the saved display configuration and saves changes to the base configuration
 class PersistDisplayConfig
 {
 public:
-    PersistDisplayConfig();
     ~PersistDisplayConfig();
     PersistDisplayConfig(PersistDisplayConfig const&);
     auto operator=(PersistDisplayConfig const&) -> PersistDisplayConfig&;
 
     // TODO factor this out better
-    using DisplayConfigurationPolicyWrapper =
-        std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy>(const std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> &wrapped)>;
-    PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper);
+    using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<DisplayConfigurationPolicy>()>;
+
+    PersistDisplayConfig(std::shared_ptr<DisplayConfigurationStorage> const& storage,
+                         DisplayConfigurationPolicyWrapper const& custom_wrapper);
 
     void operator()(mir::Server& server);
 
@@ -47,6 +50,7 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 };
+
 }
 
 #endif //MIRAL_PERSIST_DISPLAY_CONFIG_H

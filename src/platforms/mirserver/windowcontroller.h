@@ -19,11 +19,11 @@
 
 #include "windowcontrollerinterface.h"
 
-class WindowManagementPolicy;
+class WrappedWindowManagementPolicy;
 
 namespace qtmir {
 
-class WindowController : public WindowControllerInterface
+class WindowController : public qtmir::WindowControllerInterface
 {
 public:
     WindowController();
@@ -46,10 +46,10 @@ public:
     void setWindowConfinementRegions(const QVector<QRect> &regions) override;
     void setWindowMargins(Mir::Type windowType, const QMargins &margins) override;
 
-    void setPolicy(WindowManagementPolicy *policy);
+    void setPolicy(WrappedWindowManagementPolicy *policy);
 
 protected:
-    WindowManagementPolicy *m_policy;
+    WrappedWindowManagementPolicy *m_policy;
 };
 
 } // namespace qtmir

@@ -1,6 +1,8 @@
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_BINARY_DIR} # for tracepoints.h
 )
 
 include_directories(
@@ -29,6 +31,7 @@ add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 set(QMLMIRPLUGIN_SRC
     application_manager.cpp
     application.cpp
+    compositortextureprovider.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp
@@ -93,7 +96,7 @@ target_link_libraries(
     Qt5::Qml
     Qt5::Quick
 
-    qpa-mirserver
+    qtmirserver
 )
 
 # Generate tracepoints.c and .h from tracepoints.tp
