@@ -49,6 +49,10 @@ QObject* applicationManagerSingleton(QQmlEngine* engine, QJSEngine* scriptEngine
 QObject* mirSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
     return qtmir::Mir::instance();
 }
+
+QObject* surfaceManagerSingleton(QQmlEngine* /*engine*/, QJSEngine* /*scriptEngine*/) {
+    return qtmir::SurfaceManager::instance();
+}
 } // anonymous namespace
 
 class UnityApplicationPlugin : public QQmlExtensionPlugin {
@@ -67,6 +71,8 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
         qRegisterMetaType<unity::shell::application::SurfaceManagerInterface*>("unity::shell::application::SurfaceManagerInterface*");
         qRegisterMetaType<MirWindowAttrib>("MirWindowAttrib");
 
+        qRegisterMetaType<std::shared_ptr<miral::Workspace>>("std::shared_ptr<miral::Workspace>");
+
         qmlRegisterUncreatableType<unity::shell::application::ApplicationManagerInterface>(
                     uri, 0, 1, "ApplicationManagerInterface", "Abstract interface. Cannot be created in QML");
         qmlRegisterSingletonType<qtmir::ApplicationManager>(
@@ -79,7 +85,7 @@ class UnityApplicationPlugin : public QQmlExtensionPlugin {
                     uri, 0, 1, "MirSurface", "MirSurface can't be instantiated from QML");
         qmlRegisterType<qtmir::MirSurfaceItem>(uri, 0, 1, "MirSurfaceItem");
         qmlRegisterSingletonType<qtmir::Mir>(uri, 0, 1, "Mir", mirSingleton);
-        qmlRegisterType<qtmir::SurfaceManager>(uri, 0, 1, "SurfaceManager");
+        qmlRegisterSingletonType<qtmir::SurfaceManager>(uri, 0, 1, "SurfaceManager", surfaceManagerSingleton);
 
         qmlRegisterType<qtmir::WindowModel>(uri, 0, 1, "WindowModel");
     }

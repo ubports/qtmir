@@ -28,9 +28,10 @@
 #include <mir_toolkit/common.h>
 
 // local
+#include "qtmir/types.h"
+#include "qtmir/miral/display_configuration_storage.h"
 #include "cursor.h"
 #include "screenplatformwindow.h"
-#include "screentypes.h"
 
 // std
 #include <memory>
@@ -66,7 +67,7 @@ public:
     float scale() const { return m_scale; }
     qtmir::FormFactor formFactor() const { return m_formFactor; }
     MirPowerMode powerMode() const { return m_powerMode; }
-    qtmir::OutputId outputId() const { return m_outputId; }
+    miral::DisplayId displayId() const { return m_displayId; }
     qtmir::OutputTypes outputType() const { return m_type; }
     uint32_t currentModeIndex() const { return m_currentModeIndex; }
     bool isActive() const { return m_isActive; }
@@ -93,6 +94,8 @@ Q_SIGNALS:
     void outputTypeChanged();
     void scaleChanged();
     void formFactorChanged();
+    void orientationChanged();
+    void powerModeChanged();
     void currentModeIndexChanged();
     void positionChanged();
     void modeChanged();
@@ -134,7 +137,7 @@ private:
 
     mir::renderer::gl::RenderTarget *m_renderTarget;
     mir::graphics::DisplaySyncGroup *m_displayGroup;
-    qtmir::OutputId m_outputId;
+    miral::DisplayId m_displayId;
     qtmir::OutputTypes m_type;
     MirPowerMode m_powerMode;
 

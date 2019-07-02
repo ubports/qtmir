@@ -2,6 +2,7 @@
 # And also not anymore as pkgconfig module since Qt 5.6.
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 include(FindQt5PlatformSupport)
+include(UseLttngGenTp)
 
 set(QTMIRSERVER_ABI 1)
 
@@ -72,7 +73,19 @@ endif()
     ${VALGRIND_INCLUDE_DIRS}
 )
 
-# These files will compile without mirserver-dev
+
+# We have to remove -pedantic for tracepoints.c
+string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+# BYTE_ORDER needed to compile tracepoints in C99 mode.
+set(TRACEPOINTS_CMAKE_C_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS} -DBYTE_ORDER=__BYTE_ORDER -fPIC ")
+set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS}")
+
+# Generate tracepoints.c and .h from tracepoints.tp
+add_lttng_gen_tp(NAME tracepoints)
+add_custom_target(MirServer_LTTNG
+    DEPENDS tracepoints.h tracepoints.c
+)
+
 # These files will compile without mirserver-dev
 add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
@@ -86,17 +99,16 @@ add_library(qtmirserver-nomirserver OBJECT
     nativeinterface.cpp
     services.cpp
     windowcontroller.cpp
+    workspacecontroller.cpp
     tracepoints.c
     surfaceobserver.cpp
     initialsurfacesizes.cpp
     orientationsensor.cpp
+    screenadaptor.cpp
+    screenadaptormodel.cpp
+    qtmir.cpp
 )
-
-# We have to remove -pedantic for tracepoints.c
-string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-# BYTE_ORDER needed to compile tracepoints in C99 mode.
-set(TRACEPOINTS_CMAKE_C_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS} -DBYTE_ORDER=__BYTE_ORDER -fPIC ")
-set_source_files_properties(tracepoints.c PROPERTIES COMPILE_FLAGS "${TRACEPOINTS_CMAKE_C_FLAGS}")
+add_dependencies(qtmirserver-nomirserver MirServer_LTTNG)
 
 include_directories(SYSTEM ${MIRSERVER_INCLUDE_DIRS})
 
@@ -130,6 +142,7 @@ set(QMIRSERVER_PLUGIN_SRC
     offscreensurface.cpp
     inputdeviceobserver.cpp
     mirserverapplication.cpp
+    windowmodelnotifier.cpp
 
 # We need to run moc on these headers
     ${APPLICATION_API_INCLUDEDIR}/unity/shell/application/MirMousePointerInterface.h
@@ -140,8 +153,13 @@ set(QMIRSERVER_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/include/qtmir/sessionauthorizer.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/windowmanagementpolicy.h
     ${CMAKE_SOURCE_DIR}/include/qtmir/displayconfigurationstorage.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/screen.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/screens.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/types.h
+    ${CMAKE_SOURCE_DIR}/include/qtmir/qtmir.h
 
     ${CMAKE_SOURCE_DIR}/src/common/windowcontrollerinterface.h
+    ${CMAKE_SOURCE_DIR}/src/common/workspacecontrollerinterface.h
     ${CMAKE_SOURCE_DIR}/src/common/windowmodelnotifier.h
     ${CMAKE_SOURCE_DIR}/src/common/appnotifier.h
 )

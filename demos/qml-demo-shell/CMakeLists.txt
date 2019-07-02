@@ -15,6 +15,8 @@ include_directories(
 
 add_executable(${DEMO_SHELL}
     pointerposition.cpp
+    screenwindow.cpp
+    screens.cpp
     main.cpp
 )
 

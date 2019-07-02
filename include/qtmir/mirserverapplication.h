@@ -22,9 +22,20 @@
 // std
 #include <functional>
 
+#if defined(qApp)
+#undef qApp
+#endif
+#define qApp (static_cast<qtmir::GuiServerApplication *>(QCoreApplication::instance()))
+
+#if defined(qGuiApp)
+#undef qGuiApp
+#endif
+#define qGuiApp (static_cast<qtmir::GuiServerApplication *>(QCoreApplication::instance()))
+
 class QMirServer;
 
-namespace qtmir {
+namespace qtmir
+{
 
 class WindowModelNotifier;
 class AppNotifier;

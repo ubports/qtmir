@@ -263,6 +263,22 @@ namespace qtmir
         Q_EMIT d->m_windowModel.windowsRaised(windows);
     }
 
+    void WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                            std::vector<miral::Window> const& windows)
+    {
+        miral::CanonicalWindowManagerPolicy::advise_adding_to_workspace(workspace, windows);
+
+        Q_EMIT d->m_windowModel.windowsAddedToWorkspace(workspace, windows);
+    }
+
+    void WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                                std::vector<miral::Window> const& windows)
+    {
+        miral::CanonicalWindowManagerPolicy::advise_removing_from_workspace(workspace, windows);
+
+        Q_EMIT d->m_windowModel.windowsAboutToBeRemovedFromWorkspace(workspace, windows);
+    }
+
     Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
     {
         if (d->m_confinementRegions.isEmpty()) {
@@ -331,6 +347,7 @@ namespace qtmir
 WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
+                                               qtmir::WorkspaceController &workspaceController,
                                                qtmir::AppNotifier &appNotifier,
                                                const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
     : qtmir::WindowManagementPolicy(tools, std::make_shared<qtmir::WindowManagementPolicyPrivate>(windowModel,
@@ -341,6 +358,7 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
     qRegisterMetaType<std::vector<miral::Window>>();
     qRegisterMetaType<miral::ApplicationInfo>();
     windowController.setPolicy(this);
+    workspaceController.setPolicy(this);
 }
 
 /* Following are hooks to allow custom policy be imposed */
@@ -494,6 +512,18 @@ void WrappedWindowManagementPolicy::deliver_pointer_event(const MirPointerEvent 
     qtmir::dispatchInputEvent(window, mir_pointer_event_input_event(event));
 }
 
+void WrappedWindowManagementPolicy::advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                               const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_adding_to_workspace(workspace, windows);
+}
+
+void WrappedWindowManagementPolicy::advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                                   const std::vector<miral::Window> &windows)
+{
+    m_wrapper->advise_removing_from_workspace(workspace, windows);
+}
+
 void WrappedWindowManagementPolicy::activate(const miral::Window &window)
 {
     if (window) {
@@ -618,3 +648,43 @@ void WrappedWindowManagementPolicy::handle_request_resize(miral::WindowInfo &win
 {
     m_wrapper->handle_request_resize(window_info, input_event, edge);
 }
+void WrappedWindowManagementPolicy::for_each_window_in_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                                                 std::function<void(miral::Window const&)> const& callback)
+{
+    tools.invoke_under_lock([&]() {
+        tools.for_each_window_in_workspace(workspace, callback);
+    });
+}
+
+void WrappedWindowManagementPolicy::move_worspace_content_to_workspace(const std::shared_ptr<miral::Workspace> &to,
+                                                                       const std::shared_ptr<miral::Workspace> &from)
+{
+    tools.invoke_under_lock([&]() {
+        tools.move_workspace_content_to_workspace(to, from);
+    });
+}
+
+void WrappedWindowManagementPolicy::move_window_to_workspace(const miral::Window &window,
+                                                             const std::shared_ptr<miral::Workspace> &workspace)
+{
+    tools.invoke_under_lock([&]() {
+        auto root = window;
+        auto const* info = &tools.info_for(root);
+
+        while (auto const& parent = info->parent())
+        {
+            root = parent;
+            info = &tools.info_for(root);
+        }
+
+        std::vector<std::shared_ptr<miral::Workspace>> workspaces;
+        tools.for_each_workspace_containing(root, [&](std::shared_ptr<miral::Workspace> const& from) {
+            workspaces.push_back(from);
+        });
+        for (auto wks : workspaces) {
+            tools.remove_tree_from_workspace(root, wks);
+        }
+        tools.add_tree_to_workspace(root, workspace);
+    });
+}
+

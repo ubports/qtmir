@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,28 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UNITY_SCREEN_TYPES_H
-#define UNITY_SCREEN_TYPES_H
+#ifndef SCREENADAPTORMODEL_H
+#define SCREENADAPTORMODEL_H
 
-#include <QObject>
-#include <QSize>
+#include "qtmir/screens.h"
 
-class ScreenMode : public QObject
+namespace qtmir
 {
-    Q_OBJECT
-    Q_PROPERTY(qreal refreshRate MEMBER refreshRate CONSTANT)
-    Q_PROPERTY(QSize size MEMBER size CONSTANT)
-public:
-    ScreenMode():refreshRate(-1) {}
-    ScreenMode(const ScreenMode& other)
-        : QObject(nullptr),
-          refreshRate{other.refreshRate},size{other.size}
-    {}
+class Screen;
+}
 
-    qreal refreshRate;
-    QSize size;
+class ScreenAdaptorModel : public qtmir::Screens
+{
+public:
+    ScreenAdaptorModel(QObject* parent = 0);
+    ~ScreenAdaptorModel();
+
+    QVector<qtmir::Screen*> screens() const { return m_screenList; }
+
+    qtmir::Screen* activeScreen() const;
+
+private Q_SLOTS:
+    void onScreenAdded(QScreen *screen);
+    void onScreenRemoved(QScreen *screen);
+
+private:
+    QVector<qtmir::Screen*> m_screenList;
 };
 
-Q_DECLARE_METATYPE(ScreenMode)
-
-#endif //UNITY_SCREEN_TYPES_H
+#endif // SCREENADAPTORMODEL_H

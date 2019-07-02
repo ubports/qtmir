@@ -7,6 +7,8 @@ qtmir (0.6.0ubuntu4) xenial; urgency=medium
   * Support for multiple compositors per MirSurface
   * Support multiple screen windows & cursors with qml instantiation
   * Screen configuration API & implementation
+  * Removed Unity.Screens
+  * Support for workspaces
 
  -- Marius Gripsgard <marius@ubports.com>  Tue, 02 Jul 2019 01:36:30 +0200
 

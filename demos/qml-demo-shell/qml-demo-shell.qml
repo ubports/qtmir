@@ -1,5 +1,5 @@
 import QtQuick 2.5
-import Unity.Screens 0.1
+import QtMir 0.1
 
 Instantiator {
     id: root
@@ -10,6 +10,12 @@ Instantiator {
         id: window
         visible: true
         screen: model.screen
+
+        Binding {
+            target: model.screen
+            property: "active"
+            value: index == 0
+        }
 
         Row {
             x: 10

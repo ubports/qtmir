@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Canonical, Ltd.
+ * Copyright (C) 2017 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,32 +14,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CUSTOMSCREENCONFIGURATION_H
-#define CUSTOMSCREENCONFIGURATION_H
+#ifndef QTMIR_SCREENS_H
+#define QTMIR_SCREENS_H
 
-#include <QPoint>
+#include <QObject>
 #include <QVector>
 
-#include "screentypes.h"
-#include <mir_toolkit/common.h>
+class QScreen;
 
-
-struct CustomScreenConfiguration
+namespace qtmir
 {
-    bool valid{false};
-    qtmir::OutputId id;
+class Screen;
 
-    bool used;
-    QPoint topLeft;
-    uint32_t currentModeIndex;
-    MirPowerMode powerMode;
-    MirOrientation orientation;
-    float scale;
-    qtmir::FormFactor formFactor;
+class Screens : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(qtmir::Screen* activeScreen READ activeScreen NOTIFY activeScreenChanged)
+public:
+    Screens(QObject *parent = 0): QObject(parent) {}
+    ~Screens() = default;
 
-    // To read additional readonly state, consult the Screen
+    virtual QVector<qtmir::Screen*> screens() const = 0;
+
+    virtual qtmir::Screen* activeScreen() const = 0;
+
+Q_SIGNALS:
+    void screenAdded(qtmir::Screen *screen);
+    void screenRemoved(qtmir::Screen *screen);
+
+    void activeScreenChanged();
 };
 
-typedef QVector<CustomScreenConfiguration> CustomScreenConfigurationList;
+} // namespace qtmir
 
-#endif // CUSTOMSCREENCONFIGURATION_H
+#endif // QTMIR_SCREENS_H

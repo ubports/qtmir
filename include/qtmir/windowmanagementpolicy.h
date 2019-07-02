@@ -18,7 +18,7 @@
 #define QTMIR_WINDOWMANAGEMENTPOLICY_H
 
 // miral
-#include "miral/canonical_window_manager.h"
+#include <miral/canonical_window_manager.h>
 #include <miral/version.h>
 #if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
 #include <miral/set_window_management_policy.h>
@@ -85,8 +85,13 @@ public:
     void handle_request_drag_and_drop(miral::WindowInfo &window_info) override;
     void handle_request_move(miral::WindowInfo &window_info, const MirInputEvent *input_event) override;
     void handle_request_resize(miral::WindowInfo &window_info, const MirInputEvent *input_event, MirResizeEdge edge) override;
+ 
+    Rectangle confirm_inherited_move(const miral::WindowInfo &windowInfo, Displacement movement) override;
 
-    Rectangle confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement) override;
+    void advise_adding_to_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                    const std::vector<miral::Window> &windows) override;
+    void advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                        const std::vector<miral::Window> &windows) override;
 
 protected:
     WindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd);

@@ -5,6 +5,7 @@ set(
 )
 
 include_directories(
+  ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common

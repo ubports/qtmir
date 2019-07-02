@@ -21,11 +21,8 @@
 
 #include <QtCore/qmetatype.h>
 
-namespace mir { namespace graphics { namespace detail { struct GraphicsConfOutputIdTag; } } }
-
 namespace qtmir
 {
-using OutputId = mir::IntWrapper<mir::graphics::detail::GraphicsConfOutputIdTag>;
 
 enum OutputTypes {
     Unknown,

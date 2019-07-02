@@ -37,15 +37,15 @@ ScreensController::ScreensController(const std::shared_ptr<ScreensModel> &model,
 {
 }
 
-CustomScreenConfigurationList ScreensController::configuration()
+qtmir::ScreenConfigurationList ScreensController::configuration()
 {
-    CustomScreenConfigurationList list;
+    qtmir::ScreenConfigurationList list;
 
     Q_FOREACH(auto screen, m_screensModel->screens()) {
         list.append(
-            CustomScreenConfiguration {
+            qtmir::ScreenConfiguration {
                         true,
-                        screen->outputId(),
+                        screen->displayId().output_id,
                         screen->used(),
                         screen->geometry().topLeft(),
                         screen->currentModeIndex(),
@@ -58,7 +58,7 @@ CustomScreenConfigurationList ScreensController::configuration()
     return list;
 }
 
-bool ScreensController::setConfiguration(const CustomScreenConfigurationList &newConfig)
+bool ScreensController::setConfiguration(const qtmir::ScreenConfigurationList &newConfig)
 {
     using namespace mir::geometry;
 
@@ -88,17 +88,16 @@ bool ScreensController::setConfiguration(const CustomScreenConfigurationList &ne
     return true;
 }
 
-CustomScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputId outputId)
+qtmir::ScreenConfiguration ScreensController::outputConfiguration(miral::OutputId outputId)
 {
     auto displayConfiguration = m_display->configuration();
-    CustomScreenConfiguration config;
+    qtmir::ScreenConfiguration config;
 
     displayConfiguration->for_each_output(
         [&config, outputId](mg::UserDisplayConfigurationOutput &outputConfig)
         {
             if (outputConfig.id == outputId) {
                 config.valid = true;
-                config.id = outputConfig.id;
                 config.used = outputConfig.used;
                 config.topLeft = QPoint{outputConfig.top_left.x.as_int(), outputConfig.top_left.y.as_int()};
                 config.currentModeIndex = outputConfig.current_mode_index;
@@ -111,7 +110,7 @@ CustomScreenConfiguration ScreensController::outputConfiguration(qtmir::OutputId
     return config;
 }
 
-bool ScreensController::setOutputConfiguration(const CustomScreenConfiguration &newConfig)
+bool ScreensController::setOutputConfiguration(const qtmir::ScreenConfiguration &newConfig)
 {
     using namespace mir::geometry;
     if (!newConfig.valid)

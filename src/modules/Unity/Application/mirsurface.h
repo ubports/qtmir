@@ -54,7 +54,7 @@ class MirSurface : public MirSurfaceInterface
     Q_OBJECT
 
 public:
-    MirSurface(NewWindow windowInfo,
+    MirSurface(qtmir::NewWindow windowInfo,
                WindowControllerInterface *controller,
                SessionInterface *session = nullptr,
                MirSurface *parentSurface = nullptr);
@@ -261,6 +261,8 @@ private:
 
     class SurfaceObserverImpl;
     std::shared_ptr<SurfaceObserverImpl> m_surfaceObserver;
+    class WindowNotifierObserverImpl;
+    std::shared_ptr<WindowNotifierObserverImpl> m_windowModelObserver;
 
     QPoint m_position;
     QPoint m_requestedPosition;

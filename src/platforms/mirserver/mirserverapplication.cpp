@@ -16,12 +16,14 @@
 
 #include "qtmir/mirserverapplication.h"
 #include "qmirserver.h"
+#include "qtmir/qtmir.h"
 
 #include <QDebug>
 
-namespace qtmir {
-
-namespace {
+namespace qtmir
+{
+namespace
+{
 
 QSharedPointer<QMirServer> mirServer;
 

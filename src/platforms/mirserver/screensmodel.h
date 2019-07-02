@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREENCONTROLLER_H
-#define SCREENCONTROLLER_H
+#ifndef SCREENCONFIGURATIONOBSERVER_H
+#define SCREENCONFIGURATIONOBSERVER_H
 
 #include "mirdisplayconfigurationobserver.h"
 
@@ -107,4 +107,4 @@ private:
     std::shared_ptr<OrientationSensor> m_orientationSensor;
 };
 
-#endif // SCREENCONTROLLER_H
+#endif // SCREENCONFIGURATIONOBSERVER_H
