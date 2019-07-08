@@ -64,9 +64,11 @@ namespace qtmir
     struct WindowManagementPolicyPrivate
     {
         WindowManagementPolicyPrivate(qtmir::WindowModelNotifier &windowModel,
-                                      qtmir::AppNotifier &appNotifier)
+                                      qtmir::AppNotifier &appNotifier,
+                                      const std::shared_ptr<QtEventFeeder>& eventFeeder)
             : m_windowModel(windowModel)
             , m_appNotifier(appNotifier)
+            , m_eventFeeder(eventFeeder)
         {}
 
         QRect getConfinementRect(const QRect rect) const
@@ -84,7 +86,7 @@ namespace qtmir
 
         qtmir::WindowModelNotifier &m_windowModel;
         qtmir::AppNotifier &m_appNotifier;
-        QtEventFeeder m_eventFeeder;
+        const std::shared_ptr<QtEventFeeder> m_eventFeeder;
 
         QVector<QRect> m_confinementRegions;
         QMargins m_windowMargins[mir_window_types];
@@ -166,19 +168,19 @@ namespace qtmir
 
     bool WindowManagementPolicy::handle_keyboard_event(const MirKeyboardEvent *event)
     {
-        d->m_eventFeeder.dispatchKey(event);
+        d->m_eventFeeder->dispatchKey(event);
         return true;
     }
 
     bool WindowManagementPolicy::handle_touch_event(const MirTouchEvent *event)
     {
-        d->m_eventFeeder.dispatchTouch(event);
+        d->m_eventFeeder->dispatchTouch(event);
         return true;
     }
 
     bool WindowManagementPolicy::handle_pointer_event(const MirPointerEvent *event)
     {
-        d->m_eventFeeder.dispatchPointer(event);
+        d->m_eventFeeder->dispatchPointer(event);
         return true;
     }
 
@@ -349,9 +351,11 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::WindowController &windowController,
                                                qtmir::WorkspaceController &workspaceController,
                                                qtmir::AppNotifier &appNotifier,
+                                               const std::shared_ptr<QtEventFeeder> &eventFeeder,
                                                const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
     : qtmir::WindowManagementPolicy(tools, std::make_shared<qtmir::WindowManagementPolicyPrivate>(windowModel,
-                                                                                                  appNotifier))
+                                                                                                  appNotifier,
+                                                                                                  eventFeeder))
     , m_wrapper(wmBuilder(tools, d))
 {
     qRegisterMetaType<qtmir::NewWindow>();

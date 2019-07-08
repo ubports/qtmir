@@ -37,6 +37,7 @@ public:
                                   qtmir::WindowController &windowController,
                                   qtmir::WorkspaceController &workspaceController,
                                   qtmir::AppNotifier &appNotifier,
+                                  const std::shared_ptr<QtEventFeeder> &eventFeeder,
                                   const qtmir::WindowManagmentPolicyBuilder &wmBuilder);
 
     // From WindowManagementPolicy

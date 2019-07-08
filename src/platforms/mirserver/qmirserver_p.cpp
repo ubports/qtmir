@@ -184,6 +184,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
                                                                                m_windowController,
                                                                                m_workspaceController,
                                                                                m_appNotifier,
+                                                                               eventFeeder,
                                                                                m_windowManagementPolicy),
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
