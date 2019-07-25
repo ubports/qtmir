@@ -44,6 +44,7 @@ class SurfaceObserver;
 
 namespace qtmir {
 
+class AbstractTimer;
 class MirSurfaceListModel;
 class SessionInterface;
 
@@ -176,6 +177,7 @@ public:
     miral::Window window() const { return m_window; }
 
     // useful for tests
+    void setCloseTimer(AbstractTimer *timer);
     std::shared_ptr<SurfaceObserver> surfaceObserver() const;
 
 public Q_SLOTS:
@@ -194,6 +196,7 @@ private Q_SLOTS:
     void onFramesPostedObserved();
     void emitSizeChanged();
     void setCursor(const QCursor &cursor);
+    void onCloseTimedOut();
     void setInputBounds(const QRect &rect);
 
 private:
@@ -274,6 +277,14 @@ private:
     QRect m_inputBounds;
 
     bool m_focused{false};
+
+    enum ClosingState {
+        NotClosing = 0,
+        Closing = 1,
+        CloseOverdue = 2
+    };
+    ClosingState m_closingState{NotClosing};
+    AbstractTimer *m_closeTimer{nullptr};
 
     // assumes parent won't be destroyed before its children
     MirSurface *m_parentSurface;

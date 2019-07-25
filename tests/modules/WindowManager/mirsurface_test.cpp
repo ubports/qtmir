@@ -167,6 +167,10 @@ TEST_F(MirSurfaceTest, failedSurfaceCloseEventuallyDestroysSurface)
     bool surfaceDeleted = false;
     QObject::connect(&surface, &QObject::destroyed, &surface, [&surfaceDeleted](){ surfaceDeleted = true; });
 
+    QSharedPointer<FakeTimeSource> fakeTimeSource(new FakeTimeSource);
+    QPointer<FakeTimer> fakeTimer(new FakeTimer(fakeTimeSource));
+    surface.setCloseTimer(fakeTimer.data()); // surface takes ownership of the timer
+
     qintptr view = (qintptr)1;
     surface.registerView(view);
 
@@ -174,6 +178,12 @@ TEST_F(MirSurfaceTest, failedSurfaceCloseEventuallyDestroysSurface)
         .Times(1);
 
     surface.close();
+
+    if (fakeTimer->isRunning()) {
+        // Simulate that closeTimer has timed out.
+        fakeTimeSource->m_msecsSinceReference = fakeTimer->nextTimeoutTime() + 1;
+        fakeTimer->update();
+    }
 
     // clean up
     surface.setLive(false);
