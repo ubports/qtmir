@@ -91,6 +91,7 @@ Application::~Application()
     case InternalState::SuspendingWaitProcess:
         wipeQMLCache();
         break;
+    case InternalState::Closing:
     case InternalState::Suspended:
     case InternalState::StoppedResumable:
         break;
@@ -200,6 +201,8 @@ const char* Application::internalStateToStr(InternalState state)
         return "SuspendingWaitProcess";
     case InternalState::Suspended:
         return "Suspended";
+    case InternalState::Closing:
+        return "Closing";
     case InternalState::StoppedResumable:
         return "StoppedResumable";
     case InternalState::Stopped:
@@ -246,6 +249,7 @@ Application::State Application::state() const
         return Starting;
     case InternalState::Running:
     case InternalState::RunningInBackground:
+    case InternalState::Closing:
         return Running;
     case InternalState::SuspendingWaitSession:
     case InternalState::SuspendingWaitProcess:
@@ -315,7 +319,7 @@ void Application::applyClosing()
             m_stopTimer->start();
         }
         if (m_closing) {
-            Q_EMIT closing();
+            setInternalState(InternalState::Closing);
         }
         break;
     case InternalState::SuspendingWaitSession:
@@ -324,6 +328,11 @@ void Application::applyClosing()
         break;
     case InternalState::SuspendingWaitProcess:
         // should leave the app alone until it reaches Suspended state
+        break;
+    case InternalState::Closing:
+        // leave it alone
+        Q_ASSERT(m_closing);
+        Q_ASSERT(m_stopTimer->isRunning());
         break;
     case InternalState::StoppedResumable:
         setInternalState(InternalState::Stopped);
@@ -354,6 +363,10 @@ void Application::applyRequestedRunning()
         break;
     case InternalState::SuspendingWaitProcess:
         // should leave the app alone until it reaches Suspended state
+        break;
+    case InternalState::Closing:
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
         respawn();
@@ -388,6 +401,10 @@ void Application::applyRequestedSuspended()
     case InternalState::SuspendingWaitProcess:
     case InternalState::Suspended:
         // it's already going where we it's wanted
+        break;
+    case InternalState::Closing:
+        // can't be
+        Q_ASSERT(false);
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:
@@ -434,6 +451,9 @@ void Application::close()
         for (auto session : m_sessions) {
             session->close();
         }
+        break;
+    case InternalState::Closing:
+        // already on the way
         break;
     case InternalState::StoppedResumable:
         // session stopped while suspended. Stop it for good now.
@@ -484,6 +504,7 @@ void Application::addSession(SessionInterface *newSession)
     case InternalState::Starting:
     case InternalState::Running:
     case InternalState::RunningInBackground:
+    case InternalState::Closing:
         newSession->resume();
         break;
     case InternalState::SuspendingWaitSession:
@@ -537,6 +558,10 @@ void Application::setInternalState(Application::InternalState state)
         case InternalState::RunningInBackground:
         case InternalState::Suspended:
             releaseWakelock();
+            break;
+        case InternalState::Closing:
+            Q_EMIT closing();
+            acquireWakelock();
             break;
         case InternalState::StoppedResumable:
             releaseWakelock();
@@ -600,7 +625,8 @@ void Application::setProcessState(ProcessState newProcessState)
         if (m_state == InternalState::Starting) {
             // that was way too soon. let it go away
             setInternalState(InternalState::Stopped);
-        } else if (m_state == InternalState::StoppedResumable) {
+        } else if (m_state == InternalState::StoppedResumable ||
+                   m_state == InternalState::Closing) {
             // The application stopped nicely, likely closed itself. Thus not meant to be resumed later.
             setInternalState(InternalState::Stopped);
         } else {
@@ -719,7 +745,7 @@ void Application::releaseWakelock() const
     m_sharedWakelock->release(this);
 }
 
-SessionInterface::State Application::combinedSessionState() const
+SessionInterface::State Application::combinedSessionState()
 {
     // This doesn't make sense when there are no sessions
     Q_ASSERT(m_sessions.count() > 0);
@@ -805,6 +831,10 @@ void Application::onSessionStopped()
                (probably was launched via cmd line by user) */
             setInternalState(InternalState::Stopped);
         }
+        break;
+    case InternalState::Closing:
+        /* We're expecting the application to stop after a close request */
+        setInternalState(InternalState::Stopped);
         break;
     case InternalState::StoppedResumable:
     case InternalState::Stopped:

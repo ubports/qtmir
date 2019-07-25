@@ -42,6 +42,9 @@ void PrintTo(const Application::InternalState& state, ::std::ostream* os)
     case Application::InternalState::StoppedResumable:
         *os << "StoppedResumable";
         break;
+    case Application::InternalState::Closing:
+        *os << "Closing";
+        break;
     case Application::InternalState::Stopped:
         *os << "Stopped";
         break;
