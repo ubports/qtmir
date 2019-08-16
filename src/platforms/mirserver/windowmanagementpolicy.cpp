@@ -74,8 +74,6 @@ miral::WindowSpecification WindowManagementPolicy::place_new_window(
 
 void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
 {
-    CanonicalWindowManagerPolicy::handle_window_ready(windowInfo);
-
     Q_EMIT m_windowModel.windowReady(windowInfo);
 
     auto appInfo = tools.info_for(windowInfo.window().application());
