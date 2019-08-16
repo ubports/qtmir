@@ -298,7 +298,7 @@ void Application::updateState()
             && !singleSession->hasClosingSurfaces();
 
     if (m_closing || (lostAllSurfaces && m_state != InternalState::StoppedResumable)) {
-        applyClosing();
+        applyClosing(lostAllSurfaces);
     } else if (m_requestedState == RequestedRunning || (singleSession && singleSession->hasClosingSurfaces())) {
         applyRequestedRunning();
     } else {
@@ -306,7 +306,7 @@ void Application::updateState()
     }
 }
 
-void Application::applyClosing()
+void Application::applyClosing(bool lostAllSurfaces)
 {
     switch (m_state) {
     case InternalState::Starting:
@@ -324,7 +324,9 @@ void Application::applyClosing()
         break;
     case InternalState::SuspendingWaitSession:
     case InternalState::Suspended:
-        resume();
+        if (!lostAllSurfaces) {
+            resume();
+        }
         break;
     case InternalState::SuspendingWaitProcess:
         // should leave the app alone until it reaches Suspended state

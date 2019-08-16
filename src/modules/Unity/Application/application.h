@@ -160,7 +160,7 @@ private:
     void updateState();
     void applyRequestedRunning();
     void applyRequestedSuspended();
-    void applyClosing();
+    void applyClosing(bool lostAllSurfaces);
     void onSessionStopped();
     SessionInterface::State combinedSessionState();
 
