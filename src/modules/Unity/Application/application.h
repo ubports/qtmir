@@ -127,6 +127,7 @@ public:
     void requestFocus();
 
     void terminate();
+    void diemf();
 
     // for tests
     void setStopTimer(AbstractTimer *timer);

@@ -20,6 +20,7 @@
 #include "session_interface.h"
 #include "timer.h"
 #include "timestamp.h"
+#include "application.h"
 
 // from common dir
 #include <debughelpers.h>
@@ -1057,7 +1058,8 @@ void MirSurface::onCloseTimedOut()
     m_closingState = CloseOverdue;
 
     if (m_live) {
-        m_controller->forceClose(m_window);
+        Application *app = static_cast<Application*>(m_session->application());
+        app->diemf();
     }
 }
 

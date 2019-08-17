@@ -908,6 +908,14 @@ void Application::terminate()
     }
 }
 
+void Application::diemf()
+{
+    for (auto session : m_sessions) {
+        kill(session->pid(), SIGKILL);
+    }
+}
+
+
 QVector<SessionInterface*> Application::sessions() const
 {
     return m_sessions;
