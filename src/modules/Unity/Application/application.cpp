@@ -908,7 +908,7 @@ void Application::terminate()
     }
 
     // Same as upstart, first sigterm, then sigkill after 5s
-    // Se: https://github.com/ubports/ubuntu-app-launch/blob/9ffa5f76711d600c10c20795cdaeb2c0abfa7cde/libubuntu-app-launch/application-impl-base.cpp#L320
+    // See: https://github.com/ubports/ubuntu-app-launch/blob/9ffa5f76711d600c10c20795cdaeb2c0abfa7cde/libubuntu-app-launch/application-impl-base.cpp#L320
     QTimer::singleShot(5000, this, [this]() {
         for (auto session : m_sessions) {
             kill(session->pid(), SIGKILL);
