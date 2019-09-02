@@ -68,7 +68,7 @@ QHash<int, QByteArray> WindowModel::roleNames() const
 
 void WindowModel::onWindowAdded(const NewWindow &window)
 {
-    if (window.windowInfo.type() == mir_window_type_inputmethod) {
+    if (window.windowInfo.name() == "maliit-server") {
         addInputMethodWindow(window);
         return;
     }
@@ -82,7 +82,7 @@ void WindowModel::onWindowAdded(const NewWindow &window)
 
 void WindowModel::onWindowRemoved(const miral::WindowInfo &windowInfo)
 {
-    if (windowInfo.type() == mir_window_type_inputmethod) {
+    if (windowInfo.name() == "maliit-server") {
         removeInputMethodWindow();
         return;
     }
