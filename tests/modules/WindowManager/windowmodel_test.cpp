@@ -77,6 +77,7 @@ public:
 
         ms::SurfaceCreationParameters windowSpec;
         windowSpec.of_type(mir_window_type_inputmethod);
+        windowSpec.of_name("maliit-server");
         miral::WindowInfo windowInfo{window, windowSpec};
         return NewWindow{windowInfo};
     }
