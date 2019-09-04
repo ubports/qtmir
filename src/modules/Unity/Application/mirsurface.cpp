@@ -182,6 +182,11 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     , m_parentSurface(parentSurface)
     , m_childSurfaceList(new MirSurfaceListModel(this))
 {
+    // FIXME: WAYLAND HACK!
+    if (m_name == "maliit-server") {
+        m_type = mir_window_type_inputmethod;
+    }
+
     INFO_MSG << "("
         << "type=" << mirSurfaceTypeToStr(m_type)
         << ",state=" << unityapiMirStateToStr(m_state)
