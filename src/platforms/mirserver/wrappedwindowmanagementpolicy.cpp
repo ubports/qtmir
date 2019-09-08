@@ -116,6 +116,13 @@ namespace qtmir
             if (initialSize.isValid() && surfaceType == mir_surface_type_normal) {
                 parameters.size() = toMirSize(initialSize);
             }
+
+            auto surfaceName = requestParameters.name().is_set() ? requestParameters.name().value() : "";
+
+            if (surfaceName == "maliit-server") {
+                parameters.type() = mir_window_type_inputmethod;
+            }
+
         }
 
         parameters.userdata() = std::make_shared<ExtraWindowInfo>();
