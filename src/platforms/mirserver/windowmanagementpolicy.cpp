@@ -67,6 +67,12 @@ miral::WindowSpecification WindowManagementPolicy::place_new_window(
         if (initialSize.isValid() && surfaceType == mir_window_type_normal) {
             parameters.size() = toMirSize(initialSize);
         }
+
+        auto surfaceName = requestParameters.name().is_set() ? requestParameters.name().value() : "";
+
+        if (surfaceName == "maliit-server") {
+            parameters.type() = mir_window_type_inputmethod;
+        }
     }
 
     parameters.userdata() = std::make_shared<ExtraWindowInfo>();
