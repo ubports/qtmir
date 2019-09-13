@@ -122,8 +122,6 @@ namespace qtmir
 
     void WindowManagementPolicy::handle_window_ready(miral::WindowInfo &windowInfo)
     {
-        CanonicalWindowManagerPolicy::handle_window_ready(windowInfo);
-
         Q_EMIT d->m_windowModel.windowReady(windowInfo);
 
         auto appInfo = tools.info_for(windowInfo.window().application());
@@ -691,4 +689,3 @@ void WrappedWindowManagementPolicy::move_window_to_workspace(const miral::Window
         tools.add_tree_to_workspace(root, workspace);
     });
 }
-

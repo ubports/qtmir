@@ -65,6 +65,7 @@ public:
         SuspendingWaitSession,
         SuspendingWaitProcess,
         Suspended,
+        Closing, // The user has requested the app be closed
         StoppedResumable, // The process stopped but we want to keep the Application object around
                           // so it can be respawned as if it never stopped running in the first place.
         Stopped // It closed itself, crashed or it stopped and we can't respawn it
@@ -122,11 +123,11 @@ public:
 
     // internal as in "not exposed in unity-api", so qtmir-internal.
     InternalState internalState() const { return m_state; }
+    bool isClosing() const { return m_closing; }
 
     void requestFocus();
 
     void terminate();
-
     // for tests
     void setStopTimer(AbstractTimer *timer);
     AbstractTimer *stopTimer() const { return m_stopTimer; }
@@ -161,7 +162,7 @@ private:
     void applyRequestedSuspended();
     void applyClosing();
     void onSessionStopped();
-    SessionInterface::State combinedSessionState() const;
+    SessionInterface::State combinedSessionState();
 
     QSharedPointer<SharedWakelock> m_sharedWakelock;
     QSharedPointer<ApplicationInfo> m_appInfo;

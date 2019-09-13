@@ -390,9 +390,6 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::stopApplication - appId=" << appId;
 
     Application *application = findApplicationMutexHeld(appId);
-    if (!application) { // maybe it's already on the closing list
-        application = findClosingApplication(appId);
-    }
     if (!application) {
         qCritical() << "No such running application with appId" << appId;
         return false;
@@ -405,9 +402,9 @@ bool ApplicationManager::stopApplication(const QString &inputAppId)
 
 void ApplicationManager::onApplicationClosing(Application *application)
 {
-    connect(application, &QObject::destroyed, this, [this, application](QObject*) {
-        m_closingApplications.removeAll(application);
-    });
+    QMutexLocker locker(&m_mutex);
+    remove(application);
+
     m_closingApplications.append(application);
 }
 
