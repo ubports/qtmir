@@ -83,6 +83,7 @@ inline Mir::State toQtState(MirWindowState state)
     case mir_window_state_fullscreen:      return Mir::FullscreenState;
     case mir_window_state_horizmaximized:  return Mir::HorizMaximizedState;
     case mir_window_state_hidden:          return Mir::HiddenState;
+    case mir_window_state_attached:        return Mir::UnknownState;
     case mir_window_states:                Q_UNREACHABLE();
     }
     Q_UNREACHABLE();
