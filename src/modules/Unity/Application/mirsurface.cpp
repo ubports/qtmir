@@ -117,6 +117,11 @@ public:
     void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
     void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
 #endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
+    void depth_layer_set_to(mir::scene::Surface const*, MirDepthLayer) override {}
+#endif
+
 #else
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
