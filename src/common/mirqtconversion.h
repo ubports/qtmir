@@ -24,6 +24,7 @@
 #include <mir/geometry/size.h>
 #include <mir/geometry/point.h>
 #include <mir/geometry/rectangle.h>
+#include <mir/version.h>
 
 #include <mir_toolkit/common.h>
 
@@ -83,6 +84,9 @@ inline Mir::State toQtState(MirWindowState state)
     case mir_window_state_fullscreen:      return Mir::FullscreenState;
     case mir_window_state_horizmaximized:  return Mir::HorizMaximizedState;
     case mir_window_state_hidden:          return Mir::HiddenState;
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
+    case mir_window_state_attached:        return Mir::AttachedState;
+#endif
     case mir_window_states:                Q_UNREACHABLE();
     }
     Q_UNREACHABLE();
@@ -109,6 +113,9 @@ inline MirWindowState toMirState(Mir::State state)
         return mir_window_state_restored;
 
     case Mir::HiddenState:          return mir_window_state_hidden;
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
+    case Mir::AttachedState:        return mir_window_state_attached;
+#endif
     default: Q_UNREACHABLE();
     }
 }
