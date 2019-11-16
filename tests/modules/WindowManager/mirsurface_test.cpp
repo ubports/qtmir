@@ -103,7 +103,7 @@ TEST_F(MirSurfaceTest, UpdateTextureBeforeDraw)
     EXPECT_CALL(*mockRenderable.get(),buffer())
         .WillRepeatedly(Return(std::make_shared<mir::graphics::StubBuffer>()));
 
-    MirSurface surface(mockWindowInfo, nullptr);
+    qtmir::MirSurface surface(mockWindowInfo, nullptr);
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 30, 0)
     surface.surfaceObserver()->frame_posted(NULL, 1, mir::geometry::Size{1,1});
 #else
@@ -132,7 +132,7 @@ TEST_F(MirSurfaceTest, EnsureVisiblePropertyRecalculatedAfterFrameSwap)
     EXPECT_CALL(*mockSurface.get(),visible())
         .WillOnce(Return(false));
 
-    MirSurface surface(mockWindowInfo, nullptr);
+    qtmir::MirSurface surface(mockWindowInfo, nullptr);
 
     EXPECT_FALSE(surface.visible());
 
@@ -162,7 +162,7 @@ TEST_F(MirSurfaceTest, failedSurfaceCloseEventuallyDestroysSurface)
     miral::WindowInfo mockWindowInfo(mockWindow, spec);
     MockWindowModelController controller;
 
-    MirSurface surface(mockWindowInfo, &controller);
+    qtmir::MirSurface surface(mockWindowInfo, &controller);
 
     bool surfaceDeleted = false;
     QObject::connect(&surface, &QObject::destroyed, &surface, [&surfaceDeleted](){ surfaceDeleted = true; });

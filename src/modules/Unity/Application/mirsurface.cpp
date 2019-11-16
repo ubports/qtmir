@@ -122,6 +122,10 @@ public:
     void depth_layer_set_to(mir::scene::Surface const*, MirDepthLayer) override {}
 #endif
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void application_id_set_to(mir::scene::Surface const* /* surf */, std::string const& /* application_id */) override {};
+#endif
+
 #else
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
