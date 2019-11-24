@@ -151,18 +151,18 @@ void MirServerIntegration::initialize()
         qFatal("ScreensModel not initialized");
     }
     QObject::connect(screens.data(), &ScreensModel::screenAdded,
-            [this](Screen *screen) { this->screenAdded(screen); });
+            [this](Screen *screen) { QWindowSystemInterface::handleScreenAdded(screen); });
     QObject::connect(screens.data(), &ScreensModel::screenRemoved,
             [this](Screen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;
 #else
-        this->destroyScreen(screen);
+        QWindowSystemInterface::handleScreenRemoved(screen);
 #endif
     });
 
     Q_FOREACH(auto screen, screens->screens()) {
-        screenAdded(screen);
+        QWindowSystemInterface::handleScreenAdded(screen);
     }
 
     m_nativeInterface = new NativeInterface(m_mirServer.data());
