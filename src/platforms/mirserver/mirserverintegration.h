@@ -37,6 +37,8 @@ public:
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
 
     QAbstractEventDispatcher *createEventDispatcher() const override;
+    void handleScreenAdded(QPlatformScreen *screen) const;
+    void handleScreenRemoved(QPlatformScreen *screen) const;
     void initialize() override;
 
     QPlatformClipboard *clipboard() const override;
