@@ -143,7 +143,7 @@ public:
 const QEvent::Type OrientationReadingEvent::m_type =
         static_cast<QEvent::Type>(QEvent::registerEventType());
 
-Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen,
+Screen::Screen(const miral::Output &output,
                const std::shared_ptr<OrientationSensor> orientationSensor)
     : QObject(nullptr)
     , m_refreshRate(-1.0)
@@ -153,11 +153,12 @@ Screen::Screen(const mir::graphics::DisplayConfigurationOutput &screen,
     , m_renderTarget(nullptr)
     , m_displayGroup(nullptr)
     , m_screenWindow(nullptr)
+    , m_output(output)
 {
     // Hack to make signals work
     this->moveToThread(orientationSensor->thread());
 
-    setMirDisplayConfiguration(screen, false);
+    setMirDisplayConfiguration(output, false);
 
     // Set the default orientation based on the initial screen dimmensions.
     m_nativeOrientation = (m_geometry.width() >= m_geometry.height())
@@ -191,38 +192,45 @@ bool Screen::orientationSensorEnabled()
     return m_sensorEnabled;
 }
 
-void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &screen,
+void Screen::setMirDisplayConfiguration(const miral::Output &output,
                                         bool notify)
 {
-    // Note: DisplayConfigurationOutput will be destroyed after this function returns
+    m_output = std::move(output);
 
-    // Output data - each output has a unique id and corresponding type. Can be multiple cards.
-    m_outputId = screen.id;
-    m_type = static_cast<qtmir::OutputTypes>(screen.type); //FIXME: need compile time check these are equivalent
+    m_outputId = qtmir::OutputId(output.id());
+    m_type = static_cast<qtmir::OutputTypes>(output.type()); //FIXME: need compile time check these are equivalent
 
     // Physical screen size
-    m_physicalSize.setWidth(screen.physical_size_mm.width.as_int());
-    m_physicalSize.setHeight(screen.physical_size_mm.height.as_int());
+    m_physicalSize.setWidth(output.physical_size_mm().width);
+    m_physicalSize.setHeight(output.physical_size_mm().height);
 
     // Screen capabilities
-    m_currentModeIndex = screen.current_mode_index;
+    //m_currentModeIndex = output.current_mode_index();
 
     // Current Pixel Format & depth
-    m_format = qImageFormatFromMirPixelFormat(screen.current_format);
-    m_depth = 8 * MIR_BYTES_PER_PIXEL(screen.current_format);
+    m_format = qImageFormatFromMirPixelFormat(output.pixel_format());
+    m_depth = 8 * MIR_BYTES_PER_PIXEL(output.pixel_format());
 
     // Power mode
-    m_powerMode = screen.power_mode;
+    m_powerMode = output.power_mode();
 
     QRect oldGeometry = m_geometry;
-    // Position of screen in virtual desktop coordinate space
-    m_geometry.setTop(screen.top_left.y.as_int());
-    m_geometry.setLeft(screen.top_left.x.as_int());
+    auto mode = output.extents();
 
-    // Mode = current resolution & refresh rate
-    mir::graphics::DisplayConfigurationMode mode = screen.modes.at(m_currentModeIndex);
-    m_geometry.setWidth(mode.size.width.as_int());
-    m_geometry.setHeight(mode.size.height.as_int());
+    // Position of screen in virtual desktop coordinate space
+    m_geometry.setTop(mode.top_left.y.as_int());
+    m_geometry.setLeft(mode.top_left.x.as_int());
+
+    // We need to normalize extents, as extents returns
+    // values based on orientation
+    if (output.orientation() == mir_orientation_normal ||
+        output.orientation() == mir_orientation_inverted) {
+        m_geometry.setWidth(mode.size.width.as_int());
+        m_geometry.setHeight(mode.size.height.as_int());
+    } else {
+        m_geometry.setWidth(mode.size.height.as_int());
+        m_geometry.setHeight(mode.size.width.as_int());
+    }
 
     // DPI - unnecessary to calculate, default implementation in QPlatformScreen is sufficient
 
@@ -237,10 +245,10 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
     }
 
     // Refresh rate
-    if (m_refreshRate != mode.vrefresh_hz) {
-        m_refreshRate = mode.vrefresh_hz;
+    if (m_refreshRate != output.refresh_rate()) {
+        m_refreshRate = output.refresh_rate();
         if (notify) {
-            QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), mode.vrefresh_hz);
+            QWindowSystemInterface::handleScreenRefreshRateChange(this->screen(), output.refresh_rate());
         }
     }
 
@@ -251,15 +259,15 @@ void Screen::setMirDisplayConfiguration(const mir::graphics::DisplayConfiguratio
 
     auto w = window(); // usually there is no Window associated with this Screen at this time.
     auto nativeInterface = qGuiApp->platformNativeInterface();
-    if (screen.form_factor != m_formFactor) {
-        m_formFactor = screen.form_factor;
+    if (output.form_factor() != m_formFactor) {
+        m_formFactor = output.form_factor();
         if (w && notify) {
             Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("formFactor"));
         }
     }
 
-    if (!qFuzzyCompare(screen.scale, m_scale)) {
-        m_scale = screen.scale;
+    if (!qFuzzyCompare(output.scale(), m_scale)) {
+        m_scale = output.scale();
         if (w && notify) {
             Q_EMIT nativeInterface->windowPropertyChanged(w, QStringLiteral("scale"));
         }
@@ -393,4 +401,9 @@ bool Screen::internalDisplay() const
         return true;
     }
     return false;
+}
+
+bool Screen::isSameOutput(const miral::Output &output)
+{
+    return m_output.is_same_output(output);
 }

@@ -86,7 +86,8 @@ TEST_F(ScreensModelTest, SingleScreenFound)
     std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
     display->setFakeConfiguration(config, bufferConfig);
 
-    screensModel->update();
+    const miral::Output output{config[0]};
+    screensModel->screenCreated(output);
 
     ASSERT_EQ(1, screensModel->screens().count());
     Screen* screen = screensModel->screens().first();
@@ -99,7 +100,10 @@ TEST_F(ScreensModelTest, MultipleScreenFound)
     std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
     display->setFakeConfiguration(config, bufferConfig);
 
-    screensModel->update();
+    for (auto out : config) {
+        const miral::Output output{out};
+        screensModel->screenCreated(output);
+    }
 
     ASSERT_EQ(2, screensModel->screens().count());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(0)->geometry());
@@ -112,7 +116,8 @@ TEST_F(ScreensModelTest, ScreenAdded)
     std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
     display->setFakeConfiguration(config, bufferConfig);
 
-    screensModel->update();
+    const miral::Output output{config[0]};
+    screensModel->screenCreated(output);
 
     config.push_back(fakeOutput2);
     display->setFakeConfiguration(config, bufferConfig);
@@ -120,7 +125,8 @@ TEST_F(ScreensModelTest, ScreenAdded)
     ASSERT_EQ(1, screensModel->screens().count());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(0)->geometry());
 
-    screensModel->update();
+    const miral::Output output2{config[1]};
+    screensModel->screenCreated(output2);
 
     ASSERT_EQ(2, screensModel->screens().count());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(0)->geometry());
@@ -133,8 +139,12 @@ TEST_F(ScreensModelTest, ScreenRemoved)
     std::vector<MockGLDisplayBuffer*> bufferConfig; // only used to match buffer with display, unecessary here
     display->setFakeConfiguration(config, bufferConfig);
 
-    screensModel->update();
+    for (auto out : config) {
+        const miral::Output output{out};
+        screensModel->screenCreated(output);
+    }
 
+    auto removal = config.back();
     config.pop_back();
     display->setFakeConfiguration(config, bufferConfig);
 
@@ -142,7 +152,8 @@ TEST_F(ScreensModelTest, ScreenRemoved)
     EXPECT_EQ(QRect(500, 600, 1500, 2000), screensModel->screens().at(0)->geometry());
     EXPECT_EQ(QRect(0, 0, 150, 200), screensModel->screens().at(1)->geometry());
 
-    screensModel->update();
+    const miral::Output rm{removal};
+    screensModel->screenDeleted(rm);
 
     ASSERT_EQ(1, screensModel->screens().count());
     EXPECT_EQ(QRect(500, 600, 1500, 2000), screensModel->screens().at(0)->geometry());
@@ -159,7 +170,9 @@ TEST_F(ScreensModelTest, MatchBufferWithDisplay)
             .WillRepeatedly(Return(buffer1Geom));
 
     display->setFakeConfiguration(config, buffers);
-    screensModel->update();
+
+    const miral::Output output{config[0]};
+    screensModel->screenCreated(output);
 
     ASSERT_EQ(1, screensModel->screens().count());
     EXPECT_CALL(buffer1, make_current());
@@ -180,7 +193,11 @@ TEST_F(ScreensModelTest, MultipleMatchBuffersWithDisplays)
             .WillRepeatedly(Return(buffer2Geom));
 
     display->setFakeConfiguration(config, buffers);
-    screensModel->update();
+
+    for (auto out : config) {
+        const miral::Output output{out};
+        screensModel->screenCreated(output);
+    }
 
     ASSERT_EQ(2, screensModel->screens().count());
     EXPECT_CALL(buffer1, make_current());

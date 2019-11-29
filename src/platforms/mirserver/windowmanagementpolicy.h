@@ -23,6 +23,7 @@
 #include "qteventfeeder.h"
 #include "windowcontroller.h"
 #include "windowmodelnotifier.h"
+#include "screensmodel.h"
 
 #include <QScopedPointer>
 
@@ -34,7 +35,8 @@ public:
     WindowManagementPolicy(const miral::WindowManagerTools &tools,
                            qtmir::WindowModelNotifier &windowModel,
                            qtmir::WindowController &windowController,
-                           qtmir::AppNotifier &appNotifier);
+                           qtmir::AppNotifier &appNotifier,
+                           const QSharedPointer<ScreensModel> screensModel);
 
     // From WindowManagementPolicy
     auto place_new_window(const miral::ApplicationInfo &app_info,
@@ -71,6 +73,10 @@ public:
     void advise_delete_window(const miral::WindowInfo &windowInfo) override;
     void advise_raise(const std::vector<miral::Window> &windows) override;
 
+    void advise_output_create(miral::Output const& output) override;
+    void advise_output_update(miral::Output const& updated, miral::Output const& original) override;
+    void advise_output_delete(miral::Output const& output) override;
+
     void handle_request_drag_and_drop(miral::WindowInfo &window_info) override;
     void handle_request_move(miral::WindowInfo &window_info, const MirInputEvent *input_event) override;
     void handle_request_resize(miral::WindowInfo &window_info, const MirInputEvent *input_event, MirResizeEdge edge) override;
@@ -101,6 +107,7 @@ private:
 
     qtmir::WindowModelNotifier &m_windowModel;
     qtmir::AppNotifier &m_appNotifier;
+    const QSharedPointer<ScreensModel> m_screensModel;
     QtEventFeeder m_eventFeeder;
     QVector<QRect> m_confinementRegions;
     QMargins m_windowMargins[mir_window_types];

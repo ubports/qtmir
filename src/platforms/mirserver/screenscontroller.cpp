@@ -67,7 +67,7 @@ bool ScreensController::setConfiguration(const CustomScreenConfigurationList &ne
             [&config](mg::UserDisplayConfigurationOutput &outputConfig)
             {
                 if (config.id == outputConfig.id) {
-                    outputConfig.current_mode_index = config.currentModeIndex;
+                    //outputConfig.current_mode_index = config.currentModeIndex;
                     outputConfig.top_left = Point{ X{config.topLeft.x()}, Y{config.topLeft.y()}};
                     outputConfig.power_mode = config.powerMode;
 //                    outputConfig.orientation = config.orientation; // disabling for now
