@@ -115,7 +115,6 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
 
     runner.add_start_callback([&]
     {
-        screensModel->update();
         screensController = m_mirServerHooks.createScreensController(screensModel);
         m_mirServerHooks.createInputDeviceObserver();
     });

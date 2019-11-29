@@ -221,21 +221,17 @@ void WindowManagementPolicy::advise_end()
 
 void WindowManagementPolicy::advise_output_create(miral::Output const& output)
 {
-    Q_UNUSED(output);
-    m_screensModel->update();
+    m_screensModel->screenCreated(output);
 }
 
 void WindowManagementPolicy::advise_output_update(miral::Output const& updated, miral::Output const& original)
 {
-    Q_UNUSED(updated);
-    Q_UNUSED(original);
-    m_screensModel->update();
+    m_screensModel->screenUpdated(updated, original);
 }
 
 void WindowManagementPolicy::advise_output_delete(miral::Output const& output)
 {
-    Q_UNUSED(output);
-    m_screensModel->update();
+    m_screensModel->screenDeleted(output);
 }
 
 void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)

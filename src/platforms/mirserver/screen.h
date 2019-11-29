@@ -27,6 +27,9 @@
 // Mir
 #include <mir_toolkit/common.h>
 
+// Miral
+#include <miral/output.h>
+
 // local
 #include "cursor.h"
 #include "screenwindow.h"
@@ -45,7 +48,7 @@ class Screen : public QObject, public QPlatformScreen
 {
     Q_OBJECT
 public:
-    Screen(const mir::graphics::DisplayConfigurationOutput &, const std::shared_ptr<OrientationSensor>);
+    Screen(const miral::Output &, const std::shared_ptr<OrientationSensor>);
     ~Screen();
 
     // QPlatformScreen methods.
@@ -75,13 +78,14 @@ public:
     // To make it testable
     bool orientationSensorEnabled();
 
+    bool isSameOutput(const miral::Output &output);
 public Q_SLOTS:
    void onOrientationReadingChanged(QOrientationReading::Orientation);
 
 protected:
     void setWindow(ScreenWindow *window);
 
-    void setMirDisplayConfiguration(const mir::graphics::DisplayConfigurationOutput &, bool notify = true);
+    void setMirDisplayConfiguration(const miral::Output &, bool notify = true);
     void setMirDisplayBuffer(mir::graphics::DisplayBuffer *, mir::graphics::DisplaySyncGroup *);
     void swapBuffers();
     void makeCurrent();
@@ -111,6 +115,7 @@ private:
     Qt::ScreenOrientation m_currentOrientation;
 
     ScreenWindow *m_screenWindow;
+    miral::Output m_output;
 
     QScopedPointer<qtmir::Cursor> m_cursor;
 
