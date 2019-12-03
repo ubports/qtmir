@@ -143,7 +143,7 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
 
 void MirServerIntegration::handleScreenAdded(QPlatformScreen *screen)
 {
-    // TODO: remove this after we no longer support Qt 5.13
+    // TODO: remove this after we no longer support Qt < 5.13
     #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
             this->screenAdded(screen);
     #else
@@ -153,7 +153,7 @@ void MirServerIntegration::handleScreenAdded(QPlatformScreen *screen)
 
 void MirServerIntegration::handleScreenRemoved(QPlatformScreen *screen)
 {
-    // TODO: remove this after we no longer support Qt 5.13
+    // TODO: remove this after we no longer support Qt < 5.13
     #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
             this->destroyScreen(screen);
     #else
