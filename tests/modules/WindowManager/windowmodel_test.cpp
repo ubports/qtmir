@@ -39,7 +39,11 @@ using namespace testing;
 
 struct SizedStubSurface : public mir::test::doubles::StubSurface
 {
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+    mir::geometry::Size window_size() const override { return toMirSize(m_size); }
+#else
     mir::geometry::Size size() const override { return toMirSize(m_size); }
+#endif
 
     void setSize(QSize size) { m_size = size; }
 

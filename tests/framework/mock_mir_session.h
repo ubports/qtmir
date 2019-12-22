@@ -86,6 +86,9 @@ struct MockSession : public Session
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
     auto create_surface(
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+        std::shared_ptr<Session> const&,
+#endif
         SurfaceCreationParameters const&,
         std::shared_ptr<mir::scene::SurfaceObserver> const&) -> std::shared_ptr<Surface> override { return nullptr; };
     void destroy_surface(std::shared_ptr<Surface> const&) override {};
