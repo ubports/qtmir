@@ -39,7 +39,9 @@ public:
     QAbstractEventDispatcher *createEventDispatcher() const override;
     void initialize() override;
 
+#ifdef WITH_CONTENTHUB
     QPlatformClipboard *clipboard() const override;
+#endif
 
     QPlatformInputContext* inputContext() const override { return m_inputContext; }
 

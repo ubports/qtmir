@@ -199,6 +199,7 @@ QPlatformNativeInterface *MirServerIntegration::nativeInterface() const
     return m_nativeInterface;
 }
 
+#ifdef WITH_CONTENTHUB
 QPlatformClipboard *MirServerIntegration::clipboard() const
 {
     static QPlatformClipboard *clipboard = nullptr;
@@ -207,6 +208,7 @@ QPlatformClipboard *MirServerIntegration::clipboard() const
     }
     return clipboard;
 }
+#endif
 
 QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
         QOffscreenSurface *surface) const
