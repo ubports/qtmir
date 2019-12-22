@@ -66,8 +66,13 @@ struct MockSession : public Session
     std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
 
     MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    MOCK_METHOD1(destroy_buffer_stream, void(std::shared_ptr<frontend::BufferStream> const&));
+    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mir::compositor::BufferStream>(graphics::BufferProperties const&));
+#else
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+#endif
     void configure_streams(Surface&, std::vector<shell::StreamSpecification> const&) override;
 
     void send_error(ClientVisibleError const&) override;
@@ -79,6 +84,12 @@ struct MockSession : public Session
 #endif
 #endif
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    auto create_surface(
+        SurfaceCreationParameters const&,
+        std::shared_ptr<mir::scene::SurfaceObserver> const&) -> std::shared_ptr<Surface> override { return nullptr; };
+    void destroy_surface(std::shared_ptr<Surface> const&) override {};
+#endif
 private:
 
     graphics::BufferID create_buffer(graphics::BufferProperties const&) { return graphics::BufferID{0}; }

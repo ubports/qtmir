@@ -18,6 +18,7 @@
 #define MOCK_MIR_GRAPHICS_RENDERABLE_H
 
 #include <mir/graphics/renderable.h>
+#include <mir/version.h>
 #include <gmock/gmock.h>
 
 namespace mir {
@@ -36,6 +37,9 @@ struct MockRenderable : public Renderable
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(shaped, bool());
     MOCK_CONST_METHOD0(swap_interval, unsigned int());
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    MOCK_CONST_METHOD0(clip_area, std::experimental::optional<geometry::Rectangle>());
+#endif
 };
 
 } // namespace graphics
