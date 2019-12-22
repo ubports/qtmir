@@ -12,6 +12,10 @@ if (QGL_DEBUG)
     add_definitions(-DQGL_DEBUG)
 endif()
 
+if (WITH_CONTENTHUB)
+    add_definitions(-DWITH_CONTENTHUB)
+endif()
+
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
 if(Qt5Core_VERSION VERSION_LESS "5.8.0")
@@ -57,7 +61,9 @@ endif()
 
     ${APPLICATION_API_INCLUDE_DIRS}
 
+if(WITH_CONTENTHUB)
     ${CONTENT_HUB_INCLUDE_DIRS}
+endif()
 
     ${VALGRIND_INCLUDE_DIRS}
 )
@@ -84,9 +90,13 @@ set(MIRSERVER_DEPENDANTS
     setqtcompositor.cpp
     )
 
+if(WITH_CONTENTHUB)
+    set(CLIPBOARD_SRC clipboard.cpp)
+endif()
+
 add_library(qpa-mirserver SHARED
     ${MIRSERVER_DEPENDANTS}
-    clipboard.cpp
+    ${CLIPBOARD_SRC}
     cursor.cpp
     initialsurfacesizes.cpp
     inputdeviceobserver.cpp
