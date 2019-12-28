@@ -22,7 +22,7 @@ struct TestableScreensModel : public ScreensModel
     Q_OBJECT
 
 public:
-    Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const override
+    Screen *createScreen(const miral::Output &output) const override
     {
         return new StubScreen(output);
     }

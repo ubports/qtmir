@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QPoint>
+#include <QMutex>
 
 // Mir
 #include "mir/int_wrapper.h"
@@ -36,6 +37,10 @@ namespace mir {
     class Display;
     class DisplayConfigurationOutput;
     }
+}
+
+namespace miral {
+    class Output;
 }
 
 class Screen;
@@ -70,12 +75,14 @@ public:
     QList<Screen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
 
+    // called by Mirs thread
+    void screenCreated(const miral::Output &output);
+    void screenUpdated(miral::Output const& updated, miral::Output const& original);
+    void screenDeleted(const miral::Output &output);
+
 Q_SIGNALS:
     void screenAdded(Screen *screen);
     void screenRemoved(Screen *screen);
-
-public Q_SLOTS:
-    void update();
 
 public:
     // called by MirServer
@@ -86,24 +93,32 @@ public:
     void terminate();
 
     // override for testing purposes
-    virtual Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const;
+    virtual Screen *createScreen(const miral::Output &output) const;
 
 protected Q_SLOTS:
     void onCompositorStarting();
     void onCompositorStopping();
 
 private:
-    Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
-    bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
+    Screen* findScreenWithOutput(const QList<Screen*> &list, const miral::Output &output);
+    bool canUpdateExistingScreen(const Screen *screen, const miral::Output &output);
     void startRenderer();
     void haltRenderer();
+    void updateBuffers();
+    void raport();
+    void deleteScreen(Screen *screen);
+    bool havePendingScreenEvents();
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<QtCompositor> m_compositor;
     std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
+
+    // The screen list should *ONLY* be medified in mir's thread
     QList<Screen*> m_screenList;
+
     bool m_compositing;
     std::shared_ptr<OrientationSensor> m_orientationSensor;
+    QMutex m_mutex;
 };
 
 #endif // SCREENCONTROLLER_H

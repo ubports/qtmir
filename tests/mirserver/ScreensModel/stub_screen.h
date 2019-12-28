@@ -24,7 +24,7 @@ class StubScreen : public Screen
 {
     Q_OBJECT
 public:
-    StubScreen(const mir::graphics::DisplayConfigurationOutput &output) : Screen(output, std::make_shared<OrientationSensor>()) {}
+    StubScreen(const miral::Output &output) : Screen(output, std::make_shared<OrientationSensor>()) {}
 
     void makeCurrent() { Screen::makeCurrent(); }
 };

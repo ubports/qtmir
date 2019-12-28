@@ -38,10 +38,12 @@ using namespace qtmir;
 WindowManagementPolicy::WindowManagementPolicy(const miral::WindowManagerTools &tools,
                                                qtmir::WindowModelNotifier &windowModel,
                                                qtmir::WindowController &windowController,
-                                               qtmir::AppNotifier &appNotifier)
+                                               qtmir::AppNotifier &appNotifier,
+                                               const QSharedPointer<ScreensModel> screensModel)
     : CanonicalWindowManagerPolicy(tools)
     , m_windowModel(windowModel)
     , m_appNotifier(appNotifier)
+    , m_screensModel(screensModel)
 {
     qRegisterMetaType<qtmir::NewWindow>();
     qRegisterMetaType<std::vector<miral::Window>>();
@@ -215,6 +217,21 @@ void WindowManagementPolicy::advise_begin()
 void WindowManagementPolicy::advise_end()
 {
     Q_EMIT m_windowModel.modificationsEnded();
+}
+
+void WindowManagementPolicy::advise_output_create(miral::Output const& output)
+{
+    m_screensModel->screenCreated(output);
+}
+
+void WindowManagementPolicy::advise_output_update(miral::Output const& updated, miral::Output const& original)
+{
+    m_screensModel->screenUpdated(updated, original);
+}
+
+void WindowManagementPolicy::advise_output_delete(miral::Output const& output)
+{
+    m_screensModel->screenDeleted(output);
 }
 
 void WindowManagementPolicy::ensureWindowIsActive(const miral::Window &window)
