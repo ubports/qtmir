@@ -141,6 +141,26 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
     return createUnixEventDispatcher();
 }
 
+void MirServerIntegration::handleScreenAdded(QPlatformScreen *screen)
+{
+    // TODO: remove this after we no longer support Qt < 5.13
+    #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
+            this->screenAdded(screen);
+    #else
+            QWindowSystemInterface::handleScreenAdded(screen);
+    #endif
+}
+
+void MirServerIntegration::handleScreenRemoved(QPlatformScreen *screen)
+{
+    // TODO: remove this after we no longer support Qt < 5.13
+    #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
+            this->destroyScreen(screen);
+    #else
+            QWindowSystemInterface::handleScreenRemoved(screen);
+    #endif
+}
+
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
@@ -151,18 +171,18 @@ void MirServerIntegration::initialize()
         qFatal("ScreensModel not initialized");
     }
     QObject::connect(screens.data(), &ScreensModel::screenAdded,
-            [this](Screen *screen) { this->screenAdded(screen); });
+            [this](Screen *screen) { handleScreenAdded(screen); });
     QObject::connect(screens.data(), &ScreensModel::screenRemoved,
             [this](Screen *screen) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
         delete screen;
 #else
-        this->destroyScreen(screen);
+        handleScreenRemoved(screen);
 #endif
     });
 
     Q_FOREACH(auto screen, screens->screens()) {
-        screenAdded(screen);
+        handleScreenAdded(screen);
     }
 
     m_nativeInterface = new NativeInterface(m_mirServer.data());
