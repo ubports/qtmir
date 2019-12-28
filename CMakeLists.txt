@@ -83,7 +83,6 @@ pkg_check_modules(MIRAL miral>=1.1.0 REQUIRED)
 pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)
 pkg_check_modules(PROCESS_CPP process-cpp REQUIRED)
-pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-2 REQUIRED)
 pkg_check_modules(URL_DISPATCHER url-dispatcher-1)
 pkg_check_modules(EGL egl)
 pkg_check_modules(GIO gio-2.0)
@@ -102,6 +101,11 @@ endif()
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
 
+pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-3)
+if (NOT UBUNTU_APP_LAUNCH_FOUND)
+  message("Did not find ual-3, trying to find ual-2")
+  pkg_check_modules(UBUNTU_APP_LAUNCH ubuntu-app-launch-2 REQUIRED)
+endif()
 
 # Use the fast string builder
 add_definitions(-DQT_USE_QSTRINGBUILDER)
