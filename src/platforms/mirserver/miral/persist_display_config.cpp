@@ -73,6 +73,12 @@ struct DisplayConfigurationObserver : mg::DisplayConfigurationObserver
     void catastrophic_configuration_error(
         std::shared_ptr<mg::DisplayConfiguration const> const& /*failed_fallback*/,
         std::exception const& /*error*/) override {}
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void configuration_updated_for_session(
+        std::shared_ptr<mir::scene::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+#endif
 };
 #else
 struct DisplayConfigurationObserver { };
@@ -93,10 +99,15 @@ struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayCo
     {
         save_config(*base_config);
     }
-
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void session_configuration_applied(std::shared_ptr<mir::scene::Session> const&,
+                                       std::shared_ptr<mg::DisplayConfiguration> const&){}
+    void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&)  {}
+#else
     void session_configuration_applied(std::shared_ptr<mir::frontend::Session> const&,
                                        std::shared_ptr<mg::DisplayConfiguration> const&){}
     void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&)  {}
+#endif
 #endif
 };
 

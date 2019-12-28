@@ -89,7 +89,12 @@ public:
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 30, 0)
     void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override;
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+    void content_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
+    void window_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override {}
+#else
     void resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
+#endif
     void moved_to(mir::scene::Surface const*, mir::geometry::Point const&) override {}
     void hidden_set_to(mir::scene::Surface const*, bool) override {}
 
@@ -115,6 +120,15 @@ public:
     void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
     void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
 #endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
+    void depth_layer_set_to(mir::scene::Surface const*, MirDepthLayer) override {}
+#endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void application_id_set_to(mir::scene::Surface const* /* surf */, std::string const& /* application_id */) override {};
+#endif
+
 #else
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
@@ -1280,7 +1294,11 @@ void MirSurface::SurfaceObserverImpl::attrib_changed(mir::scene::Surface const*,
     }
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+void MirSurface::SurfaceObserverImpl::content_resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
+#else
 void MirSurface::SurfaceObserverImpl::resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
+#endif
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
 }
