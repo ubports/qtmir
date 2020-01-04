@@ -170,6 +170,13 @@ void ScreensModel::deleteScreen(Screen *screen)
     qCDebug(QTMIR_SCREENS) << "Removing Screen " << screen
                            << "with id: " << screen->outputId().as_value();
 
+    // Destroy ScreenWindow associated with this screen if any
+    // this needs to be done before screenRemoved gets emitted,
+    // to avoid race condition with unity8
+    if (window && window->window()) {
+        window->window()->destroy();
+    }
+
     m_screenList.removeAll(screen);
     Q_EMIT screenRemoved(screen); // should delete the backing Screen
 
