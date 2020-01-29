@@ -17,11 +17,9 @@
 #include "mirbuffer.h"
 
 #include <mir/graphics/buffer.h>
-#include <mir/renderer/gl/texture_source.h>
+#include "mir/graphics/texture.h"
 
 #include <stdexcept>
-
-using mir::renderer::gl::TextureSource;
 
 miral::GLBuffer::GLBuffer() = default;
 miral::GLBuffer::~GLBuffer() = default;
@@ -57,23 +55,11 @@ void miral::GLBuffer::reset()
     wrapped.reset();
 }
 
-void miral::GLBuffer::bind_to_texture()
+void miral::GLBuffer::bind()
 {
-    if (auto const texture_source = dynamic_cast<TextureSource*>(wrapped->native_buffer_base()))
+    if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
     {
-        texture_source->gl_bind_to_texture();
-    }
-    else
-    {
-        throw std::logic_error("Buffer does not support GL rendering");
-    }
-}
-
-void miral::GLBuffer::secure_for_render()
-{
-    if (auto const texture_source = dynamic_cast<TextureSource*>(wrapped->native_buffer_base()))
-    {
-        texture_source->secure_for_render();
+        texture->bind();
     }
     else
     {

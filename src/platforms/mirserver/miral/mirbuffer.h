@@ -38,8 +38,7 @@ public:
 
     void reset();
     void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
-    void bind_to_texture();
-    void secure_for_render();
+    void bind();
 
 private:
     std::shared_ptr<mir::graphics::Buffer> wrapped;
