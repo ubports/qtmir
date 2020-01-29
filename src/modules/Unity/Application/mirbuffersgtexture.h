@@ -23,6 +23,8 @@
 
 #include <QtGui/qopengl.h>
 
+#include <QMutex>
+
 class MirBufferSGTexture : public QSGTexture
 {
     Q_OBJECT
@@ -42,10 +44,12 @@ public:
     void bind() override;
 
 private:
-    miral::GLBuffer m_mirBuffer;
+    mutable miral::GLBuffer m_mirBuffer;
     int m_width;
     int m_height;
-    GLuint m_textureId;
+    mutable GLint m_textureId;
+    mutable bool m_needsUpdate;
+    mutable QMutex m_mutex;
 };
 
 #endif // MIRBUFFERSGTEXTURE_H
