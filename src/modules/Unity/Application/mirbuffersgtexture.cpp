@@ -19,6 +19,8 @@
 // Mir
 #include <mir/geometry/size.h>
 
+#include <QMutexLocker>
+
 namespace mg = mir::geometry;
 
 MirBufferSGTexture::MirBufferSGTexture()
@@ -26,9 +28,8 @@ MirBufferSGTexture::MirBufferSGTexture()
     , m_width(0)
     , m_height(0)
     , m_textureId(0)
+    , m_needsUpdate(false)
 {
-    glGenTextures(1, &m_textureId);
-
     setFiltering(QSGTexture::Linear);
     setHorizontalWrapMode(QSGTexture::ClampToEdge);
     setVerticalWrapMode(QSGTexture::ClampToEdge);
@@ -36,13 +37,12 @@ MirBufferSGTexture::MirBufferSGTexture()
 
 MirBufferSGTexture::~MirBufferSGTexture()
 {
-    if (m_textureId) {
-        glDeleteTextures(1, &m_textureId);
-    }
 }
 
 void MirBufferSGTexture::freeBuffer()
 {
+    QMutexLocker locker(&m_mutex);
+
     m_mirBuffer.reset();
     m_width = 0;
     m_height = 0;
@@ -50,10 +50,13 @@ void MirBufferSGTexture::freeBuffer()
 
 void MirBufferSGTexture::setBuffer(const std::shared_ptr<mir::graphics::Buffer>& buffer)
 {
+    QMutexLocker locker(&m_mutex);
+
     m_mirBuffer.reset(buffer);
     mg::Size size = m_mirBuffer.size();
     m_height = size.height.as_int();
     m_width = size.width.as_int();
+    m_needsUpdate = true;
 }
 
 bool MirBufferSGTexture::hasBuffer() const
@@ -63,6 +66,17 @@ bool MirBufferSGTexture::hasBuffer() const
 
 int MirBufferSGTexture::textureId() const
 {
+    QMutexLocker locker(&m_mutex);
+
+    if (m_needsUpdate)
+    {
+        GLint existing_binding;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &existing_binding);
+        m_mirBuffer.bind();
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_textureId);
+        glBindTexture(GL_TEXTURE_2D, existing_binding);
+        m_needsUpdate = false;
+    }
     return m_textureId;
 }
 
@@ -78,14 +92,10 @@ bool MirBufferSGTexture::hasAlphaChannel() const
 
 void MirBufferSGTexture::bind()
 {
+    QMutexLocker locker(&m_mutex);
+
     Q_ASSERT(hasBuffer());
-    glBindTexture(GL_TEXTURE_2D, m_textureId);
     updateBindOptions(true/* force */);
 
-    m_mirBuffer.bind_to_texture();
-    m_mirBuffer.secure_for_render();
-
-    // Fix for lp:1583088 - For non-GL clients, Mir uploads the client pixel buffer to a GL texture.
-    // But as it does so, it changes some GL state and neglects to restore it, which breaks Qt's rendering.
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // 4 is the default which Qt uses
+    m_mirBuffer.bind();
 }
