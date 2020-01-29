@@ -85,7 +85,7 @@ inline Mir::State toQtState(MirWindowState state)
     case mir_window_state_horizmaximized:  return Mir::HorizMaximizedState;
     case mir_window_state_hidden:          return Mir::HiddenState;
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
-    case mir_window_state_attached:        return Mir::AttachedState;
+    case mir_window_state_attached:        return Mir::UnknownState;
 #endif
     case mir_window_states:                Q_UNREACHABLE();
     }
@@ -114,7 +114,7 @@ inline MirWindowState toMirState(Mir::State state)
 
     case Mir::HiddenState:          return mir_window_state_hidden;
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
-    case Mir::AttachedState:        return mir_window_state_attached;
+//    case Mir::AttachedState:        return mir_window_state_attached;
 #endif
     default: Q_UNREACHABLE();
     }
