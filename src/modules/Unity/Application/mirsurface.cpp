@@ -96,7 +96,7 @@ public:
     void resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
 #endif
     void moved_to(mir::scene::Surface const*, mir::geometry::Point const&) override {}
-    void hidden_set_to(mir::scene::Surface const*, bool) override {}
+    void hidden_set_to(mir::scene::Surface const*, bool) override;
 
     // Get new frame notifications from Mir, called from a Mir thread.
     void frame_posted(mir::scene::Surface const*, int frames_available, mir::geometry::Size const& size ) override;
@@ -133,7 +133,7 @@ public:
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
     void moved_to(mir::geometry::Point const&) override {}
-    void hidden_set_to(bool) override {}
+    void hidden_set_to(bool) override;
 
     // Get new frame notifications from Mir, called from a Mir thread.
     void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
@@ -211,6 +211,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     connect(m_surfaceObserver.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::nameChanged, this, &MirSurface::onNameChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
+    connect(m_surfaceObserver.get(), &SurfaceObserver::hiddenChanged, this, &MirSurface::updateVisible);
     connect(m_surfaceObserver.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::onMinimumWidthChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::minimumHeightChanged, this, &MirSurface::onMinimumHeightChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::maximumWidthChanged, this, &MirSurface::onMaximumWidthChanged);
@@ -1303,6 +1304,11 @@ void MirSurface::SurfaceObserverImpl::resized_to(mir::scene::Surface const*, mir
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
 }
 
+void MirSurface::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const*, bool hide)
+{
+    Q_EMIT hiddenChanged(hide);
+}
+
 void MirSurface::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const*, const mir::graphics::CursorImage &cursorImage)
 {
     QCursor qcursor = createQCursorFromMirCursorImage(cursorImage);
@@ -1351,6 +1357,11 @@ void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, 
 void MirSurface::SurfaceObserverImpl::resized_to(mir::geometry::Size const&size)
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
+}
+
+void MirSurface::SurfaceObserverImpl::hidden_set_to(bool hide)
+{
+    Q_EMIT hiddenChanged(hide);
 }
 
 void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::CursorImage &cursorImage)
