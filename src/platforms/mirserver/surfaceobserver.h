@@ -57,6 +57,7 @@ Q_SIGNALS:
     void resized(const QSize &size);
     void nameChanged(const QString &name);
     void cursorChanged(const QCursor &cursor);
+    void hiddenChanged(const bool hide);
 
     void minimumWidthChanged(int);
     void minimumHeightChanged(int);
