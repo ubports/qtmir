@@ -22,6 +22,7 @@
 #include <QSharedPointer>
 #include <QString>
 #include <QStringList>
+#include <QHash>
 
 // miral
 #include <miral/application.h>
