@@ -32,11 +32,7 @@
 #include <QQmlEngine>
 #include <QQuickWindow>
 #include <QScreen>
-#if QT_VERSION >= 0x050800
 #include <private/qsgdefaultinternalimagenode_p.h>
-#else
-#include <private/qsgdefaultimagenode_p.h>
-#endif
 #include <QTimer>
 #include <QSGTextureProvider>
 
@@ -236,17 +232,9 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     }
 
     m_textureProvider->smooth = smooth();
-#if QT_VERSION >= 0x050800
     QSGDefaultInternalImageNode *node = static_cast<QSGDefaultInternalImageNode*>(oldNode);
-#else
-    QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
-#endif
     if (!node) {
-#if QT_VERSION >= 0x050800
         node = new QSGDefaultInternalImageNode;
-#else
-        node = new QSGDefaultImageNode;
-#endif
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);

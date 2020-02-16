@@ -18,24 +18,18 @@ endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
-if(Qt5Core_VERSION VERSION_LESS "5.8.0")
-    add_definitions(-DQ_FONTCONFIGDATABASE)
-    find_package(Qt5PlatformSupport REQUIRED)
-    set(QT5PLATFORMSUPPORT_LIBS Qt5PlatformSupport::Qt5PlatformSupport)
-else()
-    find_package(Qt5FontDatabaseSupport REQUIRED)
-    find_package(Qt5ThemeSupport REQUIRED)
-    find_package(Qt5EventDispatcherSupport REQUIRED)
-    find_package(Qt5EglSupport REQUIRED)
-    find_package(Qt5ServiceSupport REQUIRED)
-    set(QT5PLATFORMSUPPORT_LIBS
-        Qt5FontDatabaseSupport::Qt5FontDatabaseSupport
-        Qt5ThemeSupport::Qt5ThemeSupport
-        Qt5EventDispatcherSupport::Qt5EventDispatcherSupport
-        Qt5EglSupport::Qt5EglSupport
-        Qt5ServiceSupport::Qt5ServiceSupport
-    )
-endif()
+find_package(Qt5FontDatabaseSupport REQUIRED)
+find_package(Qt5ThemeSupport REQUIRED)
+find_package(Qt5EventDispatcherSupport REQUIRED)
+find_package(Qt5EglSupport REQUIRED)
+find_package(Qt5ServiceSupport REQUIRED)
+set(QT5PLATFORMSUPPORT_LIBS
+    Qt5FontDatabaseSupport::Qt5FontDatabaseSupport
+    Qt5ThemeSupport::Qt5ThemeSupport
+    Qt5EventDispatcherSupport::Qt5EventDispatcherSupport
+    Qt5EglSupport::Qt5EglSupport
+    Qt5ServiceSupport::Qt5ServiceSupport
+)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
@@ -53,9 +47,6 @@ include_directories(
 
     ${QT5PLATFORM_SUPPORT_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-if(Qt5Core_VERSION VERSION_LESS "5.8.0")
-    ${Qt5ThemeSupport_INCLUDE_DIRS}
-endif()
 
     ${Qt5Quick_PRIVATE_INCLUDE_DIRS}
 

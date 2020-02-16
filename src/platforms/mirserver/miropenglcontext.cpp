@@ -25,11 +25,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QSurfaceFormat>
 
-#if QT_VERSION >= 0x050800
 #include <QtEglSupport/private/qeglconvenience_p.h>
-#else
-#include <QtPlatformSupport/private/qeglconvenience_p.h>
-#endif
 
 #include <QtGui/private/qopenglcontext_p.h>
 
@@ -188,14 +184,7 @@ void MirOpenGLContext::doneCurrent()
     }
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
-QFunctionPointer MirOpenGLContext::getProcAddress(const QByteArray &procName)
-{
-    return eglGetProcAddress(procName.constData());
-}
-#else
 QFunctionPointer MirOpenGLContext::getProcAddress(const char *procName)
 {
     return eglGetProcAddress(procName);
 }
-#endif

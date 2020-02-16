@@ -65,13 +65,13 @@ add_custom_target(cppcheck COMMAND cppcheck --enable=all -q --error-exitcode=2
 option(WITH_CONTENTHUB "Build with content-hub" OFF)
 
 include(FindPkgConfig)
-find_package(Qt5Core 5.4 REQUIRED)
-find_package(Qt5DBus 5.4 REQUIRED)
-find_package(Qt5Gui 5.4 REQUIRED)
-find_package(Qt5Qml 5.4 REQUIRED)
-find_package(Qt5Quick 5.4 REQUIRED)
-find_package(Qt5Sensors 5.4 REQUIRED)
-find_package(Qt5Test 5.4 REQUIRED)
+find_package(Qt5Core 5.9 REQUIRED)
+find_package(Qt5DBus 5.9 REQUIRED)
+find_package(Qt5Gui 5.9 REQUIRED)
+find_package(Qt5Qml 5.9 REQUIRED)
+find_package(Qt5Quick 5.9 REQUIRED)
+find_package(Qt5Sensors 5.9 REQUIRED)
+find_package(Qt5Test 5.9 REQUIRED)
 
 find_package(Threads REQUIRED)
 
