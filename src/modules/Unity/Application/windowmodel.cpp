@@ -184,12 +184,7 @@ void WindowModel::onWindowsRaised(const std::vector<miral::Window> &windows)
         const int to = moveList[i].second;
 
         beginMoveRows(parent, from, from, parent, to+1);
-#if QT_VERSION < QT_VERSION_CHECK(5, 6, 0)
-        const auto &window = m_windowModel.takeAt(from);
-        m_windowModel.insert(to, window);
-#else
         m_windowModel.move(from, to);
-#endif
 
         endMoveRows();
     }

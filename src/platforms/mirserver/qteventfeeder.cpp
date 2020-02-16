@@ -421,43 +421,14 @@ public:
                 const QString& text, bool autorep, ushort count) override
     {
 
-#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleExtendedKeyEvent(window, timestamp, type, key, modifiers,
                 nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
-#else
-        // The version above is the right one, but we have to workaround a FIXME hack in
-        // QWindowSystemInterface::handleShortcutEvent which forcibly sets sync mode from the GUI thread.
-        // Sending an event synchronously from the mir input thread risks a deadlock with the main/GUI thread
-        // from a miral mutex locked by both thread (eg. holding Alt + dragging a window with the the mouse)
-        // See: https://bugreports.qt.io/browse/QTBUG-56274
-        // Bug was introduced by commit c7e5e1d9e01849347a9e59b8285477a20d82002b and fixed by commit
-        // 33d748bb88676b69e596ae77badfeaf5a69a33d1
-        QWindowSystemInterfacePrivate::KeyEvent *e =
-                new QWindowSystemInterfacePrivate::KeyEvent(window, timestamp, type, key, modifiers,
-                    nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count);
-        QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
-#endif
-
     }
 
     void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points, Qt::KeyboardModifiers mods) override
     {
-        // See comment in handleExtendedKeyEvent
-#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0)) || (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         QWindowSystemInterface::handleTouchEvent(window, timestamp, device, points, mods);
-#else
-        {
-            if (!points.size()) // Touch events must have at least one point
-                return;
-            QEvent::Type type;
-            QList<QTouchEvent::TouchPoint> touchPoints = QWindowSystemInterfacePrivate::fromNativeTouchPoints(points, window, &type);
-
-            QWindowSystemInterfacePrivate::TouchEvent *e =
-                    new QWindowSystemInterfacePrivate::TouchEvent(window, timestamp, type, device, touchPoints, mods);
-            QWindowSystemInterfacePrivate::postWindowSystemEvent(e);
-        }
-#endif
     }
 
     void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,

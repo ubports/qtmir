@@ -18,15 +18,9 @@
 
 #include <QtGlobal>
 
-#if QT_VERSION >= 0x050800
 #include <QtFontDatabaseSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtEventDispatcherSupport/private/qgenericunixeventdispatcher_p.h>
 #include <QtServiceSupport/private/qgenericunixservices_p.h>
-#else
-#include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
-#include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
-#include <QtPlatformSupport/private/qgenericunixservices_p.h>
-#endif
 
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformaccessibility.h>
@@ -174,11 +168,7 @@ void MirServerIntegration::initialize()
             [this](Screen *screen) { handleScreenAdded(screen); });
     QObject::connect(screens.data(), &ScreensModel::screenRemoved,
             [this](Screen *screen) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-        delete screen;
-#else
         handleScreenRemoved(screen);
-#endif
     });
 
     Q_FOREACH(auto screen, screens->screens()) {
