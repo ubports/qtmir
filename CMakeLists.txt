@@ -102,6 +102,8 @@ endif()
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
 
+# Disable all deprecated qt functions in and before qt version 5.9
+add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050900)
 
 # Use the fast string builder
 add_definitions(-DQT_USE_QSTRINGBUILDER)
