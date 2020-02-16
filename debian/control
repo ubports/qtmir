@@ -1,7 +1,7 @@
 Source: qtmir
 Section: libs
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: UBports Developers <developers@ubports.com>
 Build-Depends: cmake,
                cmake-extras (>= 0.10),
                debhelper (>= 9),
@@ -46,12 +46,7 @@ Build-Depends: cmake,
                libboost-filesystem-dev,
                libboost-system-dev,
 Standards-Version: 3.9.5
-Homepage: https://launchpad.net/qtmir
-# if you don't have have commit access to this branch but would like to upload
-# directly to Ubuntu, don't worry: your changes will be merged back into the
-# upstream branch
-Vcs-Bzr: lp:qtmir
-Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
+Homepage: https://github.com/ubports/qtmir
 
 Package: qtmir-android
 Architecture: armhf arm64
