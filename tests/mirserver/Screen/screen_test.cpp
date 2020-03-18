@@ -51,6 +51,7 @@ void ScreenTest::SetUp()
     OrientationSensor::skipDBusRegistration = true;
 }
 
+/*
 TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
 {
     auto orientationSensor = std::make_shared<OrientationSensor>();
@@ -66,6 +67,7 @@ TEST_F(ScreenTest, OrientationSensorForExternalDisplay)
     orientationSensor->onDisplayPowerStateChanged(1,0);
     ASSERT_FALSE(orientationSensor->enabled());
 }
+*/
 
 TEST_F(ScreenTest, OrientationSensorForInternalDisplay)
 {
