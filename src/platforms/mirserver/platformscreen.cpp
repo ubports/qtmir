@@ -489,5 +489,7 @@ bool PlatformScreen::internalDisplay() const
     if (m_type == qtmir::OutputTypes::LVDS || m_type == qtmir::OutputTypes::EDP) {
         return true;
     }
-    return false;
+
+    qWarning("is not internalDisplay, but enabling anyway");
+    return true;
 }
