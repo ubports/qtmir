@@ -140,7 +140,11 @@ include(GNUInstallDirs)
 # Determine QPA plugin install path
 # FIXME(greyback) there must be a better way than calling a private macro to set a property.
 # I'm manually calling a macro from Qt5GuiConfig.cmake, but I don't understand why it isn't being called.
-_populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms")
+if (Qt5Gui_VERSION VERSION_LESS 5.14.0)
+  _populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms")
+else()
+  _populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms" FALSE)
+endif()
 get_target_property(Qt5Gui_QPA_Plugin_Path Qt5::Gui IMPORTED_LOCATION_PLATFORMS)
 
 # Set QML module install path
