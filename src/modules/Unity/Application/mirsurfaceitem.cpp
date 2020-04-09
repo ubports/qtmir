@@ -335,7 +335,10 @@ void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 
 void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
 {
-    if (m_consumesInput && m_surface && m_surface->live()) {
+    // WORKAROUND for https://github.com/ubports/ubuntu-touch/issues/787
+    // This is a improved workaround that allows "mouse" hover events to work correctly by
+    // ignoring hover move events with no timestamp as these are bogus synthesized touch events
+    if (m_consumesInput && m_surface && m_surface->live() && event->timestamp() != 0) {
         m_surface->hoverMoveEvent(event);
     } else {
         event->ignore();
