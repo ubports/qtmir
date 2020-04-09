@@ -295,20 +295,26 @@ void WindowManagementPolicy::deliver_pointer_event(const MirPointerEvent *event,
 // raises the window tree and focus it.
 void WindowManagementPolicy::activate(const miral::Window &window)
 {
-    if (window) {
-        auto &windowInfo = tools.info_for(window);
+    try {
+        if (window) {
+            auto &windowInfo = tools.info_for(window);
 
-        // restore from minimized if needed
-        if (windowInfo.state() == mir_window_state_minimized) {
-            auto extraInfo = getExtraInfo(windowInfo);
-            Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
-            requestState(window, extraInfo->previousState);
+            // restore from minimized if needed
+            if (windowInfo.state() == mir_window_state_minimized) {
+                auto extraInfo = getExtraInfo(windowInfo);
+                Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
+                requestState(window, extraInfo->previousState);
+            }
         }
-    }
 
-    tools.invoke_under_lock([&]() {
-        tools.select_active_window(window);
-    });
+        tools.invoke_under_lock([&]() {
+            tools.select_active_window(window);
+        });
+    } catch (const std::out_of_range&) {
+        // usually shell trying to operate on a window which already closed, just ignore
+        // (throws from tools.info_for(...) ususally)
+        // TODO: Same issue as resize below
+    }
 }
 
 // raises the window tree
