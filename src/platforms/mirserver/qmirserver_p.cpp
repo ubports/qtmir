@@ -30,6 +30,7 @@
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
 #include <miral/version.h>
+#include <miral/x11_support.h>
 #if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
 #include <miral/set_window_management_policy.h>
 #else
@@ -138,7 +139,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy},
+            miral::X11Support{},
         });
 }
 

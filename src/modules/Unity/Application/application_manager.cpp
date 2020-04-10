@@ -74,6 +74,31 @@ QString toShortAppIdIfPossible(const QString &appId) {
 
 } // namespace
 
+class NoDesktopAppInfo : public ApplicationInfo
+{
+public:
+    NoDesktopAppInfo(QString name) : m_name(name) {};
+    QString appId() const override { return m_name; };
+    QString name() const override { return m_name; };
+    QString comment() const override { return m_name; };
+    QUrl icon() const override {return QUrl(); };
+    QString splashTitle() const override {return m_name; };
+    QUrl splashImage() const override {return QUrl(); };
+    bool splashShowHeader() const override { return false; };
+    QString splashColor() const override { return ""; };
+    QString splashColorHeader() const override { return ""; };
+    QString splashColorFooter() const override { return ""; };
+    Qt::ScreenOrientations supportedOrientations() const override { return Qt::PortraitOrientation |
+                                                                           Qt::LandscapeOrientation | 
+                                                                           Qt::InvertedPortraitOrientation |
+                                                                           Qt::InvertedLandscapeOrientation; };
+    bool rotatesWindowContents() const override { return false; };
+    bool isTouchApp() const override { return false; };
+
+private:
+    QString m_name;
+};
+
 ApplicationManager* ApplicationManager::create()
 {
     NativeInterface *nativeInterface = dynamic_cast<NativeInterface*>(QGuiApplication::platformNativeInterface());
@@ -508,6 +533,62 @@ void ApplicationManager::onAppDataChanged(const int role)
     }
 }
 
+QSharedPointer<ApplicationInfo> ApplicationManager::tryFindApp(const pid_t pid)
+{
+    // We first try task controller
+    std::unique_ptr<ProcInfo::CommandLine> info = m_procInfo->commandLine(pid);
+    QString desktopFileName = info->getParameter("--desktop_file_hint=");
+
+    if (desktopFileName.isNull()) {
+        auto environment = m_procInfo->environment(pid);
+        if (environment->contains("DESKTOP_FILE_HINT")) {
+            desktopFileName = environment->getParameter("DESKTOP_FILE_HINT");
+        }
+    }
+
+    qCDebug(QTMIR_APPLICATIONS) << "Trying to find desktop file";
+
+    if (desktopFileName.isNull()) {
+        const auto paths = QStandardPaths::standardLocations(QStandardPaths::ApplicationsLocation);
+        for (const auto &path: paths) {
+            qWarning() << "searching" << path;
+            QDirIterator it(path, QStringList() << "*.desktop", QDir::Files, QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                auto file = it.next();
+                QTextStream in (&file);
+                QString line;
+                while (!line.isNull()) {
+                    line = in.readLine();
+                    if (line.contains("exec") && line.contains(info->getExec())) {
+                        qWarning() << "found match for" << info->asStringList()[0] << "as" << file;
+                        desktopFileName = file;
+                        break;
+                    }
+                }
+                if (!desktopFileName.isNull())
+                    break;
+            }
+        if (!desktopFileName.isNull())
+            break;
+        }
+    }
+
+    if (!desktopFileName.isNull()) {
+        // Guess appId from the desktop file hint
+        const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(QStringLiteral(".desktop$"))));
+
+        qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
+
+        auto appInfo = m_taskController->getInfoForApp(appId);
+        return appInfo;
+    }
+
+    // If all else fails, make a dummy app info
+    auto nod = new NoDesktopAppInfo(info->getExec());
+    return QSharedPointer<NoDesktopAppInfo>(nod);
+
+}
+
 void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
 {
     // This is the only function that is called from a different thread than the one
@@ -546,34 +627,27 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
         return;
     }
 
+    qWarning() << info->asStringList();
+
     if (info->startsWith("maliit-server") || info->contains("qt5/libexec/QtWebProcess")) {
         authorized = true;
         return;
     }
 
-    QString desktopFileName = info->getParameter("--desktop_file_hint=");
 
-    if (desktopFileName.isNull()) {
-        auto environment = m_procInfo->environment(pid);
-        if (!environment->contains("DESKTOP_FILE_HINT")) {
-            qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                        << "as it was not launched by upstart, and no desktop_file_hint is specified";
-            return;
-        }
-        desktopFileName = environment->getParameter("DESKTOP_FILE_HINT");
-    }
-
-    // Guess appId from the desktop file hint
-    const QString appId = toShortAppIdIfPossible(desktopFileName.split('/').last().remove(QRegExp(QStringLiteral(".desktop$"))));
-
-    qCDebug(QTMIR_APPLICATIONS) << "Process supplied desktop_file_hint, loading:" << appId;
-
-    auto appInfo = m_taskController->getInfoForApp(appId);
-    if (!appInfo) {
-        qCritical() << "ApplicationManager REJECTED connection from app with pid" << pid
-                    << "as the app specified by the desktop_file_hint argument could not be found";
+    if (info->startsWith("unity8")) {
+        const QStringList arguments(info->asStringList());
+        auto nod = new NoDesktopAppInfo("Xwayland");
+        auto nodq = QSharedPointer<NoDesktopAppInfo>(nod);
+        qWarning() << nodq->appId() << nodq->supportedOrientations();
+        queuedAddApp(nodq, arguments, pid);
+        authorized = true;
+        m_authorizedPids.insertMulti(pid, "Xwayland");
         return;
     }
+    
+
+    auto appInfo = tryFindApp(pid);
 
     // some naughty applications use a script to launch the actual application. Check for the
     // case where shell actually launched the script.

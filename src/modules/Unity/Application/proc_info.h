@@ -41,6 +41,7 @@ public:
         bool contains(const char* prefix) const;
         QString getParameter(const char* name) const;
         QStringList asStringList() const;
+        QString getExec() const;
     };
 
     struct Environment {
