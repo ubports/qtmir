@@ -33,6 +33,7 @@
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
 #include <miral/wayland_extensions.h>
+#include <miral/x11_support.h>
 
 // Qt
 #include <QCoreApplication>
@@ -198,6 +199,7 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             miral::PersistDisplayConfig{displayStorageBuilder(),
                                         m_displayConfigurationPolicy},
             waylandExtensions,
+            miral::X11Support{},
         });
 }
 

@@ -61,6 +61,11 @@ QString ProcInfo::CommandLine::getParameter(const char* name) const
     return QString(regExpMatch.captured(1));
 }
 
+QString ProcInfo::CommandLine::getExec() const
+{
+    return asStringList()[0];
+}
+
 
 std::unique_ptr<ProcInfo::Environment> ProcInfo::environment(pid_t pid)
 {
