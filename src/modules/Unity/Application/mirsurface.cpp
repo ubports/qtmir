@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015-2017 Canonical, Ltd.
+ * Copyright (C) 2020 UBports Foundation
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -1075,15 +1076,35 @@ void MirSurface::onCloseTimedOut()
     if (m_live) {
         if (m_session && m_session->application()) {
             Application *app = static_cast<Application*>(m_session->application());
-
-            // If the application is in progress of closing, we let the applicationManager
-            // handle closing of the application.
             if (app->isClosing()) {
+                // If the application is in progress of closing, we let the
+                // applicationManager handle closing it.
+                INFO_MSG << "(), app is in the process of closing, not " <<
+                    "forcing to close.";
                 return;
+            } else {
+                // Otherwise, it's ignoring our polite request to close. It
+                // might be showing an "unsaved data, are you sure you want to
+                // quit?" dialog, but on the phone the user has swiped the app
+                // away. There's no convenient way to bring it back for the
+                // dialog.
+                // FIXME: We should have a way to ask the user if they'd like
+                // to kill the app.
+                // ref https://github.com/ubports/ubuntu-touch/issues/1417
+                WARNING_MSG << "(), app with ID " << app->appId() << " has " <<
+                    "ignored request to close a window. Terminating the " <<
+                    "application. This could be a bug in the application.";
+                app->terminate();
             }
+        } else {
+            // Weird zombie surface. Removing it may still cause problems later
+            // since this should almost never occur.
+            WARNING_MSG << "(), force closing surface with no app session. " <<
+                "Expect strange behavior.";
+            m_controller->forceClose(m_window);
         }
-
-        m_controller->forceClose(m_window);
+    } else {
+        WARNING_MSG << " called but the surface is not live. What do we do?";
     }
 }
 
