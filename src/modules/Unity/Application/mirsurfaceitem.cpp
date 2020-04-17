@@ -32,6 +32,10 @@
 #include <QQmlEngine>
 #include <QQuickWindow>
 #include <QScreen>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#include <private/qquickwindow_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
+#endif
 #include <private/qsgdefaultinternalimagenode_p.h>
 #include <QTimer>
 #include <QSGTextureProvider>
@@ -234,7 +238,12 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     m_textureProvider->smooth = smooth();
     QSGDefaultInternalImageNode *node = static_cast<QSGDefaultInternalImageNode*>(oldNode);
     if (!node) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        QSGRenderContext *rc = QQuickWindowPrivate::get(window())->context;
+        node = new QSGDefaultInternalImageNode(static_cast<QSGDefaultRenderContext *>(rc));
+#else
         node = new QSGDefaultInternalImageNode;
+#endif
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
         node->setVerticalWrapMode(QSGTexture::ClampToEdge);
