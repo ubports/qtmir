@@ -190,13 +190,15 @@ QPlatformFontDatabase *MirServerIntegration::fontDatabase() const
 
 QStringList MirServerIntegration::themeNames() const
 {
-    return QStringList(UbuntuTheme::name);
+    return QStringList(QLatin1String(UbuntuTheme::name));
 }
 
 QPlatformTheme *MirServerIntegration::createPlatformTheme(const QString& name) const
 {
-    Q_UNUSED(name);
-    return new UbuntuTheme;
+    if (name == QLatin1String(UbuntuTheme::name))
+        return new UbuntuTheme;
+
+    return QGenericUnixTheme::createUnixTheme(name);
 }
 
 QPlatformServices *MirServerIntegration::services() const
