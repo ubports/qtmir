@@ -103,7 +103,6 @@ add_library(qpa-mirserver SHARED
     shelluuid.cpp
     surfaceobserver.cpp
     tracepoints.c
-    ubuntutheme.cpp
     windowcontroller.cpp
     windowmanagementpolicy.cpp
     orientationsensor.cpp
