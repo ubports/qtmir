@@ -7,6 +7,7 @@ include(UseLttngGenTp)
 set(QTMIRSERVER_ABI 1)
 
 add_subdirectory(miral)
+add_subdirectory(wayland-generated)
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
@@ -41,6 +42,9 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR} # for tracepoints.h
 )
 
+set(MIRCOMMON_INCLUDE_DIRS /usr/include/mircommon/)
+set(MIRCOMMON_LDFLAGS "-lmircommon")
+
 include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
@@ -48,6 +52,8 @@ include_directories(
     ${MIRSERVER_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
+    ${MIRCOMMON_INCLUDE_DIRS}
+    ${MIRWAYLAND_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -125,6 +131,7 @@ add_library(qtmirserver-mirserver OBJECT
     setqtcompositor.cpp setqtcompositor.h
     eventdispatch.cpp eventdispatch.h
     promptsessionmanager.cpp promptsessionmanager.h promptsession.h
+    wayland-generated/qt_windowmanager_wrapper.cpp
 )
 
 # These files get entangled by automoc so they need to go together. And some depend on mirserver-dev
@@ -132,6 +139,7 @@ set(QMIRSERVER_PLUGIN_SRC
     ${CMAKE_SOURCE_DIR}/src/common/debughelpers.cpp
     cursor.cpp
     eventbuilder.cpp
+    qtwindowmanager.cpp
     qteventfeeder.cpp
     qmirserver.cpp
     qmirserver_p.cpp
@@ -186,6 +194,11 @@ target_link_libraries(qtmirserver
         ${GIO_LDFLAGS}
         ${FONTCONFIG_LDFLAGS}
         ${XKBCOMMON_LIBRARIES}
+
+        ${MIRCOMMON_LDFLAGS}
+        ${MIRWAYLAND_LDFLAGS}
+        ${WAYLAND_CLIENT_LIBRARIES}
+        ${WAYLAND_SERVER_LDFLAGS}
 
         ${CONTENT_HUB_LIBRARIES}
 

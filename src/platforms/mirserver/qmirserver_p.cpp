@@ -24,6 +24,7 @@
 #include "setqtcompositor.h"
 #include "qteventfeeder.h"
 #include "qtmir/sessionauthorizer.h"
+#include "qtwindowmanager.h"
 
 // prototyping for later incorporation in miral
 #include <miral/persist_display_config.h>
@@ -31,6 +32,7 @@
 // miral
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
+#include <miral/wayland_extensions.h>
 
 // Qt
 #include <QCoreApplication>
@@ -149,6 +151,9 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         QCoreApplication::quit();
     }};
 
+    miral::WaylandExtensions waylandExtensions{};
+    waylandExtensions.add_extension(qtmir::qtWindowmanagerExtension());
+
     runner.set_exception_handler([this]
     {
         try {
@@ -191,7 +196,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
             miral::PersistDisplayConfig{displayStorageBuilder(),
-                                        m_displayConfigurationPolicy}
+                                        m_displayConfigurationPolicy},
+            waylandExtensions,
         });
 }
 
