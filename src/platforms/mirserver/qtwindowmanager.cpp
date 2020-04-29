@@ -14,7 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memory>
+
 #include "qtwindowmanager.h"
+#include "urlbuilderdispatcher.h"
 #include "services.h"
 
 #include <wayland-generated/qt_windowmanager_wrapper.h>
@@ -34,15 +37,16 @@ public:
     QtWindowManager(struct wl_resource*);
 
     void open_url(uint32_t remaining, std::string const& url) override {
-        Q_UNUSED(remaining);
-        Q_UNUSED(url);
-        qDebug() << "TESTING, TESTING, open_url WAS CALLED. HI WAYLAND!";
+        mBuilder->urlInput(remaining, url);
     }
+private:
+    qtmir::URLBuilderDispatcher* mBuilder;
 };
 
 QtWindowManager::QtWindowManager(
     struct wl_resource* resource) :
-    Windowmanager{resource, Version<1>{}}
+    Windowmanager{resource, Version<1>{}},
+    mBuilder{new qtmir::URLBuilderDispatcher{std::make_shared<Services>()}}
 {
 }
 
