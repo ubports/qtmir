@@ -112,6 +112,7 @@ add_library(qpa-mirserver SHARED
     surfaceobserver.cpp
     tracepoints.c
     ubuntutheme.cpp
+    urlbuilderdispatcher.cpp
     windowcontroller.cpp
     windowmanagementpolicy.cpp
     orientationsensor.cpp
