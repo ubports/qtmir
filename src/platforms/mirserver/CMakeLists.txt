@@ -111,6 +111,7 @@ add_library(qpa-mirserver SHARED
     shelluuid.cpp
     surfaceobserver.cpp
     tracepoints.c
+    urlbuilderdispatcher.cpp
     windowcontroller.cpp
     windowmanagementpolicy.cpp
     orientationsensor.cpp
