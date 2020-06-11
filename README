@@ -1,3 +1,6 @@
+This branch, xenial_-_edge_-_wayland_-_mir18 is only for testing Mir 1.8
+and can be deleted safely
+
 This repo contains a QPA plugin to make Qt a Mir server.
 
 Handy way to grab dependencies is with:
