@@ -136,6 +136,7 @@ private:
     static ApplicationManager* the_application_manager;
 
     QHash<pid_t, QString> m_authorizedPids;
+    QHash<QString, QSharedPointer<qtmir::ApplicationInfo>> m_cachedAppInfo;
 
     mutable QMutex m_mutex;
 };

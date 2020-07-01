@@ -24,6 +24,8 @@
 // Qt
 #include <QStandardPaths>
 
+#include "tracepoints.h" // generated from tracepoints.tp
+
 // upstart
 extern "C" {
     #include "ubuntu-app-launch.h"
@@ -173,6 +175,8 @@ bool TaskController::appIdHasProcessId(const QString& appId, pid_t pid)
 
 bool TaskController::stop(const QString& appId)
 {
+    tracepoint(qtmir, taskcontrollerStop);
+
     auto app = createApp(appId, impl->registry);
     if (!app) {
         return false;
@@ -182,11 +186,14 @@ bool TaskController::stop(const QString& appId)
         instance->stop();
     }
 
+    tracepoint(qtmir, taskcontrollerStop_end);
+
     return true;
 }
 
 bool TaskController::start(const QString& appId, const QStringList& arguments)
 {
+    tracepoint(qtmir, taskcontrollerStart);
     auto app = createApp(appId, impl->registry);
     if (!app) {
         return false;
@@ -199,6 +206,8 @@ bool TaskController::start(const QString& appId, const QStringList& arguments)
     }
 
     app->launch(urls);
+
+    tracepoint(qtmir, taskcontrollerStart_end);
 
     return true;
 }
@@ -233,6 +242,8 @@ bool TaskController::resume(const QString& appId)
 
 QSharedPointer<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QString &appId) const
 {
+    tracepoint(qtmir, taskcontrollerGetInfo);
+
     auto app = createApp(appId, impl->registry);
     if (!app || !app->info()) {
         return QSharedPointer<qtmir::ApplicationInfo>();
@@ -240,6 +251,9 @@ QSharedPointer<qtmir::ApplicationInfo> TaskController::getInfoForApp(const QStri
 
     QString shortAppId = toShortAppIdIfPossible(QString::fromStdString(std::string(app->appId())));
     auto appInfo = new qtmir::upstart::ApplicationInfo(shortAppId, app->info());
+
+    tracepoint(qtmir, taskcontrollerGetInfo_end);
+
     return QSharedPointer<qtmir::ApplicationInfo>(appInfo);
 }
 

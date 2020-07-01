@@ -45,6 +45,7 @@
 
 // std
 #include <csignal>
+#include <future>
 
 // Unity API
 #include <unity/shell/application/MirSurfaceInterface.h>
@@ -290,6 +291,10 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
     QString appId = toShortAppIdIfPossible(inputAppId);
     qCDebug(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - this=" << this << "appId" << qPrintable(appId);
 
+    std::future<QSharedPointer<qtmir::ApplicationInfo>> appInfoResult = std::async(std::launch::async, [&](){
+        return m_taskController->getInfoForApp(appId);
+    });
+
     Application *application = findApplicationMutexHeld(appId);
     if (application) {
         qWarning() << "ApplicationManager::startApplication - application appId=" << appId << " already exists";
@@ -313,17 +318,33 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
         }
     }
 
-    if (!m_taskController->start(appId, arguments)) {
-        qWarning() << "Upstart failed to start application with appId" << appId;
-        return nullptr;
-    }
+    std::future<bool> startResult = std::async(std::launch::async, [&](){
+        return m_taskController->start(appId, arguments);
+    });
 
     // The TaskController may synchroneously callback onProcessStarting, so check if application already added
     application = findApplicationMutexHeld(appId);
     if (application) {
         application->setArguments(arguments);
     } else {
-        auto appInfo = m_taskController->getInfoForApp(appId);
+        QSharedPointer<qtmir::ApplicationInfo> appInfo;
+        bool cachedResult = false;
+
+        // if the result for appInfo has alredy been recived, use that
+        // if not and if we have cached appinfo, we use cached info
+        // if we dont have cached appinfo we are forced to wait
+        auto status = appInfoResult.wait_for(std::chrono::seconds(0));
+        if (status != std::future_status::ready && m_cachedAppInfo.contains(appId)) {
+            qCDebug(QTMIR_APPLICATIONS) << "Using cached result";
+            appInfo = m_cachedAppInfo[appId];
+            cachedResult = true;
+        } else {
+            // We ether have the info to get immediately or we need to wait
+            qCDebug(QTMIR_APPLICATIONS) << "Using fresh result, status: "
+                                        << (status == std::future_status::ready ? "ready" : "wating");
+            appInfo = appInfoResult.get();
+        }
+
         if (!appInfo) {
             qCWarning(QTMIR_APPLICATIONS) << "ApplicationManager::startApplication - Unable to instantiate application with appId" << appId;
             return nullptr;
@@ -336,7 +357,26 @@ Application* ApplicationManager::startApplication(const QString &inputAppId,
                     this);
 
         add(application);
+
+        if (cachedResult) {
+            qCDebug(QTMIR_APPLICATIONS) << "Replacing cached result";
+            // This blocks until result
+            appInfo = appInfoResult.get();
+        }
+
+        m_cachedAppInfo[appId] = appInfo;
     }
+
+    tracepoint(qtmir, startApplication_added);
+
+    // Blocks until start has finished
+    if (!startResult.get()) {
+        qWarning() << "Upstart failed to start application with appId" << appId;
+        return nullptr;
+    }
+
+    tracepoint(qtmir, startApplication_end);
+
     return application;
 }
 
@@ -590,6 +630,8 @@ void ApplicationManager::authorizeSession(const pid_t pid, bool &authorized)
     queuedAddApp(appInfo, arguments, pid);
     authorized = true;
     m_authorizedPids.insertMulti(pid, appInfo->appId());
+
+    tracepoint(qtmir, authorizeSession_end);
 }
 
 
@@ -652,6 +694,12 @@ void ApplicationManager::add(Application* application)
     Q_ASSERT(!m_modelUnderChange);
     m_modelUnderChange = true;
 
+    // Insert first so the user can see it faster
+    beginInsertRows(QModelIndex(), m_applications.count(), m_applications.count());
+    m_applications.append(application);
+    endInsertRows();
+    Q_EMIT countChanged();
+
     /*
         All begin[...]Rows() and end[...]Rows() functions cause signal emissions which can
         be processed by slots immediately and then trigger yet more model changes.
@@ -700,11 +748,6 @@ void ApplicationManager::add(Application* application)
         remove(application);
         application->deleteLater();
     });
-
-    beginInsertRows(QModelIndex(), m_applications.count(), m_applications.count());
-    m_applications.append(application);
-    endInsertRows();
-    Q_EMIT countChanged();
 
     m_modelUnderChange = false;
 

@@ -1,8 +1,13 @@
 #include <stdint.h>
 
 TRACEPOINT_EVENT(qtmir, startApplication, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, startApplication_added, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, startApplication_end, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmir, onProcessStarting, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, onProcessStarting_added, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, onProcessStarting_end, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmir, authorizeSession, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, authorizeSession_end, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmir, onProcessStopped, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmir, surfaceCreated, TP_ARGS(0), TP_FIELDS())
 TRACEPOINT_EVENT(qtmir, surfaceDestroyed, TP_ARGS(0), TP_FIELDS())
@@ -12,3 +17,10 @@ TRACEPOINT_EVENT(qtmir, appIdHasProcessId_end, TP_ARGS(int, found), TP_FIELDS(ct
 
 TRACEPOINT_EVENT(qtmir, touchEventConsume_start, TP_ARGS(int64_t, event_time), TP_FIELDS(ctf_integer(int64_t, event_time, event_time)))
 TRACEPOINT_EVENT(qtmir, touchEventConsume_end, TP_ARGS(int64_t, event_time), TP_FIELDS(ctf_integer(int64_t, event_time, event_time)))
+
+TRACEPOINT_EVENT(qtmir, taskcontrollerStart, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, taskcontrollerStart_end, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, taskcontrollerStop, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, taskcontrollerStop_end, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, taskcontrollerGetInfo, TP_ARGS(0), TP_FIELDS())
+TRACEPOINT_EVENT(qtmir, taskcontrollerGetInfo_end, TP_ARGS(0), TP_FIELDS())
