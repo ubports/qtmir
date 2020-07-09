@@ -72,6 +72,7 @@ int MirBufferSGTexture::textureId() const
     {
         GLint existing_binding;
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &existing_binding);
+        m_mirBuffer.gl_bind_tex();
         m_mirBuffer.bind();
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &m_textureId);
         glBindTexture(GL_TEXTURE_2D, existing_binding);
@@ -95,6 +96,7 @@ void MirBufferSGTexture::bind()
     QMutexLocker locker(&m_mutex);
 
     Q_ASSERT(hasBuffer());
+    m_mirBuffer.gl_bind_tex();
     updateBindOptions(true/* force */);
 
     m_mirBuffer.bind();
