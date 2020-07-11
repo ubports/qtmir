@@ -38,6 +38,8 @@
 #include <memory>
 #include <gmock/gmock.h>
 
+#include "check_gtest_version.h"
+
 namespace testing
 {
 namespace internal
@@ -75,9 +77,13 @@ class ActionResultHolder<std::unique_ptr<T>>
   // result in a new-ed ActionResultHolder.
   template <typename F>
   static ActionResultHolder* PerformDefaultAction(
+#if GTEST_AT_LEAST(1, 10, 0)
+      const FunctionMocker<F>* func_mocker,
+#else
       const FunctionMockerBase<F>* func_mocker,
+#endif
       typename Function<F>::ArgumentTuple args,
-      const string& call_description) {
+      const std::string& call_description) {
     return new ActionResultHolder(
         func_mocker->PerformDefaultAction(std::move(args), call_description));
   }
