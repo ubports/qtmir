@@ -1,11 +1,12 @@
 Source: qtmir
 Section: libs
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: UBports Developers <developers@ubports.com>
 Build-Depends: cmake,
                cmake-extras (>= 0.10),
                debhelper (>= 9),
                google-mock (>= 1.6.0+svn437),
+               libcgmanager-dev,
                libcontent-hub-dev (>= 0.2),
                libfontconfig1-dev,
                libgles2-mesa-dev,
@@ -22,7 +23,6 @@ Build-Depends: cmake,
                libqtdbusmock1-dev (>= 0.2),
                libqtdbustest1-dev (>= 0.2),
                libubuntu-app-launch2-dev,
-               libubuntu-application-api-dev,
                libudev-dev,
                libunity-api-dev (>= 8.7),
                liburl-dispatcher1-dev,
@@ -46,12 +46,7 @@ Build-Depends: cmake,
                libboost-filesystem-dev,
                libboost-system-dev,
 Standards-Version: 3.9.5
-Homepage: https://launchpad.net/qtmir
-# if you don't have have commit access to this branch but would like to upload
-# directly to Ubuntu, don't worry: your changes will be merged back into the
-# upstream branch
-Vcs-Bzr: lp:qtmir
-Vcs-Browser: http://bazaar.launchpad.net/~mir-team/qtmir/trunk/files
+Homepage: https://github.com/ubports/qtmir
 
 Package: qtmir-android
 Architecture: armhf arm64

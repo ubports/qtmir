@@ -18,7 +18,11 @@
 #include "logging.h"
 
 namespace mg = mir::graphics;
-namespace mf = mir::frontend;
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+namespace mfs = mir::scene;
+#else
+namespace mfs = mir::frontend;
+#endif
 
 MirDisplayConfigurationObserver::MirDisplayConfigurationObserver(QObject *parent)
     : QObject(parent)
@@ -43,12 +47,12 @@ void MirDisplayConfigurationObserver::base_configuration_updated(const std::shar
     Q_EMIT baseConfigurationUpdated(base_config);
 }
 
-void MirDisplayConfigurationObserver::session_configuration_applied(const std::shared_ptr<mf::Session> &,
+void MirDisplayConfigurationObserver::session_configuration_applied(const std::shared_ptr<mfs::Session> &,
                                                                     const std::shared_ptr<mg::DisplayConfiguration> &)
 {
 }
 
-void MirDisplayConfigurationObserver::session_configuration_removed(const std::shared_ptr<mf::Session> &)
+void MirDisplayConfigurationObserver::session_configuration_removed(const std::shared_ptr<mfs::Session> &)
 {
 }
 

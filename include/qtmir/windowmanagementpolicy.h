@@ -93,6 +93,10 @@ public:
     void advise_removing_from_workspace(const std::shared_ptr<miral::Workspace> &workspace,
                                         const std::vector<miral::Window> &windows) override;
 
+    void advise_output_create(miral::Output const& output) override;
+    void advise_output_update(miral::Output const& updated, miral::Output const& original) override;
+    void advise_output_delete(miral::Output const& output) override;
+
 protected:
     WindowManagementPolicy(const miral::WindowManagerTools &tools, std::shared_ptr<qtmir::WindowManagementPolicyPrivate> dd);
 

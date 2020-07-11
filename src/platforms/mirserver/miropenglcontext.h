@@ -44,11 +44,7 @@ public:
 
     bool isSharing() const override { return false; }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
-    QFunctionPointer getProcAddress(const QByteArray &procName) override;
-#else
     QFunctionPointer getProcAddress(const char *procName) override;
-#endif
 
 #ifdef QGL_DEBUG
     Q_SLOT void onGlDebugMessageLogged(QOpenGLDebugMessage m) { qDebug() << m; }

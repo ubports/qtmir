@@ -39,7 +39,11 @@ using namespace testing;
 
 struct SizedStubSurface : public mir::test::doubles::StubSurface
 {
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+    mir::geometry::Size window_size() const override { return toMirSize(m_size); }
+#else
     mir::geometry::Size size() const override { return toMirSize(m_size); }
+#endif
 
     void setSize(QSize size) { m_size = size; }
 
@@ -92,10 +96,10 @@ public:
         return NewWindow{windowInfo};
     }
 
-    MirSurface *getMirSurfaceFromModel(const WindowModel &model, int index)
+    qtmir::MirSurface *getMirSurfaceFromModel(const WindowModel &model, int index)
     {
         flushEvents();
-        return model.data(model.index(index, 0), WindowModel::SurfaceRole).value<MirSurface*>();
+        return model.data(model.index(index, 0), WindowModel::SurfaceRole).value<qtmir::MirSurface*>();
     }
 
     miral::Window getMirALWindowFromModel(const WindowModel &model, int index)
@@ -658,7 +662,7 @@ TEST_F(WindowModelTest, WhenAddInputMethodWindowNotifiedModelPropertyHasCorrectW
     notifier.windowAdded(newWindow);
     flushEvents();
 
-    auto miralWindow = static_cast<MirSurface*>(model.inputMethodSurface())->window();
+    auto miralWindow = static_cast<qtmir::MirSurface*>(model.inputMethodSurface())->window();
     EXPECT_EQ(newWindow.windowInfo.window(), miralWindow);
 }
 
@@ -694,7 +698,7 @@ TEST_F(WindowModelTest, WindowReadyCausesMirSurfaceToEmitReadySignal)
     notifier.windowAdded(newWindow);
 
     auto surface = getMirSurfaceFromModel(model, 0); // will be MirSurface for newWindow
-    QSignalSpy readySpy(surface, &MirSurface::ready);
+    QSignalSpy readySpy(surface, &qtmir::MirSurface::ready);
 
     // Mark window ready
     notifier.windowReady(newWindow.windowInfo);

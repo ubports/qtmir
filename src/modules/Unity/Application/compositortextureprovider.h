@@ -20,6 +20,7 @@
 #include <functional>
 #include <qglobal.h>
 #include <QSharedPointer>
+#include <QHash>
 
 class QSGTexture;
 

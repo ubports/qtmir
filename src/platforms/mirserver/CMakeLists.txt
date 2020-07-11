@@ -16,26 +16,24 @@ if (QGL_DEBUG)
     add_definitions(-DQGL_DEBUG)
 endif()
 
+if (WITH_CONTENTHUB)
+    add_definitions(-DWITH_CONTENTHUB)
+endif()
+
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -fPIC")
 
-if(Qt5Core_VERSION VERSION_LESS "5.8.0")
-    add_definitions(-DQ_FONTCONFIGDATABASE)
-    find_package(Qt5PlatformSupport REQUIRED)
-    set(QT5PLATFORMSUPPORT_LIBS Qt5PlatformSupport::Qt5PlatformSupport)
-else()
-    find_package(Qt5FontDatabaseSupport REQUIRED)
-    find_package(Qt5ThemeSupport REQUIRED)
-    find_package(Qt5EventDispatcherSupport REQUIRED)
-    find_package(Qt5EglSupport REQUIRED)
-    find_package(Qt5ServiceSupport REQUIRED)
-    set(QT5PLATFORMSUPPORT_LIBS
-        Qt5FontDatabaseSupport::Qt5FontDatabaseSupport
-        Qt5ThemeSupport::Qt5ThemeSupport
-        Qt5EventDispatcherSupport::Qt5EventDispatcherSupport
-        Qt5EglSupport::Qt5EglSupport
-        Qt5ServiceSupport::Qt5ServiceSupport
-    )
-endif()
+find_package(Qt5FontDatabaseSupport REQUIRED)
+find_package(Qt5ThemeSupport REQUIRED)
+find_package(Qt5EventDispatcherSupport REQUIRED)
+find_package(Qt5EglSupport REQUIRED)
+find_package(Qt5ServiceSupport REQUIRED)
+set(QT5PLATFORMSUPPORT_LIBS
+    Qt5FontDatabaseSupport::Qt5FontDatabaseSupport
+    Qt5ThemeSupport::Qt5ThemeSupport
+    Qt5EventDispatcherSupport::Qt5EventDispatcherSupport
+    Qt5EglSupport::Qt5EglSupport
+    Qt5ServiceSupport::Qt5ServiceSupport
+)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
@@ -57,9 +55,6 @@ include_directories(
 
     ${Qt5Gui_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-if(Qt5Core_VERSION VERSION_LESS "5.8.0")
-    ${Qt5ThemeSupport_INCLUDE_DIRS}
-endif()
 
 
     ${Qt5Quick_INCLUDE_DIRS}
@@ -68,11 +63,12 @@ endif()
 
     ${APPLICATION_API_INCLUDE_DIRS}
 
+if(WITH_CONTENTHUB)
     ${CONTENT_HUB_INCLUDE_DIRS}
+endif()
 
     ${VALGRIND_INCLUDE_DIRS}
 )
-
 
 # We have to remove -pedantic for tracepoints.c
 string (REPLACE " -pedantic " " " TRACEPOINTS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
@@ -86,12 +82,16 @@ add_custom_target(MirServer_LTTNG
     DEPENDS tracepoints.h tracepoints.c
 )
 
+if(WITH_CONTENTHUB)
+    set(CLIPBOARD_SRC clipboard.cpp)
+endif()
+
 # These files will compile without mirserver-dev
 add_library(qtmirserver-nomirserver OBJECT
     ${CMAKE_SOURCE_DIR}/src/common/timestamp.cpp
+    ${CLIPBOARD_SRC}
     logging.cpp
     shelluuid.cpp
-    clipboard.cpp
     mirsingleton.cpp
     wrappedsessionauthorizer.cpp
     promptsessionlistener.cpp
@@ -228,7 +228,6 @@ install(
 add_library(qpa-mirserver SHARED
     mirserverintegration.cpp
     plugin.cpp
-    ubuntutheme.cpp
 )
 
 target_link_libraries(qpa-mirserver
@@ -253,8 +252,5 @@ PRIVATE
     Qt5::Sensors
     Qt5::Qml
 )
-
-include(UseLttngGenTp)
-add_lttng_gen_tp(NAME tracepoints)
 
 install(TARGETS qpa-mirserver LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/qt5/plugins/platforms")

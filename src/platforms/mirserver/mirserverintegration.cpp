@@ -18,15 +18,9 @@
 
 #include <QtGlobal>
 
-#if QT_VERSION >= 0x050800
 #include <QtFontDatabaseSupport/private/qgenericunixfontdatabase_p.h>
 #include <QtEventDispatcherSupport/private/qgenericunixeventdispatcher_p.h>
 #include <QtServiceSupport/private/qgenericunixservices_p.h>
-#else
-#include <QtPlatformSupport/private/qgenericunixfontdatabase_p.h>
-#include <QtPlatformSupport/private/qgenericunixeventdispatcher_p.h>
-#include <QtPlatformSupport/private/qgenericunixservices_p.h>
-#endif
 
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformaccessibility.h>
@@ -133,6 +127,26 @@ QAbstractEventDispatcher *MirServerIntegration::createEventDispatcher() const
     return createUnixEventDispatcher();
 }
 
+void MirServerIntegration::handleScreenAdded(QPlatformScreen *screen)
+{
+    // TODO: remove this after we no longer support Qt < 5.13
+    #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
+            this->screenAdded(screen);
+    #else
+            QWindowSystemInterface::handleScreenAdded(screen);
+    #endif
+}
+
+void MirServerIntegration::handleScreenRemoved(QPlatformScreen *screen)
+{
+    // TODO: remove this after we no longer support Qt < 5.13
+    #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
+            this->destroyScreen(screen);
+    #else
+            QWindowSystemInterface::handleScreenRemoved(screen);
+    #endif
+}
+
 void MirServerIntegration::initialize()
 {
     // Creates instance of and start the Mir server in a separate thread
@@ -143,22 +157,19 @@ void MirServerIntegration::initialize()
     if (!screens) {
         qFatal("ScreensModel not initialized");
     }
+
     // need to create the screens before the integration initialises.
     screens->update();
 
     QObject::connect(screens.get(), &ScreensModel::screenAdded,
-            [this](PlatformScreen *screen) { this->screenAdded(screen); });
+            [this](PlatformScreen *screen) { handleScreenAdded(screen); });
     QObject::connect(screens.get(), &ScreensModel::screenRemoved,
             [this](PlatformScreen *screen) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-        delete screen;
-#else
-        this->destroyScreen(screen);
-#endif
+        handleScreenRemoved(screen);
     });
 
     Q_FOREACH(auto screen, screens->screens()) {
-        screenAdded(screen);
+        handleScreenAdded(screen);
     }
 }
 
@@ -174,13 +185,15 @@ QPlatformFontDatabase *MirServerIntegration::fontDatabase() const
 
 QStringList MirServerIntegration::themeNames() const
 {
-    return QStringList(UbuntuTheme::name);
+    return QStringList(QLatin1String(UbuntuTheme::name));
 }
 
 QPlatformTheme *MirServerIntegration::createPlatformTheme(const QString& name) const
 {
-    Q_UNUSED(name);
-    return new UbuntuTheme;
+    if (name == QLatin1String(UbuntuTheme::name))
+        return new UbuntuTheme;
+
+    return QGenericUnixTheme::createUnixTheme(name);
 }
 
 QPlatformServices *MirServerIntegration::services() const
@@ -193,6 +206,7 @@ QPlatformNativeInterface *MirServerIntegration::nativeInterface() const
     return m_nativeInterface;
 }
 
+#ifdef WITH_CONTENTHUB
 QPlatformClipboard *MirServerIntegration::clipboard() const
 {
     static QPlatformClipboard *clipboard = nullptr;
@@ -201,6 +215,7 @@ QPlatformClipboard *MirServerIntegration::clipboard() const
     }
     return clipboard;
 }
+#endif
 
 QPlatformOffscreenSurface *MirServerIntegration::createPlatformOffscreenSurface(
         QOffscreenSurface *surface) const

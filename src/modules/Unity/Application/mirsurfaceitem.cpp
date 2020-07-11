@@ -32,11 +32,11 @@
 #include <QQmlEngine>
 #include <QQuickWindow>
 #include <QScreen>
-#if QT_VERSION >= 0x050800
-#include <private/qsgdefaultinternalimagenode_p.h>
-#else
-#include <private/qsgdefaultimagenode_p.h>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#include <private/qquickwindow_p.h>
+#include <private/qsgdefaultrendercontext_p.h>
 #endif
+#include <private/qsgdefaultinternalimagenode_p.h>
 #include <QTimer>
 #include <QSGTextureProvider>
 #include <QRunnable>
@@ -254,16 +254,13 @@ QSGNode *MirSurfaceItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         QTimer::singleShot(0, this, &MirSurfaceItem::update);
     }
 
-#if QT_VERSION >= 0x050800
     QSGDefaultInternalImageNode *node = static_cast<QSGDefaultInternalImageNode*>(oldNode);
-#else
-    QSGDefaultImageNode *node = static_cast<QSGDefaultImageNode*>(oldNode);
-#endif
     if (!node) {
-#if QT_VERSION >= 0x050800
-        node = new QSGDefaultInternalImageNode;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        QSGRenderContext *rc = QQuickWindowPrivate::get(window())->context;
+        node = new QSGDefaultInternalImageNode(static_cast<QSGDefaultRenderContext *>(rc));
 #else
-        node = new QSGDefaultImageNode;
+        node = new QSGDefaultInternalImageNode;
 #endif
         node->setMipmapFiltering(QSGTexture::None);
         node->setHorizontalWrapMode(QSGTexture::ClampToEdge);
@@ -366,12 +363,10 @@ void MirSurfaceItem::hoverLeaveEvent(QHoverEvent *event)
 
 void MirSurfaceItem::hoverMoveEvent(QHoverEvent *event)
 {
-    // HACK! Ignore hover move events
-    // This is a masive hack and is only done as a temp fix
-    event->ignore();
-    return;
-
-    if (m_consumesInput && m_surface && m_surface->live()) {
+    // WORKAROUND for https://github.com/ubports/ubuntu-touch/issues/787
+    // This is a improved workaround that allows "mouse" hover events to work correctly by
+    // ignoring hover move events with no timestamp as these are bogus synthesized touch events
+    if (m_consumesInput && m_surface && m_surface->live() && event->timestamp() != 0) {
         m_surface->hoverMoveEvent(event);
     } else {
         event->ignore();

@@ -64,14 +64,16 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-z,defs")
 add_custom_target(cppcheck COMMAND cppcheck --enable=all -q --error-exitcode=2
                                        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests)
 
+option(WITH_CONTENTHUB "Build with content-hub" OFF)
+
 include(FindPkgConfig)
-find_package(Qt5Core 5.4 REQUIRED)
-find_package(Qt5DBus 5.4 REQUIRED)
-find_package(Qt5Gui 5.4 REQUIRED)
-find_package(Qt5Qml 5.4 REQUIRED)
-find_package(Qt5Quick 5.4 REQUIRED)
-find_package(Qt5Sensors 5.4 REQUIRED)
-find_package(Qt5Test 5.4 REQUIRED)
+find_package(Qt5Core 5.9 REQUIRED)
+find_package(Qt5DBus 5.9 REQUIRED)
+find_package(Qt5Gui 5.9 REQUIRED)
+find_package(Qt5Qml 5.9 REQUIRED)
+find_package(Qt5Quick 5.9 REQUIRED)
+find_package(Qt5Sensors 5.9 REQUIRED)
+find_package(Qt5Test 5.9 REQUIRED)
 
 find_package(Threads REQUIRED)
 
@@ -93,11 +95,18 @@ pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=27)
-pkg_check_modules(CONTENT_HUB libcontent-hub>=0.2 REQUIRED)
+pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 pkg_check_modules(VALGRIND valgrind REQUIRED)
+
+if(WITH_CONTENTHUB)
+pkg_check_modules(CONTENT_HUB libcontent-hub>=0.2 REQUIRED)
+message(STATUS "Bulding with content-hub")
+endif()
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})
 
+# Disable all deprecated qt functions in and before qt version 5.9
+add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x050900)
 
 # Use the fast string builder
 add_definitions(-DQT_USE_QSTRINGBUILDER)
@@ -134,7 +143,11 @@ include(GNUInstallDirs)
 # Determine QPA plugin install path
 # FIXME(greyback) there must be a better way than calling a private macro to set a property.
 # I'm manually calling a macro from Qt5GuiConfig.cmake, but I don't understand why it isn't being called.
-_populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms")
+if (Qt5Gui_VERSION VERSION_LESS 5.14.0)
+  _populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms")
+else()
+  _populate_Gui_plugin_properties("Gui" "PLATFORMS" "platforms" FALSE)
+endif()
 get_target_property(Qt5Gui_QPA_Plugin_Path Qt5::Gui IMPORTED_LOCATION_PLATFORMS)
 
 # Set QML module install path

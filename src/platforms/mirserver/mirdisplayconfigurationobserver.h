@@ -20,6 +20,7 @@
 #include <QObject>
 
 #include <mir/graphics/display_configuration_observer.h>
+#include <mir/version.h>
 
 class MirDisplayConfigurationObserver : public QObject,
                                         public mir::graphics::DisplayConfigurationObserver
@@ -34,10 +35,21 @@ public:
 
     void base_configuration_updated(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& base_config) override;
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void session_configuration_applied(std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::graphics::DisplayConfiguration> const& config) override;
+
+    void session_configuration_removed(std::shared_ptr<mir::scene::Session> const& session);
+
+    void configuration_updated_for_session(
+        std::shared_ptr<mir::scene::Session> const&,
+        std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) override {};
+#else
     void session_configuration_applied(std::shared_ptr<mir::frontend::Session> const& session,
         std::shared_ptr<mir::graphics::DisplayConfiguration> const& config) override;
 
     void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const& session);
+#endif
 
     void configuration_failed(
             std::shared_ptr<mir::graphics::DisplayConfiguration const> const& attempted,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Canonical, Ltd.
+ * Copyright (C) 2016 Canonical, Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -14,30 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ubuntutheme.h"
+#ifndef QTMIR_CGMANAGER_H
+#define QTMIR_CGMANAGER_H
 
-#include <QtCore/QVariant>
+#include <QDBusConnection>
 
-const char *UbuntuTheme::name = "ubuntu";
+namespace qtmir {
 
-UbuntuTheme::UbuntuTheme()
-{
-}
+class CGManager : public QObject {
+    Q_OBJECT
+public:
+    CGManager(QObject *parent = nullptr);
+    virtual ~CGManager();
 
-UbuntuTheme::~UbuntuTheme()
-{
-}
+    QString getCGroupOfPid(const QString &controller, pid_t pid);
 
-QVariant UbuntuTheme::themeHint(ThemeHint hint) const
-{
-    if (hint == QPlatformTheme::SystemIconThemeName) {
-        QByteArray iconTheme = qgetenv("QTUBUNTU_ICON_THEME");
-        if (iconTheme.isEmpty()) {
-            return QVariant(QStringLiteral("ubuntu-mobile"));
-        } else {
-            return QVariant(QString(iconTheme));
-        }
-    } else {
-        return QGenericUnixTheme::themeHint(hint);
-    }
-}
+    QSet<pid_t> getTasks(const QString &controller, const QString &cgroup);
+
+private:
+    const QString m_interface{"org.linuxcontainers.cgmanager0_0"};
+    const QString m_path{"/org/linuxcontainers/cgmanager"};
+    QDBusConnection getConnection();
+};
+
+} // namespace qtmir
+
+#endif // QTMIR_CGMANAGER_H

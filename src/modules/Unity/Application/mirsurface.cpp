@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015-2017 Canonical, Ltd.
+ * Copyright (C) 2020 UBports Foundation
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License version 3, as published by
@@ -91,9 +92,14 @@ public:
 
 #if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 30, 0)
     void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override;
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+    void content_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
+    void window_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override {}
+#else
     void resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override;
+#endif
     void moved_to(mir::scene::Surface const*, mir::geometry::Point const&) override {}
-    void hidden_set_to(mir::scene::Surface const*, bool) override {}
+    void hidden_set_to(mir::scene::Surface const*, bool) override;
 
     // Get new frame notifications from Mir, called from a Mir thread.
     void frame_posted(mir::scene::Surface const*, int frames_available, mir::geometry::Size const& size ) override;
@@ -117,11 +123,20 @@ public:
     void input_consumed(mir::scene::Surface const*, MirEvent const* event) override;
     void start_drag_and_drop(mir::scene::Surface const*, std::vector<uint8_t> const& handle) override;
 #endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 4, 0)
+    void depth_layer_set_to(mir::scene::Surface const*, MirDepthLayer) override {}
+#endif
+
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 5, 0)
+    void application_id_set_to(mir::scene::Surface const* /* surf */, std::string const& /* application_id */) override {};
+#endif
+
 #else
     void attrib_changed(MirWindowAttrib, int) override;
     void resized_to(mir::geometry::Size const&) override;
     void moved_to(mir::geometry::Point const&) override {}
-    void hidden_set_to(bool) override {}
+    void hidden_set_to(bool) override;
 
     // Get new frame notifications from Mir, called from a Mir thread.
     void frame_posted(int frames_available, mir::geometry::Size const& size ) override;
@@ -226,6 +241,7 @@ MirSurface::MirSurface(NewWindow newWindowInfo,
     connect(m_surfaceObserver.get(), &SurfaceObserver::attributeChanged, this, &MirSurface::onAttributeChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::nameChanged, this, &MirSurface::onNameChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::cursorChanged, this, &MirSurface::setCursor);
+    connect(m_surfaceObserver.get(), &SurfaceObserver::hiddenChanged, this, &MirSurface::updateVisible);
     connect(m_surfaceObserver.get(), &SurfaceObserver::minimumWidthChanged, this, &MirSurface::onMinimumWidthChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::minimumHeightChanged, this, &MirSurface::onMinimumHeightChanged);
     connect(m_surfaceObserver.get(), &SurfaceObserver::maximumWidthChanged, this, &MirSurface::onMaximumWidthChanged);
@@ -1103,15 +1119,35 @@ void MirSurface::onCloseTimedOut()
     if (m_live) {
         if (m_session && m_session->application()) {
             Application *app = static_cast<Application*>(m_session->application());
-
-            // If the application is in progress of closing, we let the applicationManager
-            // handle closing of the application.
             if (app->isClosing()) {
+                // If the application is in progress of closing, we let the
+                // applicationManager handle closing it.
+                INFO_MSG << "(), app is in the process of closing, not " <<
+                    "forcing to close.";
                 return;
+            } else {
+                // Otherwise, it's ignoring our polite request to close. It
+                // might be showing an "unsaved data, are you sure you want to
+                // quit?" dialog, but on the phone the user has swiped the app
+                // away. There's no convenient way to bring it back for the
+                // dialog.
+                // FIXME: We should have a way to ask the user if they'd like
+                // to kill the app.
+                // ref https://github.com/ubports/ubuntu-touch/issues/1417
+                WARNING_MSG << "(), app with ID " << app->appId() << " has " <<
+                    "ignored request to close a window. Terminating the " <<
+                    "application. This could be a bug in the application.";
+                app->terminate();
             }
+        } else {
+            // Weird zombie surface. Removing it may still cause problems later
+            // since this should almost never occur.
+            WARNING_MSG << "(), force closing surface with no app session. " <<
+                "Expect strange behavior.";
+            m_controller->forceClose(m_window);
         }
-
-        m_controller->forceClose(m_window);
+    } else {
+        WARNING_MSG << " called but the surface is not live. What do we do?";
     }
 }
 
@@ -1331,9 +1367,18 @@ void MirSurface::SurfaceObserverImpl::attrib_changed(mir::scene::Surface const*,
     }
 }
 
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(1, 6, 0)
+void MirSurface::SurfaceObserverImpl::content_resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
+#else
 void MirSurface::SurfaceObserverImpl::resized_to(mir::scene::Surface const*, mir::geometry::Size const&size)
+#endif
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
+}
+
+void MirSurface::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const*, bool hide)
+{
+    Q_EMIT hiddenChanged(hide);
 }
 
 void MirSurface::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const*, const mir::graphics::CursorImage &cursorImage)
@@ -1384,6 +1429,11 @@ void MirSurface::SurfaceObserverImpl::attrib_changed(MirWindowAttrib attribute, 
 void MirSurface::SurfaceObserverImpl::resized_to(mir::geometry::Size const&size)
 {
     Q_EMIT resized(QSize(size.width.as_int(), size.height.as_int()));
+}
+
+void MirSurface::SurfaceObserverImpl::hidden_set_to(bool hide)
+{
+    Q_EMIT hiddenChanged(hide);
 }
 
 void MirSurface::SurfaceObserverImpl::cursor_image_set_to(const mir::graphics::CursorImage &cursorImage)

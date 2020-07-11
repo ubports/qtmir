@@ -21,6 +21,7 @@
 
 namespace qtmir {
 
+class CGManager;
 class MirSurfaceInterface;
 
 /*
@@ -56,6 +57,8 @@ private:
     MirSurfaceInterface *findQmlSurface(const QString &serializedId);
 
     const QList<Application*> &m_applications;
+
+    CGManager *m_cgManager;
 };
 
 } // namespace qtmir

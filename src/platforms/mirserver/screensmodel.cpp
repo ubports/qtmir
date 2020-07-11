@@ -125,6 +125,7 @@ void ScreensModel::update()
 
                     // Can we re-use the existing Screen?
                     if (canUpdateExistingScreen(screen, output)) {
+                        qCDebug(QTMIR_SCREENS) << "Can reuse Screen with id" << output.id.as_value();
                         screen->setMirDisplayConfiguration(output);
                         oldScreenList.removeAll(screen);
                         m_screenList.append(screen);
@@ -158,6 +159,8 @@ void ScreensModel::update()
                         }
                     }
                 }
+            } else {
+                qCDebug(QTMIR_SCREENS) << "Output with ID" << output.id.as_value() << "is not used and connected.";
             }
         }
     );

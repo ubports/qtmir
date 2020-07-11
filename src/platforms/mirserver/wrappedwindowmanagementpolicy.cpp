@@ -65,10 +65,12 @@ namespace qtmir
     {
         WindowManagementPolicyPrivate(qtmir::WindowModelNotifier &windowModel,
                                       qtmir::AppNotifier &appNotifier,
-                                      const std::shared_ptr<QtEventFeeder>& eventFeeder)
+                                      const std::shared_ptr<QtEventFeeder>& eventFeeder,
+                                      const std::shared_ptr<ScreensModel> screensModel)
             : m_windowModel(windowModel)
             , m_appNotifier(appNotifier)
             , m_eventFeeder(eventFeeder)
+            , m_screensModel(screensModel)
         {}
 
         QRect getConfinementRect(const QRect rect) const
@@ -87,6 +89,7 @@ namespace qtmir
         qtmir::WindowModelNotifier &m_windowModel;
         qtmir::AppNotifier &m_appNotifier;
         const std::shared_ptr<QtEventFeeder> m_eventFeeder;
+        const std::shared_ptr<ScreensModel> m_screensModel;
 
         QVector<QRect> m_confinementRegions;
         QMargins m_windowMargins[mir_window_types];
@@ -279,6 +282,25 @@ namespace qtmir
         Q_EMIT d->m_windowModel.windowsAboutToBeRemovedFromWorkspace(workspace, windows);
     }
 
+    void WindowManagementPolicy::advise_output_create(miral::Output const& output)
+    {
+        Q_UNUSED(output);
+        Q_EMIT d->m_screensModel->update();
+    }
+
+    void WindowManagementPolicy::advise_output_update(miral::Output const& updated, miral::Output const& original)
+    {
+        Q_UNUSED(updated);
+        Q_UNUSED(original);
+        Q_EMIT d->m_screensModel->update();
+    }
+
+    void WindowManagementPolicy::advise_output_delete(miral::Output const& output)
+    {
+        Q_UNUSED(output);
+        Q_EMIT d->m_screensModel->update();
+    }
+
     Rectangle WindowManagementPolicy::confirm_inherited_move(miral::WindowInfo const& windowInfo, Displacement movement)
     {
         if (d->m_confinementRegions.isEmpty()) {
@@ -349,11 +371,13 @@ WrappedWindowManagementPolicy::WrappedWindowManagementPolicy(const miral::Window
                                                qtmir::WindowController &windowController,
                                                qtmir::WorkspaceController &workspaceController,
                                                qtmir::AppNotifier &appNotifier,
+                                               const std::shared_ptr<ScreensModel> screensModel,
                                                const std::shared_ptr<QtEventFeeder> &eventFeeder,
                                                const qtmir::WindowManagmentPolicyBuilder &wmBuilder)
     : qtmir::WindowManagementPolicy(tools, std::make_shared<qtmir::WindowManagementPolicyPrivate>(windowModel,
                                                                                                   appNotifier,
-                                                                                                  eventFeeder))
+                                                                                                  eventFeeder,
+                                                                                                  screensModel))
     , m_wrapper(wmBuilder(tools, d))
 {
     qRegisterMetaType<qtmir::NewWindow>();
@@ -526,22 +550,44 @@ void WrappedWindowManagementPolicy::advise_removing_from_workspace(const std::sh
     m_wrapper->advise_removing_from_workspace(workspace, windows);
 }
 
+
+void WrappedWindowManagementPolicy::advise_output_create(miral::Output const& output)
+{
+    m_wrapper->advise_output_create(output);
+}
+
+void WrappedWindowManagementPolicy::advise_output_update(miral::Output const& updated, miral::Output const& original)
+{
+    m_wrapper->advise_output_update(updated, original);
+}
+
+void WrappedWindowManagementPolicy::advise_output_delete(miral::Output const& output)
+{
+    m_wrapper->advise_output_delete(output);
+}
+
 void WrappedWindowManagementPolicy::activate(const miral::Window &window)
 {
-    if (window) {
-        auto &windowInfo = tools.info_for(window);
+    try {
+        if (window) {
+            auto &windowInfo = tools.info_for(window);
 
-        // restore from minimized if needed
-        if (windowInfo.state() == mir_window_state_minimized) {
-            auto extraInfo = qtmir::getExtraInfo(windowInfo);
-            Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
-            requestState(window, extraInfo->previousState);
+            // restore from minimized if needed
+            if (windowInfo.state() == mir_window_state_minimized) {
+                auto extraInfo = qtmir::getExtraInfo(windowInfo);
+                Q_ASSERT(extraInfo->previousState != Mir::MinimizedState);
+                requestState(window, extraInfo->previousState);
+            }
+
+            tools.invoke_under_lock([&]() {
+                tools.select_active_window(window);
+            });
         }
+    } catch (const std::out_of_range&) {
+        // usually shell trying to operate on a window which already closed, just ignore
+        // (throws from tools.info_for(...) ususally)
+        // TODO: Same issue as resize below
     }
-
-    tools.invoke_under_lock([&]() {
-        tools.select_active_window(window);
-    });
 }
 
 void WrappedWindowManagementPolicy::resize(const miral::Window &window, const Size size)

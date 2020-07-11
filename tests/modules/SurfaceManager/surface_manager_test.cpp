@@ -111,7 +111,7 @@ TEST_F(SurfaceManagerTests, miralWindowCreationCausesMirSurfaceCreation)
     qtApp->sendPostedEvents();
 
     // Check result
-    auto mirSurface = qvariant_cast<MirSurface*>(newMirSurfaceSpy.takeFirst().at(0));
+    auto mirSurface = qvariant_cast<qtmir::MirSurface*>(newMirSurfaceSpy.takeFirst().at(0));
     ASSERT_TRUE(mirSurface);
     EXPECT_EQ(window, mirSurface->window());
 }
@@ -219,7 +219,7 @@ TEST_F(SurfaceManagerTests, miralWindowReadyUpdatesMirSurfaceState)
     auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
-    QSignalSpy mirSurfaceReadySpy(mirSurface, &MirSurface::ready);
+    QSignalSpy mirSurfaceReadySpy(mirSurface, &qtmir::MirSurface::ready);
 
     // Test
     Q_EMIT wmNotifier.windowReady(windowInfo);
@@ -243,7 +243,7 @@ TEST_F(SurfaceManagerTests, miralWindowMoveUpdatesMirSurfacePosition)
     auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
-    QSignalSpy mirSurfacePositionSpy(mirSurface, &MirSurface::positionChanged);
+    QSignalSpy mirSurfacePositionSpy(mirSurface, &qtmir::MirSurface::positionChanged);
 
     // Test
     Q_EMIT wmNotifier.windowMoved(windowInfo, newPosition);
@@ -267,7 +267,7 @@ TEST_F(SurfaceManagerTests, miralWindowFocusChangeUpdatesMirSurfaceFocus)
     ASSERT_TRUE(mirSurface);
     ASSERT_FALSE(mirSurface->focused()); // false must be the initial state
 
-    QSignalSpy mirSurfaceFocusSpy(mirSurface, &MirSurface::focusedChanged);
+    QSignalSpy mirSurfaceFocusSpy(mirSurface, &qtmir::MirSurface::focusedChanged);
 
     // Test
     Q_EMIT wmNotifier.windowFocusChanged(windowInfo, true);
@@ -292,7 +292,7 @@ TEST_F(SurfaceManagerTests, miralWindowStateChangeUpdatesMirSurfaceState)
     auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
-    QSignalSpy mirSurfaceStateSpy(mirSurface, &MirSurface::stateChanged);
+    QSignalSpy mirSurfaceStateSpy(mirSurface, &qtmir::MirSurface::stateChanged);
 
     // Test
     Q_EMIT wmNotifier.windowStateChanged(windowInfo, newState);
@@ -351,7 +351,7 @@ TEST_F(SurfaceManagerTests, focusRequestCausesMirSurfaceToFireFocusRequestedSign
     auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
-    QSignalSpy mirSurfaceFocusRequestedSpy(mirSurface, &MirSurface::focusRequested);
+    QSignalSpy mirSurfaceFocusRequestedSpy(mirSurface, &qtmir::MirSurface::focusRequested);
 
     // Test
     Q_EMIT wmNotifier.windowRequestedRaise(windowInfo);
