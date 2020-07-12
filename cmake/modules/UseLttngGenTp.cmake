@@ -5,7 +5,7 @@ endif(POLICY CMP0011)
 
 find_program(LTTNG_GEN_TP NAMES lttng-gen-tp DOC "lttng-gen-tp executable")
 if(NOT LTTNG_GEN_TP)
- message(FATAL_ERROR "Excutable lttng-gen-top not found")
+ message(FATAL_ERROR "Excutable lttng-gen-tp not found")
 endif()
 
 function(add_lttng_gen_tp)
