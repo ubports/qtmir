@@ -22,6 +22,7 @@
 #include "windowmanagementpolicy.h"
 #include "promptsessionmanager.h"
 #include "setqtcompositor.h"
+#include "qtwindowmanager.h"
 
 // prototyping for later incorporation in miral
 #include <miral/persist_display_config.h>
@@ -30,6 +31,7 @@
 #include <miral/add_init_callback.h>
 #include <miral/set_terminator.h>
 #include <miral/version.h>
+#include <miral/wayland_extensions.h>
 #if MIRAL_VERSION > MIR_VERSION_NUMBER(1,3,1)
 #include <miral/set_window_management_policy.h>
 #else
@@ -103,6 +105,9 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
         QCoreApplication::quit();
     }};
 
+    miral::WaylandExtensions waylandExtensions{};
+    waylandExtensions.add_extension(qtmir::qtWindowmanagerExtension());
+
     runner.set_exception_handler([this]
     {
         try {
@@ -138,7 +143,8 @@ void QMirServerPrivate::run(const std::function<void()> &startCallback)
             addInitCallback,
             qtmir::SetQtCompositor{screensModel},
             setTerminator,
-            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy}
+            miral::PersistDisplayConfig{&qtmir::wrapDisplayConfigurationPolicy},
+            waylandExtensions,
         });
 }
 

@@ -3,6 +3,7 @@
 #pkg_check_modules(QT5PLATFORM_SUPPORT Qt5PlatformSupport REQUIRED)
 
 add_subdirectory(miral)
+add_subdirectory(wayland-generated)
 
 # Hacks for the QPA privates monster.
 pkg_check_modules(FONTCONFIG fontconfig REQUIRED)
@@ -35,11 +36,16 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/common
 )
 
+set(MIRCOMMON_INCLUDE_DIRS /usr/include/mircommon/)
+set(MIRCOMMON_LDFLAGS "-lmircommon")
+
 include_directories(
     SYSTEM
     ${MIRAL_INCLUDE_DIRS}
     ${MIRRENDERERGLDEV_INCLUDE_DIRS}
     ${MIRSERVER_INCLUDE_DIRS}
+    ${MIRCOMMON_INCLUDE_DIRS}
+    ${MIRWAYLAND_INCLUDE_DIRS}
 
     ${URL_DISPATCHER_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -73,12 +79,14 @@ set(MIRSERVER_DEPENDANTS
     promptsessionmanager.cpp
     qmirserver.cpp
     qmirserver_p.cpp
+    qtwindowmanager.cpp
     qteventfeeder.cpp
     screen.cpp
     screenscontroller.cpp
     screensmodel.cpp
     screenwindow.cpp
     setqtcompositor.cpp
+    wayland-generated/qt_windowmanager_wrapper.cpp
     )
 
 if(WITH_CONTENTHUB)
@@ -103,6 +111,7 @@ add_library(qpa-mirserver SHARED
     shelluuid.cpp
     surfaceobserver.cpp
     tracepoints.c
+    urlbuilderdispatcher.cpp
     windowcontroller.cpp
     windowmanagementpolicy.cpp
     orientationsensor.cpp
@@ -131,8 +140,12 @@ target_link_libraries(
     ${QT5PLATFORMSUPPORT_LIBS}
 
     ${MIRAL_LDFLAGS}
+    ${MIRCOMMON_LDFLAGS}
+    ${MIRWAYLAND_LDFLAGS}
     ${MIRSERVER_LDFLAGS}
     ${URL_DISPATCHER_LDFLAGS}
+    ${WAYLAND_CLIENT_LIBRARIES}
+    ${WAYLAND_SERVER_LDFLAGS}
     ${EGL_LDFLAGS}
     ${GL_LIBRARIES}
     ${LTTNG_LIBRARIES}
