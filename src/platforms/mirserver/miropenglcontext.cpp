@@ -18,7 +18,7 @@
 
 #include "offscreensurface.h"
 #include "mirglconfig.h"
-#include "screenwindow.h"
+#include "screenplatformwindow.h"
 
 #include <QDebug>
 
@@ -120,7 +120,7 @@ void MirOpenGLContext::swapBuffers(QPlatformSurface *surface)
         // NOOP
     } else {
         // ultimately calls Mir's DisplayBuffer::post_update()
-        ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
+        ScreenPlatformWindow *screenWindow = static_cast<ScreenPlatformWindow*>(surface);
         screenWindow->swapBuffers(); //blocks for vsync
     }
 }
@@ -154,7 +154,7 @@ bool MirOpenGLContext::makeCurrent(QPlatformSurface *surface)
     }
 
     // ultimately calls Mir's DisplayBuffer::make_current()
-    ScreenWindow *screenWindow = static_cast<ScreenWindow*>(surface);
+    ScreenPlatformWindow *screenWindow = static_cast<ScreenPlatformWindow*>(surface);
     if (Q_LIKELY(screenWindow)) {
         m_currentWindow = screenWindow;
         screenWindow->makeCurrent();

@@ -8,6 +8,7 @@ set(
 )
 
 include_directories(
+  ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common
@@ -27,7 +28,7 @@ set_property(TARGET ScreensModelTest PROPERTY CXX_STANDARD 14)
 
 target_link_libraries(
   ScreensModelTest
-  qpa-mirserver
+  qtmirserver
 
   -L${CMAKE_BINARY_DIR}/tests/framework
   qtmir-test-framework-static

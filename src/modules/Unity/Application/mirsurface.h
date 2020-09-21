@@ -47,13 +47,15 @@ namespace qtmir {
 class AbstractTimer;
 class MirSurfaceListModel;
 class SessionInterface;
+class CompositorTextureProvider;
+class CompositorTexture;
 
 class MirSurface : public MirSurfaceInterface
 {
     Q_OBJECT
 
 public:
-    MirSurface(NewWindow windowInfo,
+    MirSurface(qtmir::NewWindow windowInfo,
                WindowControllerInterface *controller,
                SessionInterface *session = nullptr,
                MirSurface *parentSurface = nullptr);
@@ -126,11 +128,11 @@ public:
     void setViewExposure(qintptr viewId, bool exposed) override;
 
     // methods called from the rendering (scene graph) thread:
-    QSharedPointer<QSGTexture> texture() override;
-    QSGTexture *weakTexture() const override { return m_texture.data(); }
-    bool updateTexture() override;
-    unsigned int currentFrameNumber() const override;
-    bool numBuffersReadyForCompositor() override;
+    QSharedPointer<QSGTexture> texture(qintptr userId) override;
+    QSGTexture *weakTexture(qintptr userId) const override;
+    bool updateTexture(qintptr userId) override;
+    unsigned int currentFrameNumber(qintptr userId) const override;
+    bool numBuffersReadyForCompositor(qintptr userId) override;
     // end of methods called from the rendering (scene graph) thread
 
     void setFocused(bool focus) override;
@@ -179,6 +181,7 @@ public:
     // useful for tests
     void setCloseTimer(AbstractTimer *timer);
     std::shared_ptr<SurfaceObserver> surfaceObserver() const;
+    void setTextureProvider(CompositorTextureProvider *textureProvider);
 
 public Q_SLOTS:
     ////
@@ -222,6 +225,8 @@ private:
     void forgetPressedKey(quint32 nativeVirtualKey);
     void releaseAllPressedKeys();
 
+    bool updateTextureLocked(qintptr userId, CompositorTexture* compositorTexture);
+
     const miral::Window m_window;
     const std::shared_ptr<ExtraWindowInfo> m_extraInfo;
     QString m_name;
@@ -244,10 +249,7 @@ private:
 
     mutable QMutex m_mutex;
 
-    // Lives in the rendering (scene graph) thread
-    QWeakPointer<QSGTexture> m_texture;
-    bool m_textureUpdated;
-    unsigned int m_currentFrameNumber;
+    CompositorTextureProvider* m_textures;
 
     bool m_ready{false};
     bool m_visible;
@@ -262,6 +264,8 @@ private:
 
     class SurfaceObserverImpl;
     std::shared_ptr<SurfaceObserverImpl> m_surfaceObserver;
+    class WindowNotifierObserverImpl;
+    std::shared_ptr<WindowNotifierObserverImpl> m_windowModelObserver;
 
     QPoint m_position;
     QPoint m_requestedPosition;

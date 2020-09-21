@@ -4,13 +4,13 @@ set(
 )
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}/src/platforms/mirserver/miral
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 add_executable(MirALTests ${MIRAL_TEST_SOURCES})
 
 target_link_libraries(MirALTests
-  qpa-mirserver
+  qtmirserver
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
 )

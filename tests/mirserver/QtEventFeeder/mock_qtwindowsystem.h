@@ -19,12 +19,12 @@
 #define MOCK_QTWINDOWSYSTEM_H
 
 #include <qteventfeeder.h>
+#include <QGuiApplication>
 #include <QWindow>
 
 class MockQtWindowSystem : public QtEventFeeder::QtWindowSystemInterface {
 public:
     MOCK_CONST_METHOD0(ready, bool());
-    MOCK_METHOD1(getWindowForTouchPoint, QWindow*(const QPoint &point));
     MOCK_METHOD0(lastWindow, QWindow*());
     MOCK_METHOD0(focusedWindow, QWindow*());
     // ignores the last parameter count, due to parameter limit in gmock
@@ -50,8 +50,6 @@ public:
     MOCK_METHOD5(handleTouchEvent, void(QWindow *window, ulong timestamp, QTouchDevice *device,
             const QList<struct QWindowSystemInterface::TouchPoint> &points,
             Qt::KeyboardModifiers mods));
-    MOCK_METHOD5(handleMouseEvent, void(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers));
-    MOCK_METHOD4(handleWheelEvent, void(ulong timestamp, QPointF absolute, QPoint angleDelta, Qt::KeyboardModifiers modifiers));
 
     ~MockQtWindowSystem()
     {
@@ -61,6 +59,12 @@ public:
     void registerTouchDevice(QTouchDevice* device)
     {
         m_devices << device;
+    }
+
+    QWindow* getWindowForPoint(const QPoint&)
+    {
+        auto windows = qApp->topLevelWindows();
+        return windows.isEmpty() ? nullptr : windows.first();
     }
 
     QVector<QTouchDevice*> m_devices;

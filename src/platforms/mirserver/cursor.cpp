@@ -20,166 +20,180 @@
 
 #include "mirsingleton.h"
 
+#include <QQuickWindow>
+
 // Unity API
 #include <unity/shell/application/MirMousePointerInterface.h>
 
-using namespace qtmir;
+namespace qtmir {
+
+// Shares data between all pointers in the server
+class Cursor::Private : public QObject
+{
+    Q_OBJECT
+public:
+    Private()
+        : m_customCursor(nullptr)
+    {
+        m_shapeToCursorName[Qt::ArrowCursor] = QStringLiteral("left_ptr");
+        m_shapeToCursorName[Qt::UpArrowCursor] = QStringLiteral("up_arrow");
+        m_shapeToCursorName[Qt::CrossCursor] = QStringLiteral("cross");
+        m_shapeToCursorName[Qt::WaitCursor] = QStringLiteral("watch");
+        m_shapeToCursorName[Qt::IBeamCursor] = QStringLiteral("xterm");
+        m_shapeToCursorName[Qt::SizeVerCursor] = QStringLiteral("size_ver");
+        m_shapeToCursorName[Qt::SizeHorCursor] = QStringLiteral("size_hor");
+        m_shapeToCursorName[Qt::SizeBDiagCursor] = QStringLiteral("size_bdiag");
+        m_shapeToCursorName[Qt::SizeFDiagCursor] = QStringLiteral("size_fdiag");
+        m_shapeToCursorName[Qt::SizeAllCursor] = QStringLiteral("size_all");
+        m_shapeToCursorName[Qt::BlankCursor] = QStringLiteral("blank");
+        m_shapeToCursorName[Qt::SplitVCursor] = QStringLiteral("split_v");
+        m_shapeToCursorName[Qt::SplitHCursor] = QStringLiteral("split_h");
+        m_shapeToCursorName[Qt::PointingHandCursor] = QStringLiteral("hand");
+        m_shapeToCursorName[Qt::ForbiddenCursor] = QStringLiteral("forbidden");
+        m_shapeToCursorName[Qt::WhatsThisCursor] = QStringLiteral("whats_this");
+        m_shapeToCursorName[Qt::BusyCursor] = QStringLiteral("left_ptr_watch");
+        m_shapeToCursorName[Qt::OpenHandCursor] = QStringLiteral("openhand");
+        m_shapeToCursorName[Qt::ClosedHandCursor] = QStringLiteral("closedhand");
+        m_shapeToCursorName[Qt::DragCopyCursor] = QStringLiteral("dnd-copy");
+        m_shapeToCursorName[Qt::DragMoveCursor] = QStringLiteral("dnd-move");
+        m_shapeToCursorName[Qt::DragLinkCursor] = QStringLiteral("dnd-link");
+
+        connect(Mir::instance(), &Mir::cursorNameChanged, this, &Private::setMirCursorName);
+        m_mirCursorName = Mir::instance()->cursorName();
+    }
+
+    void setScreenPosition(const QPoint& screenPos)
+    {
+        m_position = screenPos;
+        Q_EMIT screenPositionChanged(m_position);
+    }
+
+    QPoint screenPosition() const { return m_position; }
+
+    void setCustomCursor(QCursor* custom, const QString& qtCursorName)
+    {
+        delete m_customCursor;
+        m_customCursor = custom;
+
+        m_qtCursorName  = qtCursorName;
+
+        Q_EMIT cursorChanged(customCursor(), cursorName());
+    }
+
+    QCursor customCursor() const { return m_customCursor ? *m_customCursor : QCursor(); }
+
+    QString cursorName() const
+    {
+        if (m_mirCursorName.isEmpty()) {
+            if (m_qtCursorName.isEmpty()) {
+               return QStringLiteral("left_ptr");
+            } else {
+                return m_qtCursorName;
+            }
+        } else {
+            return m_mirCursorName;
+        }
+    }
+
+Q_SIGNALS:
+    void screenPositionChanged(const QPoint& screenPos);
+    void cursorChanged(const QCursor& cursor, const QString& cursorName);
+
+private Q_SLOTS:
+    void setMirCursorName(const QString &mirCursorName)
+    {
+        m_mirCursorName = mirCursorName;
+        Q_EMIT cursorChanged(customCursor(), cursorName());
+    }
+
+public:
+    QMutex m_mutex;
+    QMap<int,QString> m_shapeToCursorName;
+
+    QCursor* m_customCursor;
+    QString m_mirCursorName;
+    QString m_qtCursorName;
+    QPoint m_position;
+};
 
 Cursor::Cursor()
+    : d(new Cursor::Private)
 {
-    m_shapeToCursorName[Qt::ArrowCursor] = QStringLiteral("left_ptr");
-    m_shapeToCursorName[Qt::UpArrowCursor] = QStringLiteral("up_arrow");
-    m_shapeToCursorName[Qt::CrossCursor] = QStringLiteral("cross");
-    m_shapeToCursorName[Qt::WaitCursor] = QStringLiteral("watch");
-    m_shapeToCursorName[Qt::IBeamCursor] = QStringLiteral("xterm");
-    m_shapeToCursorName[Qt::SizeVerCursor] = QStringLiteral("size_ver");
-    m_shapeToCursorName[Qt::SizeHorCursor] = QStringLiteral("size_hor");
-    m_shapeToCursorName[Qt::SizeBDiagCursor] = QStringLiteral("size_bdiag");
-    m_shapeToCursorName[Qt::SizeFDiagCursor] = QStringLiteral("size_fdiag");
-    m_shapeToCursorName[Qt::SizeAllCursor] = QStringLiteral("size_all");
-    m_shapeToCursorName[Qt::BlankCursor] = QStringLiteral("blank");
-    m_shapeToCursorName[Qt::SplitVCursor] = QStringLiteral("split_v");
-    m_shapeToCursorName[Qt::SplitHCursor] = QStringLiteral("split_h");
-    m_shapeToCursorName[Qt::PointingHandCursor] = QStringLiteral("hand");
-    m_shapeToCursorName[Qt::ForbiddenCursor] = QStringLiteral("forbidden");
-    m_shapeToCursorName[Qt::WhatsThisCursor] = QStringLiteral("whats_this");
-    m_shapeToCursorName[Qt::BusyCursor] = QStringLiteral("left_ptr_watch");
-    m_shapeToCursorName[Qt::OpenHandCursor] = QStringLiteral("openhand");
-    m_shapeToCursorName[Qt::ClosedHandCursor] = QStringLiteral("closedhand");
-    m_shapeToCursorName[Qt::DragCopyCursor] = QStringLiteral("dnd-copy");
-    m_shapeToCursorName[Qt::DragMoveCursor] = QStringLiteral("dnd-move");
-    m_shapeToCursorName[Qt::DragLinkCursor] = QStringLiteral("dnd-link");
-
-    connect(Mir::instance(), &Mir::cursorNameChanged, this, &Cursor::setMirCursorName);
 }
 
 void Cursor::changeCursor(QCursor *windowCursor, QWindow * /*window*/)
 {
-    if (m_mousePointer.isNull()) {
-        return;
-    }
-
     if (windowCursor) {
         if (windowCursor->pixmap().isNull()) {
-            m_qtCursorName = m_shapeToCursorName.value(windowCursor->shape(), QStringLiteral("left_ptr"));
-            m_mousePointer->setCustomCursor(QCursor());
+            QString qtCursorName = d->m_shapeToCursorName.value(windowCursor->shape(), QLatin1String("left_ptr"));
+            d->setCustomCursor(nullptr, qtCursorName);
         } else {
             // Ensure we get different names for consecutive custom cursors.
             // The name doesn't have to be unique (ie, different from all custom cursor names generated so far),
             // just different from the previous custom cursor name, which is enough to trigger a change in the cursor
             // source image URL in the QML side which on is turn makes QML request the new cursor image.
             static quint8 serialNumber = 1;
-            m_qtCursorName = QString("custom%1").arg(serialNumber++);
-            m_mousePointer->setCustomCursor(*windowCursor);
+            QString qtCursorName = QStringLiteral("custom%1").arg(serialNumber++);
+            d->setCustomCursor(new QCursor(*windowCursor), qtCursorName);
         }
     } else {
-        m_qtCursorName.clear();
-        m_mousePointer->setCustomCursor(QCursor());
+        d->setCustomCursor(nullptr, QString());
     }
-
-    updateMousePointerCursorName();
 }
 
-void Cursor::setMirCursorName(const QString &mirCursorName)
+void Cursor::registerMousePointer(MirMousePointerInterface *mousePointer)
 {
-    m_mirCursorName = mirCursorName;
-    updateMousePointerCursorName();
+    QMutexLocker locker(&d->m_mutex);
+
+    auto updatePositionFunction = [mousePointer](const QPoint& screenPos) {
+        if (!mousePointer->window()) return;
+        if (!mousePointer->isEnabled()) return;
+
+        QPoint localPos = screenPos - mousePointer->window()->geometry().topLeft();
+        mousePointer->moveTo(localPos);
+    };
+
+    connect(d.data(), &Private::screenPositionChanged, mousePointer, updatePositionFunction, Qt::UniqueConnection);
+    connect(d.data(), &Private::cursorChanged, mousePointer, [this, mousePointer](const QCursor& cursor, const QString& cursorName) {
+        mousePointer->setCustomCursor(cursor);
+        mousePointer->setCursorName(cursorName);
+    }, Qt::UniqueConnection);
+
+    mousePointer->setCustomCursor(d->customCursor());
+    mousePointer->setCursorName(d->cursorName());
 }
 
-void Cursor::setMousePointer(MirMousePointerInterface *mousePointer)
+void Cursor::unregisterMousePointer(MirMousePointerInterface *mousePointer)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&d->m_mutex);
 
-    if (mousePointer && !m_mousePointer.isNull()) {
-        qFatal("QPA mirserver: Only one MousePointer per screen is allowed!");
-    }
-
-    m_mousePointer = mousePointer;
-    updateMousePointerCursorName();
+    disconnect(d.data(), &Private::screenPositionChanged, mousePointer, 0);
+    disconnect(d.data(), &Private::cursorChanged, mousePointer, 0);
 }
 
-bool Cursor::handleMouseEvent(ulong timestamp, QPointF movement, Qt::MouseButtons buttons,
-        Qt::KeyboardModifiers modifiers)
+void Cursor::pointerEvent(const QMouseEvent &event)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&d->m_mutex);
 
-    if (!m_mousePointer || !m_mousePointer->isVisible()) {
-        return false;
-    }
+    auto pos = event.globalPos();
+    qCDebug(QTMIR_MIR_INPUT) << "Cursor::pointerEvent(x=" << pos.x() << ", y=" << pos.y() << ")";
 
-    // Must not be called directly as we're most likely not in Qt's GUI (main) thread.
-    bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleMouseEvent", Qt::AutoConnection,
-        Q_ARG(ulong, timestamp),
-        Q_ARG(QPointF, movement),
-        Q_ARG(Qt::MouseButtons, buttons),
-        Q_ARG(Qt::KeyboardModifiers, modifiers));
-
-    if (!ok) {
-        qCWarning(QTMIR_MIR_INPUT) << "Failed to invoke MousePointer::handleMouseEvent";
-    }
-
-    return ok;
-}
-
-bool Cursor::handleWheelEvent(ulong timestamp, QPoint angleDelta, Qt::KeyboardModifiers modifiers)
-{
-    QMutexLocker locker(&m_mutex);
-
-    if (!m_mousePointer || !m_mousePointer->isVisible()) {
-        return false;
-    }
-
-    // Must not be called directly as we're most likely not in Qt's GUI (main) thread.
-    bool ok = QMetaObject::invokeMethod(m_mousePointer, "handleWheelEvent", Qt::AutoConnection,
-        Q_ARG(ulong, timestamp),
-        Q_ARG(QPoint, angleDelta),
-        Q_ARG(Qt::KeyboardModifiers, modifiers));
-
-    if (!ok) {
-        qCWarning(QTMIR_MIR_INPUT) << "Failed to invoke MousePointer::handleMouseEvent";
-    }
-
-    return ok;
+    d->setScreenPosition(pos);
 }
 
 void Cursor::setPos(const QPoint &pos)
 {
-    if (!m_mousePointer) {
-        QPlatformCursor::setPos(pos);
-        return;
-    }
+    QMutexLocker locker(&d->m_mutex);
+    qCDebug(QTMIR_MIR_INPUT) << "Cursor::setPos(x=" << pos.x() << ", y=" << pos.y() << ")";
 
-    QPointF movement;
-    QPointF mouseScenePos = m_mousePointer->mapToItem(nullptr, QPointF(0, 0));
-
-    movement.setX(pos.x() - mouseScenePos.x());
-    movement.setY(pos.y() - mouseScenePos.y());
-
-    m_mousePointer->handleMouseEvent(0 /*timestamp*/, movement, Qt::NoButton, Qt::NoModifier);
+    d->setScreenPosition(pos);
 }
 
 QPoint Cursor::pos() const
 {
-    if (m_mousePointer) {
-        return m_mousePointer->mapToItem(nullptr, QPointF(0, 0)).toPoint();
-    } else {
-        return QPlatformCursor::pos();
-    }
+    return d->screenPosition();
 }
 
-void Cursor::updateMousePointerCursorName()
-{
-    if (!m_mousePointer) {
-        return;
-    }
+} // namespace qtmir
 
-    if (m_mirCursorName.isEmpty()) {
-        if (m_qtCursorName.isEmpty()) {
-            m_mousePointer->setCursorName(QStringLiteral("left_ptr"));
-        } else {
-            m_mousePointer->setCursorName(m_qtCursorName);
-        }
-    } else {
-        m_mousePointer->setCursorName(m_mirCursorName);
-    }
-}
+#include "cursor.moc"

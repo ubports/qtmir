@@ -23,7 +23,7 @@
 #include <QOpenGLDebugLogger>
 #endif
 
-class ScreenWindow;
+class ScreenPlatformWindow;
 namespace mir { namespace graphics { class Display; class GLConfig; }}
 
 class MirOpenGLContext : public QObject, public QPlatformOpenGLContext
@@ -52,7 +52,7 @@ public:
 
 private:
     QSurfaceFormat m_format;
-    ScreenWindow *m_currentWindow;
+    ScreenPlatformWindow *m_currentWindow;
 #ifdef QGL_DEBUG
     QOpenGLDebugLogger *m_logger;
 #endif

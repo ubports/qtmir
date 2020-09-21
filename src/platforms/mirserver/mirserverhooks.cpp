@@ -148,7 +148,7 @@ std::shared_ptr<mir::input::InputDeviceHub> qtmir::MirServerHooks::theInputDevic
     throw std::logic_error("No input device hub available. Server not running?");
 }
 
-QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController(QSharedPointer<ScreensModel> const &screensModel) const
+QSharedPointer<ScreensController> qtmir::MirServerHooks::createScreensController(std::shared_ptr<ScreensModel> const &screensModel) const
 {
     return QSharedPointer<ScreensController>(
         new ScreensController(screensModel, theMirDisplay(), self->m_mirDisplayConfigurationController.lock()));

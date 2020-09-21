@@ -26,6 +26,8 @@
 #include <QVector>
 #include <QLoggingCategory>
 
+#include <boost/bimap.hpp>
+
 Q_DECLARE_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER)
 
 namespace qtmir {
@@ -33,46 +35,56 @@ namespace qtmir {
 class MirSurface;
 class SessionMapInterface;
 class WindowControllerInterface;
+class WorkspaceControllerInterface;
 
 class SurfaceManager : public unity::shell::application::SurfaceManagerInterface
 {
     Q_OBJECT
 
 public:
-    explicit SurfaceManager();
     SurfaceManager(WindowControllerInterface *windowController,
                    WindowModelNotifier *windowModel,
                    SessionMapInterface *sessionMap);
     virtual ~SurfaceManager() {}
 
+    static SurfaceManager *instance();
+
     void raise(unity::shell::application::MirSurfaceInterface *surface) override;
     void activate(unity::shell::application::MirSurfaceInterface *surface) override;
 
+    void forEachSurfaceInWorkspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                   const std::function<void(unity::shell::application::MirSurfaceInterface*)> &callback) override;
+    void moveSurfaceToWorkspace(unity::shell::application::MirSurfaceInterface* surface,
+                                const std::shared_ptr<miral::Workspace> &workspace) override;
+    void moveWorkspaceContentToWorkspace(const std::shared_ptr<miral::Workspace> &to,
+                                         const std::shared_ptr<miral::Workspace> &from) override;
+
     // mainly for test usage
-    MirSurface* find(const miral::WindowInfo &needle) const;
+    MirSurface* surfaceFor(const miral::Window &window) const;
 
 private Q_SLOTS:
     void onWindowAdded(const qtmir::NewWindow &windowInfo);
     void onWindowRemoved(const miral::WindowInfo &windowInfo);
-    void onWindowReady(const miral::WindowInfo &windowInfo);
-    void onWindowMoved(const miral::WindowInfo &windowInfo, const QPoint topLeft);
-    void onWindowStateChanged(const miral::WindowInfo &windowInfo, Mir::State state);
-    void onWindowFocusChanged(const miral::WindowInfo &windowInfo, bool focused);
-    void onWindowsRaised(const std::vector<miral::Window> &windows);
-    void onWindowsRequestedRaise(const miral::WindowInfo &windowInfo);
-
 private:
+    explicit SurfaceManager();
+
     void connectToWindowModelNotifier(WindowModelNotifier *notifier);
     void rememberMirSurface(MirSurface *surface);
     void forgetMirSurface(const miral::Window &window);
-    MirSurface* find(const miral::Window &needle) const;
-
-    QVector<MirSurface*> m_allSurfaces;
+    QVector<unity::shell::application::MirSurfaceInterface*> surfacesFor(const std::vector<miral::Window> &windows) const;
+    miral::Window windowFor(MirSurface *surface) const;
 
     WindowControllerInterface *m_windowController;
+    WorkspaceControllerInterface *m_workspaceController;
     SessionMapInterface *m_sessionMap;
+
+    friend class Workspace;
+    using swbimap_t = boost::bimap<MirSurface*, miral::Window>;
+    swbimap_t surface_to_window;
 };
 
 } // namespace qtmir
+
+Q_DECLARE_METATYPE(std::shared_ptr<miral::Workspace>)
 
 #endif // QTMIR_SURFACEMANAGER_H

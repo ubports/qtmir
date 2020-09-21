@@ -26,6 +26,7 @@
 // common
 #include <debughelpers.h>
 #include <mirqtconversion.h>
+#include <workspacecontrollerinterface.h>
 
 // Qt
 #include <QGuiApplication>
@@ -38,6 +39,14 @@ Q_LOGGING_CATEGORY(QTMIR_SURFACEMANAGER, "qtmir.surfacemanager", QtInfoMsg)
 using namespace qtmir;
 namespace unityapi = unity::shell::application;
 
+SurfaceManager *SurfaceManager::instance()
+{
+    static SurfaceManager* instance{nullptr};
+    if (!instance) {
+        instance = new SurfaceManager;
+    }
+    return instance;
+}
 
 SurfaceManager::SurfaceManager()
 {
@@ -51,6 +60,7 @@ SurfaceManager::SurfaceManager()
 
     m_sessionMap = ApplicationManager::singleton();
     m_windowController = static_cast<WindowControllerInterface*>(nativeInterface->nativeResourceForIntegration("WindowController"));
+    m_workspaceController = static_cast<WorkspaceControllerInterface*>(nativeInterface->nativeResourceForIntegration("WorkspaceController"));
 
     auto windowModel = static_cast<WindowModelNotifier*>(nativeInterface->nativeResourceForIntegration("WindowModelNotifier"));
     connectToWindowModelNotifier(windowModel);
@@ -68,31 +78,71 @@ SurfaceManager::SurfaceManager(WindowControllerInterface *windowController,
 
 void SurfaceManager::connectToWindowModelNotifier(WindowModelNotifier *notifier)
 {
-    connect(notifier, &WindowModelNotifier::windowAdded,          this, &SurfaceManager::onWindowAdded,           Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowRemoved,        this, &SurfaceManager::onWindowRemoved,         Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowReady,          this, &SurfaceManager::onWindowReady,           Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowMoved,          this, &SurfaceManager::onWindowMoved,           Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowStateChanged,   this, &SurfaceManager::onWindowStateChanged,    Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowFocusChanged,   this, &SurfaceManager::onWindowFocusChanged,    Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowsRaised,        this, &SurfaceManager::onWindowsRaised,         Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::windowRequestedRaise, this, &SurfaceManager::onWindowsRequestedRaise, Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::modificationsStarted, this, &SurfaceManager::modificationsStarted,    Qt::QueuedConnection);
-    connect(notifier, &WindowModelNotifier::modificationsEnded,   this, &SurfaceManager::modificationsEnded,      Qt::QueuedConnection);
+    connect(notifier, &WindowModelNotifier::windowAdded,
+            this, &SurfaceManager::onWindowAdded, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowRemoved,
+            this, &SurfaceManager::onWindowRemoved, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowReady,
+            this, [this](const miral::WindowInfo &windowInfo) {
+        Q_EMIT surfaceReady(surfaceFor(windowInfo.window()));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowMoved,
+            this, [this](const miral::WindowInfo &windowInfo, const QPoint &top_left) {
+        Q_EMIT surfaceMoved(surfaceFor(windowInfo.window()), top_left);
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowResized,
+            this, [this](const miral::WindowInfo &windowInfo, const QSize &size) {
+        Q_EMIT surfaceResized(surfaceFor(windowInfo.window()), size);
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowStateChanged,
+            this, [this](const miral::WindowInfo &windowInfo, Mir::State state) {
+        Q_EMIT surfaceStateChanged(surfaceFor(windowInfo.window()), state);
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowFocusChanged,
+            this, [this](const miral::WindowInfo &windowInfo, bool focused) {
+        Q_EMIT surfaceFocusChanged(surfaceFor(windowInfo.window()), focused);
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowRequestedRaise,
+            this, [this](const miral::WindowInfo &windowInfo) {
+        Q_EMIT surfaceRequestedRaise(surfaceFor(windowInfo.window()));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowsRaised,
+            this, [this](const std::vector<miral::Window> &windows) {
+        Q_EMIT surfacesRaised(surfacesFor(windows));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowsAddedToWorkspace,
+            this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
+        Q_EMIT surfacesAddedToWorkspace(workspace, surfacesFor(windows));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::windowsAboutToBeRemovedFromWorkspace,
+            this, [this](const std::shared_ptr<miral::Workspace> &workspace, const std::vector<miral::Window> &windows) {
+        Q_EMIT surfacesAboutToBeRemovedFromWorkspace(workspace, surfacesFor(windows));
+    }, Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::modificationsEnded,   this, &SurfaceManager::modificationsEnded,    Qt::QueuedConnection);
+
+    connect(notifier, &WindowModelNotifier::modificationsStarted, this, &SurfaceManager::modificationsStarted,  Qt::QueuedConnection);
 }
 
 void SurfaceManager::rememberMirSurface(MirSurface *surface)
 {
-    m_allSurfaces.append(surface);
+    surface_to_window.insert({ surface, surface->window() });
 }
 
 void SurfaceManager::forgetMirSurface(const miral::Window &window)
 {
-    for (int i = 0; i < m_allSurfaces.count(); ++i) {
-        if (m_allSurfaces[i]->window() == window) {
-            m_allSurfaces.removeAt(i);
-            return;
-        }
-    }
+    std::shared_ptr<mir::scene::Surface> msSurface = window;
+    surface_to_window.right.erase(window);
 }
 
 void SurfaceManager::onWindowAdded(const NewWindow &window)
@@ -109,7 +159,7 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
     auto mirSession = windowInfo.window().application();
     SessionInterface* session = m_sessionMap->findSession(mirSession.get());
 
-    const auto parentSurface = find(windowInfo.parent());
+    const auto parentSurface = surfaceFor(windowInfo.parent());
     const auto surface = new MirSurface(window, m_windowController, session, parentSurface);
     rememberMirSurface(surface);
 
@@ -136,85 +186,49 @@ void SurfaceManager::onWindowAdded(const NewWindow &window)
 void SurfaceManager::onWindowRemoved(const miral::WindowInfo &windowInfo)
 {
     DEBUG_MSG << "()";
-    MirSurface *surface = find(windowInfo);
+    MirSurface *surface = surfaceFor(windowInfo.window());
     forgetMirSurface(windowInfo.window());
-    if (surface && surface->isBeingDisplayed()) {
-        surface->setLive(false);
-    } else {
+
+    if (!surface) return;
+    Q_EMIT surfaceRemoved(surface);
+
+    if (!surface->isBeingDisplayed()) {
         delete surface;
         tracepoint(qtmir, surfaceDestroyed);
     }
 }
 
-MirSurface *SurfaceManager::find(const miral::WindowInfo &needle) const
+MirSurface *SurfaceManager::surfaceFor(const miral::Window &window) const
 {
-    return find(needle.window());
-}
-
-MirSurface *SurfaceManager::find(const miral::Window &window) const
-{
-    Q_FOREACH(const auto surface, m_allSurfaces) {
-        if (surface->window() == window) {
-            return surface;
-        }
+    auto window_iterator = surface_to_window.right.find(window);
+    if(window_iterator != surface_to_window.right.end()) {
+        return window_iterator->second;
     }
     return nullptr;
 }
 
-void SurfaceManager::onWindowReady(const miral::WindowInfo &windowInfo)
+QVector<unity::shell::application::MirSurfaceInterface *> SurfaceManager::surfacesFor(const std::vector<miral::Window> &windows) const
 {
-    if (auto mirSurface = find(windowInfo)) {
-        tracepoint(qtmir, firstFrameDrawn); // MirAL decides surface ready when it swaps its first frame
-        mirSurface->setReady();
-    }
-}
-
-void SurfaceManager::onWindowMoved(const miral::WindowInfo &windowInfo, const QPoint topLeft)
-{
-    if (auto mirSurface = find(windowInfo)) {
-        mirSurface->setPosition(topLeft);
-    }
-}
-
-void SurfaceManager::onWindowFocusChanged(const miral::WindowInfo &windowInfo, bool focused)
-{
-    if (auto mirSurface = find(windowInfo)) {
-        mirSurface->setFocused(focused);
-    }
-}
-
-void SurfaceManager::onWindowStateChanged(const miral::WindowInfo &windowInfo, Mir::State state)
-{
-    if (auto mirSurface = find(windowInfo)) {
-        mirSurface->updateState(state);
-    }
-}
-
-void SurfaceManager::onWindowsRaised(const std::vector<miral::Window> &windows)
-{
-    // sad inefficiency when crossing API boundaries (from miral to qt)
-
-    const int raiseCount = windows.size();
-
-    DEBUG_MSG << "() raiseCount = " << raiseCount;
-
-    QVector<unityapi::MirSurfaceInterface*> surfaces(raiseCount);
-    for (int i = 0; i < raiseCount; i++) {
-        auto mirSurface = find(windows[i]);
+    QVector<unityapi::MirSurfaceInterface*> surfaces;
+    for (size_t i = 0; i < windows.size(); i++) {
+        auto mirSurface = surfaceFor(windows[i]);
         if (mirSurface) {
-            surfaces[i] = mirSurface;
+            surfaces.push_back(mirSurface);
         } else {
-            WARNING_MSG << " Could not find qml surface for " << windows[i];
+            std::shared_ptr<mir::scene::Surface> ms = windows[i];
+            WARNING_MSG << " Could not find qml surface for " << ms.get();
         }
     }
-    Q_EMIT surfacesRaised(surfaces);
+    return surfaces;
 }
 
-void SurfaceManager::onWindowsRequestedRaise(const miral::WindowInfo &windowInfo)
+miral::Window SurfaceManager::windowFor(MirSurface *surface) const
 {
-    if (auto mirSurface = find(windowInfo)) {
-        mirSurface->requestFocus();
+    auto window_iterator = surface_to_window.left.find(surface);
+    if(window_iterator != surface_to_window.left.end()) {
+        return window_iterator->second;
     }
+    return miral::Window();
 }
 
 void SurfaceManager::raise(unityapi::MirSurfaceInterface *surface)
@@ -226,6 +240,32 @@ void SurfaceManager::raise(unityapi::MirSurfaceInterface *surface)
 
 void SurfaceManager::activate(unityapi::MirSurfaceInterface *surface)
 {
-    auto qtmirSurface = static_cast<qtmir::MirSurface*>(surface);
+    auto qtmirSurface = static_cast<MirSurface*>(surface);
     m_windowController->activate(qtmirSurface ? qtmirSurface->window() : miral::Window());
+}
+
+void SurfaceManager::forEachSurfaceInWorkspace(const std::shared_ptr<miral::Workspace> &workspace,
+                                               const std::function<void(unity::shell::application::MirSurfaceInterface *)> &callback)
+{
+    m_workspaceController->forEachWindowInWorkspace(workspace, [&](const miral::Window &window) {
+        auto surface = surfaceFor(window);
+        if (surface) {
+            callback(surface);
+        }
+    });
+}
+
+void SurfaceManager::moveSurfaceToWorkspace(unity::shell::application::MirSurfaceInterface *surface,
+                                            const std::shared_ptr<miral::Workspace> &workspace)
+{
+    miral::Window window = windowFor(static_cast<qtmir::MirSurface*>(surface));
+    if (window) {
+        m_workspaceController->moveWindowToWorkspace(window, workspace);
+    }
+}
+
+void SurfaceManager::moveWorkspaceContentToWorkspace(const std::shared_ptr<miral::Workspace> &to,
+                                                     const std::shared_ptr<miral::Workspace> &from)
+{
+    m_workspaceController->moveWorkspaceContentToWorkspace(to, from);
 }

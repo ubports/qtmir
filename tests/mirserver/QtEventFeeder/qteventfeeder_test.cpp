@@ -103,9 +103,6 @@ void QtEventFeederTest::TearDown()
 
 void QtEventFeederTest::setIrrelevantMockWindowSystemExpectations()
 {
-    EXPECT_CALL(*mockWindowSystem, getWindowForTouchPoint(_))
-        .Times(AnyNumber())
-        .WillRepeatedly(Return(window));
     EXPECT_CALL(*mockWindowSystem, focusedWindow())
         .Times(AnyNumber())
         .WillRepeatedly(Return(window));

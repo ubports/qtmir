@@ -5,6 +5,7 @@ set(
 )
 
 include_directories(
+  ${CMAKE_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/tests/framework
   ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
   ${CMAKE_SOURCE_DIR}/src/common
@@ -20,10 +21,12 @@ add_executable(ScreenTest ${SCREEN_TEST_SOURCES})
 
 target_link_libraries(
   ScreenTest
-  qpa-mirserver
+  qtmirserver
 
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
+
+  Qt5::Sensors
 )
 
 add_test(Screen, ScreenTest)

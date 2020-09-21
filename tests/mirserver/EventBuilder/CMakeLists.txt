@@ -17,7 +17,7 @@ add_executable(EventBuilderTest ${EVENT_BUILDER_TEST_SOURCES})
 
 target_link_libraries(
   EventBuilderTest
-  qpa-mirserver
+  qtmirserver
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
 )

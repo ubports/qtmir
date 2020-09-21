@@ -16,7 +16,7 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "edid.h"
+#include "qtmir/miral/edid.h"
 
 #include <cstring>
 #include <numeric>
@@ -25,7 +25,7 @@
 miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
 {
     if (data.size() != 128 && data.size() != 256) {
-        throw std::runtime_error("Incorrect EDID structure size");
+        throw std::runtime_error(std::string("Incorrect EDID structure size:") + std::to_string(data.size()));
     }
 
     // check the checksum

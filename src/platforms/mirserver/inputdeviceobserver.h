@@ -21,6 +21,7 @@
 #include <QString>
 #include <QVector>
 #include <QMutex>
+#include <memory>
 
 namespace mir { namespace input { class Device; }}
 

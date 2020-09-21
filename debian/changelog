@@ -1,3 +1,17 @@
+qtmir (0.6.0ubuntu5) xenial; urgency=medium
+
+  * Merge Multiscreen branch
+
+  [ Nick Dedekind ]
+  * Introduced QtMir API
+  * Support for multiple compositors per MirSurface
+  * Support multiple screen windows & cursors with qml instantiation
+  * Screen configuration API & implementation
+  * Removed Unity.Screens
+  * Support for workspaces
+
+ -- Marius Gripsgard <marius@ubports.com>  Tue, 02 Jul 2019 01:36:30 +0200
+
 qtmir (0.5.3+ubports1) xenial; urgency=medium
 
   * Import to ubports 

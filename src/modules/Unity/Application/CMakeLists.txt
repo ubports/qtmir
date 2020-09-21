@@ -1,6 +1,10 @@
+include(UseLttngGenTp)
+
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src/platforms/mirserver
     ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_CURRENT_BINARY_DIR} # for tracepoints.h
 )
 
 include_directories(
@@ -28,9 +32,16 @@ string (REPLACE " -pedantic " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 # Needed to compile tracepoints in C99 mode.
 add_definitions(-DBYTE_ORDER=__BYTE_ORDER)
 
+# Generate tracepoints.c and .h from tracepoints.tp
+add_lttng_gen_tp(NAME tracepoints)
+add_custom_target(UnityApplication_LTTNG
+    DEPENDS tracepoints.h tracepoints.c
+)
+
 set(QMLMIRPLUGIN_SRC
     application_manager.cpp
     application.cpp
+    compositortextureprovider.cpp
     cgmanager.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
@@ -66,11 +77,12 @@ set(QMLMIRPLUGIN_SRC
     applicationinfo.h
     taskcontroller.h
     settings_interface.h
-    )
+)
 
 add_library(unityapplicationplugin SHARED
     ${QMLMIRPLUGIN_SRC}
 )
+add_dependencies(unityapplicationplugin UnityApplication_LTTNG)
 
 # Frig for files that still rely on mirserver-dev
 string(REPLACE ";" " -I" QTMIR_ADD_MIRSERVER "-I ${MIRSERVER_INCLUDE_DIRS}")
@@ -96,12 +108,8 @@ target_link_libraries(
     Qt5::Qml
     Qt5::Quick
 
-    qpa-mirserver
+    qtmirserver
 )
-
-# Generate tracepoints.c and .h from tracepoints.tp
-include(UseLttngGenTp)
-add_lttng_gen_tp(NAME tracepoints)
 
 
 # install

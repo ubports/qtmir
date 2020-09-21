@@ -19,14 +19,17 @@
 
 #include <mir_toolkit/event.h>
 
+#include <QObject>
 #include <qpa/qwindowsysteminterface.h>
+
+#include <memory>
 
 class QTouchDevice;
 
 /*
   Fills Qt's event loop with input events from Mir
  */
-class QtEventFeeder
+class QtEventFeeder : public QObject
 {
 public:
     // Interface between QtEventFeeder and the actual QWindowSystemInterface functions
@@ -35,7 +38,7 @@ public:
     class QtWindowSystemInterface {
         public:
         virtual ~QtWindowSystemInterface() {}
-        virtual QWindow* getWindowForTouchPoint(const QPoint &point) = 0;
+        virtual QWindow* getWindowForPoint(const QPoint &point) = 0;
         virtual QWindow* focusedWindow() = 0;
         virtual void registerTouchDevice(QTouchDevice *device) = 0;
         virtual void handleExtendedKeyEvent(QWindow *window, ulong timestamp, QEvent::Type type, int key,
@@ -47,10 +50,6 @@ public:
         virtual void handleTouchEvent(QWindow *window, ulong timestamp, QTouchDevice *device,
                 const QList<struct QWindowSystemInterface::TouchPoint> &points,
                 Qt::KeyboardModifiers mods = Qt::NoModifier) = 0;
-        virtual void handleMouseEvent(ulong timestamp, QPointF relative, QPointF absolute, Qt::MouseButtons buttons,
-                                      Qt::KeyboardModifiers modifiers) = 0;
-        virtual void handleWheelEvent(ulong timestamp, QPointF absolute, QPoint angleDelta,
-                                      Qt::KeyboardModifiers modifiers) = 0;
     };
 
     QtEventFeeder();
@@ -62,6 +61,8 @@ public:
     void dispatchPointer(MirPointerEvent const* event);
 
     bool dispatch(MirEvent const& event); // FIXME used only in tests
+
+    bool event(QEvent *event) Q_DECL_OVERRIDE;
 
 private:
     void validateTouches(QWindow *window, ulong timestamp, QList<QWindowSystemInterface::TouchPoint> &touchPoints);
@@ -75,6 +76,7 @@ private:
 
     // Maps the id of an active touch to its last known state
     QHash<int, QWindowSystemInterface::TouchPoint> mActiveTouches;
+    Qt::MouseButtons m_buttons;
 };
 
 #endif // MIR_QT_EVENT_FEEDER_H

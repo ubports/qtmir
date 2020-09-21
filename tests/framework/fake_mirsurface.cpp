@@ -155,15 +155,15 @@ void FakeMirSurface::unregisterView(qintptr viewId)
     updateVisibility();
 }
 
-QSharedPointer<QSGTexture> FakeMirSurface::texture() { return QSharedPointer<QSGTexture>(); }
+QSharedPointer<QSGTexture> FakeMirSurface::texture(qintptr) { return QSharedPointer<QSGTexture>(); }
 
-QSGTexture *FakeMirSurface::weakTexture() const { return nullptr; }
+QSGTexture *FakeMirSurface::weakTexture(qintptr) const { return nullptr; }
 
-bool FakeMirSurface::updateTexture() { return true; }
+bool FakeMirSurface::updateTexture(qintptr) { return true; }
 
-unsigned int FakeMirSurface::currentFrameNumber() const { return 0; }
+unsigned int FakeMirSurface::currentFrameNumber(qintptr) const { return 0; }
 
-bool FakeMirSurface::numBuffersReadyForCompositor() { return 0; }
+bool FakeMirSurface::numBuffersReadyForCompositor(qintptr) { return 0; }
 
 void FakeMirSurface::setFocused(bool focus)
 {

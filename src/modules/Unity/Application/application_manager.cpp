@@ -119,7 +119,7 @@ ApplicationManager* ApplicationManager::create()
 
 ApplicationManager* ApplicationManager::singleton()
 {
-    static ApplicationManager* instance;
+    static ApplicationManager* instance{nullptr};
     if (!instance) {
         instance = create();
     }

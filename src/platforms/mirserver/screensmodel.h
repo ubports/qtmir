@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SCREENCONTROLLER_H
-#define SCREENCONTROLLER_H
+#ifndef SCREENCONFIGURATIONOBSERVER_H
+#define SCREENCONFIGURATIONOBSERVER_H
+
+#include "mirdisplayconfigurationobserver.h"
 
 #include <QObject>
 #include <QPoint>
@@ -37,8 +39,7 @@ namespace mir {
     class DisplayConfigurationOutput;
     }
 }
-
-class Screen;
+class PlatformScreen;
 class QtCompositor;
 class OrientationSensor;
 /*
@@ -61,18 +62,18 @@ class OrientationSensor;
  * All other methods must be called on the Qt GUI thread.
  */
 
-class ScreensModel : public QObject
+class ScreensModel : public MirDisplayConfigurationObserver
 {
     Q_OBJECT
 public:
     explicit ScreensModel(QObject *parent = 0);
 
-    QList<Screen*> screens() const { return m_screenList; }
+    QList<PlatformScreen*> screens() const { return m_screenList; }
     bool compositing() const { return m_compositing; }
 
 Q_SIGNALS:
-    void screenAdded(Screen *screen);
-    void screenRemoved(Screen *screen);
+    void screenAdded(PlatformScreen *screen);
+    void screenRemoved(PlatformScreen *screen);
 
 public Q_SLOTS:
     void update();
@@ -86,24 +87,24 @@ public:
     void terminate();
 
     // override for testing purposes
-    virtual Screen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const;
+    virtual PlatformScreen *createScreen(const mir::graphics::DisplayConfigurationOutput &output) const;
 
 protected Q_SLOTS:
     void onCompositorStarting();
     void onCompositorStopping();
 
 private:
-    Screen* findScreenWithId(const QList<Screen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
-    bool canUpdateExistingScreen(const Screen *screen, const mir::graphics::DisplayConfigurationOutput &output);
+    PlatformScreen* findScreenWithId(const QList<PlatformScreen*> &list, const mir::graphics::DisplayConfigurationOutputId id);
+    bool canUpdateExistingScreen(const PlatformScreen *screen, const mir::graphics::DisplayConfigurationOutput &output);
     void startRenderer();
     void haltRenderer();
 
     std::weak_ptr<mir::graphics::Display> m_display;
     std::shared_ptr<QtCompositor> m_compositor;
     std::shared_ptr<mir::compositor::DisplayListener> m_displayListener;
-    QList<Screen*> m_screenList;
+    QList<PlatformScreen*> m_screenList;
     bool m_compositing;
     std::shared_ptr<OrientationSensor> m_orientationSensor;
 };
 
-#endif // SCREENCONTROLLER_H
+#endif // SCREENCONFIGURATIONOBSERVER_H

@@ -127,7 +127,7 @@ TEST_F(SurfaceManagerTests, miralWindowCreationAddsMirSurfaceToItsInternalList)
     qtApp->sendPostedEvents();
 
     // Check result
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
     EXPECT_EQ(window, mirSurface->window());
 }
@@ -147,7 +147,7 @@ TEST_F(SurfaceManagerTests, createdMirSurfaceHasSessionSet)
     qtApp->sendPostedEvents();
 
     // Check result
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
     EXPECT_EQ(&fakeSession, mirSurface->session());
 }
@@ -171,8 +171,8 @@ TEST_F(SurfaceManagerTests, parentedMiralWindowGeneratesMirSurfaceWithCorrectPar
     qtApp->sendPostedEvents();
 
     // Check result
-    auto childMirSurface = surfaceManager->find(childWindowInfo);
-    auto parentMirSurface = surfaceManager->find(parentWindowInfo);
+    auto childMirSurface = surfaceManager->surfaceFor(childWindow);
+    auto parentMirSurface = surfaceManager->surfaceFor(parentWindow);
     ASSERT_TRUE(childMirSurface);
     ASSERT_TRUE(parentMirSurface);
 
@@ -198,8 +198,8 @@ TEST_F(SurfaceManagerTests, miralWindowWithChildHasMirSurfaceWithCorrectChild)
     qtApp->sendPostedEvents();
 
     // Check result
-    auto childMirSurface = surfaceManager->find(childWindowInfo);
-    auto parentMirSurface = surfaceManager->find(parentWindowInfo);
+    auto childMirSurface = surfaceManager->surfaceFor(childWindow);
+    auto parentMirSurface = surfaceManager->surfaceFor(parentWindow);
     ASSERT_TRUE(childMirSurface);
     ASSERT_TRUE(parentMirSurface);
 
@@ -216,7 +216,7 @@ TEST_F(SurfaceManagerTests, miralWindowReadyUpdatesMirSurfaceState)
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceReadySpy(mirSurface, &qtmir::MirSurface::ready);
@@ -240,7 +240,7 @@ TEST_F(SurfaceManagerTests, miralWindowMoveUpdatesMirSurfacePosition)
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfacePositionSpy(mirSurface, &qtmir::MirSurface::positionChanged);
@@ -263,7 +263,7 @@ TEST_F(SurfaceManagerTests, miralWindowFocusChangeUpdatesMirSurfaceFocus)
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
     ASSERT_FALSE(mirSurface->focused()); // false must be the initial state
 
@@ -289,7 +289,7 @@ TEST_F(SurfaceManagerTests, miralWindowStateChangeUpdatesMirSurfaceState)
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceStateSpy(mirSurface, &qtmir::MirSurface::stateChanged);
@@ -319,8 +319,8 @@ TEST_F(SurfaceManagerTests, miralsRaiseWindowListTransformedToVectorOfMirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo1);
     Q_EMIT wmNotifier.windowAdded(windowInfo2);
     qtApp->sendPostedEvents();
-    auto mirSurface1 = surfaceManager->find(windowInfo1);
-    auto mirSurface2 = surfaceManager->find(windowInfo2);
+    auto mirSurface1 = surfaceManager->surfaceFor(window1);
+    auto mirSurface2 = surfaceManager->surfaceFor(window2);
     ASSERT_TRUE(mirSurface1);
     ASSERT_TRUE(mirSurface2);
 
@@ -348,7 +348,7 @@ TEST_F(SurfaceManagerTests, focusRequestCausesMirSurfaceToFireFocusRequestedSign
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceFocusRequestedSpy(mirSurface, &qtmir::MirSurface::focusRequested);
@@ -371,7 +371,7 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceDestroyedSpy(mirSurface, &QObject::destroyed);
@@ -382,7 +382,7 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
 
     // Check result
     ASSERT_EQ(2, mirSurfaceDestroyedSpy.count()); //FIXME - should be 1
-    EXPECT_FALSE(surfaceManager->find(windowInfo));
+    EXPECT_FALSE(surfaceManager->surfaceFor(window));
 }
 
 /*
@@ -395,7 +395,7 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceDestroyedSpy(mirSurface, &QObject::destroyed);
@@ -408,7 +408,7 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedDeletesSurfaceManagerInternalEntry
 
     // Check result
     ASSERT_EQ(0, mirSurfaceDestroyedSpy.count());
-    EXPECT_FALSE(surfaceManager->find(windowInfo));
+    EXPECT_FALSE(surfaceManager->surfaceFor(window));
     EXPECT_FALSE(mirSurface->live());
 }
 
@@ -424,7 +424,7 @@ TEST_F(SurfaceManagerTests, miralWindowRemovedSurfaceManagerDeletesMirSurfaceWhe
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
 
     QSignalSpy mirSurfaceDestroyedSpy(mirSurface, &QObject::destroyed);
@@ -458,7 +458,7 @@ TEST_F(SurfaceManagerTests, surfaceManagerDoesNotDeleteLiveMirSurfaceWhenStopsBe
     // Setup: add window and get corresponding MirSurface
     Q_EMIT wmNotifier.windowAdded(windowInfo);
     qtApp->sendPostedEvents();
-    auto mirSurface = surfaceManager->find(windowInfo);
+    auto mirSurface = surfaceManager->surfaceFor(window);
     ASSERT_TRUE(mirSurface);
     ASSERT_TRUE(mirSurface->live());
 
