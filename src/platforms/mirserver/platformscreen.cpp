@@ -422,7 +422,7 @@ ScreenPlatformWindow *PlatformScreen::primaryWindow() const
 void PlatformScreen::addWindow(ScreenPlatformWindow *window)
 {
     if (!window || m_screenWindows.contains(window)) return;
-    DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
+    DEBUG_MSG_SCREENS << "(screenWindow=" << (void*) window << ")";
     m_screenWindows.push_back(window);
 
     window->setGeometry(geometry());
@@ -439,7 +439,7 @@ void PlatformScreen::removeWindow(ScreenPlatformWindow *window)
 {
     int index = m_screenWindows.indexOf(window);
     if (index >= 0) {
-        DEBUG_MSG_SCREENS << "(screenWindow=" << window << ")";
+        DEBUG_MSG_SCREENS << "(screenWindow=" << (void*) window << ")";
         m_screenWindows.remove(index);
         if (index == 0) {
             Q_EMIT primaryWindowChanged(m_screenWindows.value(0, nullptr));
