@@ -436,7 +436,7 @@ QSGTexture *MirSurface::weakTexture(qintptr userId) const
 {
     QMutexLocker locker(&m_mutex);
     auto compositorTexure = m_textures->compositorTextureForId(userId);
-    return compositorTexure ? compositorTexure->texture().data() : nullptr;
+    return compositorTexure ? compositorTexure->texture().toStrongRef().data() : nullptr;
 }
 
 bool MirSurface::updateTexture(qintptr userId)
