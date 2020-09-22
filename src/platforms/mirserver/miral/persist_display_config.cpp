@@ -28,6 +28,8 @@
 #include <mir/server.h>
 #include <mir/version.h>
 
+#include <stdexcept>
+
 // shouldn't really import this
 #include <qglobal.h>
 
