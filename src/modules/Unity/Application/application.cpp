@@ -916,15 +916,21 @@ void Application::requestFocus()
 
 void Application::terminate()
 {
+    auto mypid = QCoreApplication::applicationPid();
+
     for (auto session : m_sessions) {
-        kill(session->pid(), SIGTERM);
+        // Lets not kill ourself
+        if (mypid != session->pid())
+            kill(session->pid(), SIGTERM);
     }
 
     // Same as upstart, first sigterm, then sigkill after 5s
     // See: https://github.com/ubports/ubuntu-app-launch/blob/9ffa5f76711d600c10c20795cdaeb2c0abfa7cde/libubuntu-app-launch/application-impl-base.cpp#L320
-    QTimer::singleShot(5000, this, [this]() {
+    QTimer::singleShot(5000, this, [this, mypid]() {
         for (auto session : m_sessions) {
-            kill(session->pid(), SIGKILL);
+            // Lets not kill ourself
+            if (mypid != session->pid())
+                kill(session->pid(), SIGKILL);
         }
     });
 }
