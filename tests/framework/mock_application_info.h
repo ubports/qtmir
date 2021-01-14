@@ -42,6 +42,7 @@ struct MockApplicationInfo : public qtmir::ApplicationInfo
     MOCK_CONST_METHOD0(supportedOrientations, Qt::ScreenOrientations());
     MOCK_CONST_METHOD0(rotatesWindowContents, bool());
     MOCK_CONST_METHOD0(isTouchApp, bool());
+    MOCK_CONST_METHOD0(noDisplay, bool());
 };
 
 } // namespace qtmir
