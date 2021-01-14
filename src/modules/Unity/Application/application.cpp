@@ -69,6 +69,8 @@ Application::Application(const QSharedPointer<SharedWakelock>& sharedWakelock,
 
     m_rotatesWindowContents = m_appInfo->rotatesWindowContents();
 
+    m_visible = !m_appInfo->noDisplay();
+
     setStopTimer(new Timer);
 
     connect(&m_surfaceList, &unityapp::MirSurfaceListInterface::countChanged, this, &unityapp::ApplicationInfoInterface::surfaceCountChanged);
@@ -130,6 +132,17 @@ void Application::wipeQMLCache()
 bool Application::isValid() const
 {
     return !appId().isEmpty();
+}
+
+bool Application::visible() const
+{
+    return m_visible;
+}
+
+void Application::setVisible(bool visible)
+{
+    m_visible = visible;
+    Q_EMIT visibleChanged(m_visible);
 }
 
 QString Application::appId() const

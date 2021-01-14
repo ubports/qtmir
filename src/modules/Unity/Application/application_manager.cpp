@@ -94,6 +94,7 @@ public:
                                                                            Qt::InvertedLandscapeOrientation; };
     bool rotatesWindowContents() const override { return false; };
     bool isTouchApp() const override { return false; };
+    bool noDisplay() const override { return true; };
 
 private:
     QString m_name;
