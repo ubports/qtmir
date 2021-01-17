@@ -65,6 +65,7 @@ add_custom_target(cppcheck COMMAND cppcheck --enable=all -q --error-exitcode=2
                                        ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests)
 
 option(WITH_CONTENTHUB "Build with content-hub" OFF)
+option(WITH_CGMANAGER "Build with cgmanager" ON)
 
 include(FindPkgConfig)
 find_package(Qt5Core 5.9 REQUIRED)
@@ -98,12 +99,16 @@ pkg_check_modules(GSETTINGS_QT REQUIRED gsettings-qt)
 pkg_check_modules(QTDBUSTEST libqtdbustest-1 REQUIRED)
 pkg_check_modules(QTDBUSMOCK libqtdbusmock-1 REQUIRED)
 pkg_check_modules(APPLICATION_API REQUIRED unity-shell-application=27)
-pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
 pkg_check_modules(VALGRIND valgrind REQUIRED)
 
 if(WITH_CONTENTHUB)
 pkg_check_modules(CONTENT_HUB libcontent-hub>=0.2 REQUIRED)
 message(STATUS "Bulding with content-hub")
+endif()
+
+if(WITH_CGMANAGER)
+pkg_check_modules(CGMANAGER libcgmanager REQUIRED)
+message(STATUS "Bulding with libcgmanager")
 endif()
 
 include_directories(SYSTEM ${APPLICATION_API_INCLUDE_DIRS})

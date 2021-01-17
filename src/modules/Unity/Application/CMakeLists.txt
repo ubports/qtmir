@@ -19,7 +19,10 @@ include_directories(
     ${UBUNTU_PLATFORM_API_INCLUDE_DIRS}
     ${UBUNTU_APP_LAUNCH_INCLUDE_DIRS}
     ${GSETTINGS_QT_INCLUDE_DIRS}
+
+if(WITH_CGMANAGER)
     ${CGMANAGER_INCLUDE_DIRS}
+endif()
 
     ${LTTNG_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
@@ -38,11 +41,17 @@ add_custom_target(UnityApplication_LTTNG
     DEPENDS tracepoints.h tracepoints.c
 )
 
+if(WITH_CGMANAGER)
+    set(SRC_CGMANAGER
+        cgmanager.cpp
+    )
+    add_definitions(-DWITH_CGMANAGER=1)
+endif()
+
 set(QMLMIRPLUGIN_SRC
     application_manager.cpp
     application.cpp
     compositortextureprovider.cpp
-    cgmanager.cpp
     ../../../common/abstractdbusservicemonitor.cpp
     ../../../common/debughelpers.cpp
     dbusfocusinfo.cpp
@@ -77,6 +86,8 @@ set(QMLMIRPLUGIN_SRC
     applicationinfo.h
     taskcontroller.h
     settings_interface.h
+# Cgmanager if enabled
+    ${SRC_CGMANAGER}
 )
 
 add_library(unityapplicationplugin SHARED

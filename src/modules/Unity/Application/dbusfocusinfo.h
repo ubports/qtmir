@@ -21,7 +21,9 @@
 
 namespace qtmir {
 
+#ifdef WITH_CGMANAGER
 class CGManager;
+#endif
 class MirSurfaceInterface;
 
 /*
@@ -58,7 +60,9 @@ private:
 
     const QList<Application*> &m_applications;
 
+#ifdef WITH_CGMANAGER
     CGManager *m_cgManager;
+#endif
 };
 
 } // namespace qtmir
