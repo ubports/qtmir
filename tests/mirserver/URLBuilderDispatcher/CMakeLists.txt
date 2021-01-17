@@ -25,6 +25,8 @@ target_link_libraries(
   ${QT5PLATFORMSUPPORT_LIBS}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
+
+  Threads::Threads
 )
 
 add_test(URLBuilderDispatcher, URLBuilderDispatcherTest)
