@@ -81,7 +81,7 @@ QString ApplicationInfo::splashColorFooter() const
 
 Qt::ScreenOrientations ApplicationInfo::supportedOrientations() const
 {
-    Qt::ScreenOrientations response = 0;
+    Qt::ScreenOrientations response = {};
     auto orientations = m_info->supportedOrientations();
     if (orientations.portrait)
         response |= Qt::PortraitOrientation;
