@@ -193,6 +193,8 @@ target_link_libraries(qtmirserver
         Qt5::Quick
         Qt5::Sensors
         ${QT5PLATFORMSUPPORT_LIBS}
+
+        Threads::Threads
 )
 
 set_target_properties(qtmirserver

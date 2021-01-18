@@ -122,7 +122,11 @@ QPoint ScreenAdaptor::position() const
 
 QQmlListProperty<qtmir::ScreenMode> ScreenAdaptor::availableModes()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    return QQmlListProperty<qtmir::ScreenMode>(this, &m_modes);
+#else
     return QQmlListProperty<qtmir::ScreenMode>(this, m_modes);
+#endif
 }
 
 uint ScreenAdaptor::currentModeIndex() const

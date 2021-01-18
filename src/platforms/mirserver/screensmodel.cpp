@@ -192,7 +192,7 @@ void ScreensModel::update()
     // Move Windows from about-to-be-deleted Screens to new Screen
     auto i = windowMoveList.constBegin();
     while (i != windowMoveList.constEnd()) {
-        DEBUG_MSG << "() - moving platform window " << i.key() <<  " from " << static_cast<PlatformScreen*>(i.key()->screen()) << " to " << i.value();
+        DEBUG_MSG << "() - moving platform window " << (void*) i.key() <<  " from " << static_cast<PlatformScreen*>(i.key()->screen()) << " to " << i.value();
         i.key()->setScreen(i.value());
         i++;
     }
@@ -219,7 +219,7 @@ void ScreensModel::update()
     Q_FOREACH (auto screen, m_screenList) {
         qCDebug(QTMIR_SCREENS) << screen << "- id:" << screen->displayId().output_id.as_value()
                                << "geometry:" << screen->geometry()
-                               << "window:" << screen->primaryWindow()
+                               << "window:" << (void*) screen->primaryWindow()
                                << "type:" << screen->name()
                                << "scale:" << screen->scale();
     }
